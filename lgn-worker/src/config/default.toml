@@ -1,0 +1,35 @@
+[worker]
+version = "develop"
+instance_type = "medium"
+
+[avs]
+gateway_url = "ws://gateway.test-distributed-query.test.distributed-query.io:80"
+issuer = "issuer"
+worker_id = "worker_id"
+lagr_keystore = "lagr_keystore.json"
+
+[prometheus]
+port = 9090
+
+[public_params]
+# Where to store params
+dir = "./zkmr_params"
+# Parameters common directory
+url = "https://distributed-query-public-params.s3.us-east-2.amazonaws.com"
+skip_store = false
+
+[public_params.preprocessing_params]
+# Parameters name in S3 and file name where it's will be stored
+file = "STORAGE_PREPROCESS/PUBLIC_PARAMS"
+
+[public_params.query2_params]
+# Parameters name in S3 and file name where it's will be stored
+file = "STORAGE_QUERY2/public_params"
+
+[public_params.groth16_assets]
+# Parameters name in S3 and file name where it's will be stored
+circuit_file = "STORAGE_QUERY2/groth16_assets/circuit.bin"
+# Parameters name in S3 and file name where it's will be stored
+r1cs_file = "STORAGE_QUERY2/groth16_assets/r1cs.bin"
+# Parameters name in S3 and file name where it's will be stored
+pk_file = "STORAGE_QUERY2/groth16_assets/pk.bin"
