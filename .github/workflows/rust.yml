@@ -1,0 +1,108 @@
+name: Test, Format, and Lint
+'on':
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+    branches:
+      - '**'
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    environment: CI
+    if: '! contains(toJSON(github.event.commits.*.message), ''[skip-ci]'')'
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Install nightly toolchain
+        id: rustc-toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+      - name: rust-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: >-
+            rustc-test-${{ steps.rustc-toolchain.outputs.rustc_hash }}-cargo-${{
+            hashFiles('**/Cargo.toml') }}
+      - name: Setup Git Credentials
+        run: >-
+          git config --global url."https://${{ secrets.GIT_TOKEN
+          }}@github.com/".insteadOf "https://github.com/"
+      - name: Run cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: '--all --release'
+        env:
+          RUSTFLAGS: >-
+            -Copt-level=3 -Cdebug-assertions -Coverflow-checks=y -Cdebuginfo=0
+            -Ctarget-cpu=native
+          CARGO_INCREMENTAL: 1
+          RUST_BACKTRACE: 1
+          S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
+          S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
+  lints:
+    name: Formatting and Clippy
+    runs-on: ubuntu-latest
+    environment: CI
+    if: '! contains(toJSON(github.event.commits.*.message), ''[skip-ci]'')'
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Install nightly toolchain
+        id: rustc-toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: 'rustfmt, clippy'
+      - name: rust-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: >-
+            rustc-lints-${{ steps.rustc-toolchain.outputs.rustc_hash
+            }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+      - name: Run cargo fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: '--all -- --check'
+        env:
+          CARGO_INCREMENTAL: 1
+      - name: Setup Git Credentials
+        run: >-
+          git config --global url."https://${{ secrets.GIT_TOKEN
+          }}@github.com/".insteadOf "https://github.com/"
+      - name: Run cargo clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: '--all-features --all-targets --all -- -D warnings -A incomplete-features'
+        env:
+          CARGO_INCREMENTAL: 1
