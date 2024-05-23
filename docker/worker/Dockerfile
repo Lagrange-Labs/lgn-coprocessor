@@ -29,16 +29,16 @@ RUN mkdir -p ~/.ssh && \
     chmod 600 ~/.ssh/known_hosts
 
 # Set work directory
-WORKDIR /distributed-query
+WORKDIR /lgn-distributed-query
 
 # Copy the source code
 COPY . .
 
 # Build with caching
 RUN --mount=type=ssh,id=default \
-    --mount=type=cache,id=worker,target=/usr/local/cargo/registry \
-    --mount=type=cache,id=worker,target=/usr/local/cargo/git \
-    RUSTFLAGS=-Ctarget-cpu=${INSTRUCTION_SET} cargo build --bin worker --bin avs ${BUILD_FLAGS}
+    --mount=type=cache,id=lgn-worker,target=/usr/local/cargo/registry \
+    --mount=type=cache,id=lgn-worker,target=/usr/local/cargo/git \
+    RUSTFLAGS=-Ctarget-cpu=${INSTRUCTION_SET} cargo build --bin lgn-worker --bin avs ${BUILD_FLAGS}
 
 # Disabling tools for now
 # WORKDIR /distributed-query/tools
@@ -62,9 +62,8 @@ RUN apt-get install -y ca-certificates
 RUN update-ca-certificates
 
 # Copy the built binary from the builder stage
-COPY --from=builder /distributed-query/target/release/worker /usr/local/bin
+COPY --from=builder /distributed-query/target/release/lgn-worker /usr/local/bin
 COPY --from=builder /distributed-query/target/release/avs /usr/local/bin
-# COPY --from=builder /distributed-query/target/release/gen-groth16-assets /usr/local/bin
 
 # Set environment variables
 ENV RUST_BACKTRACE=full
@@ -73,4 +72,4 @@ ENV RUST_MIN_STACK=1048576000
 
 EXPOSE 8080
 
-CMD "/usr/local/bin/worker" "--config" "$CONFIG_FILE"
+CMD "/usr/local/bin/lgn-worker" "--config" "$CONFIG_FILE"
