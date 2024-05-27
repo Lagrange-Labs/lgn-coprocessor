@@ -258,7 +258,7 @@ impl<P: StorageProver> Preprocessing<P> {
             }
         };
 
-        Ok(WorkerReply::new(task.block_nr, maybe_proof))
+        Ok(WorkerReply::new(task.chain_id, task.block_nr, maybe_proof))
     }
 }
 

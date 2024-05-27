@@ -37,6 +37,9 @@ pub struct MessageEnvelope<T> {
     /// Task id is unique for each task and helps to map replies to tasks
     pub task_id: String,
 
+    /// Task id referenced in the DB tasks table
+    pub db_task_id: Option<i32>,
+
     /// Estimate how long it takes this task to finish.
     /// This includes may factors like: redis queue current length, workers count, parallel queries count, etc.
     /// Ideally assigned by an "intelligent" algorithm. Not important for now though.
@@ -59,6 +62,7 @@ impl<T> MessageEnvelope<T> {
             rtt: u64::MAX,
             routing_key,
             task_id,
+            db_task_id: None,
         }
     }
 
@@ -88,6 +92,7 @@ pub struct MessageReplyEnvelope<T> {
     pub task_id: String,
 
     inner: T,
+
     error: Option<WorkerError>,
 }
 
@@ -164,6 +169,12 @@ impl From<Position> for (usize, usize) {
 /// All the messages that may transit from the worker to the server
 #[derive(Debug, Serialize, Deserialize)]
 pub enum UpstreamPayload<T> {
+    /// The worker is authenticating
+    Authentication { token: String },
+
+    /// The worker is ready to start working(after params loading)
+    Ready,
+
     /// the workers sends back a proof for the given task ID
     Done(MessageReplyEnvelope<T>),
 }
@@ -172,6 +183,8 @@ impl<T> Display for UpstreamPayload<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             UpstreamPayload::Done(_) => write!(f, "Task done"),
+            UpstreamPayload::Authentication { .. } => write!(f, "Authentication"),
+            UpstreamPayload::Ready => write!(f, "Ready"),
         }
     }
 }
@@ -179,7 +192,9 @@ impl<T> Display for UpstreamPayload<T> {
 /// All the messages that may transit from the server to the worker
 #[derive(Serialize, Deserialize)]
 pub enum DownstreamPayload<T> {
-    /// orders the worker to process the given task
+    /// indicate a successful authentication to the worker
+    Ack,
+    /// order the worker to process the given task
     Todo { envelope: MessageEnvelope<T> },
 }
 
@@ -202,7 +217,7 @@ pub enum WorkerClass {
 
 impl WorkerClass {
     /// Returns the minimal worker class required to process a task of the given queue
-    pub fn min_for_queue(domain: &str) -> Self {
+    pub fn from_queue(domain: &str) -> Self {
         let domain = domain.split('_').next().expect("invalid routing key");
         match domain {
             v0::preprocessing::ROUTING_DOMAIN => WorkerClass::Medium,

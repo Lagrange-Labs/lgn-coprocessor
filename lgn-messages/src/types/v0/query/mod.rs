@@ -9,6 +9,11 @@ pub const ROUTING_DOMAIN: &str = "sc";
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct WorkerTask {
+    /// Chain ID
+    pub chain_id: u64,
+    /// Query ID
+    pub query_id: String,
+
     /// Which contract this task is for.
     pub contract: Address,
 
@@ -18,8 +23,15 @@ pub struct WorkerTask {
 
 impl WorkerTask {
     #[must_use]
-    pub fn new(contract: Address, task_type: WorkerTaskType) -> Self {
+    pub fn new(
+        chain_id: u64,
+        query_id: String,
+        contract: Address,
+        task_type: WorkerTaskType,
+    ) -> Self {
         Self {
+            chain_id,
+            query_id,
             contract,
             task_type,
         }
@@ -214,6 +226,7 @@ pub struct RevelationData {
 
 #[derive(Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
 pub struct WorkerReply {
+    pub chain_id: u64,
     pub query_id: String,
     pub task_id: String,
     #[dbg(formatter = crate::types::kp_pretty)]
@@ -222,8 +235,14 @@ pub struct WorkerReply {
 
 impl WorkerReply {
     #[must_use]
-    pub fn new(query_id: String, task_id: String, proof: Option<KeyedPayload>) -> Self {
+    pub fn new(
+        chain_id: u64,
+        query_id: String,
+        task_id: String,
+        proof: Option<KeyedPayload>,
+    ) -> Self {
         Self {
+            chain_id,
             query_id,
             task_id,
             proof,

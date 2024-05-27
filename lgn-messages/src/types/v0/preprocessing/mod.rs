@@ -16,14 +16,18 @@ pub struct WorkerTask {
     /// Which block we are proving.
     pub block_nr: u64,
 
+    /// Chain ID
+    pub chain_id: u64,
+
     /// What we are proving.
     pub task_type: WorkerTaskType,
 }
 
 impl WorkerTask {
     #[must_use]
-    pub fn new(block_nr: u64, task_type: WorkerTaskType) -> Self {
+    pub fn new(chain_id: u64, block_nr: u64, task_type: WorkerTaskType) -> Self {
         Self {
+            chain_id,
             block_nr,
             task_type,
         }
@@ -296,17 +300,19 @@ pub struct BlocksDbData {
 
 #[derive(Clone, Dbg, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct WorkerReply {
-    /// Which block we are proving.
+    pub chain_id: u64,
     pub block_nr: u64,
-
-    /// Proof in bytes, see [`KeyedPayload`]
     #[dbg(formatter = crate::types::kp_pretty)]
     pub proof: Option<KeyedPayload>,
 }
 
 impl WorkerReply {
     #[must_use]
-    pub fn new(block_nr: u64, proof: Option<KeyedPayload>) -> Self {
-        Self { block_nr, proof }
+    pub fn new(chain_id: u64, block_nr: u64, proof: Option<KeyedPayload>) -> Self {
+        Self {
+            chain_id,
+            block_nr,
+            proof,
+        }
     }
 }

@@ -9,7 +9,7 @@ use clap::Parser;
 
 use jwt::{Claims, RegisteredClaims};
 use mimalloc::MiMalloc;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info};
 use tracing_subscriber::EnvFilter;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::http::HeaderValue;
@@ -17,16 +17,18 @@ use tungstenite::{connect, Message};
 
 use ethers::signers::Wallet;
 use lgn_auth::jwt::JWTAuth;
-use lgn_messages::types::{DownstreamPayload, TaskType, UpstreamPayload, WorkerClass};
+use lgn_messages::types::{DownstreamPayload, ReplyType, TaskType, UpstreamPayload, WorkerClass};
 use lgn_provers::provers::v0::{groth16, preprocessing, query};
 use lgn_provers::provers::ProverType;
 use lgn_worker::avs::utils::read_keystore;
 
 use crate::config::Config;
 use crate::manager::ProversManager;
+use crate::metrics::Metrics;
 
 mod config;
 mod manager;
+mod metrics;
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
@@ -73,6 +75,7 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn run(config: &Config) -> Result<()> {
+    let metrics = Metrics::new();
     let lagrange_wallet = match (
         &config.avs.lagr_keystore,
         &config.avs.lagr_pwd,
@@ -129,45 +132,63 @@ fn run(config: &Config) -> Result<()> {
     let headers = connection_request.headers_mut();
     headers.insert("Authorization", HeaderValue::from_str(&auth).unwrap());
 
-    let mut provers_manager = ProversManager::new();
+    let mut provers_manager = ProversManager::new(&metrics);
     register_provers(config, &mut provers_manager);
 
     // Connect to the server after loading params which is slow.
     let (mut ws_socket, _) = connect(connection_request)?;
     info!("Connected to the gateway");
+    metrics.increment_gateway_connection_count();
 
     info!("ready to work");
+    ws_socket
+        .send(Message::Text(
+            serde_json::to_string(&UpstreamPayload::<ReplyType>::Ready).unwrap(),
+        ))
+        .context("unable to send ready frame")?;
 
     loop {
-        debug!("ready to work");
         let msg = ws_socket
             .read()
             .with_context(|| "unable to read from gateway socket")?;
         match msg {
             Message::Text(content) => {
                 debug!("Received message: {:?}", content);
+                metrics.increment_websocket_messages_received("text");
+
                 match serde_json::from_str::<DownstreamPayload<TaskType>>(&content)? {
                     DownstreamPayload::Todo { envelope } => {
                         debug!("Received task: {:?}", envelope);
+
                         match provers_manager.delegate_proving(envelope) {
                             Ok(reply) => {
                                 debug!("Sending reply: {:?}", reply);
+
                                 ws_socket.send(Message::Text(serde_json::to_string(
                                     &UpstreamPayload::Done(reply),
                                 )?))?;
+                                metrics.increment_websocket_messages_sent("text");
                             }
                             Err(e) => {
-                                warn!("Error processing task: {:?}", e);
+                                error!("Error processing task: {:?}", e);
+                                metrics.increment_error_count("proof processing");
                             }
                         }
                     }
+                    DownstreamPayload::Ack => bail!("unexpected ACK frame"),
                 }
             }
-            Message::Ping(_) | Message::Close(_) => {
+            Message::Ping(_) => {
                 debug!("Received ping or close message");
+                metrics.increment_websocket_messages_received("ping");
+            }
+            Message::Close(_) => {
+                info!("Received close message");
+                return Ok(());
             }
             _ => {
                 error!("unexpected frame: {msg}");
+                metrics.increment_error_count("unexpected frame");
             }
         }
     }

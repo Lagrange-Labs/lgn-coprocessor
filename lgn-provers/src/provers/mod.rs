@@ -1,9 +1,10 @@
 use anyhow::anyhow;
 use lgn_messages::types::{MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType};
+use std::fmt::Display;
 
 pub mod v0;
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ProverType {
     /// V0 query preprocessing handler.
     Query2Preprocess,
@@ -24,6 +25,16 @@ impl TryFrom<&TaskType> for ProverType {
             TaskType::StorageQuery(_) => Ok(Self::Query2Query),
             TaskType::StorageGroth16(_) => Ok(Self::Query2Groth16),
             _ => Err(anyhow!("Unsupported task type: {:?}", task_type)),
+        }
+    }
+}
+
+impl Display for ProverType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Query2Preprocess => write!(f, "Query2Preprocess"),
+            Self::Query2Query => write!(f, "Query2Query"),
+            Self::Query2Groth16 => write!(f, "Query2Groth16"),
         }
     }
 }

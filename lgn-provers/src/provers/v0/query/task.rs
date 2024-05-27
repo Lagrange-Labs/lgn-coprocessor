@@ -31,7 +31,8 @@ impl<P: QueryProver> Query<P> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
         if let TaskType::StorageQuery(task) = envelope.inner() {
-            let reply = self.process_task(query_id.clone(), task_id.clone(), task)?;
+            let reply =
+                self.process_task(task.chain_id, query_id.clone(), task_id.clone(), task)?;
             let reply_type = ReplyType::StorageQuery(reply);
             let reply_envelope = MessageReplyEnvelope::new(query_id, task_id, reply_type);
             Ok(reply_envelope)
@@ -42,6 +43,7 @@ impl<P: QueryProver> Query<P> {
 
     fn process_task(
         &mut self,
+        chain_id: u64,
         query_id: String,
         task_id: String,
         task: &WorkerTask,
@@ -107,6 +109,6 @@ impl<P: QueryProver> Query<P> {
             }
         };
 
-        Ok(WorkerReply::new(query_id, task_id, maybe_proof))
+        Ok(WorkerReply::new(chain_id, query_id, task_id, maybe_proof))
     }
 }

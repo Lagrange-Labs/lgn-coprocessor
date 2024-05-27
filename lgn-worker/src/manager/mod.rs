@@ -1,19 +1,21 @@
-use anyhow::anyhow;
-
+use crate::metrics::Metrics;
+use anyhow::bail;
 use lgn_messages::types::{MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType};
 use lgn_provers::provers::{LgnProver, ProverType};
 use std::collections::HashMap;
 use tracing::debug;
 
 /// Manages provers for different proving task types
-pub(crate) struct ProversManager {
+pub(crate) struct ProversManager<'a> {
     provers: HashMap<ProverType, Box<dyn LgnProver>>,
+    metrics: &'a Metrics,
 }
 
-impl ProversManager {
-    pub(crate) fn new() -> Self {
+impl<'a> ProversManager<'a> {
+    pub(crate) fn new(metrics: &'a Metrics) -> Self {
         Self {
             provers: HashMap::default(),
+            metrics,
         }
     }
 
@@ -37,14 +39,33 @@ impl ProversManager {
         &mut self,
         envelope: MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
-        let task_type = envelope.inner().try_into()?;
-        let prover = self
-            .provers
-            .get_mut(&task_type)
-            .ok_or_else(|| anyhow!("No handler for task type: {task_type:?}"))?;
+        let task_type: ProverType = envelope.inner().try_into()?;
 
-        debug!("Running prover for task type: {task_type:?}");
+        self.metrics
+            .increment_tasks_received(task_type.to_string().as_str());
 
-        prover.run(envelope)
+        match self.provers.get_mut(&task_type) {
+            Some(prover) => {
+                debug!("Running prover for task type: {task_type:?}");
+
+                let start_time = std::time::Instant::now();
+
+                let result = prover.run(envelope)?;
+
+                self.metrics
+                    .increment_tasks_processed(task_type.to_string().as_str());
+                self.metrics.observe_task_processing_duration(
+                    task_type.to_string().as_str(),
+                    start_time.elapsed().as_secs_f64(),
+                );
+
+                return Ok(result);
+            }
+            None => {
+                self.metrics
+                    .increment_tasks_failed(task_type.to_string().as_str());
+                bail!("No prover found for task type: {:?}", task_type);
+            }
+        }
     }
 }
