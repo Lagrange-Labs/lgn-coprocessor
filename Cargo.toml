@@ -1,0 +1,12 @@
+[workspace]
+resolver = "2"
+members = [
+    "lgn-auth",
+    "lgn-messages",
+    "lgn-provers",
+    "lgn-worker"
+]
+
+[patch.crates-io]
+plonky2 = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }
+plonky2_field = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }

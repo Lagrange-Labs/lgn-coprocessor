@@ -1,0 +1,126 @@
+name: Build and Publish Docker Images
+
+# on: workflow_dispatch
+on:
+  push:
+    tags:
+      - '**'
+    branches:
+      - main
+      - develop
+
+permissions:
+      id-token: write   # This is required for requesting the JWT
+      contents: read    # This is required for actions/checkout
+
+jobs:
+  deploy:
+    name: Build and Publish Docker Images
+    runs-on: self-hosted
+    environment: CI
+    steps:
+      - name: Cleanup docker build cache
+        run: |
+          docker system prune --force
+          docker builder prune --all --force
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.ZKMR_DEV_AWS_ACCOUNT_ID }}:role/github-actions-ecr-access-role
+          role-session-name: github-actions-ecr-access-role
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Enable Docker BuildKit
+        run: |
+          export DOCKER_BUILDKIT=1
+
+      - name: Build and push images
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          images=(
+            "worker docker/worker/Dockerfile linux/amd64"
+          )
+          for image in "${images[@]}"; do
+              TAG=$(echo ${{ github.ref_name }} | tr "[]/" -)
+              IFS=' ' read -r name dockerfile platform build_arg <<< "$image"
+              docker build -t $name:latest -f $dockerfile . --platform $platform --ssh default --build-arg INSTRUCTION_SET="x86-64-v3"
+              docker tag $name:latest $ECR_REGISTRY/$name:${{ github.sha }}
+              docker tag $name:latest $ECR_REGISTRY/$name:${TAG}
+              docker push $ECR_REGISTRY/$name:${{ github.sha }}
+              docker push $ECR_REGISTRY/$name:${TAG}
+
+              if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+                docker tag $name:latest $ECR_REGISTRY/$name:latest
+                docker push $ECR_REGISTRY/$name:latest
+              fi
+
+              if [[ ${{ github.ref }} == 'refs/tags/v'* ]]; then
+                docker tag $name:latest $ECR_REGISTRY/$name:${TAG}
+                docker push $ECR_REGISTRY/$name:${TAG}
+              fi
+          done
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.ZKMR_TEST_AWS_ACCOUNT_ID }}:role/github-actions-ecr-access-role
+          role-session-name: github-actions-ecr-access-role
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr-test
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Push to test
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr-test.outputs.registry }}
+        run: |
+          images=(
+            "worker"
+          )
+
+          for image in "${images[@]}"; do
+              TAG=$(echo ${{ github.ref_name }} | tr "[]/" -)
+              IFS=' ' read -r name <<< "$image"
+              docker tag $name:latest $ECR_REGISTRY/$name:${{ github.sha }}
+              docker tag $name:latest $ECR_REGISTRY/$name:${TAG}
+              docker push $ECR_REGISTRY/$name:${{ github.sha }}
+              docker push $ECR_REGISTRY/$name:${TAG}
+
+              if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+                docker tag $name:latest $ECR_REGISTRY/$name:latest
+                docker push $ECR_REGISTRY/$name:latest
+              fi
+
+              if [[ ${{ github.ref }} == 'refs/tags/v'* ]]; then
+                docker tag $name:latest $ECR_REGISTRY/$name:${TAG}
+                docker push $ECR_REGISTRY/$name:${TAG}
+              fi
+          done
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push to public repo
+        run: |
+          if [[ ${{ github.ref }} == 'refs/heads/develop' ]]; then
+            docker tag worker:latest lagrangelabs/worker:develop
+            docker push lagrangelabs/worker:develop
+          fi
