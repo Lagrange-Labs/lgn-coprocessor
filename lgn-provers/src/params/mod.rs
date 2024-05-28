@@ -27,8 +27,8 @@ impl ParamsLoader {
                 let reader = std::io::BufReader::new(file);
                 bincode::deserialize_from(reader).map_err(Into::into)
             }
-            Err(err) => {
-                info!("Failed to load params from local storage: {err}");
+            Err(_) => {
+                info!("public params are not locally stored yet");
 
                 let params = Self::download_file(base_url, file_name)?;
                 if !skip_store {
