@@ -18,6 +18,12 @@ pub enum WorkerTaskType {
 
 #[derive(Clone, Serialize, Deserialize, Dbg)]
 pub struct WorkerTask {
+    /// Chain ID
+    pub chain_id: u64,
+
+    /// Query ID
+    pub query_id: String,
+
     /// Which contract this task is for.
     pub contract: Address,
 
@@ -31,8 +37,15 @@ pub struct WorkerTask {
 
 impl WorkerTask {
     #[must_use]
-    pub fn new(contract: Address, task_type: WorkerTaskType) -> Self {
+    pub fn new(
+        chain_id: u64,
+        query_id: String,
+        contract: Address,
+        task_type: WorkerTaskType,
+    ) -> Self {
         Self {
+            chain_id,
+            query_id,
             contract,
             task_type,
             aggregated_result: Vec::default(),
