@@ -1,5 +1,6 @@
 pub mod keys;
 
+use crate::types::v0::ChainId;
 use crate::types::{HashOutput, KeyedPayload, Position};
 use derive_debug_plus::Dbg;
 use ethers::types::Address;
@@ -10,7 +11,7 @@ pub const ROUTING_DOMAIN: &str = "sc";
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct WorkerTask {
     /// Chain ID
-    pub chain_id: u64,
+    pub chain_id: ChainId,
     /// Query ID
     pub query_id: String,
 

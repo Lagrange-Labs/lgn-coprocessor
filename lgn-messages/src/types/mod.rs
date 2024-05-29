@@ -1,4 +1,5 @@
 use crate::routing::RoutingKey;
+use crate::types::v0::{ChainAware, ChainId};
 use serde_derive::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
@@ -83,6 +84,27 @@ impl<T> MessageEnvelope<T> {
     }
 }
 
+impl ChainAware for MessageEnvelope<TaskType> {
+    fn chain_id(&self) -> ChainId {
+        match &self.inner {
+            TaskType::StoragePreprocess(task) => task.chain_id,
+            TaskType::StorageQuery(task) => task.chain_id,
+            TaskType::StorageGroth16(_) => {
+                // TODO: add chain_id to the Groth16 WorkerTask. Skipping for now to preserve backwards
+                // compatibility with external workers
+                self.query_id
+                    .split("-")
+                    .next()
+                    .expect("failed to parse chain_id from query_id")
+                    .parse::<ChainId>()
+                    .expect("failed to parse chain id to u64")
+            }
+            // TODO: Option ?
+            _ => panic!("Chain Id not supported for Envelope {:?}", self.inner),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct MessageReplyEnvelope<T> {
     /// Query id is unique for each query and shared between all its tasks
@@ -94,6 +116,26 @@ pub struct MessageReplyEnvelope<T> {
     inner: T,
 
     error: Option<WorkerError>,
+}
+
+impl ChainAware for MessageReplyEnvelope<ReplyType> {
+    fn chain_id(&self) -> ChainId {
+        match &self.inner {
+            ReplyType::StoragePreprocess(task) => task.chain_id,
+            ReplyType::StorageQuery(task) => task.chain_id,
+            ReplyType::StorageGroth16(_) => {
+                // TODO: add chain_id to the Groth16 WorkerTask. Skipping for now to preserve backwards
+                // compatibility with external workers
+                self.query_id
+                    .split("-")
+                    .next()
+                    .expect("failed to parse chain_id from query_id")
+                    .parse::<ChainId>()
+                    .expect("failed to parse chain id to u64")
+            }
+            _ => panic!("Chain Id not supported for Envelope {:?}", self.inner),
+        }
+    }
 }
 
 impl<T> MessageReplyEnvelope<T> {

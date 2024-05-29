@@ -5,6 +5,7 @@ use derive_debug_plus::Dbg;
 use ethers::types::Address;
 use serde_derive::{Deserialize, Serialize};
 
+use crate::types::v0::ChainId;
 use crate::types::{HashOutput, KeyedPayload, Position};
 
 pub mod keys;
@@ -17,7 +18,7 @@ pub struct WorkerTask {
     pub block_nr: u64,
 
     /// Chain ID
-    pub chain_id: u64,
+    pub chain_id: ChainId,
 
     /// What we are proving.
     pub task_type: WorkerTaskType,

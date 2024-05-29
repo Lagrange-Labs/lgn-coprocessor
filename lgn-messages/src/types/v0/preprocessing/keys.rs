@@ -7,8 +7,6 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::types::Position;
 
-pub type ChainId = u64;
-
 pub type QueryId = String;
 
 pub type MptNodeHash = String;
