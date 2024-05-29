@@ -7,8 +7,8 @@ use lgn_messages::types::v0::preprocessing::{
     BlockLinkingInput, BlocksDbData, LengthExtractInput, MptProofBranchData, MptProofLeafData,
     StorageDbLeafData,
 };
-use mapreduce_plonky2::api::{lpn_state, PublicParameters};
-use mapreduce_plonky2::{api, block, state, storage};
+use mr_plonky2_circuits::api::{lpn_state, PublicParameters};
+use mr_plonky2_circuits::{api, block, state, storage};
 
 use crate::provers::v0::STORAGE_BLOCKCHAIN_DB_HEIGHT;
 
