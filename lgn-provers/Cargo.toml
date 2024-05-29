@@ -8,8 +8,8 @@ anyhow = "1.0.86"
 lgn-messages = { path = "../lgn-messages" }
 ethers = "2.0.14"
 metrics = "0.22.0"
-mapreduce-plonky2 = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
-groth16_framework = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
+mr_plonky2_circuits = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
+groth16_framework = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
 tracing = "0.1.40"
 bytes = "1.6.0"
 serde = "1.0.202"
