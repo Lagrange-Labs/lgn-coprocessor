@@ -8,14 +8,15 @@ on:
     branches:
       - main
       - develop
+      - matrix
 
 permissions:
       id-token: write   # This is required for requesting the JWT
       contents: read    # This is required for actions/checkout
 
 jobs:
-  deploy:
-    name: Build and Publish Docker Images
+  build:
+    name: Build Docker Images
     runs-on: self-hosted
     environment: CI
     steps:
@@ -26,17 +27,6 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ vars.ZKMR_DEV_AWS_ACCOUNT_ID }}:role/github-actions-ecr-access-role
-          role-session-name: github-actions-ecr-access-role
-          aws-region: ${{ vars.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.9.0
@@ -60,34 +50,38 @@ jobs:
               docker build -t $name:latest -f $dockerfile . --platform $platform --ssh default --build-arg INSTRUCTION_SET="x86-64-v3"
               docker tag $name:latest $ECR_REGISTRY/$name:${{ github.sha }}
               docker tag $name:latest $ECR_REGISTRY/$name:${TAG}
-              docker push $ECR_REGISTRY/$name:${{ github.sha }}
-              docker push $ECR_REGISTRY/$name:${TAG}
-
-              if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-                docker tag $name:latest $ECR_REGISTRY/$name:latest
-                docker push $ECR_REGISTRY/$name:latest
-              fi
-
-              if [[ ${{ github.ref }} == 'refs/tags/v'* ]]; then
-                docker tag $name:latest $ECR_REGISTRY/$name:${TAG}
-                docker push $ECR_REGISTRY/$name:${TAG}
-              fi
           done
 
+  push:
+    name: Push Docker Images
+    runs-on: self-hosted
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [dev, test, prod]
+        include:
+          - environment: dev
+            aws_account_id: ${{ vars.ZKMR_DEV_AWS_ACCOUNT_ID }}
+          - environment: test
+            aws_account_id: ${{ vars.ZKMR_TEST_AWS_ACCOUNT_ID }}
+          - environment: prod
+            aws_account_id: ${{ vars.ZKMR_PROD_AWS_ACCOUNT_ID }}
+    steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ vars.ZKMR_TEST_AWS_ACCOUNT_ID }}:role/github-actions-ecr-access-role
+          role-to-assume: arn:aws:iam::${{ matrix.aws_account_id }}:role/github-actions-ecr-access-role
           role-session-name: github-actions-ecr-access-role
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        id: login-ecr-test
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Push to test
+      - name: Push to ECR
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr-test.outputs.registry }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           images=(
             "worker"
@@ -124,3 +118,4 @@ jobs:
             docker tag worker:latest lagrangelabs/worker:develop
             docker push lagrangelabs/worker:develop
           fi
+
