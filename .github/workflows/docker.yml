@@ -54,6 +54,7 @@ jobs:
 
   push:
     name: Push Docker Images
+    environment: CI
     runs-on: self-hosted
     needs: build
     strategy:
