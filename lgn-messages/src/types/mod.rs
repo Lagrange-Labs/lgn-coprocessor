@@ -47,6 +47,9 @@ pub struct MessageEnvelope<T> {
     /// relatively fast.
     pub rtt: u64,
 
+    /// How much work prover has to do
+    pub gas: Option<u64>,
+
     /// How and where to route the message.
     pub routing_key: RoutingKey,
 
@@ -60,6 +63,7 @@ impl<T> MessageEnvelope<T> {
             query_id,
             inner,
             rtt: u64::MAX,
+            gas: None,
             routing_key,
             task_id,
             db_task_id: None,
@@ -135,6 +139,7 @@ pub enum WorkerError {
     #[error("{0}")]
     GeneralError(String),
 }
+
 #[derive(
     Default, Debug, Copy, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize,
 )]
