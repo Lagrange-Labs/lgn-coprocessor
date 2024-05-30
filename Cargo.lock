@@ -2776,6 +2776,7 @@ dependencies = [
  "metrics-exporter-prometheus",
  "mimalloc",
  "rand",
+ "redact",
  "rpassword",
  "serde",
  "serde_derive",
@@ -3914,6 +3915,15 @@ dependencies = [
  "plonky2",
  "plonky2_crypto",
  "plonky2_ecgfp5",
+ "serde",
+]
+
+[[package]]
+name = "redact"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0020ec469b096d56edb1ed0f0f141d957863302170f8d9c4bfda1a12969e5969"
+dependencies = [
  "serde",
 ]
 

@@ -1,15 +1,16 @@
 use config::FileFormat;
-use serde_derive::{Deserialize, Serialize};
+use serde_derive::Deserialize;
 
 use lazy_static_include::*;
 use lgn_messages::types::WorkerClass;
+use redact::Secret;
 use tracing::debug;
 
 lazy_static_include_str! {
     DEFAULT_CONFIG => "src/config/default.toml",
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct Config {
     pub(crate) worker: WorkerConfig,
     pub(crate) avs: AvsConfig,
@@ -17,7 +18,7 @@ pub(crate) struct Config {
     pub(crate) prometheus: PrometheusConfig,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct PublicParamsConfig {
     pub(crate) url: String,
     pub(crate) dir: String,
@@ -38,7 +39,7 @@ impl PublicParamsConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct PreprocessingParams {
     pub(crate) file: String,
 }
@@ -49,7 +50,7 @@ impl PreprocessingParams {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct Query2Params {
     pub(crate) file: String,
 }
@@ -60,7 +61,7 @@ impl Query2Params {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct Groth16Assets {
     pub(crate) circuit_file: String,
     pub(crate) r1cs_file: String,
@@ -75,31 +76,24 @@ impl Groth16Assets {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct WorkerConfig {
     pub(crate) instance_type: WorkerClass,
-    pub(crate) version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct AvsConfig {
     pub(crate) gateway_url: String,
     pub(crate) issuer: String,
     pub(crate) worker_id: String,
     pub(crate) lagr_keystore: Option<String>,
-    pub(crate) lagr_pwd: Option<String>,
-    pub(crate) lagr_private_key: Option<String>,
+    pub(crate) lagr_pwd: Option<Secret<String>>,
+    pub(crate) lagr_private_key: Option<Secret<String>>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct PrometheusConfig {
     pub(crate) port: u16,
-}
-
-impl WorkerConfig {
-    pub fn validate(&self) {
-        assert!(!self.version.is_empty(), "Version is required");
-    }
 }
 
 impl AvsConfig {
@@ -111,9 +105,12 @@ impl AvsConfig {
         match (&self.lagr_keystore, &self.lagr_pwd, &self.lagr_private_key) {
             (Some(kpath), Some(pwd), _) => {
                 assert!(!kpath.is_empty(), "Keystore path is empty");
-                assert!(!pwd.is_empty(), "Password is empty");
+                assert!(!pwd.expose_secret().is_empty(), "Password is empty");
             }
-            (None, None, Some(pkey)) => assert!(!pkey.is_empty(), "Private key value is empty"),
+            (None, None, Some(pkey)) => assert!(
+                !pkey.expose_secret().is_empty(),
+                "Private key value is empty"
+            ),
             _ => (),
         }
     }
@@ -145,7 +142,6 @@ impl Config {
     }
 
     pub fn validate(&self) {
-        self.worker.validate();
         self.public_params.validate();
         self.avs.validate();
     }

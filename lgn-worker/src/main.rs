@@ -80,8 +80,10 @@ fn run(config: &Config) -> Result<()> {
         &config.avs.lagr_pwd,
         &config.avs.lagr_private_key,
     ) {
-        (Some(keystore_path), Some(password), None) => read_keystore(keystore_path, password)?,
-        (Some(_), None, Some(pkey)) => Wallet::from_str(pkey)?,
+        (Some(keystore_path), Some(password), None) => {
+            read_keystore(keystore_path, password.expose_secret())?
+        }
+        (Some(_), None, Some(pkey)) => Wallet::from_str(pkey.expose_secret())?,
         _ => bail!("Must specify either keystore path w/ password OR private key"),
     };
 
