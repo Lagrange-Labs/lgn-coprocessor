@@ -69,9 +69,10 @@ impl Network {
         match self {
             Network::Mainnet => MAINNET_ZKMR_STAKE_REGISTRY_ADDR,
             Network::Holesky => HOLESKY_ZKMR_STAKE_REGISTRY_ADDR,
-        }.to_string()
-            .parse()
-            .expect("invalid registry address")
+        }
+        .to_string()
+        .parse()
+        .expect("invalid registry address")
     }
     /// Returns the address of the service manager contract. Necessary input to
     /// compute the right avs digest hash for the registration signature.
@@ -79,9 +80,10 @@ impl Network {
         match self {
             Network::Mainnet => MAINNET_ZKMR_SERVICE_MANAGER_ADDR,
             Network::Holesky => HOLESKY_ZKMR_SERVICE_MANAGER_ADDR,
-        }.to_string()
-            .parse()
-            .expect("invalid service manager address")
+        }
+        .to_string()
+        .parse()
+        .expect("invalid service manager address")
     }
     /// Returns the delegation manager contract address necessary to ensure an operator is
     /// already registered or not yet.
