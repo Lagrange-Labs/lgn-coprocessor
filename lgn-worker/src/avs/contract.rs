@@ -8,12 +8,14 @@ use std::sync::Arc;
 /// ZKMR service manager address as an argument (avs) to call the contract
 /// function `calculateOperatorAVSRegistrationDigestHash`
 /// - currently same address for mainnet and holesky
-const ZKMR_SERVICE_MANAGER_ADDR: &str = "0xf98D5De1014110C65c51b85Ea55f73863215CC10";
+const HOLESKY_ZKMR_SERVICE_MANAGER_ADDR: &str = "0xf98D5De1014110C65c51b85Ea55f73863215CC10";
+const MAINNET_ZKMR_SERVICE_MANAGER_ADDR: &str = "0x22CAc0e6A1465F043428e8AeF737b3cb09D0eEDa";
 
 /// ZKMRStakeRegistry contract address
 /// <https://github.com/Lagrange-Labs/lpn-relayer/blob/feat/avs-relay/src/config/chain.ts#L57>
 /// - currently same address for mainnet and holesky
-const ZKMR_STAKE_REGISTRY_ADDR: &str = "0xf724cDC7C40fd6B59590C624E8F0E5E3843b4BE4";
+const HOLESKY_ZKMR_STAKE_REGISTRY_ADDR: &str = "0xf724cDC7C40fd6B59590C624E8F0E5E3843b4BE4";
+const MAINNET_ZKMR_STAKE_REGISTRY_ADDR: &str = "0x8dcdCc50Cc00Fe898b037bF61cCf3bf9ba46f15C";
 
 /// AVSDirectory contract address
 /// from https://github.com/Layr-Labs/eigenlayer-contracts?tab=readme-ov-file#deployments
@@ -64,23 +66,20 @@ impl Network {
     /// Returns the address of the lagrange registry necessary to register an operator
     /// on Lagrange Network AVS
     fn lagrange_registry_address(&self) -> Address {
-        // match self {
-        //     // keeping optionality to have different address if it comes up one day
-        //     _ => ZKMR_STAKE_REGISTRY_ADDR.to_string(),
-        // }
-        ZKMR_STAKE_REGISTRY_ADDR
-            .to_string()
+        match self {
+            Network::Mainnet => MAINNET_ZKMR_STAKE_REGISTRY_ADDR,
+            Network::Holesky => HOLESKY_ZKMR_STAKE_REGISTRY_ADDR,
+        }.to_string()
             .parse()
             .expect("invalid registry address")
     }
     /// Returns the address of the service manager contract. Necessary input to
     /// compute the right avs digest hash for the registration signature.
     fn lagrange_service_manager_address(&self) -> Address {
-        // match self {
-        //     _ => ZKMR_SERVICE_MANAGER_ADDR.to_string(),
-        // }
-        ZKMR_SERVICE_MANAGER_ADDR
-            .to_string()
+        match self {
+            Network::Mainnet => MAINNET_ZKMR_SERVICE_MANAGER_ADDR,
+            Network::Holesky => HOLESKY_ZKMR_SERVICE_MANAGER_ADDR,
+        }.to_string()
             .parse()
             .expect("invalid service manager address")
     }
