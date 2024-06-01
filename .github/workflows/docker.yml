@@ -115,10 +115,5 @@ jobs:
 
       - name: Push to public repo
         run: |
-          TAG=$(echo ${{ github.ref_name }} | tr "[]/" -)
-          if [[ ${{ github.ref }} == 'refs/tags/v'* ]]; then
-            docker tag worker:${{ github.sha }} lagrangelabs/worker:latest
-            docker tag worker:${{ github.sha }} lagrangelabs/worker:${TAG}
-            docker push lagrangelabs/worker:latest
-            docker push lagrangelabs/worker:${TAG}
-          fi
+          docker tag worker:${{ github.sha }} lagrangelabs/worker:holesky
+          docker push lagrangelabs/worker:holesky
