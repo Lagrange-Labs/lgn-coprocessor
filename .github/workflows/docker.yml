@@ -16,7 +16,7 @@ permissions:
 jobs:
   deploy:
     name: Build and Publish Docker Images
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     environment: CI
     steps:
       - name: Cleanup docker build cache
