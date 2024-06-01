@@ -9,6 +9,7 @@ on:
       - main
       - develop
       - docker
+      - holesky
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
