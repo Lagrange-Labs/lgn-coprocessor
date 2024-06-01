@@ -27,7 +27,7 @@ jobs:
         image: [worker]
         include:
           - image: worker
-            docker_file: docker/query-executor/Dockerfile
+            docker_file: docker/worker/Dockerfile
             platform: linux/amd64
     environment: CI
     steps:
