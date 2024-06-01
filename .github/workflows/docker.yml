@@ -104,7 +104,7 @@ jobs:
   public-push:
     name: Push Docker Images to Docker hub
     environment: CI
-    runs-on: lagrange-runners
+    runs-on: nix-128g
     needs: build
     steps:
       - name: Log in to Docker Hub
