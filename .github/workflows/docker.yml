@@ -9,6 +9,7 @@ on:
       - main
       - develop
       - docker
+      - bump-holesky-v0-2-0
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
@@ -116,6 +117,8 @@ jobs:
       - name: Push to public repo
         run: |
           TAG=$(echo ${{ github.ref_name }} | tr "[]/" -)
+          docker tag worker:${{ github.sha }} lagrangelabs/worker:holesky
+          docker push lagrangelabs/worker:holesky
           if [[ ${{ github.ref }} == 'refs/tags/v'* ]]; then
             docker tag worker:${{ github.sha }} lagrangelabs/worker:latest
             docker tag worker:${{ github.sha }} lagrangelabs/worker:${TAG}
