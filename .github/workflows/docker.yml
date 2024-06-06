@@ -1,21 +1,20 @@
 name: Build and Publish Docker Images
 
-# on: workflow_dispatch
 on:
   push:
     tags:
       - '**'
     branches:
       - main
-      - develop
-      - docker
+      - holesky
+      - mainnet
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
 
 permissions:
-      id-token: write   # This is required for requesting the JWT
-      contents: read    # This is required for actions/checkout
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
 
 jobs:
   build:
@@ -104,6 +103,7 @@ jobs:
   public-push:
     name: Push Docker Images to Docker hub
     environment: CI
+    if: contains('main holesky mainnet', github.ref_name)
     runs-on: nix-128g
     needs: build
     steps:
@@ -115,10 +115,10 @@ jobs:
 
       - name: Push to public repo
         run: |
-          TAG=$(echo ${{ github.ref_name }} | tr "[]/" -)
-          if [[ ${{ github.ref }} == 'refs/tags/v'* ]]; then
-            docker tag worker:${{ github.sha }} lagrangelabs/worker:latest
-            docker tag worker:${{ github.sha }} lagrangelabs/worker:${TAG}
-            docker push lagrangelabs/worker:latest
-            docker push lagrangelabs/worker:${TAG}
+          if [[ ${{ github.ref_name }} == 'main' ]]; then
+            tag=latest
+          else
+            tag=${{ github.ref_name }}
           fi
+          docker tag worker:${{ github.sha }} lagrangelabs/worker:${tag}
+          docker push lagrangelabs/worker:${tag}
