@@ -1,5 +1,5 @@
 use anyhow::Context;
-use metrics::{Counter, Histogram};
+use metrics::{counter, histogram};
 
 use crate::provers::v0::preprocessing::prover::StorageProver;
 use crate::provers::LgnProver;
@@ -23,15 +23,11 @@ impl<P: StorageProver> LgnProver for Preprocessing<P> {
 
 pub struct Preprocessing<P> {
     prover: P,
-    metrics: Metrics,
 }
 
 impl<P: StorageProver> Preprocessing<P> {
     pub(crate) fn new(prover: P) -> Self {
-        Self {
-            prover,
-            metrics: Metrics::new(),
-        }
+        Self { prover }
     }
 
     pub(crate) fn run_inner(
@@ -51,7 +47,7 @@ impl<P: StorageProver> Preprocessing<P> {
 
     fn process_task(&mut self, block_nr: u64, task: &WorkerTask) -> anyhow::Result<WorkerReply> {
         debug!(?task, "Processing task");
-        self.metrics.zkmr_worker_task_counter.increment(1);
+        counter!("zkmr_worker_task_counter").increment(1);
 
         let maybe_proof = match &task.task_type {
             WorkerTaskType::Mpt(data) => match data {
@@ -64,10 +60,8 @@ impl<P: StorageProver> Preprocessing<P> {
                             .to_string();
                     let proof = self.prover.prove_mpt_leaf(data).unwrap();
 
-                    self.metrics
-                        .zkmr_worker_mpt_leaf_proving_latency
+                    histogram!("zkmr_worker_proving_latency", "proof_type" => "mpt_leaf")
                         .record(ts.elapsed().as_secs_f64());
-
                     debug!("Storing proof for leaf: {:?}", key);
                     Some((key, proof))
                 }
@@ -83,8 +77,7 @@ impl<P: StorageProver> Preprocessing<P> {
                         .prove_mpt_branch(input)
                         .context("running prove_mpt_branch")?;
 
-                    self.metrics
-                        .zkmr_worker_mpt_intermediate_proving_latency
+                    histogram!("zkmr_worker_proving_latency", "proof_type" => "mpt_intermediate")
                         .record(ts.elapsed().as_secs_f64());
 
                     debug!("Storing proof for branch: {}", key);
@@ -100,8 +93,7 @@ impl<P: StorageProver> Preprocessing<P> {
                         ProofKey::StorageDb(block_nr, leaf.contract, leaf.position).to_string();
                     let proof = self.prover.prove_storage_db_leaf(leaf.clone()).unwrap();
 
-                    self.metrics
-                        .zkmr_worker_storage_leaf_proving_latency
+                    histogram!("zkmr_worker_proving_latency", "proof_type" => "storage_leaf")
                         .record(ts.elapsed().as_secs_f64());
 
                     Some((key, proof))
@@ -120,8 +112,7 @@ impl<P: StorageProver> Preprocessing<P> {
                         )
                         .unwrap();
 
-                    self.metrics
-                        .zkmr_worker_storage_intermediate_proving_latency
+                    histogram!("zkmr_worker_proving_latency", "proof_type" => "storage_intermediate")
                         .record(ts.elapsed().as_secs_f64());
 
                     Some((key, proof))
@@ -137,8 +128,7 @@ impl<P: StorageProver> Preprocessing<P> {
                     .prove_length_extract(data.clone())
                     .context("running prove_length_extract")?;
 
-                self.metrics
-                    .zkmr_worker_length_extract_proving_latency
+                histogram!("zkmr_worker_proving_latency", "proof_type" => "length_extract")
                     .record(ts.elapsed().as_secs_f64());
 
                 debug!("Storing proof for length slot: {key}");
@@ -155,8 +145,7 @@ impl<P: StorageProver> Preprocessing<P> {
                     .prove_length_match(&data.mapping_proof, &data.length_extract_proof)
                     .context("runnning prove_length_match")?;
 
-                self.metrics
-                    .zkmr_worker_length_match_proving_latency
+                histogram!("zkmr_worker_proving_latency", "proof_type" => "length_match")
                     .record(ts.elapsed().as_secs_f64());
 
                 debug!("Storing proof for bridge: {}", key);
@@ -175,8 +164,7 @@ impl<P: StorageProver> Preprocessing<P> {
                     )
                     .context("runnning prove_equivalence")?;
 
-                self.metrics
-                    .zkmr_worker_equivalence_proving_latency
+                histogram!("zkmr_worker_proving_latency", "proof_type" => "equivalence")
                     .record(ts.elapsed().as_secs_f64());
 
                 debug!("Storing proof for equivalence: {}", key);
@@ -189,8 +177,7 @@ impl<P: StorageProver> Preprocessing<P> {
                 let key = ProofKey::BlockLinking(block_nr).to_string();
                 let proof = self.prover.prove_block_number_linking(data).unwrap();
 
-                self.metrics
-                    .zkmr_worker_block_linking_proving_latency
+                histogram!("zkmr_worker_proving_latency", "proof_type" => "block_linking")
                     .record(ts.elapsed().as_secs_f64());
 
                 debug!("Storing proof for block header linking: {}", key);
@@ -206,9 +193,7 @@ impl<P: StorageProver> Preprocessing<P> {
                         .prover
                         .prove_state_db_leaf(leaf.block_linking_proof.to_vec())
                         .unwrap();
-
-                    self.metrics
-                        .zkmr_worker_state_db_leaf_proving_latency
+                    histogram!("zkmr_worker_proving_latency", "proof_type" => "state_db_leaf")
                         .record(ts.elapsed().as_secs_f64());
 
                     debug!("Storing proof for leaf: {}", key);
@@ -226,8 +211,7 @@ impl<P: StorageProver> Preprocessing<P> {
                             branch.right_proof.to_vec(),
                         )
                         .unwrap();
-                    self.metrics
-                        .zkmr_worker_state_db_branch_proving_latency
+                    histogram!("zkmr_worker_proving_latency", "proof_type" => "state_db_branch")
                         .record(ts.elapsed().as_secs_f64());
 
                     debug!("Storing proof for branch: {}", key);
@@ -249,8 +233,7 @@ impl<P: StorageProver> Preprocessing<P> {
                         .prove_blocks_db_subsequent(data.clone())
                         .context("running prove_blocks_db_subsequent")?
                 };
-                self.metrics
-                    .zkmr_worker_blocks_db_proving_latency
+                histogram!("zkmr_worker_proving_latency", "proof_type" => "blocks_db")
                     .record(ts.elapsed().as_secs_f64());
 
                 debug!("Storing proof for blocks db: {:?}", key);
@@ -264,56 +247,4 @@ impl<P: StorageProver> Preprocessing<P> {
 
 fn encode_hash(hash: H256) -> String {
     hex::encode(hash)[..8].to_string()
-}
-
-struct Metrics {
-    zkmr_worker_task_counter: Counter,
-    zkmr_worker_mpt_leaf_proving_latency: Histogram,
-    zkmr_worker_mpt_intermediate_proving_latency: Histogram,
-    zkmr_worker_storage_leaf_proving_latency: Histogram,
-    zkmr_worker_storage_intermediate_proving_latency: Histogram,
-    zkmr_worker_length_extract_proving_latency: Histogram,
-    zkmr_worker_length_match_proving_latency: Histogram,
-    zkmr_worker_equivalence_proving_latency: Histogram,
-    zkmr_worker_block_linking_proving_latency: Histogram,
-    zkmr_worker_state_db_leaf_proving_latency: Histogram,
-    zkmr_worker_state_db_branch_proving_latency: Histogram,
-    zkmr_worker_blocks_db_proving_latency: Histogram,
-}
-
-impl Metrics {
-    pub fn new() -> Self {
-        Self {
-            zkmr_worker_task_counter: metrics::counter!("task_counter"),
-            zkmr_worker_mpt_leaf_proving_latency: metrics::histogram!("mpt_leaf_proving_latency"),
-            zkmr_worker_mpt_intermediate_proving_latency: metrics::histogram!(
-                "mpt_intermediate_proving_latency"
-            ),
-            zkmr_worker_storage_leaf_proving_latency: metrics::histogram!(
-                "storage_leaf_proving_latency"
-            ),
-            zkmr_worker_storage_intermediate_proving_latency: metrics::histogram!(
-                "storage_intermediate_proving_latency"
-            ),
-            zkmr_worker_length_extract_proving_latency: metrics::histogram!(
-                "length_extract_proving_latency"
-            ),
-            zkmr_worker_length_match_proving_latency: metrics::histogram!(
-                "length_match_proving_latency"
-            ),
-            zkmr_worker_equivalence_proving_latency: metrics::histogram!(
-                "equivalence_proving_latency"
-            ),
-            zkmr_worker_block_linking_proving_latency: metrics::histogram!(
-                "block_linking_proving_latency"
-            ),
-            zkmr_worker_state_db_leaf_proving_latency: metrics::histogram!(
-                "state_db_leaf_proving_latency"
-            ),
-            zkmr_worker_state_db_branch_proving_latency: metrics::histogram!(
-                "state_db_intermediate_proving_latency"
-            ),
-            zkmr_worker_blocks_db_proving_latency: metrics::histogram!("blocks_db_proving_latency"),
-        }
-    }
 }
