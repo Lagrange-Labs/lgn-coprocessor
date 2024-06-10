@@ -119,7 +119,7 @@ impl QueryProver for QueryStorageProver {
     fn prove_state_db(&self, d: &QueryStateData) -> anyhow::Result<Vec<u8>> {
         let now = std::time::Instant::now();
 
-        let proof = d.proof.clone().unwrap_or(vec![]);
+        let proof = d.proof.clone().unwrap_or_default();
         let siblings = proof
             .clone()
             .into_iter()
