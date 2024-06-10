@@ -42,3 +42,34 @@ impl WorkerTask {
         }
     }
 }
+
+#[derive(Clone, Dbg, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct WorkerReply {
+    /// Query ID
+    pub query_id: String,
+
+    /// Task ID
+    pub task_id: String,
+
+    /// Chain ID
+    pub chain_id: u64,
+    #[dbg(formatter = crate::types::kp_pretty)]
+    pub proof: Option<KeyedPayload>,
+}
+
+impl WorkerReply {
+    #[must_use]
+    pub fn new(
+        chain_id: u64,
+        query_id: String,
+        task_id: String,
+        proof: Option<KeyedPayload>,
+    ) -> Self {
+        Self {
+            query_id,
+            task_id,
+            chain_id,
+            proof,
+        }
+    }
+}
