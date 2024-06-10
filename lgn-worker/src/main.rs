@@ -10,7 +10,7 @@ use clap::Parser;
 use ::metrics::counter;
 use jwt::{Claims, RegisteredClaims};
 use mimalloc::MiMalloc;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::{connect, Message};
@@ -177,7 +177,7 @@ fn run(config: &Config) -> Result<()> {
             .with_context(|| "unable to read from gateway socket")?;
         match msg {
             Message::Text(content) => {
-                debug!("Received message: {:?}", content);
+                trace!("Received message: {:?}", content);
                 metrics.increment_websocket_messages_received("text");
 
                 match serde_json::from_str::<DownstreamPayload<TaskType>>(&content)? {

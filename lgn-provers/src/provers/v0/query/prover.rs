@@ -107,16 +107,28 @@ impl QueryProver for QueryStorageProver {
 
     fn prove_state_db(&self, d: &Query2StateData) -> anyhow::Result<Vec<u8>> {
         let now = std::time::Instant::now();
-        // Currently supporting single leaf
-        let siblings = [[0u8; 32]; 0];
-        let positions = [true; 0];
+
+        let proof = d.proof.clone().unwrap_or(vec![]);
+        let siblings = proof
+            .clone()
+            .into_iter()
+            .map(|(_, hash)| hash)
+            .collect::<Vec<[u8; 32]>>();
+
+        let positions = proof
+            .into_iter()
+            .map(|(pos, _)| pos.index % 2 == 0)
+            .collect::<Vec<bool>>();
+
+        let depth = siblings.len() as u32;
+
         let input = StateCircuitInput::new(
             d.smart_contract_address,
             d.mapping_slot,
             d.length_slot,
             // currently proving is assuming block number < 2^32
             d.block_number as u32,
-            0,
+            depth,
             &siblings,
             &positions,
             d.block_hash,

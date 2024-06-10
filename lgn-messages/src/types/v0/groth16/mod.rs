@@ -21,6 +21,9 @@ pub struct WorkerTask {
     /// Which contract this task is for.
     pub contract: Address,
 
+    /// Chain ID
+    pub chain_id: u64,
+
     /// Task type to handle.
     pub task_type: WorkerTaskType,
 
@@ -31,9 +34,10 @@ pub struct WorkerTask {
 
 impl WorkerTask {
     #[must_use]
-    pub fn new(contract: Address, task_type: WorkerTaskType) -> Self {
+    pub fn new(chain_id: u64, contract: Address, task_type: WorkerTaskType) -> Self {
         Self {
             contract,
+            chain_id,
             task_type,
             aggregated_result: Vec::default(),
         }
@@ -42,18 +46,30 @@ impl WorkerTask {
 
 #[derive(Clone, Dbg, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct WorkerReply {
+    /// Query ID
     pub query_id: String,
+
+    /// Task ID
     pub task_id: String,
+
+    /// Chain ID
+    pub chain_id: u64,
     #[dbg(formatter = crate::types::kp_pretty)]
     pub proof: Option<KeyedPayload>,
 }
 
 impl WorkerReply {
     #[must_use]
-    pub fn new(query_id: String, task_id: String, proof: Option<KeyedPayload>) -> Self {
+    pub fn new(
+        chain_id: u64,
+        query_id: String,
+        task_id: String,
+        proof: Option<KeyedPayload>,
+    ) -> Self {
         Self {
             query_id,
             task_id,
+            chain_id,
             proof,
         }
     }
