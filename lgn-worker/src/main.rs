@@ -261,6 +261,7 @@ fn register_v0_preprocessor(config: &Config, router: &mut ProversManager) {
         &params_config.url,
         &params_config.dir,
         &params_config.preprocessing_params.file,
+        &params_config.checksum,
         params_config.skip_store,
     )
     .expect("Failed to create preprocessing handler");
@@ -274,6 +275,7 @@ fn register_v0_query_prover(config: &Config, router: &mut ProversManager) {
         &params_config.url,
         &params_config.dir,
         &params_config.query2_params.file,
+        &params_config.checksum,
         params_config.skip_store,
     )
     .expect("Failed to create query handler");

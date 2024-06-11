@@ -22,6 +22,7 @@ pub(crate) struct Config {
 pub(crate) struct PublicParamsConfig {
     pub(crate) url: String,
     pub(crate) dir: String,
+    pub(crate) checksum: String,
     /// If set to true, the parameters will not be written to disk, ever.
     pub(crate) skip_store: bool,
     pub(crate) preprocessing_params: PreprocessingParams,
@@ -176,6 +177,7 @@ mod test {
             &conf.public_params.url,
             &conf.public_params.dir.clone(),
             &conf.public_params.query2_params.file.clone(),
+            &conf.public_params.checksum,
             conf.public_params.skip_store,
         )
         .expect("this should work");
@@ -190,6 +192,7 @@ mod test {
             &conf.public_params.url,
             &conf.public_params.dir.clone(),
             &conf.public_params.query2_params.file.clone(),
+            &conf.public_params.checksum,
             conf.public_params.skip_store,
         )
         .expect("this should work");

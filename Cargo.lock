@@ -2743,6 +2743,7 @@ dependencies = [
  "rand",
  "reqwest",
  "serde",
+ "sha2",
  "tracing",
 ]
 

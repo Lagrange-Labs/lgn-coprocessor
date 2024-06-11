@@ -1,5 +1,6 @@
 use anyhow::Context;
 use bytes::Bytes;
+use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{Read, Write};
 use tracing::info;
@@ -14,6 +15,7 @@ impl ParamsLoader {
         base_url: &str,
         base_dir: &str,
         file_name: &str,
+        checksum: &str,
         skip_store: bool,
     ) -> anyhow::Result<P> {
         std::fs::create_dir_all(base_dir).context("Failed to create directory")?;
@@ -22,10 +24,23 @@ impl ParamsLoader {
         info!("Checking if params are on local storage: {}", file);
 
         match File::open(&file) {
-            Ok(file) => {
-                info!("Loading params from local storage");
-                let reader = std::io::BufReader::new(file);
-                bincode::deserialize_from(reader).map_err(Into::into)
+            Ok(fl) => {
+                if Self::verify_checksum(&fl, checksum)? {
+                    info!("Loading params from local storage");
+                    let reader = std::io::BufReader::new(fl);
+                    bincode::deserialize_from(reader).map_err(Into::into)
+                } else {
+                    info!("Checksum mismatch, downloading params again");
+                    let params = Self::download_file(base_url, file_name)?;
+                    if !skip_store {
+                        Self::store_file(&file, &params)
+                            .context("Failed to store params to local storage")?;
+                    }
+
+                    info!("Deserializing params");
+                    let reader = std::io::BufReader::new(params.as_ref());
+                    bincode::deserialize_from(reader).context("Failed to deserialize params")
+                }
             }
             Err(_) => {
                 info!("public params are not locally stored yet");
@@ -135,5 +150,16 @@ impl ParamsLoader {
             .context("Failed to flush params to local storage")?;
         info!("Stored params to local storage");
         Ok(())
+    }
+    fn verify_checksum(file: &File, expected_checksum: &str) -> anyhow::Result<bool> {
+        let mut reader = std::io::BufReader::new(file);
+        let mut hasher = Sha256::new();
+        let mut buffer = Vec::new();
+        reader
+            .read_to_end(&mut buffer)
+            .context("Failed to read file for checksum verification")?;
+        hasher.update(&buffer);
+        let actual_checksum = format!("{:x}", hasher.finalize());
+        Ok(actual_checksum == expected_checksum)
     }
 }

@@ -11,6 +11,7 @@ pub fn create_prover(
     url: &str,
     dir: &str,
     file: &str,
+    checksum: &str,
     skip_store: bool,
 ) -> anyhow::Result<Query<impl QueryProver>> {
     let prover = {
@@ -25,7 +26,7 @@ pub fn create_prover(
             use crate::provers::v0::query::prover::QueryStorageProver;
 
             info!("Creating query prover");
-            QueryStorageProver::init(url, dir, file, skip_store)?
+            QueryStorageProver::init(url, dir, file, checksum, skip_store)?
         }
     };
 

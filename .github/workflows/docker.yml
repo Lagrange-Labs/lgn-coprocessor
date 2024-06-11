@@ -8,6 +8,7 @@ on:
       - main
       - holesky
       - mainnet
+      - feat/gh-109
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
