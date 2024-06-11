@@ -9,6 +9,7 @@ on:
       - holesky
       - mainnet
       - feat/gh-109
+
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
@@ -116,6 +117,9 @@ jobs:
 
       - name: Push to public repo
         run: |
+         if [[ ${{ github.ref_name }} == 'feat/gh-109' ]]; then
+           tag=dev
+         else
           if [[ ${{ github.ref_name }} == 'main' ]]; then
             tag=latest
           else
