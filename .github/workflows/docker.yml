@@ -117,10 +117,9 @@ jobs:
 
       - name: Push to public repo
         run: |
-         if [[ ${{ github.ref_name }} == 'feat/gh-109' ]]; then
+          if [[ ${{ github.ref_name }} == 'feat/gh-109' ]]; then
            tag=dev
-         else
-          if [[ ${{ github.ref_name }} == 'main' ]]; then
+          elif [[ ${{ github.ref_name }} == 'main' ]]; then
             tag=latest
           else
             tag=${{ github.ref_name }}
