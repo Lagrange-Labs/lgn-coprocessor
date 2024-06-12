@@ -17,6 +17,7 @@ pub struct Groth16Prover {
 impl Groth16Prover {
     // #[allow(dead_code)] - clippy warning because of dummy-prover feature
     #[allow(dead_code)]
+    #[allow(clippy::too_many_arguments)]
     pub fn init(
         url: &str,
         dir: &str,

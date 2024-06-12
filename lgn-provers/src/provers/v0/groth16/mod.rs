@@ -9,6 +9,7 @@ mod prover;
 mod task;
 
 #[allow(unused_variables)]
+#[allow(clippy::too_many_arguments)]
 pub fn create_prover(
     url: &str,
     dir: &str,

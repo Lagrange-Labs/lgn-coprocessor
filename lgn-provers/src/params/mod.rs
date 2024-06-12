@@ -166,6 +166,12 @@ impl ParamsLoader {
             .context("Failed to read file for checksum verification")?;
         hasher.update(&buffer);
         let actual_checksum = format!("{:x}", hasher.finalize());
+        if actual_checksum != expected_checksum {
+            info!(
+                "Checksum mismatch: expected {}, but got {}",
+                expected_checksum, actual_checksum
+            );
+        }
         Ok(actual_checksum == expected_checksum)
     }
 
@@ -173,6 +179,12 @@ impl ParamsLoader {
         let mut hasher = Sha256::new();
         hasher.update(bytes);
         let actual_checksum = format!("{:x}", hasher.finalize());
+        if actual_checksum != expected_checksum {
+            info!(
+                "Checksum mismatch: expected {}, but got {}",
+                expected_checksum, actual_checksum
+            );
+        }
         Ok(actual_checksum == expected_checksum)
     }
 }
