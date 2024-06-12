@@ -106,8 +106,18 @@ mod tests {
 
         // Create a test Groth16 task runner.
 
-        let mut runner =
-            create_prover("url", "dir", "circuit_file", "pk_file", "vk_file", true).unwrap();
+        let mut runner = create_prover(
+            "url",
+            "dir",
+            "circuit_file",
+            "a",
+            "pk_file",
+            "a",
+            "vk_file",
+            "a",
+            true,
+        )
+        .unwrap();
 
         // Load the test query proof for generating the Groth16 proof later.
         let payload = read_file(Path::new("test_data").join("query.proof")).unwrap();

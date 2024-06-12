@@ -65,8 +65,11 @@ impl Query2Params {
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct Groth16Assets {
     pub(crate) circuit_file: String,
+    pub(crate) circuit_file_checksum: String,
     pub(crate) r1cs_file: String,
+    pub(crate) r1cs_file_checksum: String,
     pub(crate) pk_file: String,
+    pub(crate) pk_file_checksum: String,
 }
 
 impl Groth16Assets {

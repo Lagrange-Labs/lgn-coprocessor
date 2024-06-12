@@ -246,8 +246,11 @@ fn register_v0_groth16_prover(config: &Config, router: &mut ProversManager) {
         &params_config.url,
         &params_config.dir,
         &assets.circuit_file,
-        &assets.r1cs_file,
+        &assets.circuit_file_checksum,
         &assets.pk_file,
+        &assets.pk_file_checksum,
+        &assets.r1cs_file,
+        &assets.r1cs_file_checksum,
         params_config.skip_store,
     )
     .expect("Failed to create groth16 handler");

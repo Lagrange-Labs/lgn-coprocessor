@@ -21,13 +21,18 @@ impl Groth16Prover {
         url: &str,
         dir: &str,
         circuit_file: &str,
+        circuit_file_checksum: &str,
         r1cs_file: &str,
+        r1cs_file_checksum: &str,
         pk_file: &str,
+        pk_file_checksum: &str,
         skip_store: bool,
     ) -> Result<Self> {
-        let circuit_bytes = ParamsLoader::prepare_raw(url, dir, circuit_file, skip_store)?;
-        let r1cs_bytes = ParamsLoader::prepare_raw(url, dir, r1cs_file, skip_store)?;
-        let pk_bytes = ParamsLoader::prepare_raw(url, dir, pk_file, skip_store)?;
+        let circuit_bytes =
+            ParamsLoader::prepare_raw(url, dir, circuit_file, circuit_file_checksum, skip_store)?;
+        let r1cs_bytes =
+            ParamsLoader::prepare_raw(url, dir, r1cs_file, r1cs_file_checksum, skip_store)?;
+        let pk_bytes = ParamsLoader::prepare_raw(url, dir, pk_file, pk_file_checksum, skip_store)?;
 
         debug!("Creating Groth16 prover");
         let inner = InnerProver::from_bytes(

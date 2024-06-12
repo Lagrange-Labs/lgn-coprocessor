@@ -31,7 +31,7 @@ impl ParamsLoader {
                     bincode::deserialize_from(reader).map_err(Into::into)
                 } else {
                     info!("Checksum mismatch, downloading params again");
-                    let params = Self::download_file(base_url, file_name)?;
+                    let params = Self::download_file(base_url, file_name, checksum)?;
                     if !skip_store {
                         Self::store_file(&file, &params)
                             .context("Failed to store params to local storage")?;
@@ -45,7 +45,7 @@ impl ParamsLoader {
             Err(_) => {
                 info!("public params are not locally stored yet");
 
-                let params = Self::download_file(base_url, file_name)?;
+                let params = Self::download_file(base_url, file_name, checksum)?;
                 if !skip_store {
                     Self::store_file(&file, &params)
                         .context("Failed to store params to local storage")?;
@@ -62,6 +62,7 @@ impl ParamsLoader {
         base_url: &str,
         base_dir: &str,
         file_name: &str,
+        checksum: &str,
         skip_store: bool,
     ) -> anyhow::Result<Bytes> {
         std::fs::create_dir_all(base_dir).context("Failed to create directory")?;
@@ -74,7 +75,7 @@ impl ParamsLoader {
             Err(err) => {
                 info!("Failed to load params from local storage: {err}");
 
-                let params = Self::download_file(base_url, file_name)?;
+                let params = Self::download_file(base_url, file_name, checksum)?;
                 if !skip_store {
                     Self::store_file(&file, &params)
                         .context("Failed to store params to local storage")?;
@@ -84,7 +85,7 @@ impl ParamsLoader {
         }
     }
 
-    fn download_file(base_url: &str, file_name: &str) -> anyhow::Result<Bytes> {
+    fn download_file(base_url: &str, file_name: &str, checksum: &str) -> anyhow::Result<Bytes> {
         let file_url = format!("{base_url}/{file_name}");
         info!("Downloading params from {}", file_url);
 
@@ -110,6 +111,11 @@ impl ParamsLoader {
             .context("Failed to download params from remote")?;
 
         info!("Downloaded params of size in KB: {}", params.len() / 1024);
+
+        if !Self::verify_checksum_from_bytes(&params, checksum)? {
+            anyhow::bail!("Checksum mismatch for downloaded params");
+        }
+
         Ok(params)
     }
 
@@ -159,6 +165,13 @@ impl ParamsLoader {
             .read_to_end(&mut buffer)
             .context("Failed to read file for checksum verification")?;
         hasher.update(&buffer);
+        let actual_checksum = format!("{:x}", hasher.finalize());
+        Ok(actual_checksum == expected_checksum)
+    }
+
+    fn verify_checksum_from_bytes(bytes: &Bytes, expected_checksum: &str) -> anyhow::Result<bool> {
+        let mut hasher = Sha256::new();
+        hasher.update(bytes);
         let actual_checksum = format!("{:x}", hasher.finalize());
         Ok(actual_checksum == expected_checksum)
     }

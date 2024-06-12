@@ -13,8 +13,11 @@ pub fn create_prover(
     url: &str,
     dir: &str,
     circuit_file: &str,
+    circuit_file_checksum: &str,
     pk_file: &str,
+    pk_file_checksum: &str,
     vk_file: &str,
+    vk_file_checksum: &str,
     skip_store: bool,
 ) -> anyhow::Result<Groth16<impl Prover>> {
     let prover = {
@@ -26,7 +29,17 @@ pub fn create_prover(
         #[cfg(not(feature = "dummy-prover"))]
         {
             info!("Creating Groth16Prover");
-            prover::Groth16Prover::init(url, dir, circuit_file, pk_file, vk_file, skip_store)?
+            prover::Groth16Prover::init(
+                url,
+                dir,
+                circuit_file,
+                circuit_file_checksum,
+                pk_file,
+                pk_file_checksum,
+                vk_file,
+                vk_file_checksum,
+                skip_store,
+            )?
         }
     };
 
