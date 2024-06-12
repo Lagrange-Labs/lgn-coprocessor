@@ -103,7 +103,7 @@ jobs:
   public-push:
     name: Push Docker Images to Docker hub
     environment: CI
-    if: contains('main holesky mainnet', github.ref_name)
+    if: contains('main holesky mainnet', github.ref_name) || startsWith(github.ref, 'refs/tags/')
     runs-on: nix-128g
     needs: build
     steps:
