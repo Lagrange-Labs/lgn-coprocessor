@@ -21,6 +21,7 @@ use lgn_messages::types::{DownstreamPayload, ReplyType, TaskType, UpstreamPayloa
 use lgn_provers::provers::v0::{groth16, preprocessing, query};
 use lgn_provers::provers::ProverType;
 use lgn_worker::avs::utils::read_keystore;
+use std::process::Command;
 
 use crate::config::Config;
 use crate::manager::ProversManager;
@@ -164,6 +165,11 @@ fn run(config: &Config) -> Result<()> {
     let mut provers_manager = ProversManager::new(&metrics);
     register_provers(config, &mut provers_manager);
 
+    // Verify checksum
+    let expected_checksums_file = "expected_checksums.txt"; // Path to the file with expected checksums
+    verify_checksums(&config.public_params.dir, expected_checksums_file)
+        .context("Failed to verify checksums")?;
+
     info!("ready to work");
     ws_socket
         .send(Message::Text(
@@ -279,4 +285,22 @@ fn register_v0_query_prover(config: &Config, router: &mut ProversManager) {
     .expect("Failed to create query handler");
 
     router.add_prover(ProverType::Query2Query, Box::new(query2_prover));
+}
+fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<()> {
+    let output = Command::new("bash")
+        .arg("verify_checksums.sh")
+        .arg(dir)
+        .arg(expected_checksums_file)
+        .output()
+        .context("Failed to execute checksum verification script")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("Checksum verification failed: {}", stderr);
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    info!("Checksum verification successful: {}", stdout);
+
+    Ok(())
 }

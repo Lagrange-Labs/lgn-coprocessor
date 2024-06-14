@@ -8,6 +8,7 @@ on:
       - main
       - holesky
       - mainnet
+      - feat/gh-109-2
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
@@ -103,7 +104,7 @@ jobs:
   public-push:
     name: Push Docker Images to Docker hub
     environment: CI
-    if: contains('main holesky mainnet', github.ref_name) || startsWith(github.ref, 'refs/tags/')
+    if: contains('main holesky mainnet feat/gh-109-2', github.ref_name) || startsWith(github.ref, 'refs/tags/')
     runs-on: nix-128g
     needs: build
     steps:
@@ -115,7 +116,9 @@ jobs:
 
       - name: Push to public repo
         run: |
-          if [[ ${{ github.ref_name }} == 'main' ]]; then
+          if [[ ${{ github.ref_name }} == 'feat/gh-109-2' ]]; then
+           tag=dev
+          elif [[ ${{ github.ref_name }} == 'main' ]]; then
             tag=latest
           else
             tag=${{ github.ref_name }}
