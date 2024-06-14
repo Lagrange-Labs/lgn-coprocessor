@@ -60,4 +60,4 @@ tungstenite = { version = "0.21.0", features = ["rustls"] }
 url = "2.5.0"
 log = "0.4.21"
 redact = { version = "0.1", features = ["serde"] }
-reqwest ={ version = "0.12.4"}
+reqwest ={ version = "0.12.4", features = ["blocking"]}

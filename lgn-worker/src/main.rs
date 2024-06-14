@@ -5,6 +5,7 @@ use std::{collections::BTreeMap, str::FromStr};
 
 use reqwest;
 use std::fs::File;
+use std::io::{self, Write};
 
 use anyhow::*;
 use backtrace::Backtrace;
@@ -166,7 +167,7 @@ fn run(config: &Config) -> Result<()> {
         })?;
 
     let mut provers_manager = ProversManager::new(&metrics);
-    register_provers(config, &mut provers_manager);
+    // register_provers(config, &mut provers_manager);
 
     // Fetch checksum file
     let checksum_url = "https://raw.githubusercontent.com/Lagrange-Labs/lgn-coprocessor/feat/gh-109-2/lgn-provers/src/params/checksum.txt";
