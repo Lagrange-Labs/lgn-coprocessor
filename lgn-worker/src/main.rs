@@ -171,11 +171,10 @@ fn run(config: &Config) -> Result<()> {
 
     // Fetch checksum file
     let checksum_url = "https://raw.githubusercontent.com/Lagrange-Labs/lgn-coprocessor/feat/gh-109-2/lgn-provers/src/params/checksum.txt";
-    let local_checksum_file = "/tmp/expected_checksums.txt";
-    fetch_checksum_file(checksum_url, local_checksum_file)?;
+    let expected_checksums_file = "/tmp/expected_checksums.txt";
+    fetch_checksum_file(checksum_url, expected_checksums_file)?;
 
     // Verify checksum
-    let expected_checksums_file = "expected_checksums.txt"; // Path to the file with expected checksums
     verify_checksums(&config.public_params.dir, expected_checksums_file)
         .context("Failed to verify checksums")?;
 
