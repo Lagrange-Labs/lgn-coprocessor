@@ -3,6 +3,9 @@ use std::result::Result::Ok;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::BTreeMap, str::FromStr};
 
+use reqwest;
+use std::fs::File;
+
 use anyhow::*;
 use backtrace::Backtrace;
 use clap::Parser;
@@ -165,6 +168,11 @@ fn run(config: &Config) -> Result<()> {
     let mut provers_manager = ProversManager::new(&metrics);
     register_provers(config, &mut provers_manager);
 
+    // Fetch checksum file
+    let checksum_url = "https://raw.githubusercontent.com/Lagrange-Labs/lgn-coprocessor/feat/gh-109-2/lgn-provers/src/params/checksum.txt";
+    let local_checksum_file = "/tmp/expected_checksums.txt";
+    fetch_checksum_file(checksum_url, local_checksum_file)?;
+
     // Verify checksum
     let expected_checksums_file = "expected_checksums.txt"; // Path to the file with expected checksums
     verify_checksums(&config.public_params.dir, expected_checksums_file)
@@ -301,6 +309,18 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     info!("Checksum verification successful: {}", stdout);
+
+    Ok(())
+}
+fn fetch_checksum_file(url: &str, local_path: &str) -> anyhow::Result<()> {
+    let response = reqwest::blocking::get(url)
+        .context("Failed to fetch checksum file")?
+        .text()
+        .context("Failed to read response text")?;
+
+    let mut file = File::create(local_path).context("Failed to create local checksum file")?;
+    file.write_all(response.as_bytes())
+        .context("Failed to write checksum file")?;
 
     Ok(())
 }
