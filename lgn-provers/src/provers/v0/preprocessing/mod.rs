@@ -24,7 +24,7 @@ pub fn create_prover(
         #[cfg(not(feature = "dummy-prover"))]
         {
             info!("Creating storage prover");
-            prover::StoragePreprocessProver::init(
+            prover::EuclidProver::init(
                 url,
                 dir,
                 file,

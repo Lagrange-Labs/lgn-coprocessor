@@ -22,7 +22,7 @@ impl ParamsLoader {
         checksum_expected_local_path: &str,
         skip_store: bool,
     ) -> anyhow::Result<P> {
-        std::fs::create_dir_all(base_dir).context("Failed to create directory")?;
+        fs::create_dir_all(base_dir).context("Failed to create directory")?;
 
         let file = format!("{base_dir}/{file_name}");
         info!(

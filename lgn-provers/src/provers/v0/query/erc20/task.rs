@@ -1,14 +1,11 @@
-use anyhow::Context;
-
-use lgn_messages::types::v0::query::erc20::keys::ProofKey;
-use lgn_messages::types::v0::query::erc20::{StorageData, WorkerTask, WorkerTaskType};
-use lgn_messages::types::v0::query::QueryBlockData::{FullNode, PartialNode};
 use lgn_messages::types::{
     MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
 };
+use lgn_messages::types::v0::query::erc20::{BlocksDbData, StorageData, WorkerTask, WorkerTaskType};
+use lgn_messages::types::v0::query::erc20::keys::ProofKey;
 
-use crate::provers::v0::query::erc20::prover::QueryProver;
 use crate::provers::LgnProver;
+use crate::provers::v0::query::erc20::prover::QueryProver;
 
 pub struct Query<P> {
     prover: P,
@@ -66,26 +63,15 @@ impl<P: QueryProver> Query<P> {
                 let key = ProofKey::StateDatabase(query_id, data.block_number).to_string();
                 Some((key, proof))
             }
-            WorkerTaskType::BlocksDb(data) => match data {
-                FullNode(ref input) => {
-                    let key = ProofKey::Aggregation(query_id.clone(), data.position()).to_string();
-                    let proof = self
-                        .prover
-                        .prove_block_full_node(
-                            input.left_child_proof.as_ref(),
-                            input.right_child_proof.as_ref(),
-                        )
-                        .context("while running prove_block_full_node")?;
-
+            WorkerTaskType::BlocksDb(input) => match input {
+                BlocksDbData::BlockPartialNode(data) => {
+                    let proof = self.prover.prove_block_partial_node(data)?;
+                    let key = ProofKey::Aggregation(query_id, data.position).to_string();
                     Some((key, proof))
                 }
-                PartialNode(ref input) => {
-                    let key = ProofKey::Aggregation(query_id.clone(), data.position()).to_string();
-                    let proof = self
-                        .prover
-                        .prove_block_partial_node(input)
-                        .context("while running prove_block_partial_node")?;
-
+                BlocksDbData::BlockFullNode(data) => {
+                    let proof = self.prover.prove_block_full_node(data)?;
+                    let key = ProofKey::Aggregation(query_id, data.position).to_string();
                     Some((key, proof))
                 }
             },
