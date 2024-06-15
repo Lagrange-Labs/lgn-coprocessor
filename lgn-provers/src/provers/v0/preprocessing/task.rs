@@ -6,9 +6,11 @@ use crate::provers::LgnProver;
 use ethers::types::H256;
 use lgn_messages::types::v0::preprocessing::keys::ProofKey;
 use lgn_messages::types::v0::preprocessing::{
-    MptData, StateDbData, StorageDbData, WorkerReply, WorkerTask, WorkerTaskType,
+    MptData, StateDbData, StorageDbData, WorkerTask, WorkerTaskType,
 };
-use lgn_messages::types::{MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType};
+use lgn_messages::types::{
+    MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
+};
 use std::time::Instant;
 use tracing::debug;
 
@@ -241,7 +243,7 @@ impl<P: StorageProver> Preprocessing<P> {
             }
         };
 
-        Ok(WorkerReply::new(task.chain_id, task.block_nr, maybe_proof))
+        Ok(WorkerReply::new(task.chain_id, maybe_proof))
     }
 }
 

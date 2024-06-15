@@ -1,9 +1,11 @@
-pub mod keys;
-
-use crate::types::{HashOutput, KeyedPayload, Position};
 use derive_debug_plus::Dbg;
 use ethers::types::Address;
 use serde_derive::{Deserialize, Serialize};
+
+use crate::types::{HashOutput, Position};
+
+pub mod erc20;
+pub mod keys;
 
 pub const ROUTING_DOMAIN: &str = "sc";
 
@@ -222,30 +224,4 @@ pub struct RevelationData {
     pub query2_proof: Vec<u8>,
     #[dbg(skip)]
     pub block_db_proof: Vec<u8>,
-}
-
-#[derive(Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
-pub struct WorkerReply {
-    pub chain_id: u64,
-    pub query_id: String,
-    pub task_id: String,
-    #[dbg(formatter = crate::types::kp_pretty)]
-    pub proof: Option<KeyedPayload>,
-}
-
-impl WorkerReply {
-    #[must_use]
-    pub fn new(
-        chain_id: u64,
-        query_id: String,
-        task_id: String,
-        proof: Option<KeyedPayload>,
-    ) -> Self {
-        Self {
-            chain_id,
-            query_id,
-            task_id,
-            proof,
-        }
-    }
 }

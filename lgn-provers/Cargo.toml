@@ -8,15 +8,18 @@ anyhow = "1.0.86"
 lgn-messages = { path = "../lgn-messages" }
 ethers = "2.0.14"
 metrics = "0.22.0"
-mr_plonky2_circuits = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
-groth16_framework = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
+#mr_plonky2_circuits = { git = "https://github.com/Lagrange-Labs/Euclid-database.git", branch = "develop" }
+mr_plonky2_circuits = { path = "../../Euclid-database/mr-plonky2-circuits" }
+#groth16_framework = { git = "https://github.com/Lagrange-Labs/Euclid-database.git", branch = "develop" }
+groth16_framework = { path = "../../Euclid-database/groth16-framework" }
 tracing = "0.1.40"
 bytes = "1.6.0"
 serde = "1.0.202"
 bincode = "1.3.3"
 hex = "0.4.3"
 rand = "0.8.5"
-reqwest = "0.11.27"
+reqwest = { version = "0.12.4", features = ["blocking"] }
+
 
 [features]
 dummy-prover = []

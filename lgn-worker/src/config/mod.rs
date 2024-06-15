@@ -26,6 +26,7 @@ pub(crate) struct PublicParamsConfig {
     pub(crate) skip_store: bool,
     pub(crate) preprocessing_params: PreprocessingParams,
     pub(crate) query2_params: Query2Params,
+    pub(crate) erc20_params: Ecr20Params,
     pub(crate) groth16_assets: Groth16Assets,
 }
 
@@ -59,6 +60,11 @@ impl Query2Params {
     pub fn validate(&self) {
         assert!(!self.file.is_empty(), "Query2 file is required");
     }
+}
+
+#[derive(Deserialize, Debug, Clone, PartialEq)]
+pub(crate) struct Ecr20Params {
+    pub(crate) file: String,
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
@@ -150,7 +156,7 @@ impl Config {
 #[cfg(test)]
 mod test {
     use super::*;
-    use lgn_provers::provers::v0::query::prover::QueryStorageProver;
+    use lgn_provers::provers::v0::query::erc721::prover::QueryStorageProver;
     use std::path::Path;
 
     #[test]

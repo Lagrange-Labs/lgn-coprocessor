@@ -1,9 +1,8 @@
+use crate::provers::v0::query::erc721::prover::QueryProver;
 use lgn_messages::types::v0::query::{
     PartialNodeBlockData, Query2StateData, RevelationData, StorageProofInput,
 };
 use std::thread::sleep;
-
-use super::prover::QueryProver;
 
 pub struct DummyProver;
 

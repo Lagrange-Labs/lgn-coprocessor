@@ -297,22 +297,3 @@ pub struct BlocksDbData {
     #[dbg(skip)]
     pub previous_leaf_proof: Vec<u8>,
 }
-
-#[derive(Clone, Dbg, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub struct WorkerReply {
-    pub chain_id: u64,
-    pub block_nr: u64,
-    #[dbg(formatter = crate::types::kp_pretty)]
-    pub proof: Option<KeyedPayload>,
-}
-
-impl WorkerReply {
-    #[must_use]
-    pub fn new(chain_id: u64, block_nr: u64, proof: Option<KeyedPayload>) -> Self {
-        Self {
-            chain_id,
-            block_nr,
-            proof,
-        }
-    }
-}

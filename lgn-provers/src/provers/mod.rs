@@ -12,6 +12,8 @@ pub enum ProverType {
     /// V0 query handler.
     Query2Query,
 
+    QueryErc20,
+
     /// V0 Groth16 handler.
     Query2Groth16,
 }
@@ -35,6 +37,7 @@ impl Display for ProverType {
             Self::Query2Preprocess => write!(f, "Query2Preprocess"),
             Self::Query2Query => write!(f, "Query2Query"),
             Self::Query2Groth16 => write!(f, "Query2Groth16"),
+            Self::QueryErc20 => write!(f, "QueryErc20"),
         }
     }
 }

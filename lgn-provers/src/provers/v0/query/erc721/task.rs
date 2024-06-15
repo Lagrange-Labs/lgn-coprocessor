@@ -1,10 +1,16 @@
 use anyhow::Context;
 use lgn_messages::types::v0::query::keys::ProofKey;
-use lgn_messages::types::v0::query::{Query2BlockData, WorkerReply, WorkerTask, WorkerTaskType};
-use lgn_messages::types::{MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType};
+use lgn_messages::types::v0::query::{Query2BlockData, WorkerTask, WorkerTaskType};
+use lgn_messages::types::{
+    MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
+};
 
-use crate::provers::v0::query::prover::QueryProver;
+use crate::provers::v0::query::erc721::prover::QueryProver;
 use crate::provers::LgnProver;
+
+pub struct Query<P> {
+    prover: P,
+}
 
 impl<P: QueryProver> LgnProver for Query<P> {
     fn run(
@@ -13,10 +19,6 @@ impl<P: QueryProver> LgnProver for Query<P> {
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         self.run_inner(envelope)
     }
-}
-
-pub struct Query<P> {
-    prover: P,
 }
 
 impl<P: QueryProver> Query<P> {
@@ -109,6 +111,6 @@ impl<P: QueryProver> Query<P> {
             }
         };
 
-        Ok(WorkerReply::new(chain_id, query_id, task_id, maybe_proof))
+        Ok(WorkerReply::new(chain_id, maybe_proof))
     }
 }
