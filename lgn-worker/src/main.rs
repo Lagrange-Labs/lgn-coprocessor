@@ -3,7 +3,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::BTreeMap, str::FromStr};
 use std::{fs, panic};
 
-use reqwest;
 use std::fs::File;
 use std::io::Write;
 
