@@ -1,11 +1,11 @@
-use std::panic;
 use std::result::Result::Ok;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::BTreeMap, str::FromStr};
+use std::{fs, panic};
 
 use reqwest;
 use std::fs::File;
-use std::io::{self, Write};
+use std::io::Write;
 
 use anyhow::*;
 use backtrace::Backtrace;
@@ -167,9 +167,10 @@ fn run(config: &Config) -> Result<()> {
         })?;
 
     let mut provers_manager = ProversManager::new(&metrics);
-    // register_provers(config, &mut provers_manager);
+    register_provers(config, &mut provers_manager);
 
     // Fetch checksum file
+    // TODO this should be in the config
     let checksum_url = "https://raw.githubusercontent.com/Lagrange-Labs/lgn-coprocessor/feat/gh-109-2/lgn-provers/src/params/checksum.txt";
     let expected_checksums_file = "/tmp/expected_checksums.txt";
     fetch_checksum_file(checksum_url, expected_checksums_file)?;
@@ -304,9 +305,20 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("Checksum verification failed: {}", stderr);
+        // If verification fails, delete the directory
+        if let Err(e) = fs::remove_dir_all(dir) {
+            bail!(
+                "Checksum verification failed and failed to delete directory: {}. Error: {}",
+                stderr,
+                e
+            );
+        } else {
+            bail!(
+                "Checksum verification failed: {}. Directory deleted.",
+                stderr
+            );
+        }
     }
-
     let stdout = String::from_utf8_lossy(&output.stdout);
     info!("Checksum verification successful: {}", stdout);
 
