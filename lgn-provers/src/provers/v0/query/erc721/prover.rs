@@ -6,9 +6,7 @@ use mr_plonky2_circuits::query2::block::CircuitInput as BlockCircuitInput;
 use mr_plonky2_circuits::query2::revelation::RevelationInput;
 use mr_plonky2_circuits::query2::state::CircuitInput as StateCircuitInput;
 
-use lgn_messages::types::v0::query::{
-    PartialNodeBlockData, Query2StateData, RevelationData, StorageProofInput,
-};
+use lgn_messages::types::v0::query::{PartialNodeBlockData, QueryStateData, RevelationData, StorageProofInput};
 use tracing::debug;
 
 use crate::params::ParamsLoader;
@@ -19,7 +17,7 @@ use crate::provers::v0::STORAGE_BLOCKCHAIN_DB_HEIGHT;
 pub trait QueryProver {
     fn prove_storage_entry(&self, data: StorageProofInput) -> anyhow::Result<Vec<u8>>;
 
-    fn prove_state_db(&self, d: &Query2StateData) -> anyhow::Result<Vec<u8>>;
+    fn prove_state_db(&self, d: &QueryStateData) -> anyhow::Result<Vec<u8>>;
 
     fn prove_block_partial_node(&self, data: &PartialNodeBlockData) -> anyhow::Result<Vec<u8>>;
 
@@ -104,7 +102,7 @@ impl QueryProver for QueryStorageProver {
         Ok(proof)
     }
 
-    fn prove_state_db(&self, d: &Query2StateData) -> anyhow::Result<Vec<u8>> {
+    fn prove_state_db(&self, d: &QueryStateData) -> anyhow::Result<Vec<u8>> {
         let now = std::time::Instant::now();
 
         let proof = d.proof.clone().unwrap_or_default();

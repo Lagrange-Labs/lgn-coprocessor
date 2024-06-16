@@ -1,6 +1,6 @@
 use anyhow::Context;
 use lgn_messages::types::v0::query::keys::ProofKey;
-use lgn_messages::types::v0::query::{Query2BlockData, WorkerTask, WorkerTaskType};
+use lgn_messages::types::v0::query::{QueryBlockData, WorkerTask, WorkerTaskType};
 use lgn_messages::types::{
     MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
 };
@@ -75,8 +75,8 @@ impl<P: QueryProver> Query<P> {
 
                 Some((key, proof))
             }
-            WorkerTaskType::Aggregation(data) => match data {
-                Query2BlockData::FullNode(ref input) => {
+            WorkerTaskType::BlocksDb(data) => match data {
+                QueryBlockData::FullNode(ref input) => {
                     let key = ProofKey::Aggregation(query_id.clone(), data.position()).to_string();
                     let proof = self
                         .prover
@@ -88,7 +88,7 @@ impl<P: QueryProver> Query<P> {
 
                     Some((key, proof))
                 }
-                Query2BlockData::PartialNode(ref input) => {
+                QueryBlockData::PartialNode(ref input) => {
                     let key = ProofKey::Aggregation(query_id.clone(), data.position()).to_string();
                     let proof = self
                         .prover

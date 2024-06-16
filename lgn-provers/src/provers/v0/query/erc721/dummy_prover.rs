@@ -1,7 +1,5 @@
 use crate::provers::v0::query::erc721::prover::QueryProver;
-use lgn_messages::types::v0::query::{
-    PartialNodeBlockData, Query2StateData, RevelationData, StorageProofInput,
-};
+use lgn_messages::types::v0::query::{PartialNodeBlockData, QueryStateData, RevelationData, StorageProofInput};
 use std::thread::sleep;
 
 pub struct DummyProver;
@@ -11,7 +9,7 @@ impl QueryProver for DummyProver {
         Ok(prove())
     }
 
-    fn prove_state_db(&self, _d: &Query2StateData) -> anyhow::Result<Vec<u8>> {
+    fn prove_state_db(&self, _d: &QueryStateData) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 

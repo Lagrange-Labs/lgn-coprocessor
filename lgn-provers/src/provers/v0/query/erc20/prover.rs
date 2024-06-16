@@ -2,7 +2,7 @@ use crate::params::ParamsLoader;
 use ethers::addressbook::Address;
 use ethers::prelude::U256;
 use lgn_messages::types::v0::query::erc20::{
-    BlockFullNodeInput, BlockPartialNodeInput, RevelationData, StateInput, StorageBranchInput,
+    RevelationData, StorageBranchInput,
     StorageLeafInput,
 };
 use lgn_messages::types::Position;
@@ -11,21 +11,25 @@ use mr_plonky2_circuits::query_erc20;
 use mr_plonky2_circuits::query_erc20::RevelationErcInput;
 use mr_plonky2_circuits::types::HashOutput;
 use tracing::{debug, info};
+use lgn_messages::types::v0::query::{FullNodeBlockData, PartialNodeBlockData, QueryStateData};
 
 pub trait QueryProver {
     fn prove_storage_leaf(
         &self,
-        contract: Address,
         data: &StorageLeafInput,
     ) -> anyhow::Result<Vec<u8>>;
 
     fn prove_storage_branch(&self, data: &StorageBranchInput) -> anyhow::Result<Vec<u8>>;
 
-    fn prove_state_db(&self, contract: Address, data: &StateInput) -> anyhow::Result<Vec<u8>>;
+    fn prove_state_db(&self, contract: Address, data: &QueryStateData) -> anyhow::Result<Vec<u8>>;
 
-    fn prove_block_partial_node(&self, data: &BlockPartialNodeInput) -> anyhow::Result<Vec<u8>>;
+    fn prove_block_partial_node(&self, data: &PartialNodeBlockData) -> anyhow::Result<Vec<u8>>;
 
-    fn prove_block_full_node(&self, data: &BlockFullNodeInput) -> anyhow::Result<Vec<u8>>;
+    fn prove_block_full_node(
+        &self,
+        left_proof: &[u8],
+        right_proof: &[u8],
+    ) -> anyhow::Result<Vec<u8>>;
 
     fn prove_revelation(&self, data: &RevelationData) -> anyhow::Result<Vec<u8>>;
 }
@@ -50,16 +54,21 @@ impl EuclidProver {
 impl QueryProver for EuclidProver {
     fn prove_storage_leaf(
         &self,
-        address: Address,
         data: &StorageLeafInput,
     ) -> anyhow::Result<Vec<u8>> {
         info!("Generating storage leaf proof...");
 
         let now = std::time::Instant::now();
 
+        let value = if data.query_address == data.used_address {
+            data.value
+        } else {
+            U256::zero()
+        };
+
         let circuit_input = query_erc20::StorageCircuitInput::new_leaf(
-            address,
             data.query_address,
+            data.used_address,
             data.value,
             data.total_supply,
             data.rewards_rate,
@@ -88,10 +97,18 @@ impl QueryProver for EuclidProver {
 
         let now = std::time::Instant::now();
 
+        let proved_is_right = data.child_position.index % 2 == 1;
+        let (left_child, right_child) = if proved_is_right {
+            (&data.unproven_child_hash, &data.child_proof)
+        } else {
+            (&data.child_proof, &data.unproven_child_hash)
+        };
+
+
         let circuit_input = query_erc20::StorageCircuitInput::new_inner_node(
-            &data.left_child,
-            &data.right_child,
-            data.proved_is_right,
+            left_child,
+            right_child,
+            proved_is_right,
         );
         let circuit = query_erc20::CircuitInput::Storage(circuit_input);
         let input = QueryInput::QueryErc(circuit);
@@ -112,7 +129,7 @@ impl QueryProver for EuclidProver {
         Ok(proof)
     }
 
-    fn prove_state_db(&self, contract: Address, data: &StateInput) -> anyhow::Result<Vec<u8>> {
+    fn prove_state_db(&self, contract: Address, data: &QueryStateData) -> anyhow::Result<Vec<u8>> {
         info!("Generating state db proof...");
 
         let now = std::time::Instant::now();
@@ -158,15 +175,18 @@ impl QueryProver for EuclidProver {
         Ok(proof)
     }
 
-    fn prove_block_partial_node(&self, data: &BlockPartialNodeInput) -> anyhow::Result<Vec<u8>> {
+    fn prove_block_partial_node(&self, data: &PartialNodeBlockData) -> anyhow::Result<Vec<u8>> {
         info!("Generating block partial node proof...");
 
         let now = std::time::Instant::now();
 
+        let sibling_is_left = data.sibling_position.index % 2 == 0;
+        debug!("Sibling is left: {:?}", sibling_is_left);
+
         let circuit_input = query_erc20::BlockCircuitInput::new_partial_node(
             data.child_proof.clone(),
             data.sibling_hash,
-            data.sibling_is_left,
+            sibling_is_left,
         )?;
 
         let circuit = query_erc20::CircuitInput::Block(circuit_input);
@@ -189,14 +209,17 @@ impl QueryProver for EuclidProver {
         Ok(proof)
     }
 
-    fn prove_block_full_node(&self, data: &BlockFullNodeInput) -> anyhow::Result<Vec<u8>> {
+    fn prove_block_full_node(
+        &self,
+        left_proof: &[u8],
+        right_proof: &[u8],
+    ) -> anyhow::Result<Vec<u8>> {
         info!("Generating block full node proof...");
 
         let now = std::time::Instant::now();
 
         let circuit_input = query_erc20::BlockCircuitInput::new_full_node(
-            data.left_proof.clone(),
-            data.right_proof.clone(),
+            left_proof.to_vec(), right_proof.to_vec(),
         )?;
         let circuit = query_erc20::CircuitInput::Block(circuit_input);
         let input = QueryInput::QueryErc(circuit);

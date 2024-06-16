@@ -47,10 +47,10 @@ pub enum WorkerTaskType {
     StorageEntry(StorageData),
 
     #[serde(rename = "2")]
-    StateEntry(Query2StateData),
+    StateEntry(QueryStateData),
 
     #[serde(rename = "3")]
-    Aggregation(Query2BlockData),
+    BlocksDb(QueryBlockData),
 
     #[serde(rename = "4")]
     Revelation(RevelationData),
@@ -100,7 +100,7 @@ pub enum StorageDetails {
 }
 
 #[derive(Clone, Serialize, Deserialize, Dbg, PartialEq, Default)]
-pub struct Query2StateData {
+pub struct QueryStateData {
     /// smart contract over which we're proving
     pub smart_contract_address: Address,
 
@@ -144,17 +144,17 @@ pub struct StateBranchData {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub enum Query2BlockData {
-    FullNode(FullNodeBlockData),
+pub enum QueryBlockData {
     PartialNode(PartialNodeBlockData),
+    FullNode(FullNodeBlockData),
 }
 
-impl Query2BlockData {
+impl QueryBlockData {
     #[must_use]
     pub fn position(&self) -> Position {
         match self {
-            Query2BlockData::FullNode(data) => data.position,
-            Query2BlockData::PartialNode(data) => data.position,
+            QueryBlockData::FullNode(data) => data.position,
+            QueryBlockData::PartialNode(data) => data.position,
         }
     }
 }

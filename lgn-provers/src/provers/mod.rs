@@ -26,6 +26,7 @@ impl TryFrom<&TaskType> for ProverType {
             TaskType::StoragePreprocess(_) => Ok(Self::Query2Preprocess),
             TaskType::StorageQuery(_) => Ok(Self::Query2Query),
             TaskType::StorageGroth16(_) => Ok(Self::Query2Groth16),
+            TaskType::Erc20Query(_) => Ok(Self::QueryErc20),
             _ => Err(anyhow!("Unsupported task type: {:?}", task_type)),
         }
     }
