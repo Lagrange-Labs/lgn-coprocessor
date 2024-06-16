@@ -1,11 +1,14 @@
 use crate::params::ParamsLoader;
 use ethers::addressbook::Address;
-use lgn_messages::types::v0::query::erc20::{RevelationData, StorageBranchInput, StorageLeafInput};
-use lgn_messages::types::v0::query::{PartialNodeBlockData, QueryStateData};
 use mr_plonky2_circuits::api::{QueryInput, QueryParameters};
+use lgn_messages::types::v0::query::erc20::{
+    BlockFullNodeInput, BlockPartialNodeInput, RevelationData, StateInput, StorageBranchInput,
+    StorageLeafInput,
+};
 use mr_plonky2_circuits::query_erc20;
 use mr_plonky2_circuits::query_erc20::RevelationErcInput;
 use tracing::{debug, info};
+use lgn_messages::types::v0::query::{PartialNodeBlockData, QueryStateData};
 
 pub trait QueryProver {
     fn prove_storage_leaf(&self, data: &StorageLeafInput) -> anyhow::Result<Vec<u8>>;

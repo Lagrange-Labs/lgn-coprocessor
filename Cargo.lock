@@ -1043,15 +1043,15 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "0.99.17"
+version = "0.99.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fb810d30a7c1953f91334de7244731fc3f3c10d7fe163338a35b9f640960321"
+checksum = "5f33878137e4dafd7fa914ad4e259e18a4e8e532b9617a2d0150262bf53abfce"
 dependencies = [
  "convert_case",
  "proc-macro2",
  "quote",
  "rustc_version",
- "syn 1.0.109",
+ "syn 2.0.66",
 ]
 
 [[package]]
@@ -2219,7 +2219,7 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#89206eb162da0825b12a3611305b48b0bc0f9cf3"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#9af9509cc3ed47a56eb4338dc8f900380a62404e"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2239,7 +2239,7 @@ dependencies = [
 [[package]]
 name = "groth16_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#89206eb162da0825b12a3611305b48b0bc0f9cf3"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#9af9509cc3ed47a56eb4338dc8f900380a62404e"
 dependencies = [
  "anyhow",
  "bytes",
@@ -3319,7 +3319,7 @@ dependencies = [
 [[package]]
 name = "mr_plonky2_circuits"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#89206eb162da0825b12a3611305b48b0bc0f9cf3"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#9af9509cc3ed47a56eb4338dc8f900380a62404e"
 dependencies = [
  "anyhow",
  "bincode",
@@ -3345,7 +3345,7 @@ dependencies = [
 [[package]]
 name = "mrp2_utils"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#89206eb162da0825b12a3611305b48b0bc0f9cf3"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#9af9509cc3ed47a56eb4338dc8f900380a62404e"
 dependencies = [
  "anyhow",
  "bincode",
@@ -4273,7 +4273,7 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#89206eb162da0825b12a3611305b48b0bc0f9cf3"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#9af9509cc3ed47a56eb4338dc8f900380a62404e"
 dependencies = [
  "anyhow",
  "log",
