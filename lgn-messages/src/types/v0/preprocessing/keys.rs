@@ -44,7 +44,7 @@ pub enum ProofKey {
     Equivalence(BlockNr, Contract),
 
     /// Indicates the location of `BlockHeader` proof tree nodes. Don't need more details because we only have one block header proof per contract.
-    BlockLinking(BlockNr),
+    BlockLinking(BlockNr, Contract),
 
     /// Indicates the location of `State` proof tree nodes. Don't need more details because we only have one state proof per contract.
     State(BlockNr, Position),
@@ -100,9 +100,12 @@ impl Display for ProofKey {
                     "{STORAGE_PREPROCESS}/{contract}/{block_nr}/{EQUIVALENCE}"
                 )
             }
-            ProofKey::BlockLinking(block_nr) => {
-                // Example: STORAGE_PREPROCESS/123/BLOCK_LINKING
-                write!(f, "{STORAGE_PREPROCESS}/{block_nr}/{BLOCK_LINKING}")
+            ProofKey::BlockLinking(block_nr, contract) => {
+                // Example: STORAGE_PREPROCESS/0xabcd/123/BLOCK_LINKING
+                write!(
+                    f,
+                    "{STORAGE_PREPROCESS}/{contract}/{block_nr}/{BLOCK_LINKING}"
+                )
             }
 
             ProofKey::StorageDb(block_nr, contract, position) => {

@@ -73,12 +73,16 @@ impl<T> MessageEnvelope<T> {
         }
     }
 
-    pub fn query_id(&self) -> &String {
+    pub fn query_id(&self) -> &str {
         &self.query_id
     }
 
-    pub fn task_id(&self) -> &String {
+    pub fn task_id(&self) -> &str {
         &self.task_id
+    }
+
+    pub fn id(&self) -> String {
+        format!("{}-{}", self.query_id, self.task_id)
     }
 
     pub fn inner(&self) -> &T {
@@ -111,6 +115,10 @@ impl<T> MessageReplyEnvelope<T> {
             inner,
             error: None,
         }
+    }
+
+    pub fn id(&self) -> String {
+        format!("{}-{}", self.query_id, self.task_id)
     }
 
     /// Flatten `inner`, returning either Ok(successful_proof) or

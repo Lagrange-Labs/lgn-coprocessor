@@ -107,7 +107,7 @@ pub struct MptProofBranchData {
     pub node: Vec<u8>,
 
     /// Recursive proofs
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub child_proofs: Vec<Vec<u8>>,
 }
 
@@ -144,11 +144,11 @@ pub struct StorageDbBranchData {
     pub children_copy_on_write_info: Vec<(Position, u64)>,
 
     /// Left child proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub left_child_proof: Vec<u8>,
 
     /// Right child proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub right_child_proof: Vec<u8>,
 }
 
@@ -181,7 +181,7 @@ pub struct LengthExtractInput {
     pub length_slot: u8,
 
     /// Proofs of the MPT node containing the length in the storage MPT trie
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub mpt_nodes: Vec<Vec<u8>>,
 }
 
@@ -198,11 +198,11 @@ pub struct LengthMatchData {
     pub mpt_root_hash: ethers::types::H256,
 
     /// Mapping entries proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub mapping_proof: Vec<u8>,
 
     /// Length extract proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub length_extract_proof: Vec<u8>,
 }
 
@@ -217,11 +217,11 @@ pub struct EquivalenceData {
     pub storage_root_block_nr: u64,
 
     /// Length match proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub length_match_proof: Vec<u8>,
 
     /// Storage proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub storage_proof: Vec<u8>,
 }
 
@@ -230,18 +230,18 @@ pub struct BlockLinkingInput {
     /// Contract address
     pub contract: Address,
 
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub header_rlp: Vec<u8>,
 
     /// Account state proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub account_proof: Vec<Vec<u8>>,
 
     /// When was the last time contract mapping was updated
     pub last_block_updated: u64,
 
     /// Equivalence proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub equivalence_proof: Vec<u8>,
 }
 
@@ -253,11 +253,14 @@ pub enum StateDbData {
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct StateDbLeafData {
+    /// Contract address
+    pub contract: Address,
+
     /// Leaf position in state tree
     pub position: Position,
 
     /// Block linking proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub block_linking_proof: Vec<u8>,
 }
 
@@ -267,11 +270,11 @@ pub struct StateDbBranchData {
     pub position: Position,
 
     /// Left child proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub left_proof: Vec<u8>,
 
     /// Right child proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub right_proof: Vec<u8>,
 }
 
@@ -284,16 +287,17 @@ pub struct BlocksDbData {
     pub previous_root_hash: HashOutput,
 
     /// Merkle proof of this node
+    #[dbg(placeholder = "...")]
     pub merkle_path: Vec<HashOutput>,
 
     /// Indicates the position of the state root in the state tree
     pub state_root_position: Position,
 
     /// New leaf proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub new_leaf_proof: Vec<u8>,
 
     /// Previous leaf proof in bytes
-    #[dbg(skip)]
+    #[dbg(placeholder = "...")]
     pub previous_leaf_proof: Vec<u8>,
 }

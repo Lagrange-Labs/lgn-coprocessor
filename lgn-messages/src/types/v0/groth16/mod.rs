@@ -20,6 +20,9 @@ pub struct WorkerTask {
     /// Which contract this task is for.
     pub contract: Address,
 
+    /// Chain ID
+    pub chain_id: u64,
+
     /// Task type to handle.
     pub task_type: WorkerTaskType,
 
@@ -30,9 +33,10 @@ pub struct WorkerTask {
 
 impl WorkerTask {
     #[must_use]
-    pub fn new(contract: Address, task_type: WorkerTaskType) -> Self {
+    pub fn new(chain_id: u64, contract: Address, task_type: WorkerTaskType) -> Self {
         Self {
             contract,
+            chain_id,
             task_type,
             aggregated_result: Vec::default(),
         }

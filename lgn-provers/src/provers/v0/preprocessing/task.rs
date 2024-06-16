@@ -176,7 +176,7 @@ impl<P: StorageProver> Preprocessing<P> {
                 debug!("Proving block linking: {:?}", block_nr);
 
                 let ts = Instant::now();
-                let key = ProofKey::BlockLinking(block_nr).to_string();
+                let key = ProofKey::BlockLinking(block_nr, data.contract).to_string();
                 let proof = self.prover.prove_block_number_linking(data).unwrap();
 
                 histogram!("zkmr_worker_proving_latency", "proof_type" => "block_linking")
