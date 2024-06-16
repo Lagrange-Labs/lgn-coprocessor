@@ -39,7 +39,7 @@ impl<P: StorageProver> Preprocessing<P> {
         debug!("Starting preprocessing task runner");
         if let TaskType::StoragePreprocess(task @ WorkerTask { block_nr, .. }) = envelope.inner() {
             let reply = self.process_task(*block_nr, task)?;
-            let reply = ReplyType::StoragePreprocess(reply);
+            let reply = ReplyType::StoragePreprocess(*block_nr, reply);
             let reply = MessageReplyEnvelope::new(envelope.query_id, envelope.task_id, reply);
             Ok(reply)
         } else {

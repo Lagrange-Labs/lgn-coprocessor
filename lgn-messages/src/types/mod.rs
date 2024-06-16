@@ -26,7 +26,7 @@ pub enum TaskType {
 pub enum ReplyType {
     TxTrie(experimental::tx_trie::WorkerReply),
     RecProof(experimental::rec_proof::WorkerReply),
-    StoragePreprocess(WorkerReply),
+    StoragePreprocess(u64, WorkerReply),
     StorageQuery(WorkerReply),
     Erc20Query(WorkerReply),
     StorageGroth16(WorkerReply),

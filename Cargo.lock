@@ -2033,7 +2033,7 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#9af9509cc3ed47a56eb4338dc8f900380a62404e"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=fix/erc_mapping_leaf#5225ce9cf74d7f431ed386f96173d70888dcd252"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2053,7 +2053,7 @@ dependencies = [
 [[package]]
 name = "groth16_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#9af9509cc3ed47a56eb4338dc8f900380a62404e"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=fix/erc_mapping_leaf#5225ce9cf74d7f431ed386f96173d70888dcd252"
 dependencies = [
  "anyhow",
  "bytes",
@@ -3109,7 +3109,7 @@ dependencies = [
 [[package]]
 name = "mr_plonky2_circuits"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#9af9509cc3ed47a56eb4338dc8f900380a62404e"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=fix/erc_mapping_leaf#5225ce9cf74d7f431ed386f96173d70888dcd252"
 dependencies = [
  "anyhow",
  "bincode",
@@ -3135,7 +3135,7 @@ dependencies = [
 [[package]]
 name = "mrp2_utils"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#9af9509cc3ed47a56eb4338dc8f900380a62404e"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=fix/erc_mapping_leaf#5225ce9cf74d7f431ed386f96173d70888dcd252"
 dependencies = [
  "anyhow",
  "bincode",
@@ -4046,7 +4046,7 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#9af9509cc3ed47a56eb4338dc8f900380a62404e"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=fix/erc_mapping_leaf#5225ce9cf74d7f431ed386f96173d70888dcd252"
 dependencies = [
  "anyhow",
  "log",
