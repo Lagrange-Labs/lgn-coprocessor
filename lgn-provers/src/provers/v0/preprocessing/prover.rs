@@ -261,6 +261,8 @@ impl StorageProver for StoragePreprocessProver {
         let length_match_input = storage::length_match::CircuitInput::new(
             mapping_proof.to_vec(),
             length_extract_proof.to_vec(),
+            //FIXME
+            true,
         );
 
         let input = api::CircuitInput::LengthMatch(length_match_input);

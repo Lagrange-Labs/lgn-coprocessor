@@ -1,12 +1,12 @@
 use crate::params::ParamsLoader;
 use ethers::addressbook::Address;
 use ethers::prelude::U256;
-use mr_plonky2_circuits::api::{QueryInput, QueryParameters};
 use lgn_messages::types::v0::query::erc20::{
     BlockFullNodeInput, BlockPartialNodeInput, RevelationData, StateInput, StorageBranchInput,
     StorageLeafInput,
 };
 use lgn_messages::types::Position;
+use mr_plonky2_circuits::api::{QueryInput, QueryParameters};
 use mr_plonky2_circuits::query_erc20;
 use mr_plonky2_circuits::query_erc20::RevelationErcInput;
 use mr_plonky2_circuits::types::HashOutput;

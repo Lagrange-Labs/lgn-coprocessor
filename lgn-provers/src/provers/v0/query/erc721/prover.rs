@@ -1,5 +1,5 @@
 use anyhow::bail;
-use mr_plonky2_circuits::api::{QueryInput, QueryParameters as QueryParameters};
+use mr_plonky2_circuits::api::{QueryInput, QueryParameters};
 use mr_plonky2_circuits::query2;
 
 use mr_plonky2_circuits::query2::block::CircuitInput as BlockCircuitInput;
@@ -61,10 +61,7 @@ impl QueryProver for QueryStorageProver {
                 right_child_proof,
             } => {
                 debug!("Generating proof for full branch");
-                query2::storage::CircuitInput::new_full_node(
-                    &left_child_proof,
-                    &right_child_proof,
-                )
+                query2::storage::CircuitInput::new_full_node(&left_child_proof, &right_child_proof)
             }
             StorageProofInput::PartialBranch {
                 proven_child,
@@ -186,7 +183,6 @@ impl QueryProver for QueryStorageProver {
     ) -> anyhow::Result<Vec<u8>> {
         let now = std::time::Instant::now();
 
-        // TODO: make these slices in mapreduce-plonky2
         let input = BlockCircuitInput::new_full_node(left_proof.to_vec(), right_proof.to_vec())?;
 
         let input = query2::api::CircuitInput::Block(input);
