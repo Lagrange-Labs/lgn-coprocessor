@@ -2,7 +2,7 @@ use crate::params::ParamsLoader;
 use ethers::addressbook::Address;
 use mr_plonky2_circuits::api::{QueryInput, QueryParameters};
 use lgn_messages::types::v0::query::erc20::{
-    BlockFullNodeInput, BlockPartialNodeInput, RevelationData, StateInput, StorageBranchInput,
+    RevelationData, StorageBranchInput,
     StorageLeafInput,
 };
 use mr_plonky2_circuits::query_erc20;
@@ -48,14 +48,19 @@ impl EuclidProver {
 }
 
 impl QueryProver for EuclidProver {
-    fn prove_storage_leaf(&self, data: &StorageLeafInput) -> anyhow::Result<Vec<u8>> {
+    fn prove_storage_leaf(
+        &self,
+        data: &StorageLeafInput,
+    ) -> anyhow::Result<Vec<u8>> {
         info!("Generating storage leaf proof...");
 
         let now = std::time::Instant::now();
 
+
         let circuit_input = query_erc20::StorageCircuitInput::new_leaf(
             data.used_address,
             data.query_address,
+            data.used_address,
             data.value,
             data.total_supply,
             data.rewards_rate,
@@ -90,6 +95,7 @@ impl QueryProver for EuclidProver {
         } else {
             (&data.child_proof, &data.unproven_child_hash)
         };
+
 
         let circuit_input = query_erc20::StorageCircuitInput::new_inner_node(
             left_child,

@@ -1,17 +1,17 @@
 use crate::provers::v0::query::erc20::prover::QueryProver;
 use ethers::addressbook::Address;
 use lgn_messages::types::v0::query::erc20::{
-    BlockFullNodeInput, BlockPartialNodeInput, RevelationData, StateInput, StorageBranchInput,
+    RevelationData, StorageBranchInput,
     StorageLeafInput,
 };
 use std::thread::sleep;
+use lgn_messages::types::v0::query::{FullNodeBlockData, PartialNodeBlockData, QueryStateData};
 
 pub struct DummyProver;
 
 impl QueryProver for DummyProver {
     fn prove_storage_leaf(
         &self,
-        contract: Address,
         data: &StorageLeafInput,
     ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
@@ -21,15 +21,19 @@ impl QueryProver for DummyProver {
         Ok(prove())
     }
 
-    fn prove_state_db(&self, contract: Address, data: &StateInput) -> anyhow::Result<Vec<u8>> {
+    fn prove_state_db(&self, contract: Address, data: &QueryStateData) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 
-    fn prove_block_partial_node(&self, data: &BlockPartialNodeInput) -> anyhow::Result<Vec<u8>> {
+    fn prove_block_partial_node(&self, data: &PartialNodeBlockData) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 
-    fn prove_block_full_node(&self, data: &BlockFullNodeInput) -> anyhow::Result<Vec<u8>> {
+    fn prove_block_full_node(
+        &self,
+        left_proof: &[u8],
+        right_proof: &[u8],
+    ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 
