@@ -28,7 +28,7 @@ impl ParamsLoader {
 
         let file = format!("{base_dir}/{file_name}");
         info!("Checking if params are on local storage: {}", file);
-        Self::verify_file_checksum(&file, checksum_expected_local_path);
+        Self::verify_file_checksum(file_name, &file, checksum_expected_local_path);
 
         match File::open(&file) {
             Ok(file) => {
@@ -64,7 +64,7 @@ impl ParamsLoader {
 
         let file = format!("{base_dir}/{file_name}");
         info!("Checking if params are on local storage: {}", file);
-        Self::verify_file_checksum(&file, checksum_expected_local_path);
+        Self::verify_file_checksum(file_name, &file, checksum_expected_local_path);
 
         match File::open(&file) {
             Ok(file) => Ok(Self::read_file(file)?),
@@ -110,6 +110,7 @@ impl ParamsLoader {
         Ok(params)
     }
     fn verify_file_checksum(
+        file_name: &str,
         file: &str,
         checksum_expected_local_path: &str,
     ) -> anyhow::Result<(bool)> {
@@ -139,7 +140,7 @@ impl ParamsLoader {
         let expected_hash = expected_hashes
             .unwrap()
             .iter()
-            .filter(|hash| hash.0 == file)
+            .filter(|hash| hash.0 == file_name)
             .map(|hash| (hash.0.to_owned(), hash.1.to_owned()))
             .collect();
         debug!("expected_hash: {:?} ", expected_hash);
