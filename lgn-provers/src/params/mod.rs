@@ -1,11 +1,8 @@
 use anyhow::{bail, Context};
 use bytes::Bytes;
-use checksums::ops::{
-    compare_hashes, create_hashes, read_hashes, write_hash_comparison_results, write_hashes,
-    CompareFileResult,
-};
+use checksums::ops::{compare_hashes, create_hashes, read_hashes, write_hash_comparison_results};
 use checksums::Error;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::Path;
@@ -15,6 +12,7 @@ pub struct ParamsLoader;
 
 // Could make configurable but 3600 should be enough
 const HTTP_TIMEOUT: u64 = 3600;
+const DOWNLOAD_MAX_RETRIES: u8 = 3;
 
 impl ParamsLoader {
     pub fn prepare_bincode<P: for<'a> serde::de::Deserialize<'a>>(
@@ -27,28 +25,36 @@ impl ParamsLoader {
         std::fs::create_dir_all(base_dir).context("Failed to create directory")?;
 
         let file = format!("{base_dir}/{file_name}");
-        info!("Checking if params are on local storage: {}", file);
-        Self::verify_file_checksum(file_name, &file, checksum_expected_local_path);
-
-        match File::open(&file) {
-            Ok(file) => {
-                info!("Loading params from local storage");
-                let reader = std::io::BufReader::new(file);
-
-                bincode::deserialize_from(reader).map_err(Into::into)
+        info!(
+            "Checking if params are on local storage and have the right checksum: {}",
+            file
+        );
+        let mut retries = 0;
+        loop {
+            debug!("checksum attempt number:  {:?}", retries);
+            if retries >= DOWNLOAD_MAX_RETRIES {
+                bail!("Downloading file {:?} failed", file);
             }
-            Err(_) => {
-                info!("public params are not locally stored yet");
+            let result = Self::verify_file_checksum(file_name, &file, checksum_expected_local_path);
 
-                let params = Self::download_file(base_url, file_name)?;
-                if !skip_store {
-                    Self::store_file(&file, &params)
-                        .context("Failed to store params to local storage")?;
+            match result {
+                Ok(true) => {
+                    info!("Loading params from local storage");
+                    let file = File::open(&file);
+                    let reader = std::io::BufReader::new(file.unwrap());
+
+                    return bincode::deserialize_from(reader).map_err(Into::into);
                 }
+                _ => {
+                    info!("public params are not locally stored yet, or checksum mismatch");
+                    retries += 1;
 
-                info!("Deserializing params");
-                let reader = std::io::BufReader::new(params.as_ref());
-                bincode::deserialize_from(reader).context("Failed to deserialize params")
+                    let params = Self::download_file(base_url, file_name)?;
+                    if !skip_store {
+                        Self::store_file(&file, &params)
+                            .context("Failed to store params to local storage")?;
+                    }
+                }
             }
         }
     }
@@ -113,7 +119,14 @@ impl ParamsLoader {
         file_name: &str,
         file: &str,
         checksum_expected_local_path: &str,
-    ) -> anyhow::Result<(bool)> {
+    ) -> anyhow::Result<bool> {
+        // checking if file exists
+        if !File::open(&file).is_ok() {
+            if let Err(err) = fs::remove_file(Path::new(file)) {
+                debug!("non existing file {}: {}", file, err);
+            }
+            return Ok(false);
+        }
         debug!("Computing file hash for: {:?}", file);
         let computed_hashes = create_hashes(
             Path::new(file),
@@ -165,44 +178,16 @@ impl ParamsLoader {
             Error::NoError => {
                 // Test result no error
                 info!("Checksum is successful");
+                Ok(true)
             }
-            Error::NFilesDiffer(count) => {
-                if let Ok((_, file_results)) = &compare_hashes {
-                    let file_differs: Vec<&CompareFileResult> = file_results
-                        .iter()
-                        .filter(|f| {
-                            if let CompareFileResult::FileDiffers { .. } = f {
-                                true
-                            } else {
-                                false
-                            }
-                        })
-                        .collect();
 
-                    for file_differ in file_differs {
-                        if let CompareFileResult::FileDiffers { file, .. } = file_differ {
-                            info!("File did not match the checksum. Deleting File {} ", file);
-                            // This will only delete the file where the checksum has failed
-                            //if let Err(err) = fs::remove_file(Path::new(dir).join(file)) {
-                            //    error!("Error deleting file {}: {}", file, err);
-                            //}
-                            // Temporarily delete the whole pp dir, because the download part doesnt handle yet downloading only the missing files
-                            if let Err(err) = fs::remove_dir_all(Path::new(file)) {
-                                error!("Error deleting dir {}: {}", file, err);
-                            }
-                        }
-                    }
-                } else {
-                    error!("Failed to get file comparison results");
-                }
-                bail!("{} files do not match", count);
-            }
             _ => {
-                error!("Checksum failure: {:?}", result)
+                if let Err(err) = fs::remove_file(Path::new(file)) {
+                    error!("Error deleting file {}: {}", file, err);
+                }
+                Ok(false)
             }
         }
-
-        Ok(bool::default())
     }
 
     fn read_file(file: File) -> anyhow::Result<Bytes> {

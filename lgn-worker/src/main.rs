@@ -283,8 +283,8 @@ fn register_v0_preprocessor(config: &Config, router: &mut ProversManager) {
     let preprocessing_prover = preprocessing::create_prover(
         &params_config.url,
         &params_config.dir,
-        &params_config.checksum_expected_local_path,
         &params_config.preprocessing_params.file,
+        &params_config.checksum_expected_local_path,
         params_config.skip_store,
     )
     .expect("Failed to create preprocessing handler");
