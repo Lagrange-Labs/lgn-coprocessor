@@ -127,10 +127,11 @@ impl ParamsLoader {
         );
 
         debug!("Computed hashes: {:?}", computed_hashes);
-        let computed_hashes = computed_hashes
+        let computed_hash = computed_hashes
             .iter()
             .map(|hash| (file_name.to_owned(), hash.1.to_owned()))
             .collect();
+        debug!("Computed hash: {:?}", computed_hash);
 
         let expected_hashes_file = Path::new(&checksum_expected_local_path);
         let expected_hashes = read_hashes(
@@ -150,7 +151,7 @@ impl ParamsLoader {
             .map(|hash| (hash.0.to_owned(), hash.1.to_owned()))
             .collect();
         debug!("expected_hash: {:?} ", expected_hash);
-        let compare_hashes = compare_hashes("compare_hashes", computed_hashes, expected_hash);
+        let compare_hashes = compare_hashes("compare_hashes", computed_hash, expected_hash);
         debug!("compare hashes: {:?} ", compare_hashes);
 
         let result = write_hash_comparison_results(
