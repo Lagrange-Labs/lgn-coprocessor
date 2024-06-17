@@ -356,13 +356,7 @@ fn verify_directory_checksums(dir: &str, expected_checksums_file: &str) -> anyho
             if let Ok((_, file_results)) = &compare_hashes {
                 let file_differs: Vec<&CompareFileResult> = file_results
                     .iter()
-                    .filter(|f| {
-                        if let CompareFileResult::FileDiffers { .. } = f {
-                            true
-                        } else {
-                            false
-                        }
-                    })
+                    .filter(|f| matches!(f, CompareFileResult::FileDiffers { .. }))
                     .collect();
 
                 for file_differ in file_differs {

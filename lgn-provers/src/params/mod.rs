@@ -69,8 +69,8 @@ impl ParamsLoader {
         std::fs::create_dir_all(base_dir).context("Failed to create directory")?;
 
         let file = format!("{base_dir}/{file_name}");
-        info!("Checking if params are on local storage: {}", file);
-        Self::verify_file_checksum(file_name, &file, checksum_expected_local_path);
+
+        let _ = Self::verify_file_checksum(file_name, &file, checksum_expected_local_path);
 
         match File::open(&file) {
             Ok(file) => Ok(Self::read_file(file)?),
@@ -121,7 +121,7 @@ impl ParamsLoader {
         checksum_expected_local_path: &str,
     ) -> anyhow::Result<bool> {
         // checking if file exists
-        if !File::open(&file).is_ok() {
+        if File::open(file).is_err() {
             if let Err(err) = fs::remove_file(Path::new(file)) {
                 debug!("non existing file {}: {}", file, err);
             }
