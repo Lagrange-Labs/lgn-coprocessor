@@ -16,6 +16,7 @@ port = 9090
 dir = "./zkmr_params"
 # Parameters common directory
 url = "https://distributed-query-public-params.s3.us-east-2.amazonaws.com"
+checksum_url = "https://raw.githubusercontent.com/Lagrange-Labs/lgn-coprocessor/feat/gh-109-2/lgn-provers/src/params/checksum.txt"
 skip_store = false
 
 [public_params.preprocessing_params]
