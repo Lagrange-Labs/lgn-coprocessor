@@ -267,8 +267,8 @@ fn register_v0_groth16_prover(config: &Config, router: &mut ProversManager) {
     let groth16_prover = groth16::create_prover(
         &params_config.url,
         &params_config.dir,
-        &params_config.checksum_expected_local_path,
         &assets.circuit_file,
+        &params_config.checksum_expected_local_path,
         &assets.r1cs_file,
         &assets.pk_file,
         params_config.skip_store,

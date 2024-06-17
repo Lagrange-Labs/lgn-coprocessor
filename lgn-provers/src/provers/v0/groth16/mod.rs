@@ -12,8 +12,8 @@ mod task;
 pub fn create_prover(
     url: &str,
     dir: &str,
-    checksum_expected_local_path: &str,
     circuit_file: &str,
+    checksum_expected_local_path: &str,
     pk_file: &str,
     vk_file: &str,
     skip_store: bool,
@@ -30,8 +30,8 @@ pub fn create_prover(
             prover::Groth16Prover::init(
                 url,
                 dir,
-                checksum_expected_local_path,
                 circuit_file,
+                checksum_expected_local_path,
                 pk_file,
                 vk_file,
                 skip_store,
