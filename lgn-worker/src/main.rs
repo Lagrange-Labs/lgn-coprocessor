@@ -1,9 +1,9 @@
 use std::collections::BTreeSet;
-use std::panic;
 use std::path::Path;
 use std::result::Result::Ok;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::BTreeMap, str::FromStr};
+use std::{fs, panic};
 
 use std::fs::File;
 use std::io::Write;
@@ -301,6 +301,7 @@ fn register_v0_query_prover(config: &Config, router: &mut ProversManager) {
 
     router.add_prover(ProverType::Query2Query, Box::new(query2_prover));
 }
+
 fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<()> {
     debug!("Computing hashes from: {:?}", dir);
     let computed_hashes = create_hashes(
@@ -317,10 +318,7 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
     let expected_hashes_file = Path::new(&expected_checksums_file);
     let expected_hashes = read_hashes(
         &mut std::io::stderr(),
-        &(
-            "expected_hashes_output_file".to_string(),
-            expected_hashes_file.to_path_buf(),
-        ),
+        &("output".to_string(), expected_hashes_file.to_path_buf()),
     );
     debug!(
         "expected hashes from: {:?} is {:?}",
@@ -357,14 +355,17 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
 
                 for file_differ in file_differs {
                     if let CompareFileResult::FileDiffers { file, .. } = file_differ {
-                        println!("Delete File {} ", file);
-                        // Delete the file here if needed
+                        info!("File did not match the checksum. Deleting File {} ", file);
+                        // This will only delete the file where the checksum has failed
+                        if let Err(err) = fs::remove_file(file) {
+                            error!("Error deleting file {}: {}", file, err);
+                        }
                     }
                 }
             } else {
                 error!("Failed to get file comparison results");
             }
-            error!("{} files do not match", count);
+            bail!("{} files do not match", count);
         }
         _ => {
             error!("Checksum failure: {:?}", result)
