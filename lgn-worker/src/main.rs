@@ -12,7 +12,8 @@ use ::metrics::counter;
 use anyhow::*;
 use backtrace::Backtrace;
 use checksums::ops::{
-    compare_hashes, create_hashes, read_hashes, write_hash_comparison_results, CompareFileResult,
+    compare_hashes, create_hashes, read_hashes, write_hash_comparison_results, write_hashes,
+    CompareFileResult,
 };
 use checksums::Error;
 use clap::Parser;
@@ -175,7 +176,7 @@ fn run(config: &Config) -> Result<()> {
 
     // Fetch checksum file
     // generate the checksum with
-    // checksums -c -r zkmr_params -a BLAKE3
+    // Download the params the install with rust checksums and run checksums -c -r zkmr_params -a BLAKE3
     let checksum_url = &config.public_params.checksum_url;
     let expected_checksums_file = "/tmp/expected_checksums.txt";
     fetch_checksum_file(checksum_url, expected_checksums_file)?;
@@ -315,6 +316,14 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
         &mut std::io::stderr(),
     );
     debug!("Computed hashes: {:?}", computed_hashes);
+    write_hashes(
+        &(
+            "output".to_string(),
+            Path::new("public_params.hash").to_path_buf(),
+        ),
+        checksums::Algorithm::BLAKE3,
+        computed_hashes.clone(),
+    );
     let expected_hashes_file = Path::new(&expected_checksums_file);
     let expected_hashes = read_hashes(
         &mut std::io::stderr(),
