@@ -20,7 +20,6 @@ use clap::Parser;
 use jwt::{Claims, RegisteredClaims};
 use mimalloc::MiMalloc;
 use tracing::{debug, error, info};
-use tracing_subscriber::field::debug;
 use tracing_subscriber::EnvFilter;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::{connect, Message};
