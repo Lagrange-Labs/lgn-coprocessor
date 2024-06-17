@@ -29,15 +29,15 @@ impl Groth16Prover {
         let circuit_bytes = ParamsLoader::prepare_raw(
             url,
             dir,
-            checksum_expected_local_path,
             circuit_file,
+            checksum_expected_local_path,
             skip_store,
         )?;
         let r1cs_bytes = ParamsLoader::prepare_raw(
             url,
             dir,
-            checksum_expected_local_path,
             r1cs_file,
+            checksum_expected_local_path,
             skip_store,
         )?;
         let pk_bytes =

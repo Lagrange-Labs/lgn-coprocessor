@@ -56,8 +56,8 @@ impl ParamsLoader {
     pub fn prepare_raw(
         base_url: &str,
         base_dir: &str,
-        checksum_expected_local_path: &str,
         file_name: &str,
+        checksum_expected_local_path: &str,
         skip_store: bool,
     ) -> anyhow::Result<Bytes> {
         std::fs::create_dir_all(base_dir).context("Failed to create directory")?;
