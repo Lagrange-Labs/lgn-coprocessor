@@ -13,6 +13,7 @@ pub fn create_prover(
     url: &str,
     dir: &str,
     circuit_file: &str,
+    checksum_expected_local_path: &str,
     pk_file: &str,
     vk_file: &str,
     skip_store: bool,
@@ -26,7 +27,15 @@ pub fn create_prover(
         #[cfg(not(feature = "dummy-prover"))]
         {
             info!("Creating Groth16Prover");
-            prover::Groth16Prover::init(url, dir, circuit_file, pk_file, vk_file, skip_store)?
+            prover::Groth16Prover::init(
+                url,
+                dir,
+                circuit_file,
+                checksum_expected_local_path,
+                pk_file,
+                vk_file,
+                skip_store,
+            )?
         }
     };
 
