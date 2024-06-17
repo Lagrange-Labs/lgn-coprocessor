@@ -139,7 +139,7 @@ impl ParamsLoader {
         let expected_hash = expected_hashes
             .unwrap()
             .iter()
-            .filter(|hash| hash.1 == file)
+            .filter(|hash| hash.0 == file)
             .map(|hash| (hash.0.to_owned(), hash.1.to_owned()))
             .collect();
         debug!("expected_hash: {:?} ", expected_hash);
