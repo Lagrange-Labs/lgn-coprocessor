@@ -21,6 +21,7 @@ pub(crate) struct Config {
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct PublicParamsConfig {
     pub(crate) url: String,
+    pub(crate) checksum_url: String,
     pub(crate) dir: String,
     /// If set to true, the parameters will not be written to disk, ever.
     pub(crate) skip_store: bool,
@@ -32,6 +33,7 @@ pub(crate) struct PublicParamsConfig {
 impl PublicParamsConfig {
     pub fn validate(&self) {
         assert!(!self.url.is_empty(), "URL is required");
+        assert!(!self.checksum_url.is_empty(), "Checksum URL is required");
         assert!(!self.dir.is_empty(), "Directory is required");
         self.preprocessing_params.validate();
         self.query2_params.validate();

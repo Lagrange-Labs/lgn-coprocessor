@@ -167,11 +167,12 @@ fn run(config: &Config) -> Result<()> {
         })?;
 
     let mut provers_manager = ProversManager::new(&metrics);
-    register_provers(config, &mut provers_manager);
+    //register_provers(config, &mut provers_manager);
 
     // Fetch checksum file
-    // TODO this should be in the config
-    let checksum_url = "https://raw.githubusercontent.com/Lagrange-Labs/lgn-coprocessor/feat/gh-109-2/lgn-provers/src/params/checksum.txt";
+    // generate the checksum with
+    // checksums -c -r zkmr_params -a BLAKE3
+    let checksum_url = &config.public_params.checksum_url;
     let expected_checksums_file = "/tmp/expected_checksums.txt";
     fetch_checksum_file(checksum_url, expected_checksums_file)?;
 
