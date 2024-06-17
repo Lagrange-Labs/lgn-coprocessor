@@ -327,6 +327,9 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
     let compare_hashes =
         compare_hashes("compare_hashes", computed_hashes, expected_hashes.unwrap());
     debug!("compare hashes: {:?} ", compare_hashes);
+    debug!("compare hashes 0: {:?} ", compare_hashes.clone().unwrap().0);
+    debug!("compare hashes 1: {:?} ", compare_hashes.clone().unwrap().1);
+
     let result = write_hash_comparison_results(
         &mut std::io::stdout(),
         &mut std::io::stderr(),
@@ -337,10 +340,10 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
     match result {
         Error::NoError => {
             // Test result no error
-            println!("Checksum is succesful");
+            info!("Checksum is succesful");
         }
         Error::NFilesDiffer(count) => {
-            println!("{} files do not match", count);
+            error!("{} files do not match", count);
         }
         _ => {
             error!("checksum failure: {:?}", result)
