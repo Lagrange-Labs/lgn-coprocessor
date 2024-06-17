@@ -16,6 +16,7 @@ use clap::Parser;
 use jwt::{Claims, RegisteredClaims};
 use mimalloc::MiMalloc;
 use tracing::{debug, error, info};
+use tracing_subscriber::field::debug;
 use tracing_subscriber::EnvFilter;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::{connect, Message};
@@ -298,6 +299,7 @@ fn register_v0_query_prover(config: &Config, router: &mut ProversManager) {
     router.add_prover(ProverType::Query2Query, Box::new(query2_prover));
 }
 fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<()> {
+    debug!("Computing hashes from: {:?}", dir);
     let computed_hashes = create_hashes(
         Path::new(dir),
         BTreeSet::new(),
@@ -308,21 +310,28 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
         &mut std::io::stdout(),
         &mut std::io::stderr(),
     );
-    let hashes_file = Path::new(&expected_checksums_file);
+    debug!("Computed hashes: {:?}", computed_hashes);
+    let expected_hashes_file = Path::new(&expected_checksums_file);
     let expected_hashes = read_hashes(
         &mut std::io::stderr(),
         &(
             "expected_hashes_output_file".to_string(),
-            hashes_file.to_path_buf(),
+            expected_hashes_file.to_path_buf(),
         ),
+    );
+    debug!(
+        "expected hashes from: {:?} is {:?}",
+        expected_hashes_file, expected_hashes
     );
     let compare_hashes =
         compare_hashes("compare_hashes", computed_hashes, expected_hashes.unwrap());
-    write_hash_comparison_results(
+    debug!("compare hashes: {:?} ", compare_hashes);
+    let result = write_hash_comparison_results(
         &mut std::io::stdout(),
         &mut std::io::stderr(),
         compare_hashes,
     );
+    debug!("checksum result: {:?} ", result);
 
     Ok(())
 }
