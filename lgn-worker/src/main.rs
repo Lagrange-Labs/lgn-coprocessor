@@ -171,7 +171,7 @@ fn run(config: &Config) -> Result<()> {
         })?;
 
     let mut provers_manager = ProversManager::new(&metrics);
-    //register_provers(config, &mut provers_manager);
+    register_provers(config, &mut provers_manager);
 
     // Fetch checksum file
     // generate the checksum with
