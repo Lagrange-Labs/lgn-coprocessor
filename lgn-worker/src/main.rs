@@ -357,7 +357,7 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
                     if let CompareFileResult::FileDiffers { file, .. } = file_differ {
                         info!("File did not match the checksum. Deleting File {} ", file);
                         // This will only delete the file where the checksum has failed
-                        if let Err(err) = fs::remove_file(file) {
+                        if let Err(err) = fs::remove_file(Path::new(dir).join(file)) {
                             error!("Error deleting file {}: {}", file, err);
                         }
                     }
