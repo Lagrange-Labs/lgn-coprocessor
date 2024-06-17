@@ -12,6 +12,7 @@ use ::metrics::counter;
 use anyhow::*;
 use backtrace::Backtrace;
 use checksums::ops::{compare_hashes, create_hashes, read_hashes, write_hash_comparison_results};
+use checksums::Error;
 use clap::Parser;
 use jwt::{Claims, RegisteredClaims};
 use mimalloc::MiMalloc;
@@ -332,6 +333,19 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
         compare_hashes,
     );
     debug!("checksum result: {:?} ", result);
+
+    match result {
+        Error::NoError => {
+            // Test result no error
+            println!("Checksum is succesful");
+        }
+        Error::NFilesDiffer(count) => {
+            println!("{} files do not match", count);
+        }
+        _ => {
+            error!("checksum failure: {:?}", result)
+        }
+    }
 
     Ok(())
 }
