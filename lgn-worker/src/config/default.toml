@@ -17,7 +17,7 @@ dir = "./zkmr_params"
 checksum_expected_local_path = "/tmp/expected_checksums.txt"
 # Parameters common directory
 url = "https://distributed-query-public-params.s3.us-east-2.amazonaws.com"
-checksum_url = "https://raw.githubusercontent.com/Lagrange-Labs/lgn-coprocessor/feat/gh-109-2/lgn-provers/src/params/checksum.txt"
+checksum_url = "https://raw.githubusercontent.com/Lagrange-Labs/lgn-coprocessor/main/lgn-provers/src/params/checksum.txt"
 skip_store = false
 
 [public_params.preprocessing_params]
