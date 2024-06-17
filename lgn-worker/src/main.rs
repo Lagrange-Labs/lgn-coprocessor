@@ -183,7 +183,7 @@ fn run(config: &Config) -> Result<()> {
 
     // Verify checksum
 
-    verify_checksums(&config.public_params.dir, expected_checksums_file)
+    verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
         .context("Failed to verify checksums")?;
 
     info!("ready to work");
@@ -306,7 +306,7 @@ fn register_v0_query_prover(config: &Config, router: &mut ProversManager) {
     router.add_prover(ProverType::Query2Query, Box::new(query2_prover));
 }
 
-fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<()> {
+fn verify_directory_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<()> {
     debug!("Computing hashes from: {:?}", dir);
     let computed_hashes = create_hashes(
         Path::new(dir),
@@ -369,12 +369,8 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
                     if let CompareFileResult::FileDiffers { file, .. } = file_differ {
                         info!("File did not match the checksum. Deleting File {} ", file);
                         // This will only delete the file where the checksum has failed
-                        //if let Err(err) = fs::remove_file(Path::new(dir).join(file)) {
-                        //    error!("Error deleting file {}: {}", file, err);
-                        //}
-                        // Temporarily delete the whole pp dir, because the download part doesnt handle yet downloading only the missing files
-                        if let Err(err) = fs::remove_dir_all(Path::new(dir)) {
-                            error!("Error deleting dir {}: {}", dir, err);
+                        if let Err(err) = fs::remove_file(Path::new(dir).join(file)) {
+                            error!("Error deleting file {}: {}", file, err);
                         }
                     }
                 }
