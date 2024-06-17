@@ -366,8 +366,12 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
                     if let CompareFileResult::FileDiffers { file, .. } = file_differ {
                         info!("File did not match the checksum. Deleting File {} ", file);
                         // This will only delete the file where the checksum has failed
-                        if let Err(err) = fs::remove_file(Path::new(dir).join(file)) {
-                            error!("Error deleting file {}: {}", file, err);
+                        //if let Err(err) = fs::remove_file(Path::new(dir).join(file)) {
+                        //    error!("Error deleting file {}: {}", file, err);
+                        //}
+                        // Temporarily delete the whole pp dir, because the download part doesnt handle yet downloading only the missing files
+                        if let Err(err) = fs::remove_dir_all(Path::new(dir)) {
+                            error!("Error deleting dir {}: {}", dir, err);
                         }
                     }
                 }
