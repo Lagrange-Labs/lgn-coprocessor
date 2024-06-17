@@ -125,7 +125,13 @@ impl ParamsLoader {
             &mut std::io::stdout(),
             &mut std::io::stderr(),
         );
+
         debug!("Computed hashes: {:?}", computed_hashes);
+        let computed_hashes = computed_hashes
+            .iter()
+            .map(|hash| (file_name.to_owned(), hash.1.to_owned()))
+            .collect();
+
         let expected_hashes_file = Path::new(&checksum_expected_local_path);
         let expected_hashes = read_hashes(
             &mut std::io::stderr(),
