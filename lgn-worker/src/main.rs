@@ -11,7 +11,9 @@ use std::io::Write;
 use ::metrics::counter;
 use anyhow::*;
 use backtrace::Backtrace;
-use checksums::ops::{compare_hashes, create_hashes, read_hashes, write_hash_comparison_results};
+use checksums::ops::{
+    compare_hashes, create_hashes, read_hashes, write_hash_comparison_results, CompareFileResult,
+};
 use checksums::Error;
 use clap::Parser;
 use jwt::{Claims, RegisteredClaims};
@@ -327,26 +329,45 @@ fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<
     let compare_hashes =
         compare_hashes("compare_hashes", computed_hashes, expected_hashes.unwrap());
     debug!("compare hashes: {:?} ", compare_hashes);
-    debug!("compare hashes 0: {:?} ", compare_hashes.clone().unwrap().0);
-    debug!("compare hashes 1: {:?} ", compare_hashes.clone().unwrap().1);
 
     let result = write_hash_comparison_results(
         &mut std::io::stdout(),
         &mut std::io::stderr(),
-        compare_hashes,
+        compare_hashes.clone(),
     );
     debug!("checksum result: {:?} ", result);
 
     match result {
         Error::NoError => {
             // Test result no error
-            info!("Checksum is succesful");
+            info!("Checksum is successful");
         }
         Error::NFilesDiffer(count) => {
+            if let Ok((_, file_results)) = &compare_hashes {
+                let file_differs: Vec<&CompareFileResult> = file_results
+                    .iter()
+                    .filter(|f| {
+                        if let CompareFileResult::FileDiffers { .. } = f {
+                            true
+                        } else {
+                            false
+                        }
+                    })
+                    .collect();
+
+                for file_differ in file_differs {
+                    if let CompareFileResult::FileDiffers { file, .. } = file_differ {
+                        println!("Delete File {} ", file);
+                        // Delete the file here if needed
+                    }
+                }
+            } else {
+                error!("Failed to get file comparison results");
+            }
             error!("{} files do not match", count);
         }
         _ => {
-            error!("checksum failure: {:?}", result)
+            error!("Checksum failure: {:?}", result)
         }
     }
 
