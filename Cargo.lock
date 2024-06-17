@@ -2920,6 +2920,7 @@ dependencies = [
  "anyhow",
  "bincode",
  "bytes",
+ "checksums",
  "ethers 2.0.14",
  "groth16_framework",
  "hex",

@@ -170,15 +170,16 @@ fn run(config: &Config) -> Result<()> {
             }
         })?;
 
+    // Fetch checksum file
+    // The checksum file can be generated in two ways.
+    // 1- Run the worker, and it will download and spit out the checksum on disk
+    // 2- Manually download the params then install with the checksums bin crate and run checksums -c -r zkmr_params -a BLAKE3
+    let checksum_url = &config.public_params.checksum_url;
+    let expected_checksums_file = &config.public_params.checksum_expected_local_path;
+    fetch_checksum_file(checksum_url, expected_checksums_file)?;
+
     let mut provers_manager = ProversManager::new(&metrics);
     register_provers(config, &mut provers_manager);
-
-    // Fetch checksum file
-    // generate the checksum with
-    // Download the params the install with rust checksums and run checksums -c -r zkmr_params -a BLAKE3
-    let checksum_url = &config.public_params.checksum_url;
-    let expected_checksums_file = "/tmp/expected_checksums.txt";
-    fetch_checksum_file(checksum_url, expected_checksums_file)?;
 
     // Verify checksum
 
@@ -266,6 +267,7 @@ fn register_v0_groth16_prover(config: &Config, router: &mut ProversManager) {
     let groth16_prover = groth16::create_prover(
         &params_config.url,
         &params_config.dir,
+        &params_config.checksum_expected_local_path,
         &assets.circuit_file,
         &assets.r1cs_file,
         &assets.pk_file,
@@ -281,6 +283,7 @@ fn register_v0_preprocessor(config: &Config, router: &mut ProversManager) {
     let preprocessing_prover = preprocessing::create_prover(
         &params_config.url,
         &params_config.dir,
+        &params_config.checksum_expected_local_path,
         &params_config.preprocessing_params.file,
         params_config.skip_store,
     )
@@ -295,6 +298,7 @@ fn register_v0_query_prover(config: &Config, router: &mut ProversManager) {
         &params_config.url,
         &params_config.dir,
         &params_config.query2_params.file,
+        &params_config.checksum_expected_local_path,
         params_config.skip_store,
     )
     .expect("Failed to create query handler");
