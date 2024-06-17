@@ -1,16 +1,18 @@
+use std::collections::BTreeSet;
+use std::panic;
+use std::path::Path;
 use std::result::Result::Ok;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::BTreeMap, str::FromStr};
-use std::{fs, panic};
 
 use std::fs::File;
 use std::io::Write;
 
+use ::metrics::counter;
 use anyhow::*;
 use backtrace::Backtrace;
+use checksums::ops::{compare_hashes, create_hashes, read_hashes, write_hash_comparison_results};
 use clap::Parser;
-
-use ::metrics::counter;
 use jwt::{Claims, RegisteredClaims};
 use mimalloc::MiMalloc;
 use tracing::{debug, error, info};
@@ -24,7 +26,6 @@ use lgn_messages::types::{DownstreamPayload, ReplyType, TaskType, UpstreamPayloa
 use lgn_provers::provers::v0::{groth16, preprocessing, query};
 use lgn_provers::provers::ProverType;
 use lgn_worker::avs::utils::read_keystore;
-use std::process::Command;
 
 use crate::config::Config;
 use crate::manager::ProversManager;
@@ -175,6 +176,7 @@ fn run(config: &Config) -> Result<()> {
     fetch_checksum_file(checksum_url, expected_checksums_file)?;
 
     // Verify checksum
+
     verify_checksums(&config.public_params.dir, expected_checksums_file)
         .context("Failed to verify checksums")?;
 
@@ -295,31 +297,31 @@ fn register_v0_query_prover(config: &Config, router: &mut ProversManager) {
     router.add_prover(ProverType::Query2Query, Box::new(query2_prover));
 }
 fn verify_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<()> {
-    let output = Command::new("bash")
-        .arg("verify_checksums.sh")
-        .arg(dir)
-        .arg(expected_checksums_file)
-        .output()
-        .context("Failed to execute checksum verification script")?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        // If verification fails, delete the directory
-        if let Err(e) = fs::remove_dir_all(dir) {
-            bail!(
-                "Checksum verification failed and failed to delete directory: {}. Error: {}",
-                stderr,
-                e
-            );
-        } else {
-            bail!(
-                "Checksum verification failed: {}. Directory deleted.",
-                stderr
-            );
-        }
-    }
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    info!("Checksum verification successful: {}", stdout);
+    let computed_hashes = create_hashes(
+        Path::new(dir),
+        BTreeSet::new(),
+        checksums::Algorithm::BLAKE3,
+        None,
+        true,
+        3,
+        &mut std::io::stdout(),
+        &mut std::io::stderr(),
+    );
+    let hashes_file = Path::new(&expected_checksums_file);
+    let expected_hashes = read_hashes(
+        &mut std::io::stderr(),
+        &(
+            "expected_hashes_output_file".to_string(),
+            hashes_file.to_path_buf(),
+        ),
+    );
+    let compare_hashes =
+        compare_hashes("compare_hashes", computed_hashes, expected_hashes.unwrap());
+    write_hash_comparison_results(
+        &mut std::io::stdout(),
+        &mut std::io::stderr(),
+        compare_hashes,
+    );
 
     Ok(())
 }
