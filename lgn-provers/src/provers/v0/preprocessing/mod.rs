@@ -11,6 +11,7 @@ pub fn create_prover(
     url: &str,
     dir: &str,
     file: &str,
+    checksum_expected_local_path: &str,
     skip_store: bool,
 ) -> anyhow::Result<Preprocessing<impl StorageProver>> {
     let prover = {
@@ -23,7 +24,13 @@ pub fn create_prover(
         #[cfg(not(feature = "dummy-prover"))]
         {
             info!("Creating storage prover");
-            prover::StoragePreprocessProver::init(url, dir, file, skip_store)?
+            prover::StoragePreprocessProver::init(
+                url,
+                dir,
+                file,
+                checksum_expected_local_path,
+                skip_store,
+            )?
         }
     };
 

@@ -56,9 +56,21 @@ pub(crate) struct StoragePreprocessProver {
 impl StoragePreprocessProver {
     // #[allow(dead_code)] - clippy warning because of dummy-prover feature
     #[allow(dead_code)]
-    pub(crate) fn init(url: &str, dir: &str, file: &str, skip_store: bool) -> anyhow::Result<Self> {
+    pub(crate) fn init(
+        url: &str,
+        dir: &str,
+        file: &str,
+        checksum_expected_local_path: &str,
+        skip_store: bool,
+    ) -> anyhow::Result<Self> {
         debug!("Creating preprocessing prover");
-        let params = ParamsLoader::prepare_bincode(url, dir, file, skip_store)?;
+        let params = ParamsLoader::prepare_bincode(
+            url,
+            dir,
+            file,
+            checksum_expected_local_path,
+            skip_store,
+        )?;
         debug!("Preprocessing prover created");
         Ok(Self { params })
     }

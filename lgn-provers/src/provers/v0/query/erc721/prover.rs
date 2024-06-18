@@ -37,9 +37,21 @@ pub struct QueryStorageProver {
 }
 
 impl QueryStorageProver {
-    pub fn init(url: &str, dir: &str, file: &str, skip_store: bool) -> anyhow::Result<Self> {
+    pub fn init(
+        url: &str,
+        dir: &str,
+        file: &str,
+        checksum_expected_local_path: &str,
+        skip_store: bool,
+    ) -> anyhow::Result<Self> {
         debug!("Creating QueryProver");
-        let params = ParamsLoader::prepare_bincode(url, dir, file, skip_store)?;
+        let params = ParamsLoader::prepare_bincode(
+            url,
+            dir,
+            file,
+            checksum_expected_local_path,
+            skip_store,
+        )?;
         debug!("QueryProver created");
         Ok(Self { params })
     }
