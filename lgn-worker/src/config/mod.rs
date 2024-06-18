@@ -21,6 +21,8 @@ pub(crate) struct Config {
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct PublicParamsConfig {
     pub(crate) url: String,
+    pub(crate) checksum_url: String,
+    pub(crate) checksum_expected_local_path: String,
     pub(crate) dir: String,
     /// If set to true, the parameters will not be written to disk, ever.
     pub(crate) skip_store: bool,
@@ -32,6 +34,11 @@ pub(crate) struct PublicParamsConfig {
 impl PublicParamsConfig {
     pub fn validate(&self) {
         assert!(!self.url.is_empty(), "URL is required");
+        assert!(!self.checksum_url.is_empty(), "Checksum URL is required");
+        assert!(
+            !self.checksum_expected_local_path.is_empty(),
+            "Checksum local path for expected checksum file is required"
+        );
         assert!(!self.dir.is_empty(), "Directory is required");
         self.preprocessing_params.validate();
         self.query2_params.validate();
@@ -176,6 +183,7 @@ mod test {
             &conf.public_params.url,
             &conf.public_params.dir.clone(),
             &conf.public_params.query2_params.file.clone(),
+            &conf.public_params.checksum_expected_local_path,
             conf.public_params.skip_store,
         )
         .expect("this should work");
@@ -190,6 +198,7 @@ mod test {
             &conf.public_params.url,
             &conf.public_params.dir.clone(),
             &conf.public_params.query2_params.file.clone(),
+            &conf.public_params.checksum_expected_local_path,
             conf.public_params.skip_store,
         )
         .expect("this should work");
