@@ -12,6 +12,8 @@ pub enum ProverType {
     /// V0 query handler.
     Query2Query,
 
+    QueryErc20,
+
     /// V0 Groth16 handler.
     Query2Groth16,
 }
@@ -24,6 +26,7 @@ impl TryFrom<&TaskType> for ProverType {
             TaskType::StoragePreprocess(_) => Ok(Self::Query2Preprocess),
             TaskType::StorageQuery(_) => Ok(Self::Query2Query),
             TaskType::StorageGroth16(_) => Ok(Self::Query2Groth16),
+            TaskType::Erc20Query(_) => Ok(Self::QueryErc20),
             _ => Err(anyhow!("Unsupported task type: {:?}", task_type)),
         }
     }
@@ -35,6 +38,7 @@ impl Display for ProverType {
             Self::Query2Preprocess => write!(f, "Query2Preprocess"),
             Self::Query2Query => write!(f, "Query2Query"),
             Self::Query2Groth16 => write!(f, "Query2Groth16"),
+            Self::QueryErc20 => write!(f, "QueryErc20"),
         }
     }
 }

@@ -35,6 +35,7 @@ pub trait StorageProver {
         &self,
         mapping_proof: &[u8],
         length_extract_proof: &[u8],
+        skip_match: bool,
     ) -> anyhow::Result<Vec<u8>>;
 
     fn prove_equivalence(
@@ -48,11 +49,11 @@ pub trait StorageProver {
     fn prove_blocks_db_subsequent(&self, data: BlocksDbData) -> anyhow::Result<Vec<u8>>;
 }
 
-pub(crate) struct StoragePreprocessProver {
+pub(crate) struct EuclidProver {
     params: PublicParameters<STORAGE_BLOCKCHAIN_DB_HEIGHT>,
 }
 
-impl StoragePreprocessProver {
+impl EuclidProver {
     // #[allow(dead_code)] - clippy warning because of dummy-prover feature
     #[allow(dead_code)]
     pub(crate) fn init(
@@ -75,7 +76,7 @@ impl StoragePreprocessProver {
     }
 }
 
-impl StorageProver for StoragePreprocessProver {
+impl StorageProver for EuclidProver {
     fn prove_mpt_leaf(&self, data: &MptProofLeafData) -> anyhow::Result<Vec<u8>> {
         let leaf = api::mapping::CircuitInput::new_leaf(
             data.node.clone(),
@@ -267,12 +268,14 @@ impl StorageProver for StoragePreprocessProver {
         &self,
         mapping_proof: &[u8],
         length_extract_proof: &[u8],
+        skip_match: bool,
     ) -> anyhow::Result<Vec<u8>> {
         let ts = std::time::Instant::now();
 
         let length_match_input = storage::length_match::CircuitInput::new(
             mapping_proof.to_vec(),
             length_extract_proof.to_vec(),
+            skip_match,
         );
 
         let input = api::CircuitInput::LengthMatch(length_match_input);

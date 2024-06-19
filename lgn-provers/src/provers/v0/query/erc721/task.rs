@@ -1,10 +1,16 @@
 use anyhow::Context;
 use lgn_messages::types::v0::query::keys::ProofKey;
-use lgn_messages::types::v0::query::{Query2BlockData, WorkerReply, WorkerTask, WorkerTaskType};
-use lgn_messages::types::{MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType};
+use lgn_messages::types::v0::query::{QueryBlockData, WorkerTask, WorkerTaskType};
+use lgn_messages::types::{
+    MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
+};
 
-use crate::provers::v0::query::prover::QueryProver;
+use crate::provers::v0::query::erc721::prover::QueryProver;
 use crate::provers::LgnProver;
+
+pub struct Query<P> {
+    prover: P,
+}
 
 impl<P: QueryProver> LgnProver for Query<P> {
     fn run(
@@ -13,10 +19,6 @@ impl<P: QueryProver> LgnProver for Query<P> {
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         self.run_inner(envelope)
     }
-}
-
-pub struct Query<P> {
-    prover: P,
 }
 
 impl<P: QueryProver> Query<P> {
@@ -31,8 +33,7 @@ impl<P: QueryProver> Query<P> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
         if let TaskType::StorageQuery(task) = envelope.inner() {
-            let reply =
-                self.process_task(task.chain_id, query_id.clone(), task_id.clone(), task)?;
+            let reply = self.process_task(task.chain_id, query_id.clone(), task)?;
             let reply_type = ReplyType::StorageQuery(reply);
             let reply_envelope = MessageReplyEnvelope::new(query_id, task_id, reply_type);
             Ok(reply_envelope)
@@ -45,7 +46,6 @@ impl<P: QueryProver> Query<P> {
         &mut self,
         chain_id: u64,
         query_id: String,
-        task_id: String,
         task: &WorkerTask,
     ) -> anyhow::Result<WorkerReply> {
         let maybe_proof = match &task.task_type {
@@ -75,8 +75,8 @@ impl<P: QueryProver> Query<P> {
 
                 Some((key, proof))
             }
-            WorkerTaskType::Aggregation(data) => match data {
-                Query2BlockData::FullNode(ref input) => {
+            WorkerTaskType::BlocksDb(data) => match data {
+                QueryBlockData::FullNode(ref input) => {
                     let key = ProofKey::Aggregation(query_id.clone(), data.position()).to_string();
                     let proof = self
                         .prover
@@ -88,7 +88,7 @@ impl<P: QueryProver> Query<P> {
 
                     Some((key, proof))
                 }
-                Query2BlockData::PartialNode(ref input) => {
+                QueryBlockData::PartialNode(ref input) => {
                     let key = ProofKey::Aggregation(query_id.clone(), data.position()).to_string();
                     let proof = self
                         .prover
@@ -109,6 +109,6 @@ impl<P: QueryProver> Query<P> {
             }
         };
 
-        Ok(WorkerReply::new(chain_id, query_id, task_id, maybe_proof))
+        Ok(WorkerReply::new(chain_id, maybe_proof))
     }
 }

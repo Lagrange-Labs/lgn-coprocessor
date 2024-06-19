@@ -19,7 +19,7 @@ use checksums::Error;
 use clap::Parser;
 use jwt::{Claims, RegisteredClaims};
 use mimalloc::MiMalloc;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::{connect, Message};
@@ -199,7 +199,7 @@ fn run(config: &Config) -> Result<()> {
             .with_context(|| "unable to read from gateway socket")?;
         match msg {
             Message::Text(content) => {
-                debug!("Received message: {:?}", content);
+                trace!("Received message: {:?}", content);
                 metrics.increment_websocket_messages_received("text");
 
                 match serde_json::from_str::<DownstreamPayload<TaskType>>(&content)? {
@@ -244,7 +244,8 @@ fn run(config: &Config) -> Result<()> {
 fn register_provers(config: &Config, router: &mut ProversManager) {
     if config.worker.instance_type >= WorkerClass::Small {
         info!("Creating query prover");
-        register_v0_query_prover(config, router);
+        register_v0_ecr721_query_prover(config, router);
+        register_v0_ecr20_query_prover(config, router);
         info!("Query prover created");
     }
 
@@ -292,9 +293,9 @@ fn register_v0_preprocessor(config: &Config, router: &mut ProversManager) {
     router.add_prover(ProverType::Query2Preprocess, Box::new(preprocessing_prover));
 }
 
-fn register_v0_query_prover(config: &Config, router: &mut ProversManager) {
+fn register_v0_ecr721_query_prover(config: &Config, router: &mut ProversManager) {
     let params_config = &config.public_params;
-    let query2_prover = query::create_prover(
+    let query2_prover = query::erc721::create_prover(
         &params_config.url,
         &params_config.dir,
         &params_config.query2_params.file,
@@ -304,6 +305,20 @@ fn register_v0_query_prover(config: &Config, router: &mut ProversManager) {
     .expect("Failed to create query handler");
 
     router.add_prover(ProverType::Query2Query, Box::new(query2_prover));
+}
+
+fn register_v0_ecr20_query_prover(config: &Config, router: &mut ProversManager) {
+    let params_config = &config.public_params;
+    let query3_prover = query::erc20::create_prover(
+        &params_config.url,
+        &params_config.dir,
+        &params_config.query2_params.file,
+        &params_config.checksum_expected_local_path,
+        params_config.skip_store,
+    )
+    .expect("Failed to create query handler");
+
+    router.add_prover(ProverType::QueryErc20, Box::new(query3_prover));
 }
 
 fn verify_directory_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<()> {

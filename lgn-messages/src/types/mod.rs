@@ -1,4 +1,5 @@
 use crate::routing::RoutingKey;
+use derive_debug_plus::Dbg;
 use serde_derive::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
@@ -17,6 +18,7 @@ pub enum TaskType {
     RecProof(experimental::rec_proof::WorkerTask),
     StoragePreprocess(v0::preprocessing::WorkerTask),
     StorageQuery(v0::query::WorkerTask),
+    Erc20Query(v0::query::erc20::WorkerTask),
     StorageGroth16(v0::groth16::WorkerTask),
 }
 
@@ -24,9 +26,10 @@ pub enum TaskType {
 pub enum ReplyType {
     TxTrie(experimental::tx_trie::WorkerReply),
     RecProof(experimental::rec_proof::WorkerReply),
-    StoragePreprocess(v0::preprocessing::WorkerReply),
-    StorageQuery(v0::query::WorkerReply),
-    StorageGroth16(v0::groth16::WorkerReply),
+    StoragePreprocess(u64, WorkerReply),
+    StorageQuery(WorkerReply),
+    Erc20Query(WorkerReply),
+    StorageGroth16(WorkerReply),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -70,12 +73,16 @@ impl<T> MessageEnvelope<T> {
         }
     }
 
-    pub fn query_id(&self) -> &String {
+    pub fn query_id(&self) -> &str {
         &self.query_id
     }
 
-    pub fn task_id(&self) -> &String {
+    pub fn task_id(&self) -> &str {
         &self.task_id
+    }
+
+    pub fn id(&self) -> String {
+        format!("{}-{}", self.query_id, self.task_id)
     }
 
     pub fn inner(&self) -> &T {
@@ -110,6 +117,10 @@ impl<T> MessageReplyEnvelope<T> {
         }
     }
 
+    pub fn id(&self) -> String {
+        format!("{}-{}", self.query_id, self.task_id)
+    }
+
     /// Flatten `inner`, returning either Ok(successful_proof) or
     /// Err(WorkerError)
     pub fn inner(&self) -> Result<&T, &WorkerError> {
@@ -130,6 +141,20 @@ impl<T> MessageReplyEnvelope<T> {
 
     pub fn task_id(&self) -> &str {
         &self.task_id
+    }
+}
+
+#[derive(Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
+pub struct WorkerReply {
+    pub chain_id: u64,
+    #[dbg(formatter = crate::types::kp_pretty)]
+    pub proof: Option<KeyedPayload>,
+}
+
+impl WorkerReply {
+    #[must_use]
+    pub fn new(chain_id: u64, proof: Option<KeyedPayload>) -> Self {
+        Self { chain_id, proof }
     }
 }
 
@@ -156,6 +181,12 @@ impl Position {
 
     pub fn as_tuple(&self) -> (usize, usize) {
         (self.level, self.index)
+    }
+}
+
+impl Display for Position {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}/{}", self.level, self.index)
     }
 }
 

@@ -1,18 +1,28 @@
-use lgn_messages::types::v0::query::{
-    PartialNodeBlockData, Query2StateData, RevelationData, StorageProofInput,
-};
 use std::thread::sleep;
 
-use super::prover::QueryProver;
+use ethers::addressbook::Address;
+
+use lgn_messages::types::v0::query::erc20::{RevelationData, StorageBranchInput, StorageLeafInput};
+use lgn_messages::types::v0::query::{PartialNodeBlockData, QueryStateData};
+
+use crate::provers::v0::query::erc20::prover::QueryProver;
 
 pub struct DummyProver;
 
 impl QueryProver for DummyProver {
-    fn prove_storage_entry(&self, _data: StorageProofInput) -> anyhow::Result<Vec<u8>> {
+    fn prove_storage_leaf(&self, _data: &StorageLeafInput) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 
-    fn prove_state_db(&self, _d: &Query2StateData) -> anyhow::Result<Vec<u8>> {
+    fn prove_storage_branch(&self, _data: &StorageBranchInput) -> anyhow::Result<Vec<u8>> {
+        Ok(prove())
+    }
+
+    fn prove_state_db(
+        &self,
+        _contract: Address,
+        _data: &QueryStateData,
+    ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 

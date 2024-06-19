@@ -1,12 +1,13 @@
 use anyhow::bail;
-use mr_plonky2_circuits::query2::PublicParameters as QueryParameters;
+use mr_plonky2_circuits::api::{QueryInput, QueryParameters};
+use mr_plonky2_circuits::query2;
 
 use mr_plonky2_circuits::query2::block::CircuitInput as BlockCircuitInput;
-use mr_plonky2_circuits::query2::revelation::RevelationRecursiveInput as RevelationCircuitInputs;
+use mr_plonky2_circuits::query2::revelation::RevelationInput;
 use mr_plonky2_circuits::query2::state::CircuitInput as StateCircuitInput;
 
 use lgn_messages::types::v0::query::{
-    PartialNodeBlockData, Query2StateData, RevelationData, StorageProofInput,
+    PartialNodeBlockData, QueryStateData, RevelationData, StorageProofInput,
 };
 use tracing::debug;
 
@@ -18,7 +19,7 @@ use crate::provers::v0::STORAGE_BLOCKCHAIN_DB_HEIGHT;
 pub trait QueryProver {
     fn prove_storage_entry(&self, data: StorageProofInput) -> anyhow::Result<Vec<u8>>;
 
-    fn prove_state_db(&self, d: &Query2StateData) -> anyhow::Result<Vec<u8>>;
+    fn prove_state_db(&self, d: &QueryStateData) -> anyhow::Result<Vec<u8>>;
 
     fn prove_block_partial_node(&self, data: &PartialNodeBlockData) -> anyhow::Result<Vec<u8>>;
 
@@ -65,17 +66,14 @@ impl QueryProver for QueryStorageProver {
         let storage_input = match data {
             StorageProofInput::Leaf { key, value } => {
                 debug!("Generating proof for storage leaf with key: {:?}", key);
-                mr_plonky2_circuits::query2::storage::CircuitInput::new_leaf(&key, &value)
+                query2::storage::CircuitInput::new_leaf(&key, &value)
             }
             StorageProofInput::FullBranch {
                 left_child_proof,
                 right_child_proof,
             } => {
                 debug!("Generating proof for full branch");
-                mr_plonky2_circuits::query2::storage::CircuitInput::new_full_node(
-                    &left_child_proof,
-                    &right_child_proof,
-                )
+                query2::storage::CircuitInput::new_full_node(&left_child_proof, &right_child_proof)
             }
             StorageProofInput::PartialBranch {
                 proven_child,
@@ -84,13 +82,13 @@ impl QueryProver for QueryStorageProver {
             } => {
                 debug!("Generating proof for partial branch");
                 if right_is_proven {
-                    mr_plonky2_circuits::query2::storage::CircuitInput::new_partial_node(
+                    query2::storage::CircuitInput::new_partial_node(
                         &unproven_child_hash,
                         &proven_child,
                         right_is_proven,
                     )
                 } else {
-                    mr_plonky2_circuits::query2::storage::CircuitInput::new_partial_node(
+                    query2::storage::CircuitInput::new_partial_node(
                         &proven_child,
                         &unproven_child_hash,
                         right_is_proven,
@@ -99,7 +97,8 @@ impl QueryProver for QueryStorageProver {
             }
         };
 
-        let input = mr_plonky2_circuits::query2::api::CircuitInput::Storage(storage_input);
+        let input = query2::api::CircuitInput::Storage(storage_input);
+        let input = QueryInput::Query2(input);
 
         let proof = self
             .params
@@ -117,18 +116,30 @@ impl QueryProver for QueryStorageProver {
         Ok(proof)
     }
 
-    fn prove_state_db(&self, d: &Query2StateData) -> anyhow::Result<Vec<u8>> {
+    fn prove_state_db(&self, d: &QueryStateData) -> anyhow::Result<Vec<u8>> {
         let now = std::time::Instant::now();
-        // Currently supporting single leaf
-        let siblings = [[0u8; 32]; 0];
-        let positions = [true; 0];
+
+        let proof = d.proof.clone().unwrap_or_default();
+        let siblings = proof
+            .clone()
+            .into_iter()
+            .map(|(_, hash)| hash)
+            .collect::<Vec<[u8; 32]>>();
+
+        let positions = proof
+            .into_iter()
+            .map(|(pos, _)| pos.index % 2 == 0)
+            .collect::<Vec<bool>>();
+
+        let depth = siblings.len() as u32;
+
         let input = StateCircuitInput::new(
             d.smart_contract_address,
             d.mapping_slot,
             d.length_slot,
             // currently proving is assuming block number < 2^32
             d.block_number as u32,
-            0,
+            depth,
             &siblings,
             &positions,
             d.block_hash,
@@ -136,7 +147,8 @@ impl QueryProver for QueryStorageProver {
             d.storage_proof.to_vec(),
         )?;
 
-        let input = mr_plonky2_circuits::query2::api::CircuitInput::State(input);
+        let input = query2::api::CircuitInput::State(input);
+        let input = QueryInput::Query2(input);
 
         let proof = self
             .params
@@ -166,7 +178,8 @@ impl QueryProver for QueryStorageProver {
             sibling_is_left,
         )?;
 
-        let input = mr_plonky2_circuits::query2::api::CircuitInput::Block(input);
+        let input = query2::api::CircuitInput::Block(input);
+        let input = QueryInput::Query2(input);
 
         let proof = self
             .params
@@ -194,10 +207,10 @@ impl QueryProver for QueryStorageProver {
     ) -> anyhow::Result<Vec<u8>> {
         let now = std::time::Instant::now();
 
-        // TODO: make these slices in mapreduce-plonky2
         let input = BlockCircuitInput::new_full_node(left_proof.to_vec(), right_proof.to_vec())?;
 
-        let input = mr_plonky2_circuits::query2::api::CircuitInput::Block(input);
+        let input = query2::api::CircuitInput::Block(input);
+        let input = QueryInput::Query2(input);
 
         let proof = self
             .params
@@ -218,16 +231,16 @@ impl QueryProver for QueryStorageProver {
     fn prove_revelation(&self, data: &RevelationData) -> anyhow::Result<Vec<u8>> {
         let now = std::time::Instant::now();
 
-        let input = RevelationCircuitInputs::<EXPOSED_RESULT_SIZE>::new(
+        let input = RevelationInput::new(
             data.mapping_keys.clone(),
             data.query_min_block,
             data.query_max_block,
-            // TODO: make these references in mapreduce-plonky2
             data.query2_proof.to_vec(),
             data.block_db_proof.to_vec(),
         )?;
 
-        let input = mr_plonky2_circuits::query2::api::CircuitInput::Revelation(input);
+        let input = query2::api::CircuitInput::Revelation(input);
+        let input = QueryInput::Query2(input);
 
         let proof = self
             .params

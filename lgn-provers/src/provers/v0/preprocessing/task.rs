@@ -6,9 +6,11 @@ use crate::provers::LgnProver;
 use ethers::types::H256;
 use lgn_messages::types::v0::preprocessing::keys::ProofKey;
 use lgn_messages::types::v0::preprocessing::{
-    MptData, StateDbData, StorageDbData, WorkerReply, WorkerTask, WorkerTaskType,
+    MptData, StateDbData, StorageDbData, WorkerTask, WorkerTaskType,
 };
-use lgn_messages::types::{MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType};
+use lgn_messages::types::{
+    MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
+};
 use std::time::Instant;
 use tracing::debug;
 
@@ -37,7 +39,7 @@ impl<P: StorageProver> Preprocessing<P> {
         debug!("Starting preprocessing task runner");
         if let TaskType::StoragePreprocess(task @ WorkerTask { block_nr, .. }) = envelope.inner() {
             let reply = self.process_task(*block_nr, task)?;
-            let reply = ReplyType::StoragePreprocess(reply);
+            let reply = ReplyType::StoragePreprocess(*block_nr, reply);
             let reply = MessageReplyEnvelope::new(envelope.query_id, envelope.task_id, reply);
             Ok(reply)
         } else {
@@ -142,7 +144,11 @@ impl<P: StorageProver> Preprocessing<P> {
                 let key = ProofKey::Bridge(block_nr, data.contract).to_string();
                 let proof = self
                     .prover
-                    .prove_length_match(&data.mapping_proof, &data.length_extract_proof)
+                    .prove_length_match(
+                        &data.mapping_proof,
+                        &data.length_extract_proof,
+                        data.skip_match,
+                    )
                     .context("runnning prove_length_match")?;
 
                 histogram!("zkmr_worker_proving_latency", "proof_type" => "length_match")
@@ -174,7 +180,7 @@ impl<P: StorageProver> Preprocessing<P> {
                 debug!("Proving block linking: {:?}", block_nr);
 
                 let ts = Instant::now();
-                let key = ProofKey::BlockLinking(block_nr).to_string();
+                let key = ProofKey::BlockLinking(block_nr, data.contract).to_string();
                 let proof = self.prover.prove_block_number_linking(data).unwrap();
 
                 histogram!("zkmr_worker_proving_latency", "proof_type" => "block_linking")
@@ -241,7 +247,7 @@ impl<P: StorageProver> Preprocessing<P> {
             }
         };
 
-        Ok(WorkerReply::new(task.chain_id, task.block_nr, maybe_proof))
+        Ok(WorkerReply::new(task.chain_id, maybe_proof))
     }
 }
 
