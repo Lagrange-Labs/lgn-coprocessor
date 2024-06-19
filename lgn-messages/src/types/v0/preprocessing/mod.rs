@@ -5,7 +5,7 @@ use derive_debug_plus::Dbg;
 use ethers::types::Address;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::types::{HashOutput, KeyedPayload, Position};
+use crate::types::{HashOutput, Position};
 
 pub mod keys;
 
@@ -204,6 +204,9 @@ pub struct LengthMatchData {
     /// Length extract proof in bytes
     #[dbg(placeholder = "...")]
     pub length_extract_proof: Vec<u8>,
+
+    /// Should we skip length match(ERC20 use case)
+    pub skip_match: bool,
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]

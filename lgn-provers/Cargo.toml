@@ -8,8 +8,8 @@ anyhow = "1.0.86"
 lgn-messages = { path = "../lgn-messages" }
 ethers = "2.0.14"
 metrics = "0.22.0"
-mr_plonky2_circuits = { git = "https://github.com/Lagrange-Labs/Euclid-database.git", branch = "fix/erc_mapping_leaf" }
-groth16_framework = { git = "https://github.com/Lagrange-Labs/Euclid-database.git", branch = "fix/erc_mapping_leaf" }
+mr_plonky2_circuits = { git = "https://github.com/Lagrange-Labs/Euclid-database.git", branch = "develop" }
+groth16_framework = { git = "https://github.com/Lagrange-Labs/Euclid-database.git", branch = "develop" }
 tracing = "0.1.40"
 bytes = "1.6.0"
 serde = "1.0.202"

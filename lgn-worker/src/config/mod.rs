@@ -26,7 +26,6 @@ pub(crate) struct PublicParamsConfig {
     pub(crate) skip_store: bool,
     pub(crate) preprocessing_params: PreprocessingParams,
     pub(crate) query2_params: Query2Params,
-    pub(crate) erc20_params: Ecr20Params,
     pub(crate) groth16_assets: Groth16Assets,
 }
 

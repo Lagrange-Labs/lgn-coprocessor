@@ -35,6 +35,7 @@ pub trait StorageProver {
         &self,
         mapping_proof: &[u8],
         length_extract_proof: &[u8],
+        skip_match: bool,
     ) -> anyhow::Result<Vec<u8>>;
 
     fn prove_equivalence(
@@ -255,14 +256,14 @@ impl StorageProver for StoragePreprocessProver {
         &self,
         mapping_proof: &[u8],
         length_extract_proof: &[u8],
+        skip_match: bool,
     ) -> anyhow::Result<Vec<u8>> {
         let ts = std::time::Instant::now();
 
         let length_match_input = storage::length_match::CircuitInput::new(
             mapping_proof.to_vec(),
             length_extract_proof.to_vec(),
-            //FIXME
-            true,
+            skip_match,
         );
 
         let input = api::CircuitInput::LengthMatch(length_match_input);

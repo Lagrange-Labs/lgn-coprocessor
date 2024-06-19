@@ -1,10 +1,11 @@
-use crate::types::v0::query::erc20::keys::BlockNr;
-use crate::types::{HashOutput, Position};
 use derive_debug_plus::Dbg;
 use ethers::addressbook::Address;
 use ethers::prelude::U256;
 use serde_derive::{Deserialize, Serialize};
-use crate::types::v0::query::{FullNodeBlockData, QueryBlockData, QueryStateData};
+
+use crate::types::v0::query::erc20::keys::BlockNr;
+use crate::types::v0::query::{QueryBlockData, QueryStateData};
+use crate::types::Position;
 
 pub mod keys;
 
@@ -42,7 +43,6 @@ pub enum StorageData {
     StorageBranch(StorageBranchInput),
 }
 
-
 #[derive(Clone, Dbg, Deserialize, Serialize)]
 pub struct StorageLeafInput {
     pub block_number: BlockNr,
@@ -67,7 +67,6 @@ pub struct StorageBranchInput {
     #[dbg(placeholder = "...")]
     pub child_proof: Vec<u8>,
 }
-
 
 #[derive(Clone, Dbg, Default, PartialEq, Deserialize, Serialize)]
 pub struct RevelationData {

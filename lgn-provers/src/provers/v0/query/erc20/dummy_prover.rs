@@ -1,43 +1,44 @@
-use crate::provers::v0::query::erc20::prover::QueryProver;
-use ethers::addressbook::Address;
-use lgn_messages::types::v0::query::erc20::{
-    RevelationData, StorageBranchInput,
-    StorageLeafInput,
-};
 use std::thread::sleep;
-use lgn_messages::types::v0::query::{FullNodeBlockData, PartialNodeBlockData, QueryStateData};
+
+use ethers::addressbook::Address;
+
+use lgn_messages::types::v0::query::erc20::{RevelationData, StorageBranchInput, StorageLeafInput};
+use lgn_messages::types::v0::query::{PartialNodeBlockData, QueryStateData};
+
+use crate::provers::v0::query::erc20::prover::QueryProver;
 
 pub struct DummyProver;
 
 impl QueryProver for DummyProver {
-    fn prove_storage_leaf(
+    fn prove_storage_leaf(&self, _data: &StorageLeafInput) -> anyhow::Result<Vec<u8>> {
+        Ok(prove())
+    }
+
+    fn prove_storage_branch(&self, _data: &StorageBranchInput) -> anyhow::Result<Vec<u8>> {
+        Ok(prove())
+    }
+
+    fn prove_state_db(
         &self,
-        data: &StorageLeafInput,
+        _contract: Address,
+        _data: &QueryStateData,
     ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 
-    fn prove_storage_branch(&self, data: &StorageBranchInput) -> anyhow::Result<Vec<u8>> {
-        Ok(prove())
-    }
-
-    fn prove_state_db(&self, contract: Address, data: &QueryStateData) -> anyhow::Result<Vec<u8>> {
-        Ok(prove())
-    }
-
-    fn prove_block_partial_node(&self, data: &PartialNodeBlockData) -> anyhow::Result<Vec<u8>> {
+    fn prove_block_partial_node(&self, _data: &PartialNodeBlockData) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 
     fn prove_block_full_node(
         &self,
-        left_proof: &[u8],
-        right_proof: &[u8],
+        _left_proof: &[u8],
+        _right_proof: &[u8],
     ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 
-    fn prove_revelation(&self, data: &RevelationData) -> anyhow::Result<Vec<u8>> {
+    fn prove_revelation(&self, _data: &RevelationData) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 }

@@ -1,23 +1,14 @@
 use crate::params::ParamsLoader;
 use ethers::addressbook::Address;
-use ethers::prelude::U256;
-use lgn_messages::types::v0::query::erc20::{
-    RevelationData, StorageBranchInput,
-    StorageLeafInput,
-};
-use lgn_messages::types::Position;
+use lgn_messages::types::v0::query::erc20::{RevelationData, StorageBranchInput, StorageLeafInput};
+use lgn_messages::types::v0::query::{PartialNodeBlockData, QueryStateData};
 use mr_plonky2_circuits::api::{QueryInput, QueryParameters};
 use mr_plonky2_circuits::query_erc20;
 use mr_plonky2_circuits::query_erc20::RevelationErcInput;
-use mr_plonky2_circuits::types::HashOutput;
 use tracing::{debug, info};
-use lgn_messages::types::v0::query::{FullNodeBlockData, PartialNodeBlockData, QueryStateData};
 
 pub trait QueryProver {
-    fn prove_storage_leaf(
-        &self,
-        data: &StorageLeafInput,
-    ) -> anyhow::Result<Vec<u8>>;
+    fn prove_storage_leaf(&self, data: &StorageLeafInput) -> anyhow::Result<Vec<u8>>;
 
     fn prove_storage_branch(&self, data: &StorageBranchInput) -> anyhow::Result<Vec<u8>>;
 
@@ -39,6 +30,8 @@ pub struct EuclidProver {
 }
 
 impl EuclidProver {
+    // #[allow(dead_code)] - clippy warning because of dummy-prover feature
+    #[allow(dead_code)]
     pub fn init(url: &str, dir: &str, file: &str, skip_store: bool) -> anyhow::Result<Self> {
         info!("Creating Erc20 query prover");
 
@@ -52,23 +45,14 @@ impl EuclidProver {
 }
 
 impl QueryProver for EuclidProver {
-    fn prove_storage_leaf(
-        &self,
-        data: &StorageLeafInput,
-    ) -> anyhow::Result<Vec<u8>> {
+    fn prove_storage_leaf(&self, data: &StorageLeafInput) -> anyhow::Result<Vec<u8>> {
         info!("Generating storage leaf proof...");
 
         let now = std::time::Instant::now();
 
-        let value = if data.query_address == data.used_address {
-            data.value
-        } else {
-            U256::zero()
-        };
-
         let circuit_input = query_erc20::StorageCircuitInput::new_leaf(
-            data.query_address,
             data.used_address,
+            data.query_address,
             data.value,
             data.total_supply,
             data.rewards_rate,
@@ -104,7 +88,6 @@ impl QueryProver for EuclidProver {
             (&data.child_proof, &data.unproven_child_hash)
         };
 
-
         let circuit_input = query_erc20::StorageCircuitInput::new_inner_node(
             left_child,
             right_child,
@@ -134,7 +117,7 @@ impl QueryProver for EuclidProver {
 
         let now = std::time::Instant::now();
 
-        let proof = data.proof.clone().unwrap_or(vec![]);
+        let proof = data.proof.clone().unwrap_or_default();
         let siblings = proof
             .clone()
             .into_iter()
@@ -219,7 +202,8 @@ impl QueryProver for EuclidProver {
         let now = std::time::Instant::now();
 
         let circuit_input = query_erc20::BlockCircuitInput::new_full_node(
-            left_proof.to_vec(), right_proof.to_vec(),
+            left_proof.to_vec(),
+            right_proof.to_vec(),
         )?;
         let circuit = query_erc20::CircuitInput::Block(circuit_input);
         let input = QueryInput::QueryErc(circuit);

@@ -144,7 +144,11 @@ impl<P: StorageProver> Preprocessing<P> {
                 let key = ProofKey::Bridge(block_nr, data.contract).to_string();
                 let proof = self
                     .prover
-                    .prove_length_match(&data.mapping_proof, &data.length_extract_proof)
+                    .prove_length_match(
+                        &data.mapping_proof,
+                        &data.length_extract_proof,
+                        data.skip_match,
+                    )
                     .context("runnning prove_length_match")?;
 
                 histogram!("zkmr_worker_proving_latency", "proof_type" => "length_match")

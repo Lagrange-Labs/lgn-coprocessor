@@ -1,16 +1,14 @@
 use anyhow::Context;
 
+use lgn_messages::types::v0::query::erc20::keys::ProofKey;
+use lgn_messages::types::v0::query::erc20::{StorageData, WorkerTask, WorkerTaskType};
+use lgn_messages::types::v0::query::QueryBlockData::{FullNode, PartialNode};
 use lgn_messages::types::{
     MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
 };
-use lgn_messages::types::v0::query::erc20::{
-    StorageData, WorkerTask, WorkerTaskType,
-};
-use lgn_messages::types::v0::query::erc20::keys::ProofKey;
-use lgn_messages::types::v0::query::QueryBlockData::{FullNode, PartialNode};
 
-use crate::provers::LgnProver;
 use crate::provers::v0::query::erc20::prover::QueryProver;
+use crate::provers::LgnProver;
 
 pub struct Query<P> {
     prover: P,

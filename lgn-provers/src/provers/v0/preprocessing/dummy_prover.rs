@@ -49,6 +49,7 @@ impl StorageProver for DummyProver {
         &self,
         _mapping_proof: &[u8],
         _length_extract_proof: &[u8],
+        _skip_match: bool,
     ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
