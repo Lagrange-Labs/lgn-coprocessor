@@ -395,7 +395,7 @@ fn verify_directory_checksums(dir: &str, expected_checksums_file: &str) -> anyho
 
     Ok(())
 }
-fn fetch_checksum_file(url: &str, local_path: &str) -> Result<()> {
+fn fetch_checksum_file(url: &str, local_path: &str) -> anyhow::Result<()> {
     let response = reqwest::blocking::get(url)
         .context("Failed to fetch checksum file")?
         .text()
