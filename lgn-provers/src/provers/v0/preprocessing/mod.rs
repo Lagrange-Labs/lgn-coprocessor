@@ -24,13 +24,7 @@ pub fn create_prover(
         #[cfg(not(feature = "dummy-prover"))]
         {
             info!("Creating storage prover");
-            prover::EuclidProver::init(
-                url,
-                dir,
-                file,
-                checksum_expected_local_path,
-                skip_store,
-            )?
+            prover::EuclidProver::init(url, dir, file, checksum_expected_local_path, skip_store)?
         }
     };
 

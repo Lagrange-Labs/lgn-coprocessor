@@ -52,12 +52,7 @@ impl<GP: Prover> Groth16<GP> {
         task: &WorkerTask,
     ) -> anyhow::Result<WorkerReply> {
         let proof = self.generate_proof(&query_id, &task_id, &task.aggregated_result)?;
-        Ok(WorkerReply::new(
-            task.chain_id,
-            query_id,
-            task_id,
-            Some(proof),
-        ))
+        Ok(WorkerReply::new(task.chain_id, Some(proof)))
     }
 
     /// Generate the Groth proof.

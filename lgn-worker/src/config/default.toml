@@ -28,10 +28,6 @@ file = "STORAGE_PREPROCESS/PUBLIC_PARAMS"
 # Parameters name in S3 and file name where it's will be stored
 file = "STORAGE_QUERY2/public_params"
 
-[public_params.erc20_params]
-# Parameters name in S3 and file name where it's will be stored
-file = "STORAGE_QUERY2/public_params"
-
 [public_params.groth16_assets]
 # Parameters name in S3 and file name where it's will be stored
 circuit_file = "STORAGE_QUERY2/groth16_assets/circuit.bin"

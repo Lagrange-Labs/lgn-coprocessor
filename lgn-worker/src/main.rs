@@ -129,8 +129,8 @@ fn run(config: &Config) -> Result<()> {
             serde_json::Value::String(config.worker.instance_type.to_string()),
         ),
     ]
-        .into_iter()
-        .collect::<BTreeMap<String, serde_json::Value>>();
+    .into_iter()
+    .collect::<BTreeMap<String, serde_json::Value>>();
 
     let claims = Claims {
         registered,
@@ -274,7 +274,7 @@ fn register_v0_groth16_prover(config: &Config, router: &mut ProversManager) {
         &assets.pk_file,
         params_config.skip_store,
     )
-        .expect("Failed to create groth16 handler");
+    .expect("Failed to create groth16 handler");
 
     router.add_prover(ProverType::Query2Groth16, Box::new(groth16_prover));
 }
@@ -288,7 +288,7 @@ fn register_v0_preprocessor(config: &Config, router: &mut ProversManager) {
         &params_config.checksum_expected_local_path,
         params_config.skip_store,
     )
-        .expect("Failed to create preprocessing handler");
+    .expect("Failed to create preprocessing handler");
 
     router.add_prover(ProverType::Query2Preprocess, Box::new(preprocessing_prover));
 }
@@ -302,7 +302,7 @@ fn register_v0_ecr721_query_prover(config: &Config, router: &mut ProversManager)
         &params_config.checksum_expected_local_path,
         params_config.skip_store,
     )
-        .expect("Failed to create query handler");
+    .expect("Failed to create query handler");
 
     router.add_prover(ProverType::Query2Query, Box::new(query2_prover));
 }
@@ -312,197 +312,15 @@ fn register_v0_ecr20_query_prover(config: &Config, router: &mut ProversManager) 
     let query3_prover = query::erc20::create_prover(
         &params_config.url,
         &params_config.dir,
-        &params_config.erc20_params.file,
+        &params_config.query2_params.file,
+        &params_config.checksum_expected_local_path,
         params_config.skip_store,
     )
-        .expect("Failed to create query handler");
+    .expect("Failed to create query handler");
 
     router.add_prover(ProverType::QueryErc20, Box::new(query3_prover));
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::config::Config;
-    use backtrace::Backtrace;
-    use ethers::abi::{ethereum_types, Address};
-    use ethers::types::U256;
-    use lgn_messages::routing::RoutingKey;
-    use lgn_messages::types::v0::query::erc20::{
-        StorageBranchInput, StorageData,
-        StorageLeafInput, WorkerTask, WorkerTaskType,
-    };
-    use lgn_messages::types::{
-        HashOutput, MessageEnvelope, Position, ReplyType, TaskType, WorkerReply,
-    };
-    use lgn_provers::provers::v0::query;
-    use lgn_provers::provers::LgnProver;
-    use rand::{thread_rng, Rng};
-    use std::panic;
-    use tracing::error;
-    use tracing_subscriber::EnvFilter;
-
-    // #[test]
-    // fn test_ecr20_query() {
-    //     let mut rng = thread_rng();
-    //     tracing_subscriber::fmt()
-    //         .with_env_filter(EnvFilter::from_default_env())
-    //         .init();
-    //
-    //     panic::set_hook(Box::new(|panic_info| {
-    //         let backtrace = Backtrace::new();
-    //         error!("Panic occurred: {:?}", panic_info);
-    //         error!("Backtrace: {:?}", backtrace);
-    //     }));
-    //
-    //     let config = Config::load(Some(
-    //         "/Users/andrussalumets/IdeaProjects/lgn-coprocessor/local_assets/worker-conf.toml"
-    //             .to_string(),
-    //     ));
-    //     let params_config = &config.public_params;
-    //     let mut query3_prover = query::erc20::create_prover(
-    //         &params_config.url,
-    //         &params_config.dir,
-    //         &params_config.erc20_params.file,
-    //         params_config.skip_store,
-    //     )
-    //         .expect("Failed to create query handler");
-    //
-    //     let contract = Address::random();
-    //     let address = contract;
-    //
-    //     let max_total_supply = U256::MAX >> 16;
-    //     let [value, total_supply] = [0; 2].map(|_| U256(rng.gen::<[u64; 4]>()));
-    //     let total_supply = total_supply & max_total_supply;
-    //
-    //     let value = value & total_supply;
-    //     let rewards_rate = U256::from(rng.gen::<u16>());
-    //
-    //     let storage_leaf_task = WorkerTask {
-    //         chain_id: 10,
-    //         contract,
-    //         task_type: WorkerTaskType::StorageEntry(StorageData::StorageLeaf(StorageLeafInput {
-    //             block_number: 100,
-    //             position: Position::default(),
-    //             query_address: address,
-    //             value,
-    //             total_supply,
-    //             rewards_rate,
-    //         })),
-    //     };
-    //
-    //     let task_type = TaskType::Erc20Query(storage_leaf_task);
-    //
-    //     let message = MessageEnvelope::new(
-    //         "query_id".to_string(),
-    //         "task_id".to_string(),
-    //         task_type,
-    //         RoutingKey::Priority(0),
-    //     );
-    //
-    //     let result = query3_prover.run(message).unwrap();
-    //     let proof =
-    //         if let ReplyType::Erc20Query(WorkerReply { proof, .. }) = result.inner().unwrap() {
-    //             proof.clone().unwrap()
-    //         } else {
-    //             panic!("Unexpected reply type");
-    //         };
-    //
-    //     let storage_leaf_task = WorkerTask {
-    //         chain_id: 10,
-    //         contract,
-    //         task_type: WorkerTaskType::StorageEntry(StorageData::StorageBranch(
-    //             StorageBranchInput {
-    //                 block_number: 100,
-    //                 position: Position::default(),
-    //                 left_child: proof.1,
-    //                 right_child: HashOutput::default().to_vec(),
-    //                 proved_is_right: false,
-    //             },
-    //         )),
-    //     };
-    //
-    //     let task_type = TaskType::Erc20Query(storage_leaf_task);
-    //
-    //     let message = MessageEnvelope::new(
-    //         "query_id".to_string(),
-    //         "task_id".to_string(),
-    //         task_type,
-    //         RoutingKey::Priority(0),
-    //     );
-    //
-    //     let result = query3_prover.run(message).unwrap();
-    //
-    //     let proof =
-    //         if let ReplyType::Erc20Query(WorkerReply { proof, .. }) = result.inner().unwrap() {
-    //             proof.clone().unwrap()
-    //         } else {
-    //             panic!("Unexpected reply type");
-    //         };
-    //
-    //     let storage_leaf_task = WorkerTask {
-    //         chain_id: 10,
-    //         contract,
-    //         task_type: WorkerTaskType::StateEntry(StateInput {
-    //             smart_contract_address: Default::default(),
-    //             mapping_slot: 8,
-    //             length_slot: 2,
-    //             block_number: 100,
-    //             proof: None,
-    //             block_hash: HashOutput::default(),
-    //             storage_proof: proof.1,
-    //         }),
-    //     };
-    //
-    //     let task_type = TaskType::Erc20Query(storage_leaf_task);
-    //
-    //     let message = MessageEnvelope::new(
-    //         "query_id".to_string(),
-    //         "task_id".to_string(),
-    //         task_type,
-    //         RoutingKey::Priority(0),
-    //     );
-    //
-    //     let result = query3_prover.run(message).unwrap();
-    //
-    //     let proof =
-    //         if let ReplyType::Erc20Query(WorkerReply { proof, .. }) = result.inner().unwrap() {
-    //             proof.clone().unwrap()
-    //         } else {
-    //             panic!("Unexpected reply type");
-    //         };
-    //
-    //     let storage_leaf_task = WorkerTask {
-    //         chain_id: 10,
-    //         contract,
-    //         task_type: WorkerTaskType::BlocksDb(BlocksDbData::BlockPartialNode(
-    //             BlockPartialNodeInput {
-    //                 position: Default::default(),
-    //                 child_proof: proof.1,
-    //                 sibling_hash: HashOutput::default(),
-    //                 sibling_is_left: false,
-    //             },
-    //         )),
-    //     };
-    //
-    //     let task_type = TaskType::Erc20Query(storage_leaf_task);
-    //
-    //     let message = MessageEnvelope::new(
-    //         "query_id".to_string(),
-    //         "task_id".to_string(),
-    //         task_type,
-    //         RoutingKey::Priority(0),
-    //     );
-    //
-    //     let result = query3_prover.run(message).unwrap();
-    //
-    //     let proof =
-    //         if let ReplyType::Erc20Query(WorkerReply { proof, .. }) = result.inner().unwrap() {
-    //             proof.clone().unwrap()
-    //         } else {
-    //             panic!("Unexpected reply type");
-    //         };
-    // }
-}
 fn verify_directory_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<()> {
     debug!("Computing hashes from: {:?}", dir);
     let computed_hashes = create_hashes(
@@ -577,7 +395,7 @@ fn verify_directory_checksums(dir: &str, expected_checksums_file: &str) -> anyho
 
     Ok(())
 }
-fn fetch_checksum_file(url: &str, local_path: &str) -> anyhow::Result<()> {
+fn fetch_checksum_file(url: &str, local_path: &str) -> Result<()> {
     let response = reqwest::blocking::get(url)
         .context("Failed to fetch checksum file")?
         .text()
@@ -589,4 +407,3 @@ fn fetch_checksum_file(url: &str, local_path: &str) -> anyhow::Result<()> {
 
     Ok(())
 }
-

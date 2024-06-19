@@ -2219,7 +2219,7 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=fix/erc_mapping_leaf#d550d9f0b48a469b2859079fa52c18df3dee1b68"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#89206eb162da0825b12a3611305b48b0bc0f9cf3"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2239,7 +2239,7 @@ dependencies = [
 [[package]]
 name = "groth16_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=fix/erc_mapping_leaf#d550d9f0b48a469b2859079fa52c18df3dee1b68"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#89206eb162da0825b12a3611305b48b0bc0f9cf3"
 dependencies = [
  "anyhow",
  "bytes",
@@ -3114,7 +3114,7 @@ dependencies = [
  "mimalloc",
  "rand",
  "redact",
- "reqwest 0.12.4",
+ "reqwest 0.12.5",
  "rpassword",
  "serde",
  "serde_derive",
@@ -3336,7 +3336,7 @@ dependencies = [
 [[package]]
 name = "mr_plonky2_circuits"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=fix/erc_mapping_leaf#d550d9f0b48a469b2859079fa52c18df3dee1b68"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#89206eb162da0825b12a3611305b48b0bc0f9cf3"
 dependencies = [
  "anyhow",
  "bincode",
@@ -3362,7 +3362,7 @@ dependencies = [
 [[package]]
 name = "mrp2_utils"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=fix/erc_mapping_leaf#d550d9f0b48a469b2859079fa52c18df3dee1b68"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#89206eb162da0825b12a3611305b48b0bc0f9cf3"
 dependencies = [
  "anyhow",
  "bincode",
@@ -4290,7 +4290,7 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=fix/erc_mapping_leaf#d550d9f0b48a469b2859079fa52c18df3dee1b68"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git?branch=develop#89206eb162da0825b12a3611305b48b0bc0f9cf3"
 dependencies = [
  "anyhow",
  "log",

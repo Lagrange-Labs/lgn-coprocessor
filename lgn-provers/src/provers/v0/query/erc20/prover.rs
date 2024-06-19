@@ -1,14 +1,11 @@
 use crate::params::ParamsLoader;
 use ethers::addressbook::Address;
+use lgn_messages::types::v0::query::erc20::{RevelationData, StorageBranchInput, StorageLeafInput};
+use lgn_messages::types::v0::query::{PartialNodeBlockData, QueryStateData};
 use mr_plonky2_circuits::api::{QueryInput, QueryParameters};
-use lgn_messages::types::v0::query::erc20::{
-    RevelationData, StorageBranchInput,
-    StorageLeafInput,
-};
 use mr_plonky2_circuits::query_erc20;
 use mr_plonky2_circuits::query_erc20::RevelationErcInput;
 use tracing::{debug, info};
-use lgn_messages::types::v0::query::{PartialNodeBlockData, QueryStateData};
 
 pub trait QueryProver {
     fn prove_storage_leaf(&self, data: &StorageLeafInput) -> anyhow::Result<Vec<u8>>;
@@ -35,11 +32,18 @@ pub struct EuclidProver {
 impl EuclidProver {
     // #[allow(dead_code)] - clippy warning because of dummy-prover feature
     #[allow(dead_code)]
-    pub fn init(url: &str, dir: &str, file: &str, skip_store: bool) -> anyhow::Result<Self> {
+    pub fn init(
+        url: &str,
+        dir: &str,
+        file: &str,
+        checksum_expected_local_path: &str,
+        skip_store: bool,
+    ) -> anyhow::Result<Self> {
         info!("Creating Erc20 query prover");
 
-        let params = ParamsLoader::prepare_bincode(url, dir, file, skip_store)
-            .expect("Failed to load params");
+        let params =
+            ParamsLoader::prepare_bincode(url, dir, file, checksum_expected_local_path, skip_store)
+                .expect("Failed to load params");
 
         info!("Erc20 query prover created");
 
@@ -48,19 +52,14 @@ impl EuclidProver {
 }
 
 impl QueryProver for EuclidProver {
-    fn prove_storage_leaf(
-        &self,
-        data: &StorageLeafInput,
-    ) -> anyhow::Result<Vec<u8>> {
+    fn prove_storage_leaf(&self, data: &StorageLeafInput) -> anyhow::Result<Vec<u8>> {
         info!("Generating storage leaf proof...");
 
         let now = std::time::Instant::now();
 
-
         let circuit_input = query_erc20::StorageCircuitInput::new_leaf(
             data.used_address,
             data.query_address,
-            data.used_address,
             data.value,
             data.total_supply,
             data.rewards_rate,
@@ -95,7 +94,6 @@ impl QueryProver for EuclidProver {
         } else {
             (&data.child_proof, &data.unproven_child_hash)
         };
-
 
         let circuit_input = query_erc20::StorageCircuitInput::new_inner_node(
             left_child,

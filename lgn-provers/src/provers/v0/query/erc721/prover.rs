@@ -6,7 +6,9 @@ use mr_plonky2_circuits::query2::block::CircuitInput as BlockCircuitInput;
 use mr_plonky2_circuits::query2::revelation::RevelationInput;
 use mr_plonky2_circuits::query2::state::CircuitInput as StateCircuitInput;
 
-use lgn_messages::types::v0::query::{PartialNodeBlockData, QueryStateData, RevelationData, StorageProofInput};
+use lgn_messages::types::v0::query::{
+    PartialNodeBlockData, QueryStateData, RevelationData, StorageProofInput,
+};
 use tracing::debug;
 
 use crate::params::ParamsLoader;
