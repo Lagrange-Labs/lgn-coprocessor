@@ -7,6 +7,9 @@ use mr_plonky2_circuits::query_erc20;
 use mr_plonky2_circuits::query_erc20::RevelationErcInput;
 use tracing::{debug, info};
 
+use crate::provers::v0::EXPOSED_RESULT_SIZE;
+use crate::provers::v0::STORAGE_BLOCKCHAIN_DB_HEIGHT;
+
 pub trait QueryProver {
     fn prove_storage_leaf(&self, data: &StorageLeafInput) -> anyhow::Result<Vec<u8>>;
 
@@ -26,7 +29,7 @@ pub trait QueryProver {
 }
 
 pub struct EuclidProver {
-    params: QueryParameters<21, 5>,
+    params: QueryParameters<STORAGE_BLOCKCHAIN_DB_HEIGHT, EXPOSED_RESULT_SIZE>,
 }
 
 impl EuclidProver {

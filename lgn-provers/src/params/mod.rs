@@ -39,7 +39,7 @@ impl ParamsLoader {
 
             match result {
                 Ok(true) => {
-                    info!("Loading params from local storage");
+                    info!("Loading params from local storage {:?}", file);
                     let file = File::open(&file);
                     let reader = std::io::BufReader::new(file.unwrap());
 
