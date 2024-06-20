@@ -136,7 +136,7 @@ impl QueryProver for EuclidProver {
 
         let positions = proof
             .into_iter()
-            .map(|(pos, _)| pos.index % 2 == 1)
+            .map(|(pos, _)| pos.index % 2 == 0)
             .collect::<Vec<bool>>();
 
         let depth = siblings.len() as u32;
