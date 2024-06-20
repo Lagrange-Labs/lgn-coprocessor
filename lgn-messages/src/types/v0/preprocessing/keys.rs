@@ -1,4 +1,4 @@
-use crate::types::v0::STORAGE_QUERY2;
+use crate::types::v0::{PARAMS_VERSION, STORAGE_QUERY2};
 use std::fmt::Display;
 
 use ethers::abi::Address;
@@ -71,8 +71,8 @@ impl Display for ProofKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ProofKey::PublicParams => {
-                // Example: STORAGE_PREPROCESS/PUBLIC_PARAMS
-                write!(f, "{STORAGE_PREPROCESS}/{PUBLIC_PARAMS}")
+                // Example: latest/STORAGE_PREPROCESS/PUBLIC_PARAMS
+                write!(f, "{PARAMS_VERSION}/{STORAGE_PREPROCESS}/{PUBLIC_PARAMS}")
             }
             ProofKey::MptInclusion(block_nr, contract, mpt_node_hash) => {
                 // Example: STORAGE_PREPROCESS/0xabcd/123/MPT/0x456
