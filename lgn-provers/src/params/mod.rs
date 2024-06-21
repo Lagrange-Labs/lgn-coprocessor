@@ -61,8 +61,7 @@ impl ParamsLoader {
                             "skipping checksum and loading file from local storage {:?}",
                             file
                         );
-                        let file = File::open(&file);
-                        let reader = std::io::BufReader::new(file.unwrap());
+                        let reader = std::io::BufReader::new(params.as_ref());
                         return bincode::deserialize_from(reader).map_err(Into::into);
                     }
                     if !skip_store {
