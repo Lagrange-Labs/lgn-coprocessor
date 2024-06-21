@@ -23,16 +23,16 @@ skip_store = false
 
 [public_params.preprocessing_params]
 # Parameters name in S3 and file name where it's will be stored
-file = "STORAGE_PREPROCESS/PUBLIC_PARAMS"
+file = "latest/STORAGE_PREPROCESS/PUBLIC_PARAMS"
 
 [public_params.query2_params]
 # Parameters name in S3 and file name where it's will be stored
-file = "STORAGE_QUERY2/public_params"
+file = "latest/STORAGE_QUERY2/public_params"
 
 [public_params.groth16_assets]
 # Parameters name in S3 and file name where it's will be stored
-circuit_file = "STORAGE_QUERY2/groth16_assets/circuit.bin"
+circuit_file = "latest/STORAGE_QUERY2/groth16_assets/circuit.bin"
 # Parameters name in S3 and file name where it's will be stored
-r1cs_file = "STORAGE_QUERY2/groth16_assets/r1cs.bin"
+r1cs_file = "latest/STORAGE_QUERY2/groth16_assets/r1cs.bin"
 # Parameters name in S3 and file name where it's will be stored
-pk_file = "STORAGE_QUERY2/groth16_assets/pk.bin"
+pk_file = "latest/STORAGE_QUERY2/groth16_assets/pk.bin"
