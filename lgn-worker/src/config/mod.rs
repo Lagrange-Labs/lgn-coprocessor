@@ -23,6 +23,7 @@ pub(crate) struct PublicParamsConfig {
     pub(crate) url: String,
     pub(crate) checksum_url: String,
     pub(crate) checksum_expected_local_path: String,
+    pub(crate) skip_checksum: bool,
     pub(crate) dir: String,
     /// If set to true, the parameters will not be written to disk, ever.
     pub(crate) skip_store: bool,
@@ -189,6 +190,7 @@ mod test {
             &conf.public_params.dir.clone(),
             &conf.public_params.query2_params.file.clone(),
             &conf.public_params.checksum_expected_local_path,
+            conf.public_params.skip_checksum,
             conf.public_params.skip_store,
         )
         .expect("this should work");
@@ -204,6 +206,7 @@ mod test {
             &conf.public_params.dir.clone(),
             &conf.public_params.query2_params.file.clone(),
             &conf.public_params.checksum_expected_local_path,
+            conf.public_params.skip_checksum,
             conf.public_params.skip_store,
         )
         .expect("this should work");

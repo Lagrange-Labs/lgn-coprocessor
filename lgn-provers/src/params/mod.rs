@@ -20,6 +20,7 @@ impl ParamsLoader {
         base_dir: &str,
         file_name: &str,
         checksum_expected_local_path: &str,
+        skip_checksum: bool,
         skip_store: bool,
     ) -> anyhow::Result<P> {
         fs::create_dir_all(base_dir).context("Failed to create directory")?;
@@ -50,6 +51,15 @@ impl ParamsLoader {
                     retries += 1;
 
                     let params = Self::download_file(base_url, file_name)?;
+                    if skip_checksum {
+                        info!(
+                            "skipping checksum and loading file from local storage {:?}",
+                            file
+                        );
+                        let file = File::open(&file);
+                        let reader = std::io::BufReader::new(file.unwrap());
+                        return bincode::deserialize_from(reader).map_err(Into::into);
+                    }
                     if !skip_store {
                         Self::store_file(&file, &params)
                             .context("Failed to store params to local storage")?;

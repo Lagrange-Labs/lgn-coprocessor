@@ -61,6 +61,7 @@ impl EuclidProver {
         dir: &str,
         file: &str,
         checksum_expected_local_path: &str,
+        skip_checksum: bool,
         skip_store: bool,
     ) -> anyhow::Result<Self> {
         debug!("Creating preprocessing prover");
@@ -69,6 +70,7 @@ impl EuclidProver {
             dir,
             file,
             checksum_expected_local_path,
+            skip_checksum,
             skip_store,
         )?;
         debug!("Preprocessing prover created");

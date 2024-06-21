@@ -40,13 +40,20 @@ impl EuclidProver {
         dir: &str,
         file: &str,
         checksum_expected_local_path: &str,
+        skip_checksum: bool,
         skip_store: bool,
     ) -> anyhow::Result<Self> {
         info!("Creating Erc20 query prover");
 
-        let params =
-            ParamsLoader::prepare_bincode(url, dir, file, checksum_expected_local_path, skip_store)
-                .expect("Failed to load params");
+        let params = ParamsLoader::prepare_bincode(
+            url,
+            dir,
+            file,
+            checksum_expected_local_path,
+            skip_checksum,
+            skip_store,
+        )
+        .expect("Failed to load params");
 
         info!("Erc20 query prover created");
 

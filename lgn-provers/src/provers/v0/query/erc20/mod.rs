@@ -12,6 +12,7 @@ pub fn create_prover(
     dir: &str,
     file: &str,
     checksum_expected_local_path: &str,
+    skip_checksum: bool,
     skip_store: bool,
 ) -> anyhow::Result<Query<impl QueryProver>> {
     let prover = {
@@ -26,7 +27,14 @@ pub fn create_prover(
             use crate::provers::v0::query::erc20::prover::EuclidProver;
 
             info!("Creating query prover");
-            EuclidProver::init(url, dir, file, checksum_expected_local_path, skip_store)?
+            EuclidProver::init(
+                url,
+                dir,
+                file,
+                checksum_expected_local_path,
+                skip_checksum,
+                skip_store,
+            )?
         }
     };
 
