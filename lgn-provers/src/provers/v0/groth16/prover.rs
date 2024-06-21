@@ -17,11 +17,13 @@ pub struct Groth16Prover {
 impl Groth16Prover {
     // #[allow(dead_code)] - clippy warning because of dummy-prover feature
     #[allow(dead_code)]
+    #[allow(clippy::too_many_arguments)]
     pub fn init(
         url: &str,
         dir: &str,
         circuit_file: &str,
         checksum_expected_local_path: &str,
+        skip_checksum: bool,
         r1cs_file: &str,
         pk_file: &str,
         skip_store: bool,
@@ -31,6 +33,7 @@ impl Groth16Prover {
             dir,
             circuit_file,
             checksum_expected_local_path,
+            skip_checksum,
             skip_store,
         )?;
         let r1cs_bytes = ParamsLoader::prepare_raw(
@@ -38,10 +41,17 @@ impl Groth16Prover {
             dir,
             r1cs_file,
             checksum_expected_local_path,
+            skip_checksum,
             skip_store,
         )?;
-        let pk_bytes =
-            ParamsLoader::prepare_raw(url, dir, pk_file, checksum_expected_local_path, skip_store)?;
+        let pk_bytes = ParamsLoader::prepare_raw(
+            url,
+            dir,
+            pk_file,
+            checksum_expected_local_path,
+            skip_checksum,
+            skip_store,
+        )?;
 
         debug!("Creating Groth16 prover");
         let inner = InnerProver::from_bytes(
