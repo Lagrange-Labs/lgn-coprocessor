@@ -1,4 +1,5 @@
 use std::collections::BTreeSet;
+use std::ffi::OsStr;
 use std::path::Path;
 use std::result::Result::Ok;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -19,6 +20,7 @@ use checksums::Error;
 use clap::Parser;
 use jwt::{Claims, RegisteredClaims};
 use mimalloc::MiMalloc;
+use reqwest::IntoUrl;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tungstenite::client::IntoClientRequest;
@@ -326,10 +328,13 @@ fn register_v0_ecr20_query_prover(config: &Config, router: &mut ProversManager) 
     router.add_prover(ProverType::QueryErc20, Box::new(query3_prover));
 }
 
-fn verify_directory_checksums(dir: &str, expected_checksums_file: &str) -> anyhow::Result<()> {
+fn verify_directory_checksums(
+    dir: impl AsRef<OsStr> + std::fmt::Debug,
+    expected_checksums_file: impl AsRef<Path>,
+) -> anyhow::Result<()> {
     debug!("Computing hashes from: {:?}", dir);
     let computed_hashes = create_hashes(
-        Path::new(dir),
+        Path::new(dir.as_ref()),
         BTreeSet::new(),
         checksums::Algorithm::BLAKE3,
         None,
@@ -347,7 +352,7 @@ fn verify_directory_checksums(dir: &str, expected_checksums_file: &str) -> anyho
         checksums::Algorithm::BLAKE3,
         computed_hashes.clone(),
     );
-    let expected_hashes_file = Path::new(&expected_checksums_file);
+    let expected_hashes_file = Path::new(expected_checksums_file.as_ref());
     let expected_hashes = read_hashes(
         &mut std::io::stderr(),
         &("output".to_string(), expected_hashes_file.to_path_buf()),
@@ -383,7 +388,7 @@ fn verify_directory_checksums(dir: &str, expected_checksums_file: &str) -> anyho
                     if let CompareFileResult::FileDiffers { file, .. } = file_differ {
                         info!("File did not match the checksum. Deleting File {} ", file);
                         // This will only delete the file where the checksum has failed
-                        if let Err(err) = fs::remove_file(Path::new(dir).join(file)) {
+                        if let Err(err) = fs::remove_file(Path::new(dir.as_ref()).join(file)) {
                             error!("Error deleting file {}: {}", file, err);
                         }
                     }
@@ -400,7 +405,8 @@ fn verify_directory_checksums(dir: &str, expected_checksums_file: &str) -> anyho
 
     Ok(())
 }
-fn fetch_checksum_file(url: &str, local_path: &str) -> anyhow::Result<()> {
+
+fn fetch_checksum_file(url: impl IntoUrl, local_path: impl AsRef<Path>) -> anyhow::Result<()> {
     let response = reqwest::blocking::get(url)
         .context("Failed to fetch checksum file")?
         .text()

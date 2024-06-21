@@ -1,4 +1,4 @@
-use crate::types::v0::STORAGE_QUERY2;
+use crate::types::v0::{PARAMS_VERSION, STORAGE_QUERY2};
 use object_store::path::Path;
 use serde_derive::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -53,8 +53,11 @@ pub enum AssetKey {
 impl Display for AssetKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let filename = self.filename();
-
-        write!(f, "{STORAGE_QUERY2}/groth16_assets/{filename}")
+        // Example: latest/STORAGE_QUERY2/groth16_assets/circuit.bin
+        write!(
+            f,
+            "{PARAMS_VERSION}/{STORAGE_QUERY2}/groth16_assets/{filename}"
+        )
     }
 }
 
