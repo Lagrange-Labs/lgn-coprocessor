@@ -9,7 +9,10 @@ and this project adheres to
 
 ### Added
 - Checksum verification
-- Downloading only the missing files
+- New Public Params
+
+### Changed
+- Downloading only the missing/corrupted files
 
 ## v2.1.0
 
