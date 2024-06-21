@@ -36,7 +36,12 @@ impl ParamsLoader {
             if retries >= DOWNLOAD_MAX_RETRIES {
                 bail!("Downloading file {:?} failed", file);
             }
-            let result = Self::verify_file_checksum(file_name, &file, checksum_expected_local_path);
+            let result = Self::verify_file_checksum(
+                file_name,
+                &file,
+                checksum_expected_local_path,
+                skip_checksum,
+            );
 
             match result {
                 Ok(true) => {
@@ -80,7 +85,7 @@ impl ParamsLoader {
 
         let file = format!("{base_dir}/{file_name}");
 
-        let _ = Self::verify_file_checksum(file_name, &file, checksum_expected_local_path);
+        let _ = Self::verify_file_checksum(file_name, &file, checksum_expected_local_path, false);
 
         match File::open(&file) {
             Ok(file) => Ok(Self::read_file(file)?),
@@ -129,6 +134,7 @@ impl ParamsLoader {
         file_name: &str,
         file: &str,
         checksum_expected_local_path: &str,
+        skip_checksum: bool,
     ) -> anyhow::Result<bool> {
         // checking if file exists
         if File::open(file).is_err() {
@@ -192,6 +198,9 @@ impl ParamsLoader {
             }
 
             _ => {
+                if skip_checksum {
+                    return Ok(false);
+                }
                 if let Err(err) = fs::remove_file(Path::new(file)) {
                     error!("Error deleting file {}: {}", file, err);
                 }
