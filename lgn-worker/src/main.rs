@@ -184,9 +184,10 @@ fn run(config: &Config) -> Result<()> {
     register_provers(config, &mut provers_manager);
 
     // Verify checksum
-
-    verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
-        .context("Failed to verify checksums")?;
+    if !config.public_params.skip_checksum {
+        verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
+            .context("Failed to verify checksums")?;
+    }
 
     info!("ready to work");
     ws_socket
@@ -272,6 +273,7 @@ fn register_v0_groth16_prover(config: &Config, router: &mut ProversManager) {
         &params_config.dir,
         &assets.circuit_file,
         &params_config.checksum_expected_local_path,
+        params_config.skip_checksum,
         &assets.r1cs_file,
         &assets.pk_file,
         params_config.skip_store,
@@ -288,6 +290,7 @@ fn register_v0_preprocessor(config: &Config, router: &mut ProversManager) {
         &params_config.dir,
         &params_config.preprocessing_params.file,
         &params_config.checksum_expected_local_path,
+        params_config.skip_checksum,
         params_config.skip_store,
     )
     .expect("Failed to create preprocessing handler");
@@ -302,6 +305,7 @@ fn register_v0_ecr721_query_prover(config: &Config, router: &mut ProversManager)
         &params_config.dir,
         &params_config.query2_params.file,
         &params_config.checksum_expected_local_path,
+        params_config.skip_checksum,
         params_config.skip_store,
     )
     .expect("Failed to create query handler");
@@ -316,6 +320,7 @@ fn register_v0_ecr20_query_prover(config: &Config, router: &mut ProversManager) 
         &params_config.dir,
         &params_config.query2_params.file,
         &params_config.checksum_expected_local_path,
+        params_config.skip_checksum,
         params_config.skip_store,
     )
     .expect("Failed to create query handler");

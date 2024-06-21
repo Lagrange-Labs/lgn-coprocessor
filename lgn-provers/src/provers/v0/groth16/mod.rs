@@ -14,6 +14,7 @@ pub fn create_prover(
     dir: &str,
     circuit_file: &str,
     checksum_expected_local_path: &str,
+    skip_checksum: bool,
     pk_file: &str,
     vk_file: &str,
     skip_store: bool,
