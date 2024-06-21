@@ -78,25 +78,45 @@ impl ParamsLoader {
         base_dir: &str,
         file_name: &str,
         checksum_expected_local_path: &str,
+        skip_checksum: bool,
         skip_store: bool,
     ) -> anyhow::Result<Bytes> {
         std::fs::create_dir_all(base_dir).context("Failed to create directory")?;
 
         let file = format!("{base_dir}/{file_name}");
+        info!(
+            "Checking if params are on local storage and have the right checksum: {}",
+            file
+        );
+        let mut retries = 0;
+        loop {
+            debug!("checksum attempt number:  {:?}", retries);
+            if retries >= DOWNLOAD_MAX_RETRIES {
+                bail!("Downloading file {:?} failed", file);
+            }
+            let result = Self::verify_file_checksum(
+                file_name,
+                &file,
+                checksum_expected_local_path,
+                skip_checksum,
+            );
 
-        let _ = Self::verify_file_checksum(file_name, &file, checksum_expected_local_path, false);
-
-        match File::open(&file) {
-            Ok(file) => Ok(Self::read_file(file)?),
-            Err(err) => {
-                info!("Failed to load params from local storage: {err}");
-
-                let params = Self::download_file(base_url, file_name)?;
-                if !skip_store {
-                    Self::store_file(&file, &params)
-                        .context("Failed to store params to local storage")?;
+            match result {
+                Ok(true) => {
+                    let file = File::open(&file)?;
+                    return Self::read_file(file);
                 }
-                Ok(params)
+
+                _ => {
+                    info!("public params are not locally stored yet, or checksum mismatch");
+                    retries += 1;
+
+                    let params = Self::download_file(base_url, file_name)?;
+                    if !skip_store {
+                        Self::store_file(&file, &params)
+                            .context("Failed to store params to local storage")?;
+                    }
+                }
             }
         }
     }
