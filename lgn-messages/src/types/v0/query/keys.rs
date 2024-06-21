@@ -1,4 +1,4 @@
-use crate::types::v0::STORAGE_QUERY2;
+use crate::types::v0::{PARAMS_VERSION, STORAGE_QUERY2};
 use ethers::abi::Address;
 use std::fmt::Display;
 
@@ -41,7 +41,8 @@ impl Display for ProofKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ProofKey::PublicParams => {
-                write!(f, "{STORAGE_QUERY2}/public_params")
+                // Example: latest/STORAGE_QUERY2/public_params
+                write!(f, "{PARAMS_VERSION}/{STORAGE_QUERY2}/public_params")
             }
             ProofKey::StorageEntry(query_id, block_nr, contract, position) => {
                 let level = position.level;
