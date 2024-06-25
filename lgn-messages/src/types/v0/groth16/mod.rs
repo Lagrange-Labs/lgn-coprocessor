@@ -10,9 +10,11 @@ pub const ROUTING_DOMAIN: &str = "sg";
 #[derive(Clone, Debug, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum WorkerTaskType {
-    /// Generate the Groth16 proof.
     #[serde(rename = "1")]
-    Prove,
+    ERC721,
+
+    #[serde(rename = "2")]
+    ERC20,
 }
 
 #[derive(Clone, Serialize, Deserialize, Dbg)]
