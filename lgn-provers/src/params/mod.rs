@@ -88,12 +88,9 @@ impl ParamsLoader {
             "Checking if params are on local storage and have the right checksum: {}",
             file
         );
-        let mut retries = 0;
-        loop {
-            debug!("checksum attempt number:  {:?}", retries);
-            if retries >= DOWNLOAD_MAX_RETRIES {
-                bail!("Downloading file {:?} failed", file);
-            }
+        const TRIALS: usize = 2;
+        for i in 0..TRIALS {
+            debug!("checksum attempt number:  {:?}", i);
             let result = Self::verify_file_checksum(
                 file_name,
                 &file,
@@ -109,7 +106,6 @@ impl ParamsLoader {
 
                 _ => {
                     info!("public params are not locally stored yet, or checksum mismatch");
-                    retries += 1;
 
                     let params = Self::download_file(base_url, file_name)?;
                     if !skip_store {
@@ -119,6 +115,7 @@ impl ParamsLoader {
                 }
             }
         }
+        bail!("could not prepare groth16 params");
     }
 
     fn download_file(base_url: &str, file_name: &str) -> anyhow::Result<Bytes> {
