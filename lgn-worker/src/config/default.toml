@@ -16,8 +16,8 @@ port = 9090
 dir = "./zkmr_params"
 checksum_expected_local_path = "/tmp/expected_checksums.txt"
 # Parameters common directory
-url = "https://distributed-query-public-params-0-3-0.s3.us-east-2.amazonaws.com"
-checksum_url = "https://distributed-query-public-params-0-3-0.s3.us-east-2.amazonaws.com/public_params.hash"
+url = "https://pub-202881a00f674748aebc3252ef4e69d5.r2.dev"
+checksum_url = "https://pub-202881a00f674748aebc3252ef4e69d5.r2.dev/public_params.hash"
 skip_checksum = false
 skip_store = false
 
