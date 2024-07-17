@@ -247,8 +247,8 @@ fn run(config: &Config) -> Result<()> {
 fn register_provers(config: &Config, manager: &mut ProversManager) {
     if config.worker.instance_type >= WorkerClass::Small {
         info!("Creating query prover");
-        register_v0_ecr721_query_prover(config, manager);
-        register_v0_ecr20_query_prover(config, manager);
+        register_v0_erc721_query_prover(config, manager);
+        register_v0_erc20_query_prover(config, manager);
         info!("Query prover created");
     }
 
@@ -298,7 +298,7 @@ fn register_v0_preprocessor(config: &Config, manager: &mut ProversManager) {
     manager.add_prover(ProverType::Query2Preprocess, Box::new(preprocessing_prover));
 }
 
-fn register_v0_ecr721_query_prover(config: &Config, manager: &mut ProversManager) {
+fn register_v0_erc721_query_prover(config: &Config, manager: &mut ProversManager) {
     let params_config = &config.public_params;
     let query2_prover = query::erc721::create_prover(
         &params_config.url,
@@ -313,7 +313,7 @@ fn register_v0_ecr721_query_prover(config: &Config, manager: &mut ProversManager
     manager.add_prover(ProverType::Query2Query, Box::new(query2_prover));
 }
 
-fn register_v0_ecr20_query_prover(config: &Config, manager: &mut ProversManager) {
+fn register_v0_erc20_query_prover(config: &Config, manager: &mut ProversManager) {
     let params_config = &config.public_params;
     let query3_prover = query::erc20::create_prover(
         &params_config.url,
