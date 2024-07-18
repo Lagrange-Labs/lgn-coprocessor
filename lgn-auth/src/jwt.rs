@@ -1,6 +1,7 @@
 //! JWT authorization logic used in both worker and gateway
 
 use anyhow::Result;
+use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
 use elliptic_curve::{consts::U32, sec1::ToEncodedPoint};
 use ethers::prelude::{LocalWallet, Signature};
 use ethers_core::k256::{
@@ -44,14 +45,14 @@ impl JWTAuth {
         // <https://github.com/mikkyang/rust-jwt/blob/master/src/lib.rs#L164>
 
         let json_bytes = serde_json::to_vec(&self)?;
-        Ok(base64::encode_config(json_bytes, base64::URL_SAFE_NO_PAD))
+        Ok(BASE64_URL_SAFE_NO_PAD.encode(json_bytes))
     }
 
     /// Decode from a Base64 string.
     pub fn decode(s: &str) -> Result<Self> {
         // <https://github.com/mikkyang/rust-jwt/blob/master/src/lib.rs#L182>
 
-        let json_bytes = base64::decode_config(s, base64::URL_SAFE_NO_PAD)?;
+        let json_bytes = BASE64_URL_SAFE_NO_PAD.decode(s)?;
         Ok(serde_json::from_slice(&json_bytes)?)
     }
 
