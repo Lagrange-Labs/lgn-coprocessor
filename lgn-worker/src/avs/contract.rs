@@ -10,26 +10,22 @@ use std::sync::Arc;
 /// - currently same address for mainnet and holesky
 const HOLESKY_ZKMR_SERVICE_MANAGER_ADDR: &str = "0xf98D5De1014110C65c51b85Ea55f73863215CC10";
 const MAINNET_ZKMR_SERVICE_MANAGER_ADDR: &str = "0x22CAc0e6A1465F043428e8AeF737b3cb09D0eEDa";
-const LOCAL_ZKMR_SERVICE_MANAGER_ADDR: &str = "0x70621A875adB93392e2B782e07fd3e1A953Ffb4f";
 
 /// ZKMRStakeRegistry contract address
 /// <https://github.com/Lagrange-Labs/lpn-relayer/blob/feat/avs-relay/src/config/chain.ts#L57>
 /// - currently same address for mainnet and holesky
 const HOLESKY_ZKMR_STAKE_REGISTRY_ADDR: &str = "0xf724cDC7C40fd6B59590C624E8F0E5E3843b4BE4";
 const MAINNET_ZKMR_STAKE_REGISTRY_ADDR: &str = "0x8dcdCc50Cc00Fe898b037bF61cCf3bf9ba46f15C";
-const LOCAL_ZKMR_STAKE_REGISTRY_ADDR: &str = "0xEe4cd8999aF659188720808e8af2f8DaB41EBD10";
 
 /// AVSDirectory contract address
 /// from https://github.com/Layr-Labs/eigenlayer-contracts?tab=readme-ov-file#deployments
 const MAINNET_AVS_DIRECTORY_ADDR: &str = "0x135dda560e946695d6f155dacafc6f1f25c1f5af";
 const HOLESKY_AVS_DIRECTORY_ADDR: &str = "0x055733000064333CaDDbC92763c58BF0192fFeBf";
-const LOCAL_AVS_DIRECTORY_ADDR: &str = "0x8BfC4B63Cb65d1004c9e9a0a8982915Dc9aAAf29";
 
 /// DelegationManager contract address
 /// from https://github.com/Layr-Labs/eigenlayer-contracts?tab=readme-ov-file#deployments
 const MAINNET_DELEGATION_MANAGER_ADDR: &str = "0x39053D51B77DC0d36036Fc1fCc8Cb819df8Ef37A";
 const HOLESKY_DELEGATION_MANAGER_ADDR: &str = "0xA44151489861Fe9e3055d95adC98FbD462B948e7";
-const LOCAL_DELEGATION_MANAGER_ADDR: &str = "0x30bdaE426d3CBD42e9d41D23958Fac6AD8310f81";
 
 abigen!(
     AVSDirectory,
@@ -74,11 +70,12 @@ impl Network {
     /// on Lagrange Network AVS
     fn lagrange_registry_address(&self) -> Address {
         match self {
-            Network::Mainnet => MAINNET_ZKMR_STAKE_REGISTRY_ADDR,
-            Network::Holesky => HOLESKY_ZKMR_STAKE_REGISTRY_ADDR,
-            Network::Local => LOCAL_ZKMR_STAKE_REGISTRY_ADDR,
+            Network::Mainnet => MAINNET_ZKMR_STAKE_REGISTRY_ADDR.to_string(),
+            Network::Holesky => HOLESKY_ZKMR_STAKE_REGISTRY_ADDR.to_string(),
+            Network::Local => {
+                std::env::var("ZKMR_STAKE_REGISTRY_ADDR").expect("ZKMR_STAKE_REGISTRY_ADDR not set")
+            }
         }
-        .to_string()
         .parse()
         .expect("invalid registry address")
     }
@@ -86,11 +83,11 @@ impl Network {
     /// compute the right avs digest hash for the registration signature.
     fn lagrange_service_manager_address(&self) -> Address {
         match self {
-            Network::Mainnet => MAINNET_ZKMR_SERVICE_MANAGER_ADDR,
-            Network::Holesky => HOLESKY_ZKMR_SERVICE_MANAGER_ADDR,
-            Network::Local => LOCAL_ZKMR_SERVICE_MANAGER_ADDR,
+            Network::Mainnet => MAINNET_ZKMR_SERVICE_MANAGER_ADDR.to_string(),
+            Network::Holesky => HOLESKY_ZKMR_SERVICE_MANAGER_ADDR.to_string(),
+            Network::Local => std::env::var("ZKMR_SERVICE_REGISTRY_ADDR")
+                .expect("ZKMR_SERVICE_REGISTRY_ADDR not set"),
         }
-        .to_string()
         .parse()
         .expect("invalid service manager address")
     }
@@ -101,7 +98,9 @@ impl Network {
         match self {
             Network::Mainnet => MAINNET_DELEGATION_MANAGER_ADDR.to_string(),
             Network::Holesky => HOLESKY_DELEGATION_MANAGER_ADDR.to_string(),
-            Network::Local => LOCAL_DELEGATION_MANAGER_ADDR.to_string(),
+            Network::Local => {
+                std::env::var("DELEGATION_MANAGER_ADDR").expect("DELEGATION_MANAGER_ADDR not set")
+            }
         }
         .parse()
         .expect("invalid delegation manager address")
@@ -113,7 +112,9 @@ impl Network {
         match self {
             Network::Mainnet => MAINNET_AVS_DIRECTORY_ADDR.to_string(),
             Network::Holesky => HOLESKY_AVS_DIRECTORY_ADDR.to_string(),
-            Network::Local => LOCAL_AVS_DIRECTORY_ADDR.to_string(),
+            Network::Local => {
+                std::env::var("AVS_DIRECTORY_ADDR").expect("AVS_DIRECTORY_ADDR not set")
+            }
         }
         .parse()
         .expect("invalid contract avs directory address")
