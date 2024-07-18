@@ -2904,7 +2904,7 @@ name = "lgn-auth"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "base64 0.13.1",
+ "base64 0.22.1",
  "elliptic-curve",
  "ethers 2.0.13",
  "ethers-core 2.0.13",
@@ -3421,9 +3421,9 @@ dependencies = [
 
 [[package]]
 name = "object_store"
-version = "0.9.1"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8718f8b65fdf67a45108d1548347d4af7d71fb81ce727bbf9e3b2535e079db3"
+checksum = "fbebfd32c213ba1907fa7a9c9138015a8de2b43e30c5aa45b18f7deb46786ad6"
 dependencies = [
  "async-trait",
  "bytes",
