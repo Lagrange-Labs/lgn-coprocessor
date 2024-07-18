@@ -70,11 +70,6 @@ impl Query2Params {
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
-pub(crate) struct Ecr20Params {
-    pub(crate) file: String,
-}
-
-#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct Groth16Assets {
     pub(crate) circuit_file: String,
     pub(crate) r1cs_file: String,
