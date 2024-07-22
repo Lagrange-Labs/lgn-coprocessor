@@ -1,9 +1,5 @@
 use ethers::prelude::Address;
-use ethers::prelude::U256;
-
-pub(crate) type F = U256;
-
-pub(crate) type Hash = Vec<u8>;
+use lgn_messages::types::HashOutput;
 
 pub trait StorageExtractionProver {
     /// Prove a leaf MPT node of single variable.
@@ -84,37 +80,37 @@ pub trait StorageExtractionProver {
 
 pub trait StorageDatabaseProver {
     /// Prove a cell tree leaf node.
-    fn prove_cell_leaf(&self, identifier: F, value: U256) -> anyhow::Result<Vec<u8>>;
+    fn prove_cell_leaf(&self, identifier: u64, value: Vec<u8>) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a cell tree partial branch node.
     fn prove_cell_partial(
         &self,
-        identifier: F,
-        value: U256,
+        identifier: u64,
+        value: Vec<u8>,
         child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a cell tree full branch node.
     fn prove_cell_full(
         &self,
-        identifier: F,
-        value: U256,
-        child_proofs: [Vec<u8>; 2],
+        identifier: u64,
+        value: Vec<u8>,
+        child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a row tree leaf node.
     fn prove_row_leaf(
         &self,
-        identifier: F,
-        value: U256,
+        identifier: u64,
+        value: Vec<u8>,
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a row tree partial branch node.
     fn prove_row_partial(
         &self,
-        identifier: F,
-        value: U256,
+        identifier: u64,
+        value: Vec<u8>,
         is_child_left: bool,
         child_proof: Vec<u8>,
         cells_proof: Vec<u8>,
@@ -123,28 +119,16 @@ pub trait StorageDatabaseProver {
     /// Prove a row tree full branch node.
     fn prove_row_full(
         &self,
-        identifier: F,
-        value: U256,
-        left_proof: Vec<u8>,
-        right_proof: Vec<u8>,
+        identifier: u64,
+        value: Vec<u8>,
+        child_proofs: Vec<Vec<u8>>,
         cells_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>;
-
-    /// Create a circuit input for proving a membership node of 1 child.
-    fn prove_membership(
-        index_identifier: F,
-        index_value: U256,
-        old_min: U256,
-        old_max: U256,
-        left_child: Hash,
-        rows_tree_hash: Hash,
-        right_child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Create a circuit input for proving a leaf node.
     fn prove_block_leaf(
         &self,
-        block_id: F,
+        block_id: u64,
         extraction_proof: Vec<u8>,
         rows_tree_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
@@ -153,14 +137,27 @@ pub trait StorageDatabaseProver {
     #[allow(clippy::too_many_arguments)]
     fn prove_block_parent(
         &self,
-        block_id: F,
-        old_block_number: U256,
-        old_min: U256,
-        old_max: U256,
-        left_child: Hash,
-        right_child: Hash,
-        old_rows_tree_hash: Hash,
+        block_id: u64,
+        old_block_number: Vec<u8>,
+        old_min: Vec<u8>,
+        old_max: Vec<u8>,
+        left_child: HashOutput,
+        right_child: HashOutput,
+        old_rows_tree_hash: HashOutput,
         extraction_proof: Vec<u8>,
         rows_tree_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Create a circuit input for proving a membership node of 1 child.
+    #[allow(clippy::too_many_arguments)]
+    fn prove_membership(
+        &self,
+        index_identifier: u64,
+        index_value: Vec<u8>,
+        old_min: Vec<u8>,
+        old_max: Vec<u8>,
+        left_child: HashOutput,
+        rows_tree_hash: HashOutput,
+        right_child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
 }

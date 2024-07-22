@@ -1,13 +1,13 @@
 use crate::params::ParamsLoader;
-use crate::provers::v1::preprocessing::prover::{
-    Hash, StorageDatabaseProver, StorageExtractionProver, F,
-};
-use anyhow::bail;
+use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageExtractionProver};
+use alloy::primitives::ruint;
+use anyhow::{bail, Context};
 use ethers::addressbook::Address;
-use ethers::prelude::U256;
 use ethers::utils::rlp::{Prototype, Rlp};
+use lgn_messages::types::HashOutput;
 use mp2_v1::api::CircuitInput::{
-    BlockExtraction, ContractExtraction, FinalExtraction, LengthExtraction, ValuesExtraction,
+    BlockExtraction, BlockTree, CellsTree, ContractExtraction, FinalExtraction, LengthExtraction,
+    RowsTree, ValuesExtraction,
 };
 use mp2_v1::api::{generate_proof, CircuitInput, PublicParameters};
 use mp2_v1::length_extraction::LengthCircuitInput;
@@ -19,6 +19,11 @@ pub struct EuclidProver {
 }
 
 impl EuclidProver {
+    #[allow(dead_code)]
+    pub(crate) fn new(params: PublicParameters) -> Self {
+        Self { params }
+    }
+
     #[allow(dead_code)]
     pub(crate) fn init(
         url: &str,
@@ -41,7 +46,7 @@ impl EuclidProver {
         Ok(Self { params })
     }
 
-    fn prove_extraction(&self, input: CircuitInput, name: &str) -> anyhow::Result<Vec<u8>> {
+    fn prove(&self, input: CircuitInput, name: &str) -> anyhow::Result<Vec<u8>> {
         debug!("Proving {}", name);
 
         let now = std::time::Instant::now();
@@ -58,10 +63,7 @@ impl EuclidProver {
                 Ok(proof)
             }
             Err(err) => {
-                debug!(
-                    "Single variable leaf proof generation failed in {:?}",
-                    now.elapsed()
-                );
+                debug!("Proof generation failed in {:?}", now.elapsed());
                 Err(err)
             }
         }
@@ -81,7 +83,7 @@ impl StorageExtractionProver for EuclidProver {
             slot as u8,
             alloy_address,
         ));
-        self.prove_extraction(input, "single variable leaf")
+        self.prove(input, "single variable leaf")
     }
 
     fn prove_single_variable_branch(
@@ -89,7 +91,7 @@ impl StorageExtractionProver for EuclidProver {
         node: Vec<u8>,
         child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
-        self.prove_extraction(
+        self.prove(
             ValuesExtraction(values_extraction::CircuitInput::new_single_variable_branch(
                 node,
                 child_proofs,
@@ -112,7 +114,7 @@ impl StorageExtractionProver for EuclidProver {
             key,
             alloy_address,
         ));
-        self.prove_extraction(input, "mapping variable leaf")
+        self.prove(input, "mapping variable leaf")
     }
 
     fn prove_mapping_variable_branch(
@@ -127,7 +129,7 @@ impl StorageExtractionProver for EuclidProver {
                     node,
                     child_proofs[0].to_owned(),
                 ));
-                self.prove_extraction(input, "mapping variable extension")
+                self.prove(input, "mapping variable extension")
             }
             Prototype::List(17) => {
                 let input = ValuesExtraction(
@@ -136,7 +138,7 @@ impl StorageExtractionProver for EuclidProver {
                         child_proofs,
                     ),
                 );
-                self.prove_extraction(input, "mapping variable branch")
+                self.prove(input, "mapping variable branch")
             }
             _ => bail!("Invalid RLP item count"),
         }
@@ -153,12 +155,12 @@ impl StorageExtractionProver for EuclidProver {
             node,
             variable_slot as u8,
         ));
-        self.prove_extraction(input, "length leaf")
+        self.prove(input, "length leaf")
     }
 
     fn prove_length_branch(&self, node: Vec<u8>, child_proof: Vec<u8>) -> anyhow::Result<Vec<u8>> {
         let input = LengthExtraction(LengthCircuitInput::new_branch(node, child_proof));
-        self.prove_extraction(input, "length branch")
+        self.prove(input, "length branch")
     }
 
     fn prove_contract_leaf(
@@ -173,7 +175,7 @@ impl StorageExtractionProver for EuclidProver {
             &storage_root,
             **alloy_address,
         ));
-        self.prove_extraction(input, "contract leaf")
+        self.prove(input, "contract leaf")
     }
 
     fn prove_contract_branch(
@@ -185,14 +187,14 @@ impl StorageExtractionProver for EuclidProver {
             node,
             child_proof,
         ));
-        self.prove_extraction(input, "contract branch")
+        self.prove(input, "contract branch")
     }
 
     fn prove_block(&self, rlp_header: Vec<u8>) -> anyhow::Result<Vec<u8>> {
         let input = BlockExtraction(block_extraction::CircuitInput::from_block_header(
             rlp_header,
         ));
-        self.prove_extraction(input, "block")
+        self.prove(input, "block")
     }
 
     fn prove_final_extraction_simple(
@@ -208,7 +210,7 @@ impl StorageExtractionProver for EuclidProver {
             value_proof,
             compound,
         )?);
-        self.prove_extraction(input, "final extraction simple")
+        self.prove(input, "final extraction simple")
     }
 
     fn prove_final_extraction_lengthed(
@@ -224,97 +226,179 @@ impl StorageExtractionProver for EuclidProver {
             value_proof,
             length_proof,
         )?);
-        self.prove_extraction(input, "final extraction lengthed")
+        self.prove(input, "final extraction lengthed")
     }
 }
 
 impl StorageDatabaseProver for EuclidProver {
-    fn prove_cell_leaf(&self, _identifier: F, _value: U256) -> anyhow::Result<Vec<u8>> {
-        todo!()
+    fn prove_cell_leaf(&self, identifier: u64, value: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+        let value = ruint::aliases::U256::try_from_be_slice(&value).context("Invalid value")?;
+        let input = CellsTree(verifiable_db::cells_tree::CircuitInput::leaf(
+            identifier, value,
+        ));
+        self.prove(input, "cell leaf")
     }
 
     fn prove_cell_partial(
         &self,
-        _identifier: F,
-        _value: U256,
-        _child_proof: Vec<u8>,
+        identifier: u64,
+        value: Vec<u8>,
+        child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        todo!()
+        let value = ruint::aliases::U256::try_from_be_slice(&value).context("Invalid value")?;
+        let input = CellsTree(verifiable_db::cells_tree::CircuitInput::partial(
+            identifier,
+            value,
+            child_proof,
+        ));
+        self.prove(input, "cell partial")
     }
 
     fn prove_cell_full(
         &self,
-        _identifier: F,
-        _value: U256,
-        _child_proofs: [Vec<u8>; 2],
+        identifier: u64,
+        value: Vec<u8>,
+        child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
-        todo!()
+        let value = ruint::aliases::U256::try_from_be_slice(&value).context("Invalid value")?;
+        let child_proofs = [child_proofs[0].to_owned(), child_proofs[1].to_vec()];
+        let input = CellsTree(verifiable_db::cells_tree::CircuitInput::full(
+            identifier,
+            value,
+            child_proofs,
+        ));
+        self.prove(input, "cell full")
     }
 
     fn prove_row_leaf(
         &self,
-        _identifier: F,
-        _value: U256,
-        _cells_proof: Vec<u8>,
+        identifier: u64,
+        value: Vec<u8>,
+        cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        todo!()
+        let value = ruint::aliases::U256::try_from_be_slice(&value).context("Invalid value")?;
+
+        let cells_proof = if !cells_proof.is_empty() {
+            cells_proof
+        } else {
+            // TODO: provide empty
+            unimplemented!("No cells proof provided")
+        };
+
+        let input = RowsTree(verifiable_db::row_tree::CircuitInput::leaf(
+            identifier,
+            value,
+            cells_proof,
+        )?);
+        self.prove(input, "row leaf")
     }
 
     fn prove_row_partial(
         &self,
-        _identifier: F,
-        _value: U256,
-        _is_child_left: bool,
-        _child_proof: Vec<u8>,
-        _cells_proof: Vec<u8>,
+        identifier: u64,
+        value: Vec<u8>,
+        is_child_left: bool,
+        child_proof: Vec<u8>,
+        cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        todo!()
+        let value = ruint::aliases::U256::try_from_be_slice(&value).context("Invalid value")?;
+        let input = RowsTree(verifiable_db::row_tree::CircuitInput::partial(
+            identifier,
+            value,
+            is_child_left,
+            child_proof,
+            cells_proof,
+        )?);
+        self.prove(input, "row partial")
     }
 
     fn prove_row_full(
         &self,
-        _identifier: F,
-        _value: U256,
-        _left_proof: Vec<u8>,
-        _right_proof: Vec<u8>,
-        _cells_proof: Vec<u8>,
+        identifier: u64,
+        value: Vec<u8>,
+        child_proofs: Vec<Vec<u8>>,
+        cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        todo!()
-    }
-
-    fn prove_membership(
-        _index_identifier: F,
-        _index_value: U256,
-        _old_min: U256,
-        _old_max: U256,
-        _left_child: Hash,
-        _rows_tree_hash: Hash,
-        _right_child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
-        todo!()
+        let value = ruint::aliases::U256::try_from_be_slice(&value).context("Invalid value")?;
+        let input = RowsTree(verifiable_db::row_tree::CircuitInput::full(
+            identifier,
+            value,
+            child_proofs[0].to_owned(),
+            child_proofs[1].to_owned(),
+            cells_proof,
+        )?);
+        self.prove(input, "row full")
     }
 
     fn prove_block_leaf(
         &self,
-        _block_id: F,
-        _extraction_proof: Vec<u8>,
-        _rows_tree_proof: Vec<u8>,
+        block_id: u64,
+        extraction_proof: Vec<u8>,
+        rows_tree_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        todo!()
+        let input = BlockTree(verifiable_db::block_tree::CircuitInput::new_leaf(
+            block_id,
+            extraction_proof,
+            rows_tree_proof,
+        ));
+        self.prove(input, "block tree leaf")
     }
 
     fn prove_block_parent(
         &self,
-        _block_id: F,
-        _old_block_number: U256,
-        _old_min: U256,
-        _old_max: U256,
-        _left_child: Hash,
-        _right_child: Hash,
-        _old_rows_tree_hash: Hash,
-        _extraction_proof: Vec<u8>,
-        _rows_tree_proof: Vec<u8>,
+        block_id: u64,
+        old_block_number: Vec<u8>,
+        old_min: Vec<u8>,
+        old_max: Vec<u8>,
+        left_child: HashOutput,
+        right_child: HashOutput,
+        old_rows_tree_hash: HashOutput,
+        extraction_proof: Vec<u8>,
+        rows_tree_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        todo!()
+        let old_min = ruint::aliases::U256::try_from_be_slice(&old_min).context("Invalid value")?;
+        let old_max = ruint::aliases::U256::try_from_be_slice(&old_max).context("Invalid value")?;
+        let old_block_number =
+            ruint::aliases::U256::try_from_be_slice(&old_block_number).context("Invalid value")?;
+        let input = BlockTree(verifiable_db::block_tree::CircuitInput::new_parent(
+            block_id,
+            old_block_number,
+            old_min,
+            old_max,
+            &(left_child.into()),
+            &(right_child.into()),
+            &(old_rows_tree_hash.into()),
+            extraction_proof,
+            rows_tree_proof,
+        ));
+        self.prove(input, "block tree parent")
+    }
+
+    fn prove_membership(
+        &self,
+        index_identifier: u64,
+        index_value: Vec<u8>,
+        old_min: Vec<u8>,
+        old_max: Vec<u8>,
+        left_child: HashOutput,
+        rows_tree_hash: HashOutput,
+        right_child_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>> {
+        let index_value =
+            ruint::aliases::U256::try_from_be_slice(&index_value).context("Invalid value")?;
+
+        let old_min = ruint::aliases::U256::try_from_be_slice(&old_min).context("Invalid value")?;
+        let old_max = ruint::aliases::U256::try_from_be_slice(&old_max).context("Invalid value")?;
+
+        let input = BlockTree(verifiable_db::block_tree::CircuitInput::new_membership(
+            index_identifier,
+            index_value,
+            old_min,
+            old_max,
+            &(left_child.into()),
+            &(rows_tree_hash.into()),
+            right_child_proof,
+        ));
+        self.prove(input, "membership")
     }
 }

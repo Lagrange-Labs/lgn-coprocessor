@@ -25,7 +25,7 @@ pub enum TaskType {
     StorageQuery(v0::query::WorkerTask),
     Erc20Query(v0::query::erc20::WorkerTask),
     StorageGroth16(v0::groth16::WorkerTask),
-    V1Preprocessing(v1::preprocessing::task::WorkerTask),
+    V1Preprocessing(v1::preprocessing::ext_tasks::WorkerTask),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -319,7 +319,7 @@ pub enum ProverType {
     /// V0 Groth16 handler.
     Query2Groth16,
 
-    PreprocessingV1,
+    V1Preprocessing,
 }
 
 impl Display for ProverType {
@@ -332,7 +332,7 @@ impl Display for ProverType {
                 ProverType::Query2Query => "Query2Query",
                 ProverType::Query2Groth16 => "Query2Groth16",
                 ProverType::QueryErc20 => "QueryErc20",
-                ProverType::PreprocessingV1 => "PreprocessingV1",
+                ProverType::V1Preprocessing => "V1Preprocessing",
             }
         )
     }
@@ -349,7 +349,7 @@ impl ToProverType for TaskType {
             TaskType::StorageQuery(_) => ProverType::Query2Query,
             TaskType::StorageGroth16(_) => ProverType::Query2Groth16,
             TaskType::Erc20Query(_) => ProverType::Query2Groth16,
-            TaskType::V1Preprocessing(_) => ProverType::PreprocessingV1,
+            TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
             _ => panic!("Unsupported task type: {:?}", self),
         }
     }

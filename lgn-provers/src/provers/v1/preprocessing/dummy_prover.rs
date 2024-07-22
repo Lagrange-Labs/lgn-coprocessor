@@ -1,10 +1,9 @@
-use crate::provers::v1::preprocessing::prover::{
-    Hash, StorageDatabaseProver, StorageExtractionProver, F,
-};
+use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageExtractionProver};
 use ethers::addressbook::Address;
-use ethers::prelude::U256;
+use lgn_messages::types::HashOutput;
 use std::thread::sleep;
 
+#[allow(dead_code)]
 pub(crate) struct DummyProver;
 
 impl StorageExtractionProver for DummyProver {
@@ -103,14 +102,14 @@ impl StorageExtractionProver for DummyProver {
 }
 
 impl StorageDatabaseProver for DummyProver {
-    fn prove_cell_leaf(&self, _identifier: F, _value: U256) -> anyhow::Result<Vec<u8>> {
+    fn prove_cell_leaf(&self, _identifier: u64, _value: Vec<u8>) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 
     fn prove_cell_partial(
         &self,
-        _identifier: F,
-        _value: U256,
+        _identifier: u64,
+        _value: Vec<u8>,
         _child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
@@ -118,17 +117,17 @@ impl StorageDatabaseProver for DummyProver {
 
     fn prove_cell_full(
         &self,
-        _identifier: F,
-        _value: U256,
-        _child_proofs: [Vec<u8>; 2],
+        _identifier: u64,
+        _value: Vec<u8>,
+        _child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 
     fn prove_row_leaf(
         &self,
-        _identifier: F,
-        _value: U256,
+        _identifier: u64,
+        _value: Vec<u8>,
         _cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
@@ -136,8 +135,8 @@ impl StorageDatabaseProver for DummyProver {
 
     fn prove_row_partial(
         &self,
-        _identifier: F,
-        _value: U256,
+        _identifier: u64,
+        _value: Vec<u8>,
         _is_child_left: bool,
         _child_proof: Vec<u8>,
         _cells_proof: Vec<u8>,
@@ -147,22 +146,22 @@ impl StorageDatabaseProver for DummyProver {
 
     fn prove_row_full(
         &self,
-        _identifier: F,
-        _value: U256,
-        _left_proof: Vec<u8>,
-        _right_proof: Vec<u8>,
+        _identifier: u64,
+        _value: Vec<u8>,
+        _child_proofs: Vec<Vec<u8>>,
         _cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 
     fn prove_membership(
-        _index_identifier: F,
-        _index_value: U256,
-        _old_min: U256,
-        _old_max: U256,
-        _left_child: Hash,
-        _rows_tree_hash: Hash,
+        &self,
+        _index_identifier: u64,
+        _index_value: Vec<u8>,
+        _old_min: Vec<u8>,
+        _old_max: Vec<u8>,
+        _left_child: HashOutput,
+        _rows_tree_hash: HashOutput,
         _right_child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
@@ -170,7 +169,7 @@ impl StorageDatabaseProver for DummyProver {
 
     fn prove_block_leaf(
         &self,
-        _block_id: F,
+        _block_id: u64,
         _extraction_proof: Vec<u8>,
         _rows_tree_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
@@ -179,13 +178,13 @@ impl StorageDatabaseProver for DummyProver {
 
     fn prove_block_parent(
         &self,
-        _block_id: F,
-        _old_block_number: U256,
-        _old_min: U256,
-        _old_max: U256,
-        _left_child: Hash,
-        _right_child: Hash,
-        _old_rows_tree_hash: Hash,
+        _block_id: u64,
+        _old_block_number: Vec<u8>,
+        _old_min: Vec<u8>,
+        _old_max: Vec<u8>,
+        _left_child: HashOutput,
+        _right_child: HashOutput,
+        _old_rows_tree_hash: HashOutput,
         _extraction_proof: Vec<u8>,
         _rows_tree_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {

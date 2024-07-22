@@ -26,5 +26,5 @@ fn register_v1_preprocessor(config: &Config, manager: &mut ProversManager<TaskTy
     )
     .expect("Failed to create preprocessing handler");
 
-    manager.add_prover(ProverType::PreprocessingV1, Box::new(preprocessing_prover));
+    manager.add_prover(ProverType::V1Preprocessing, Box::new(preprocessing_prover));
 }

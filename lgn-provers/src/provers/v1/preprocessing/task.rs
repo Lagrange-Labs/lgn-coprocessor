@@ -1,7 +1,10 @@
-use lgn_messages::types::v1::preprocessing::keys::ProofKey;
-use lgn_messages::types::v1::preprocessing::task::{
-    ExtractionType, FinalExtractionType, MptType, WorkerTask, WorkerTaskType,
+use lgn_messages::types::v1::preprocessing::db_tasks::{
+    DatabaseType, DbBlockType, DbCellType, DbRowType,
 };
+use lgn_messages::types::v1::preprocessing::ext_tasks::{
+    ExtractionType, FinalExtractionType, MptType, WorkerTask,
+};
+use lgn_messages::types::v1::preprocessing::{db_keys, ext_keys, WorkerTaskType};
 use lgn_messages::types::{
     MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
 };
@@ -22,13 +25,20 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
-        if let TaskType::V1Preprocessing(task @ WorkerTask { .. }) = envelope.inner() {
-            let proof = self.run_inner(task)?;
-            let key: ProofKey = envelope.inner().into();
-            let reply_type = ReplyType::V1Preprocessing(WorkerReply::new(
-                task.chain_id,
-                Some((key.to_string(), proof)),
-            ));
+        if let TaskType::V1Preprocessing(task @ WorkerTask { chain_id, .. }) = envelope.inner {
+            let key = match &task.task_type {
+                WorkerTaskType::Extraction(_) => {
+                    let key: ext_keys::ProofKey = (&task).into();
+                    key.to_string()
+                }
+                WorkerTaskType::Database(_) => {
+                    let key: db_keys::ProofKey = (&task).into();
+                    key.to_string()
+                }
+            };
+            let result = self.run_inner(task)?;
+            let reply_type =
+                ReplyType::V1Preprocessing(WorkerReply::new(chain_id, Some((key, result))));
             Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
         } else {
             anyhow::bail!("Received unexpected task: {:?}", envelope);
@@ -40,8 +50,8 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
         Self { prover }
     }
 
-    fn run_inner(&mut self, task: &WorkerTask) -> anyhow::Result<Vec<u8>> {
-        Ok(match &task.task_type {
+    fn run_inner(&mut self, task: WorkerTask) -> anyhow::Result<Vec<u8>> {
+        Ok(match task.task_type {
             WorkerTaskType::Extraction(ex) => match ex {
                 ExtractionType::MptExtraction(mpt) => match &mpt.mpt_type {
                     MptType::MappingLeaf(input) => self.prover.prove_mapping_variable_leaf(
@@ -123,9 +133,62 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                     )?,
                 },
             },
-            WorkerTaskType::Database(_db) => {
-                todo!("Database prover")
-            }
+            WorkerTaskType::Database(db) => match db {
+                DatabaseType::Cell(cell_type) => match cell_type {
+                    DbCellType::Leaf(leaf) => {
+                        self.prover.prove_cell_leaf(leaf.identifier, leaf.value)?
+                    }
+                    DbCellType::Partial(branch) => self.prover.prove_cell_partial(
+                        branch.identifier,
+                        branch.value,
+                        branch.child_proof,
+                    )?,
+                    DbCellType::Full(full) => self.prover.prove_cell_full(
+                        full.identifier,
+                        full.value,
+                        full.child_proofs,
+                    )?,
+                },
+                DatabaseType::Row(row_type) => match row_type {
+                    DbRowType::Leaf(leaf) => {
+                        self.prover
+                            .prove_row_leaf(leaf.identifier, leaf.value, leaf.cells_proof)?
+                    }
+                    DbRowType::Partial(partial) => self.prover.prove_row_partial(
+                        partial.identifier,
+                        partial.value,
+                        partial.is_child_left,
+                        partial.child_proof,
+                        partial.cells_proof,
+                    )?,
+                    DbRowType::Full(full) => self.prover.prove_row_full(
+                        full.identifier,
+                        full.value,
+                        full.child_proofs,
+                        full.cells_proof,
+                    )?,
+                },
+                DatabaseType::Block(block) => {
+                    for input in block.inputs {
+                        match input {
+                            DbBlockType::Leaf(leaf) => self.prover.prove_block_leaf(
+                                leaf.block_id,
+                                leaf.extraction_proof,
+                                leaf.rows_proof,
+                            )?,
+                            DbBlockType::Parent(_) => {
+                                // TODO: Implement
+                                vec![]
+                            }
+                            DbBlockType::Membership(_) => {
+                                // TODO: Implement
+                                vec![]
+                            }
+                        };
+                    }
+                    vec![]
+                }
+            },
         })
     }
 }
