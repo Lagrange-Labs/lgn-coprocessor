@@ -15,7 +15,7 @@ const CELL_PREFIX: &str = "CELL";
 
 const ROW_PREFIX: &str = "ROW";
 
-const BLOCK_PREFIX: &str = "BLOCK";
+const BLOCK_PREFIX: &str = "DB_BLOCK";
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]
 pub enum ProofKey {

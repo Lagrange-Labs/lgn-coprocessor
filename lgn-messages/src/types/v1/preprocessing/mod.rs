@@ -1,4 +1,4 @@
-use ethers::addressbook::Address;
+use alloy_primitives::{Address, U256};
 use ethers::prelude::H256;
 use serde_derive::{Deserialize, Serialize};
 
@@ -15,7 +15,6 @@ pub mod db_keys;
 pub mod db_tasks;
 pub mod ext_keys;
 pub mod ext_tasks;
-pub mod reply;
 
 const KEYS_PREPROCESSING_PREFIX: &str = "V1_PREPROCESSING";
 
@@ -176,7 +175,7 @@ impl WorkerTaskType {
         row_id: String,
         cell_id: usize,
         identifier: Identifier,
-        value: Vec<u8>,
+        value: U256,
     ) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::Cell(db_tasks::DbCellType::Leaf(
             CellLeafInput {
@@ -194,7 +193,7 @@ impl WorkerTaskType {
         row_id: String,
         cell_id: usize,
         identifier: Identifier,
-        value: Vec<u8>,
+        value: U256,
         child_location: db_keys::ProofKey,
     ) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::Cell(db_tasks::DbCellType::Partial(
@@ -215,7 +214,7 @@ impl WorkerTaskType {
         row_id: String,
         cell_id: usize,
         identifier: Identifier,
-        value: Vec<u8>,
+        value: U256,
         child_locations: Vec<db_keys::ProofKey>,
     ) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::Cell(db_tasks::DbCellType::Full(
@@ -235,7 +234,7 @@ impl WorkerTaskType {
         table_id: u64,
         row_id: String,
         identifier: Identifier,
-        value: Vec<u8>,
+        value: U256,
         cells_proof_location: Option<db_keys::ProofKey>,
     ) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::Row(db_tasks::DbRowType::Leaf(RowLeafInput {
@@ -252,7 +251,7 @@ impl WorkerTaskType {
         table_id: u64,
         row_id: String,
         identifier: Identifier,
-        value: Vec<u8>,
+        value: U256,
         is_child_left: bool,
         cells_proof_location: Option<db_keys::ProofKey>,
         child_proof_location: db_keys::ProofKey,
@@ -276,7 +275,7 @@ impl WorkerTaskType {
         table_id: u64,
         row_id: String,
         identifier: Identifier,
-        value: Vec<u8>,
+        value: U256,
         cells_proof_location: Option<db_keys::ProofKey>,
         child_proofs_locations: Vec<db_keys::ProofKey>,
     ) -> WorkerTaskType {

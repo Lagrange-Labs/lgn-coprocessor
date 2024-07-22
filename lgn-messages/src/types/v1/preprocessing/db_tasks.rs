@@ -1,9 +1,11 @@
+use alloy_primitives::U256;
 use derive_debug_plus::Dbg;
+use mp2_common::types::HashOutput;
 use serde_derive::{Deserialize, Serialize};
+use serde_with::serde_as;
 
 use crate::types::v1::preprocessing::ext_tasks::{Identifier, WorkerTask};
 use crate::types::v1::preprocessing::{db_keys, ext_keys, WorkerTaskType};
-use crate::types::HashOutput;
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub enum DatabaseType {
@@ -14,7 +16,7 @@ pub enum DatabaseType {
     Row(DbRowType),
 
     #[serde(rename = "3")]
-    Block(BlockInputs),
+    Index(BlockInputs),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -39,7 +41,7 @@ pub struct CellLeafInput {
 
     pub identifier: Identifier,
 
-    pub value: Vec<u8>,
+    pub value: U256,
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
@@ -52,7 +54,7 @@ pub struct CellPartialInput {
 
     pub identifier: Identifier,
 
-    pub value: Vec<u8>,
+    pub value: U256,
 
     pub child_location: db_keys::ProofKey,
 
@@ -70,7 +72,7 @@ pub struct CellFullInput {
 
     pub identifier: Identifier,
 
-    pub value: Vec<u8>,
+    pub value: U256,
 
     pub child_locations: Vec<db_keys::ProofKey>,
 
@@ -98,7 +100,7 @@ pub struct RowLeafInput {
 
     pub identifier: Identifier,
 
-    pub value: Vec<u8>,
+    pub value: U256,
 
     pub cells_proof_location: Option<db_keys::ProofKey>,
 
@@ -114,7 +116,7 @@ pub struct RowPartialInput {
 
     pub identifier: Identifier,
 
-    pub value: Vec<u8>,
+    pub value: U256,
 
     pub is_child_left: bool,
 
@@ -137,7 +139,7 @@ pub struct RowFullInput {
 
     pub identifier: Identifier,
 
-    pub value: Vec<u8>,
+    pub value: U256,
 
     pub child_proofs_locations: Vec<db_keys::ProofKey>,
 
@@ -222,11 +224,11 @@ pub struct BlockParentInput {
 
     pub block_id: u64,
 
-    pub old_block_number: u64,
+    pub old_block_number: U256,
 
-    pub old_min: u64,
+    pub old_min: U256,
 
-    pub old_max: u64,
+    pub old_max: U256,
 
     pub prev_left_child: HashOutput,
 
@@ -250,9 +252,9 @@ impl BlockParentInput {
     pub fn new(
         table_id: u64,
         block_id: u64,
-        old_block_number: u64,
-        old_min: u64,
-        old_max: u64,
+        old_block_number: U256,
+        old_min: U256,
+        old_max: U256,
         prev_left_child: HashOutput,
         prev_right_child: HashOutput,
         old_rows_tree_hash: HashOutput,
@@ -282,11 +284,11 @@ pub struct BlockMembershipInput {
 
     pub block_id: u64,
 
-    pub index_value: u64,
+    pub index_value: U256,
 
-    pub old_min: u64,
+    pub old_min: U256,
 
-    pub old_max: u64,
+    pub old_max: U256,
 
     pub left_child: HashOutput,
 
@@ -303,9 +305,9 @@ impl BlockMembershipInput {
     pub fn new(
         table_id: u64,
         block_id: u64,
-        index_value: u64,
-        old_min: u64,
-        old_max: u64,
+        index_value: U256,
+        old_min: U256,
+        old_max: U256,
         left_child: HashOutput,
         rows_tree_hash: HashOutput,
         right_proof_location: db_keys::ProofKey,
@@ -359,7 +361,7 @@ impl From<&WorkerTask> for db_keys::ProofKey {
                         db_keys::ProofKey::Row(rf.table_id, tt.block_nr, rf.row_id.to_string())
                     }
                 },
-                DatabaseType::Block(bt) => db_keys::ProofKey::Block(bt.table_id, tt.block_nr),
+                DatabaseType::Index(bt) => db_keys::ProofKey::Block(bt.table_id, tt.block_nr),
             },
             _ => unimplemented!("Task type not supported: {:?}", tt.task_type),
         }

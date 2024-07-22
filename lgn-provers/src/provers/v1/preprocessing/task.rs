@@ -1,16 +1,16 @@
+use lgn_messages::types::{
+    MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
+};
+use lgn_messages::types::v1::preprocessing::{db_keys, ext_keys, WorkerTaskType};
 use lgn_messages::types::v1::preprocessing::db_tasks::{
     DatabaseType, DbBlockType, DbCellType, DbRowType,
 };
 use lgn_messages::types::v1::preprocessing::ext_tasks::{
     ExtractionType, FinalExtractionType, MptType, WorkerTask,
 };
-use lgn_messages::types::v1::preprocessing::{db_keys, ext_keys, WorkerTaskType};
-use lgn_messages::types::{
-    MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
-};
 
-use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageExtractionProver};
 use crate::provers::LgnProver;
+use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageExtractionProver};
 
 pub struct Preprocessing<P> {
     prover: P,
@@ -168,25 +168,38 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         full.cells_proof,
                     )?,
                 },
-                DatabaseType::Block(block) => {
+                DatabaseType::Index(block) => {
+                    let mut last_proof = None;
                     for input in block.inputs {
-                        match input {
+                        last_proof = Some(match input {
                             DbBlockType::Leaf(leaf) => self.prover.prove_block_leaf(
                                 leaf.block_id,
                                 leaf.extraction_proof,
                                 leaf.rows_proof,
                             )?,
-                            DbBlockType::Parent(_) => {
-                                // TODO: Implement
-                                vec![]
-                            }
-                            DbBlockType::Membership(_) => {
-                                // TODO: Implement
-                                vec![]
-                            }
-                        };
+                            DbBlockType::Parent(parent) => self.prover.prove_block_parent(
+                                parent.block_id,
+                                parent.old_block_number,
+                                parent.old_min,
+                                parent.old_max,
+                                parent.prev_left_child,
+                                parent.prev_right_child,
+                                parent.old_rows_tree_hash,
+                                parent.extraction_proof,
+                                parent.rows_proof,
+                            )?,
+                            DbBlockType::Membership(membership) => self.prover.prove_membership(
+                                membership.block_id,
+                                membership.index_value,
+                                membership.old_min,
+                                membership.old_max,
+                                membership.left_child,
+                                membership.rows_tree_hash,
+                                last_proof.take().unwrap(),
+                            )?,
+                        });
                     }
-                    vec![]
+                    last_proof.take().unwrap()
                 }
             },
         })

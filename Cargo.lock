@@ -419,9 +419,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-serde"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15c5b9057acc02aee1b8aac2b5a0729cb0f73d080082c111313e5d1f92a96630"
+checksum = "e33feda6a53e6079895aed1d08dcb98a1377b000d80d16370fbbdb8155d547ef"
 dependencies = [
  "alloy-primitives 0.7.7",
  "serde",
@@ -917,6 +917,30 @@ name = "base64ct"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
+
+[[package]]
+name = "bb8"
+version = "0.8.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b10cf871f3ff2ce56432fddc2615ac7acc3aa22ca321f8fea800846fbb32f188"
+dependencies = [
+ "async-trait",
+ "futures-util",
+ "parking_lot",
+ "tokio",
+]
+
+[[package]]
+name = "bb8-postgres"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56ac82c42eb30889b5c4ee4763a24b8c566518171ebea648cd7e3bc532c60680"
+dependencies = [
+ "async-trait",
+ "bb8",
+ "tokio",
+ "tokio-postgres",
+]
 
 [[package]]
 name = "bech32"
@@ -1642,17 +1666,6 @@ name = "data-encoding"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8566979429cf69b49a5c740c60791108e86440e8be149bbea4fe54d2c32d6e2"
-
-[[package]]
-name = "delegate"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e018fccbeeb50ff26562ece792ed06659b9c2dae79ece77c4456bb10d9bf79b"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.72",
-]
 
 [[package]]
 name = "der"
@@ -3635,14 +3648,20 @@ dependencies = [
 name = "lgn-messages"
 version = "0.2.0"
 dependencies = [
+ "alloy-primitives 0.7.7",
+ "alloy-serde",
  "anyhow",
  "derive-debug-plus",
  "ethers 2.0.14",
+ "mp2_common",
+ "mp2_v1",
  "object_store",
  "serde",
  "serde_derive",
  "serde_json",
+ "serde_with 3.9.0",
  "thiserror",
+ "verifiable-db",
 ]
 
 [[package]]
@@ -3938,7 +3957,6 @@ dependencies = [
 [[package]]
 name = "mp2_common"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix/rust_native_types_circuit_apis#c25df2c324e175edaf22555f308dc1e6de9d087e"
 dependencies = [
  "alloy",
  "anyhow",
@@ -3964,7 +3982,6 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix/rust_native_types_circuit_apis#c25df2c324e175edaf22555f308dc1e6de9d087e"
 dependencies = [
  "alloy",
  "anyhow",
@@ -3973,6 +3990,7 @@ dependencies = [
  "env_logger 0.11.3",
  "eth_trie 0.4.0 (git+https://github.com/nikkolasg/eth-trie.rs)",
  "hashbrown 0.14.5",
+ "hex",
  "itertools 0.12.1",
  "log",
  "mp2_common",
@@ -3981,7 +3999,7 @@ dependencies = [
  "plonky2_crypto",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix/rust_native_types_circuit_apis)",
+ "recursion_framework 0.1.0",
  "rlp",
  "ryhope",
  "serde",
@@ -4216,16 +4234,16 @@ dependencies = [
 
 [[package]]
 name = "object_store"
-version = "0.9.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8718f8b65fdf67a45108d1548347d4af7d71fb81ce727bbf9e3b2535e079db3"
+checksum = "e6da452820c715ce78221e8202ccc599b4a52f3e1eb3eedb487b680c81a8e3f3"
 dependencies = [
  "async-trait",
  "bytes",
  "chrono",
  "futures 0.3.30",
  "humantime",
- "itertools 0.12.1",
+ "itertools 0.13.0",
  "parking_lot",
  "percent-encoding",
  "snafu",
@@ -4757,20 +4775,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da544ee218f0d287a911e9c99a39a8c9bc8fcad3cb8db5959940044ecfc67265"
 
 [[package]]
-name = "postgres"
-version = "0.19.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c9ec84ab55b0f9e418675de50052d494ba893fd28c65769a6e68fcdacbee2b8"
-dependencies = [
- "bytes",
- "fallible-iterator",
- "futures-util",
- "log",
- "tokio",
- "tokio-postgres",
-]
-
-[[package]]
 name = "postgres-protocol"
 version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4795,6 +4799,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02048d9e032fb3cc3413bbf7b83a15d84a5d419778e2628751896d856498eee9"
 dependencies = [
  "bytes",
+ "chrono",
  "fallible-iterator",
  "postgres-protocol",
  "serde",
@@ -5031,7 +5036,6 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix/rust_native_types_circuit_apis#c25df2c324e175edaf22555f308dc1e6de9d087e"
 dependencies = [
  "anyhow",
  "log",
@@ -5554,14 +5558,18 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix/rust_native_types_circuit_apis#c25df2c324e175edaf22555f308dc1e6de9d087e"
 dependencies = [
  "anyhow",
- "delegate",
+ "async-trait",
+ "bb8",
+ "bb8-postgres",
+ "futures 0.3.30",
  "itertools 0.12.1",
  "log",
- "postgres",
+ "postgres-types",
  "serde",
+ "tokio",
+ "tokio-postgres",
 ]
 
 [[package]]
@@ -6887,7 +6895,6 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "verifiable-db"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix/rust_native_types_circuit_apis#c25df2c324e175edaf22555f308dc1e6de9d087e"
 dependencies = [
  "alloy",
  "anyhow",
@@ -6901,7 +6908,7 @@ dependencies = [
  "plonky2_ecdsa",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix/rust_native_types_circuit_apis)",
+ "recursion_framework 0.1.0",
  "ryhope",
  "serde",
 ]

@@ -1,7 +1,8 @@
 use crate::types::v1::preprocessing::ext_keys::ProofKey;
 use crate::types::v1::preprocessing::WorkerTaskType;
+use alloy_primitives::Address;
 use derive_debug_plus::Dbg;
-use ethers::prelude::{Address, H256};
+use ethers::types::H256;
 use serde_derive::{Deserialize, Serialize};
 
 pub const ROUTING_DOMAIN: &str = "sp";
@@ -110,6 +111,7 @@ impl MappingLeafInput {
 #[derive(Dbg, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct MappingBranchInput {
     pub node: Vec<u8>,
+
     pub children: Vec<MptNodeVersion>,
 
     #[dbg(placeholder = "...")]
