@@ -14,7 +14,7 @@ pub struct Query<P> {
     prover: P,
 }
 
-impl<P: QueryProver> LgnProver for Query<P> {
+impl<P: QueryProver> LgnProver<TaskType, ReplyType> for Query<P> {
     fn run(
         &mut self,
         envelope: MessageEnvelope<TaskType>,

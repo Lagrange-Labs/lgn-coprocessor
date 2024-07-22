@@ -6,13 +6,18 @@ use thiserror::Error;
 
 pub mod experimental;
 pub mod v0;
+pub mod v1;
 
 /// A keyed payload contains a bunch of bytes accompanied by a storage index
 pub type KeyedPayload = (String, Vec<u8>);
 
+pub trait ToKeyedPayload {
+    fn to_keyed_payload(&self) -> KeyedPayload;
+}
+
 pub type HashOutput = [u8; 32];
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum TaskType {
     TxTrie(experimental::tx_trie::WorkerTask),
     RecProof(experimental::rec_proof::WorkerTask),
@@ -20,6 +25,7 @@ pub enum TaskType {
     StorageQuery(v0::query::WorkerTask),
     Erc20Query(v0::query::erc20::WorkerTask),
     StorageGroth16(v0::groth16::WorkerTask),
+    V1Preprocessing(v1::preprocessing::task::WorkerTask),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -30,6 +36,7 @@ pub enum ReplyType {
     StorageQuery(WorkerReply),
     Erc20Query(WorkerReply),
     StorageGroth16(WorkerReply),
+    V1Preprocessing(WorkerReply),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -297,4 +304,53 @@ pub fn kp_pretty(kp: &Option<KeyedPayload>) -> String {
     kp.as_ref()
         .map(|kp| kp.0.to_owned())
         .unwrap_or("empty".to_string())
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum ProverType {
+    /// V0 query preprocessing handler.
+    Query2Preprocess,
+
+    /// V0 query handler.
+    Query2Query,
+
+    QueryErc20,
+
+    /// V0 Groth16 handler.
+    Query2Groth16,
+
+    PreprocessingV1,
+}
+
+impl Display for ProverType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                ProverType::Query2Preprocess => "Query2Preprocess",
+                ProverType::Query2Query => "Query2Query",
+                ProverType::Query2Groth16 => "Query2Groth16",
+                ProverType::QueryErc20 => "QueryErc20",
+                ProverType::PreprocessingV1 => "PreprocessingV1",
+            }
+        )
+    }
+}
+
+pub trait ToProverType {
+    fn to_prover_type(&self) -> ProverType;
+}
+
+impl ToProverType for TaskType {
+    fn to_prover_type(&self) -> ProverType {
+        match self {
+            TaskType::StoragePreprocess(_) => ProverType::Query2Preprocess,
+            TaskType::StorageQuery(_) => ProverType::Query2Query,
+            TaskType::StorageGroth16(_) => ProverType::Query2Groth16,
+            TaskType::Erc20Query(_) => ProverType::Query2Groth16,
+            TaskType::V1Preprocessing(_) => ProverType::PreprocessingV1,
+            _ => panic!("Unsupported task type: {:?}", self),
+        }
+    }
 }

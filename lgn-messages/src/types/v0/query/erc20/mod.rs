@@ -9,7 +9,7 @@ use crate::types::Position;
 
 pub mod keys;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct WorkerTask {
     /// Chain ID
     pub chain_id: u64,
@@ -21,7 +21,7 @@ pub struct WorkerTask {
     pub task_type: WorkerTaskType,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum WorkerTaskType {
     #[serde(rename = "1")]
@@ -37,13 +37,13 @@ pub enum WorkerTaskType {
     Revelation(RevelationData),
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum StorageData {
     StorageLeaf(StorageLeafInput),
     StorageBranch(StorageBranchInput),
 }
 
-#[derive(Clone, Dbg, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct StorageLeafInput {
     pub block_number: BlockNr,
     pub position: Position,
@@ -54,7 +54,7 @@ pub struct StorageLeafInput {
     pub rewards_rate: U256,
 }
 
-#[derive(Clone, Dbg, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct StorageBranchInput {
     pub block_number: BlockNr,
 

@@ -10,7 +10,7 @@ use lgn_messages::types::{
 use std::time::Instant;
 use tracing::{debug, info};
 
-impl<GP: Prover> LgnProver for Groth16<GP> {
+impl<GP: Prover> LgnProver<TaskType, ReplyType> for Groth16<GP> {
     fn run(
         &mut self,
         envelope: MessageEnvelope<TaskType>,

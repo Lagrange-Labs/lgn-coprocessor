@@ -9,7 +9,7 @@ pub mod keys;
 
 pub const ROUTING_DOMAIN: &str = "sc";
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct WorkerTask {
     /// Chain ID
     pub chain_id: u64,
@@ -40,7 +40,7 @@ impl WorkerTask {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum WorkerTaskType {
     #[serde(rename = "1")]
@@ -56,7 +56,7 @@ pub enum WorkerTaskType {
     Revelation(RevelationData),
 }
 
-#[derive(Clone, Dbg, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct StorageData {
     /// Which block
     pub block_nr: u64,
@@ -66,7 +66,7 @@ pub struct StorageData {
     pub inputs: StorageProofInput,
 }
 
-#[derive(Clone, Dbg, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Dbg, Serialize, Deserialize)]
 pub enum StorageProofInput {
     Leaf {
         key: Vec<u8>,
@@ -86,7 +86,7 @@ pub enum StorageProofInput {
     },
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub enum StorageDetails {
     Leaf {
         key: Vec<u8>,
@@ -99,7 +99,7 @@ pub enum StorageDetails {
     },
 }
 
-#[derive(Clone, Serialize, Deserialize, Dbg, PartialEq, Default)]
+#[derive(Clone, PartialEq, Serialize, Deserialize, Dbg, Default)]
 pub struct QueryStateData {
     /// smart contract over which we're proving
     pub smart_contract_address: Address,
@@ -128,14 +128,14 @@ pub struct QueryStateData {
     pub storage_proof: Vec<u8>,
 }
 
-#[derive(Clone, Debug, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Debug, Hash, Deserialize, Serialize)]
 pub struct StateLeafData {
     pub position: Position,
     pub block_nr: u64,
     pub sibling_hash: Option<HashOutput>,
 }
 
-#[derive(Clone, Debug, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Debug, Hash, Deserialize, Serialize)]
 pub struct StateBranchData {
     pub position: Position,
     pub block_nr: u64,
@@ -143,7 +143,7 @@ pub struct StateBranchData {
     pub sibling_hash: Option<HashOutput>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum QueryBlockData {
     PartialNode(PartialNodeBlockData),
     FullNode(FullNodeBlockData),
@@ -159,13 +159,13 @@ impl QueryBlockData {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Hash)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Hash)]
 pub enum BlockNodeLeafInfo {
     StateProof(u64),
     Aggregation(Position),
 }
 
-#[derive(Clone, Dbg, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, PartialEq, Dbg, Serialize, Deserialize)]
 pub struct FullNodeBlockData {
     /// Node position in blockchain database tree
     pub position: Position,
@@ -185,7 +185,7 @@ pub struct FullNodeBlockData {
     pub right_child_proof: Vec<u8>,
 }
 
-#[derive(Clone, Dbg, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Dbg, Serialize, Deserialize)]
 pub struct PartialNodeBlockData {
     /// position, related to executor info
     pub position: Position,
@@ -201,7 +201,7 @@ pub struct PartialNodeBlockData {
     pub child_proof: Vec<u8>,
 }
 
-#[derive(Clone, Dbg, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Dbg, Default, Deserialize, Serialize)]
 pub struct RevelationData {
     /// NFT IDs being queried
     pub mapping_keys: Vec<Vec<u8>>,

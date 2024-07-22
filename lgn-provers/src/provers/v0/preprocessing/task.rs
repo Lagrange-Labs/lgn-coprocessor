@@ -14,7 +14,7 @@ use lgn_messages::types::{
 use std::time::Instant;
 use tracing::debug;
 
-impl<P: StorageProver> LgnProver for Preprocessing<P> {
+impl<P: StorageProver> LgnProver<TaskType, ReplyType> for Preprocessing<P> {
     fn run(
         &mut self,
         envelope: MessageEnvelope<TaskType>,

@@ -1,0 +1,166 @@
+use ethers::prelude::Address;
+use ethers::prelude::U256;
+
+pub(crate) type F = U256;
+
+pub(crate) type Hash = Vec<u8>;
+
+pub trait StorageExtractionProver {
+    /// Prove a leaf MPT node of single variable.
+    fn prove_single_variable_leaf(
+        &self,
+        node: Vec<u8>,
+        slot: usize,
+        contract_address: &Address,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove a branch MPT node of single variable.
+    fn prove_single_variable_branch(
+        &self,
+        node: Vec<u8>,
+        child_proofs: Vec<Vec<u8>>,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    fn prove_mapping_variable_leaf(
+        &self,
+        key: Vec<u8>,
+        node: Vec<u8>,
+        slot: usize,
+        contract_address: &Address,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove a branch MPT node of mapping variable.
+    fn prove_mapping_variable_branch(
+        &self,
+        node: Vec<u8>,
+        child_proofs: Vec<Vec<u8>>,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove the length extraction of a leaf MPT node.
+    fn prove_length_leaf(
+        &self,
+        node: Vec<u8>,
+        length_slot: usize,
+        variable_slot: usize,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove the length extraction of a branch MPT node.
+    fn prove_length_branch(&self, node: Vec<u8>, child_proof: Vec<u8>) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove a leaf MPT node of contract.
+    fn prove_contract_leaf(
+        &self,
+        node: Vec<u8>,
+        storage_root: Vec<u8>,
+        contract_address: Address,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove a branch MPT node of contract.
+    fn prove_contract_branch(&self, node: Vec<u8>, child_proof: Vec<u8>)
+        -> anyhow::Result<Vec<u8>>;
+
+    /// Prove a block.
+    /// TODO: implement this
+    fn prove_block(&self, rlp_header: Vec<u8>) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove final extraction for simple types
+    fn prove_final_extraction_simple(
+        &self,
+        block_proof: Vec<u8>,
+        contract_proof: Vec<u8>,
+        value_proof: Vec<u8>,
+        compound: bool,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove final extraction for lengthed types
+    fn prove_final_extraction_lengthed(
+        &self,
+        block_proof: Vec<u8>,
+        contract_proof: Vec<u8>,
+        value_proof: Vec<u8>,
+        length_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
+}
+
+pub trait StorageDatabaseProver {
+    /// Prove a cell tree leaf node.
+    fn prove_cell_leaf(&self, identifier: F, value: U256) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove a cell tree partial branch node.
+    fn prove_cell_partial(
+        &self,
+        identifier: F,
+        value: U256,
+        child_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove a cell tree full branch node.
+    fn prove_cell_full(
+        &self,
+        identifier: F,
+        value: U256,
+        child_proofs: [Vec<u8>; 2],
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove a row tree leaf node.
+    fn prove_row_leaf(
+        &self,
+        identifier: F,
+        value: U256,
+        cells_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove a row tree partial branch node.
+    fn prove_row_partial(
+        &self,
+        identifier: F,
+        value: U256,
+        is_child_left: bool,
+        child_proof: Vec<u8>,
+        cells_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove a row tree full branch node.
+    fn prove_row_full(
+        &self,
+        identifier: F,
+        value: U256,
+        left_proof: Vec<u8>,
+        right_proof: Vec<u8>,
+        cells_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Create a circuit input for proving a membership node of 1 child.
+    fn prove_membership(
+        index_identifier: F,
+        index_value: U256,
+        old_min: U256,
+        old_max: U256,
+        left_child: Hash,
+        rows_tree_hash: Hash,
+        right_child_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Create a circuit input for proving a leaf node.
+    fn prove_block_leaf(
+        &self,
+        block_id: F,
+        extraction_proof: Vec<u8>,
+        rows_tree_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Create a circuit input for proving a parent node.
+    #[allow(clippy::too_many_arguments)]
+    fn prove_block_parent(
+        &self,
+        block_id: F,
+        old_block_number: U256,
+        old_min: U256,
+        old_max: U256,
+        left_child: Hash,
+        right_child: Hash,
+        old_rows_tree_hash: Hash,
+        extraction_proof: Vec<u8>,
+        rows_tree_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
+}

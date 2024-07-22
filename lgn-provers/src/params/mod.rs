@@ -36,12 +36,16 @@ impl ParamsLoader {
             if retries >= DOWNLOAD_MAX_RETRIES {
                 bail!("Downloading file {:?} failed", file);
             }
-            let result = Self::verify_file_checksum(
-                file_name,
-                &file,
-                checksum_expected_local_path,
-                skip_checksum,
-            );
+            let result = if !skip_checksum {
+                Self::verify_file_checksum(
+                    file_name,
+                    &file,
+                    checksum_expected_local_path,
+                    skip_checksum,
+                )
+            } else {
+                Ok(true)
+            };
 
             match result {
                 Ok(true) => {
@@ -94,12 +98,16 @@ impl ParamsLoader {
             if retries >= DOWNLOAD_MAX_RETRIES {
                 bail!("Downloading file {:?} failed", file);
             }
-            let result = Self::verify_file_checksum(
-                file_name,
-                &file,
-                checksum_expected_local_path,
-                skip_checksum,
-            );
+            let result = if !skip_checksum {
+                Self::verify_file_checksum(
+                    file_name,
+                    &file,
+                    checksum_expected_local_path,
+                    skip_checksum,
+                )
+            } else {
+                Ok(true)
+            };
 
             match result {
                 Ok(true) => {
