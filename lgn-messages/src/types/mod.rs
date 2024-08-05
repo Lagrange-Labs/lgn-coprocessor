@@ -7,9 +7,11 @@ use thiserror::Error;
 pub mod experimental;
 pub mod v0;
 
-const REQUIRED_GAS_WORKER_SMALL: u64 = 98777;
-const REQUIRED_GAS_WORKER_MEDIUM: u64 = 98777;
-const REQUIRED_GAS_WORKER_LARGE: u64 = 169111;
+const REQUIRED_GAS_WORKER_SMALL_USD: u64 = 98777;
+const REQUIRED_GAS_WORKER_MEDIUM_USD: u64 = 98777;
+const REQUIRED_GAS_WORKER_LARGE_USD: u64 = 169111;
+
+const ETH_TO_USD: u64 = 2200;
 
 /// A keyed payload contains a bunch of bytes accompanied by a storage index
 pub type KeyedPayload = (String, Vec<u8>);
@@ -259,9 +261,9 @@ impl WorkerClass {
     /// Returns the gas needed to receive tasks per WorkerClass
     pub fn get_worker_class_gas(&self) -> u64 {
         match self {
-            WorkerClass::Small => REQUIRED_GAS_WORKER_SMALL,
-            WorkerClass::Medium => REQUIRED_GAS_WORKER_MEDIUM,
-            WorkerClass::Large => REQUIRED_GAS_WORKER_LARGE,
+            WorkerClass::Small => REQUIRED_GAS_WORKER_SMALL_USD / ETH_TO_USD,
+            WorkerClass::Medium => REQUIRED_GAS_WORKER_MEDIUM_USD / ETH_TO_USD,
+            WorkerClass::Large => REQUIRED_GAS_WORKER_LARGE_USD / ETH_TO_USD,
 
             _ => 0,
         }
