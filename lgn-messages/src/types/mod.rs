@@ -11,8 +11,6 @@ const REQUIRED_GAS_WORKER_SMALL_USD: u64 = 98777;
 const REQUIRED_GAS_WORKER_MEDIUM_USD: u64 = 98777;
 const REQUIRED_GAS_WORKER_LARGE_USD: u64 = 169111;
 
-const ETH_TO_USD: u64 = 2200;
-
 /// A keyed payload contains a bunch of bytes accompanied by a storage index
 pub type KeyedPayload = (String, Vec<u8>);
 
@@ -262,8 +260,8 @@ impl WorkerClass {
     pub fn get_worker_class_gas(&self) -> u64 {
         match self {
             WorkerClass::Small => REQUIRED_GAS_WORKER_SMALL_USD,
-            WorkerClass::Medium => REQUIRED_GAS_WORKER_MEDIUM_USD ,
-            WorkerClass::Large => REQUIRED_GAS_WORKER_LARGE_USD ,
+            WorkerClass::Medium => REQUIRED_GAS_WORKER_MEDIUM_USD,
+            WorkerClass::Large => REQUIRED_GAS_WORKER_LARGE_USD,
 
             _ => 0,
         }
