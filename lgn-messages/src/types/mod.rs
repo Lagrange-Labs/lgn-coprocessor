@@ -261,9 +261,9 @@ impl WorkerClass {
     /// Returns the gas needed to receive tasks per WorkerClass
     pub fn get_worker_class_gas(&self) -> u64 {
         match self {
-            WorkerClass::Small => REQUIRED_GAS_WORKER_SMALL_USD / ETH_TO_USD,
-            WorkerClass::Medium => REQUIRED_GAS_WORKER_MEDIUM_USD / ETH_TO_USD,
-            WorkerClass::Large => REQUIRED_GAS_WORKER_LARGE_USD / ETH_TO_USD,
+            WorkerClass::Small => REQUIRED_GAS_WORKER_SMALL_USD,
+            WorkerClass::Medium => REQUIRED_GAS_WORKER_MEDIUM_USD ,
+            WorkerClass::Large => REQUIRED_GAS_WORKER_LARGE_USD ,
 
             _ => 0,
         }
