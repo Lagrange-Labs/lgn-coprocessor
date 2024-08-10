@@ -2,9 +2,9 @@ use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageEx
 use crate::provers::v1::preprocessing::task::Preprocessing;
 use tracing::info;
 mod dummy_prover;
-mod euclid_prover;
-mod prover;
-mod task;
+pub mod euclid_prover;
+pub mod prover;
+pub mod task;
 
 #[allow(unused_variables)]
 pub fn create_prover(

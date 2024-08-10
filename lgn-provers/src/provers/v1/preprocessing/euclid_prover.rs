@@ -19,7 +19,7 @@ pub struct EuclidProver {
 
 impl EuclidProver {
     #[allow(dead_code)]
-    pub(crate) fn new(params: PublicParameters) -> Self {
+    pub fn new(params: PublicParameters) -> Self {
         Self { params }
     }
 

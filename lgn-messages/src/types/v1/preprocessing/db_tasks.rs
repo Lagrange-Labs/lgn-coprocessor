@@ -16,7 +16,7 @@ pub enum DatabaseType {
     Row(DbRowType),
 
     #[serde(rename = "3")]
-    Index(BlockInputs),
+    Index(IndexInputs),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -153,7 +153,7 @@ pub struct RowFullInput {
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct BlockInputs {
+pub struct IndexInputs {
     pub table_id: u64,
 
     pub block_nr: u64,
@@ -161,7 +161,7 @@ pub struct BlockInputs {
     pub inputs: Vec<DbBlockType>,
 }
 
-impl BlockInputs {
+impl IndexInputs {
     pub fn new(table_id: u64, block_nr: u64, inputs: Vec<DbBlockType>) -> Self {
         Self {
             table_id,

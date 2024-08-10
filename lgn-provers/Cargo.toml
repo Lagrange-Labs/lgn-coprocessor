@@ -3,6 +3,9 @@ name = "lgn-provers"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "lgn-provers"
+
 [dependencies]
 mr_plonky2_circuits = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
 groth16_framework = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
@@ -15,6 +18,7 @@ lgn-messages = { path = "../lgn-messages" }
 ethers = "2.0.14"
 eth_trie = "0.4.0"
 metrics = "0.23.0"
+mimalloc = { version = "0.1.39", default-features = false }
 tracing = "0.1.40"
 bytes = "1.6.0"
 serde = "1.0.202"

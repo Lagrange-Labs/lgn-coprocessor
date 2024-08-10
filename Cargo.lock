@@ -3679,6 +3679,7 @@ dependencies = [
  "hex",
  "lgn-messages",
  "metrics 0.23.0",
+ "mimalloc",
  "mp2_common",
  "mp2_v1",
  "mr_plonky2_circuits",

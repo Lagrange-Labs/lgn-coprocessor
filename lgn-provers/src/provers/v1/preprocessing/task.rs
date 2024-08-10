@@ -50,7 +50,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
         Self { prover }
     }
 
-    fn run_inner(&mut self, task: WorkerTask) -> anyhow::Result<Vec<u8>> {
+    pub fn run_inner(&mut self, task: WorkerTask) -> anyhow::Result<Vec<u8>> {
         Ok(match task.task_type {
             WorkerTaskType::Extraction(ex) => match ex {
                 ExtractionType::MptExtraction(mpt) => match &mpt.mpt_type {
