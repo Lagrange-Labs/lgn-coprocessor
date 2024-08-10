@@ -40,7 +40,6 @@ static GLOBAL: MiMalloc = MiMalloc;
 
 #[tokio::main]
 async fn main() {
-    println!("Hello, world!");
     test_preprocessing().await;
 }
 
@@ -51,8 +50,6 @@ pub(crate) async fn test_preprocessing() {
         .init();
 
     let address = Address::from_hex("0x2Ea072948819c4aC82a10d5F8067581488351eD9").unwrap();
-    println!("address {:?}", address.0.as_slice());
-
     let provider = ProviderBuilder::new().on_http("https://holesky-rpc.dev.distributed-query.io/kajdaia-neschastlivaia-cemia-neschastliva-po-svoeiemou".parse().unwrap());
 
     let slot = StorageSlot::Mapping(vec![0], 1).location();
@@ -99,14 +96,13 @@ pub(crate) async fn test_preprocessing() {
 
     let mut preprocessing = Preprocessing::new(euclid_prover);
 
-    let address = Address::from_hex("0x2Ea072948819c4aC82a10d5F8067581488351eD9").unwrap();
     let mapping_slot = 1;
 
     // NFT id = 0
     let mapping_key = U256::ZERO;
 
     // User address(also in this case contract address)
-    let mapping_value = U256::from_str("0x2ea072948819c4ac82a10d5f8067581488351ed9").unwrap();
+    let mapping_value = U256::from_be_slice(&address.into_array());
 
     let cell_task = WorkerTask {
         block_nr: 0,
@@ -115,7 +111,7 @@ pub(crate) async fn test_preprocessing() {
             table_id: 0,
             row_id: "".to_string(),
             cell_id: 0,
-            identifier: identifier_for_mapping_key_column(mapping_slot, &address),
+            identifier: identifier_for_mapping_value_column(mapping_slot, &address),
             value: mapping_value,
         }))),
     };
@@ -128,7 +124,7 @@ pub(crate) async fn test_preprocessing() {
         task_type: WorkerTaskType::Database(DatabaseType::Row(DbRowType::Leaf(RowLeafInput {
             table_id: 0,
             row_id: "".to_string(),
-            identifier: identifier_for_mapping_value_column(mapping_slot, &address),
+            identifier: identifier_for_mapping_key_column(mapping_slot, &address),
             value: mapping_key,
             cells_proof_location: None,
             cells_proof,
