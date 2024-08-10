@@ -43,6 +43,7 @@ alloy = { version = "0.2.0", features = [
     "transport-http",
     "reqwest",
 ] }
+tokio = "1.38.1"
 
 
 [features]

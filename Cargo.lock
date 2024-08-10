@@ -3686,6 +3686,7 @@ dependencies = [
  "rand",
  "reqwest 0.12.5",
  "serde",
+ "tokio",
  "tracing",
  "tracing-subscriber",
  "verifiable-db",
