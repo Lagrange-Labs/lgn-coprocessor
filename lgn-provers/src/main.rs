@@ -157,16 +157,15 @@ pub(crate) async fn test_preprocessing() {
             }),
         })),
     };
+    let mpt_leaf_proof = preprocessing.run_inner(mpt_leaf_task).unwrap();
     {
-        let pproof = ProofWithVK::deserialize(&rows_proof).unwrap();
+        let pproof = ProofWithVK::deserialize(&mpt_leaf_proof).unwrap();
         let pi = mp2_v1::values_extraction::PublicInputs::new(&pproof.proof().public_inputs);
         debug!(
             "[+] [+] MPT  proof value.digest() = {:?}",
             pi.values_digest(),
         );
     }
-
-    let mpt_leaf_proof = preprocessing.run_inner(mpt_leaf_task).unwrap();
 
     let mpt_branch_task = WorkerTask {
         block_nr: 0,
