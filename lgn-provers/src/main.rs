@@ -101,8 +101,8 @@ pub(crate) async fn test_preprocessing() {
     // NFT id = 0
     let mapping_key = U256::ZERO;
 
-    // User address(also in this case contract address)
-    let mapping_value = U256::from_be_slice(&address.into_array());
+    let user_address = Address::from_hex("0xcd82fc81790a8cf5081f026d2219c91be5a497b5").unwrap();
+    let mapping_value = U256::from_be_slice(&user_address.into_array());
 
     let cell_task = WorkerTask {
         block_nr: 0,
