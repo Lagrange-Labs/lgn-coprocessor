@@ -13,10 +13,12 @@ use alloy::{
 use hex::FromHex;
 use mimalloc::MiMalloc;
 use mp2_common::eth::{BlockUtil, StorageSlot};
+use mp2_common::proof::ProofWithVK;
 use mp2_v1::api::PublicParameters;
 use mp2_v1::values_extraction::{
     identifier_block_column, identifier_for_mapping_key_column, identifier_for_mapping_value_column,
 };
+use tracing::debug;
 use tracing_subscriber::EnvFilter;
 
 use lgn_messages::types::v1::preprocessing::db_tasks::{
@@ -132,7 +134,14 @@ pub(crate) async fn test_preprocessing() {
     };
 
     let rows_proof = preprocessing.run_inner(row_task).unwrap();
-
+    {
+        let pproof = ProofWithVK::deserialize(&rows_proof).unwrap();
+        let pi = verifiable_db::row_tree::PublicInputs::from_slice(&pproof.proof().public_inputs);
+        debug!(
+            "[+] [+] Merkle Row proof value.digest() = {:?}",
+            pi.rows_digest_field(),
+        );
+    }
     let mpt_leaf_task = WorkerTask {
         block_nr: 0,
         chain_id: 0,
@@ -148,6 +157,14 @@ pub(crate) async fn test_preprocessing() {
             }),
         })),
     };
+    {
+        let pproof = ProofWithVK::deserialize(&rows_proof).unwrap();
+        let pi = mp2_v1::values_extraction::PublicInputs::new(&pproof.proof().public_inputs);
+        debug!(
+            "[+] [+] MPT  proof value.digest() = {:?}",
+            pi.values_digest(),
+        );
+    }
 
     let mpt_leaf_proof = preprocessing.run_inner(mpt_leaf_task).unwrap();
 
