@@ -14,6 +14,7 @@ use hex::FromHex;
 use mimalloc::MiMalloc;
 use mp2_common::eth::{BlockUtil, StorageSlot};
 use mp2_common::proof::ProofWithVK;
+use mp2_common::utils::Packer;
 use mp2_v1::api::PublicParameters;
 use mp2_v1::values_extraction::{
     identifier_block_column, identifier_for_mapping_key_column, identifier_for_mapping_value_column,
@@ -63,6 +64,8 @@ pub(crate) async fn test_preprocessing() {
         .unwrap();
 
     let storage_root = proofs.storage_hash.0.to_vec();
+
+    println!("MPT STORAGE ROOT: {}", storage_root.pack());
 
     let contract_nodes = proofs.account_proof.clone();
     let contract_nodes: Vec<Vec<u8>> = contract_nodes.iter().rev().map(|x| x.to_vec()).collect();
@@ -183,7 +186,14 @@ pub(crate) async fn test_preprocessing() {
     };
 
     let mpt_branch_proof = preprocessing.run_inner(mpt_branch_task).unwrap();
-
+    {
+        let pproof = ProofWithVK::deserialize(&mpt_branch_proof).unwrap();
+        let pi = mp2_v1::values_extraction::PublicInputs::new(&pproof.proof().public_inputs);
+        debug!(
+            "[+] [+] MPT  BRANCH proof root hash() = {:?}",
+            pi.root_hash()
+        );
+    }
     let contract_proof_task = WorkerTask {
         block_nr: 0,
         chain_id: 0,
