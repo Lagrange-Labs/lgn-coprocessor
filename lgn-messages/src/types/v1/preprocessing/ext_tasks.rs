@@ -193,13 +193,13 @@ pub struct Contract {
     pub storage_root: Vec<u8>,
     pub contract: Address,
 
-    // #[dbg(placeholder = "...")]
+    #[dbg(placeholder = "...")]
     pub nodes: Vec<Vec<u8>>,
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct BlockExtractionInput {
-    // #[dbg(placeholder = "...")]
+    #[dbg(placeholder = "...")]
     pub rlp_header: Vec<u8>,
 }
 

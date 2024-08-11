@@ -3,9 +3,6 @@ name = "lgn-provers"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "lgn-provers"
-
 [dependencies]
 mr_plonky2_circuits = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
 groth16_framework = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
