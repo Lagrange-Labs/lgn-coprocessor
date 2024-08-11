@@ -230,9 +230,9 @@ pub struct BlockParentInput {
 
     pub old_max: U256,
 
-    pub prev_left_child: HashOutput,
+    pub prev_left_child: Option<HashOutput>,
 
-    pub prev_right_child: HashOutput,
+    pub prev_right_child: Option<HashOutput>,
 
     pub old_rows_tree_hash: HashOutput,
 
@@ -255,8 +255,8 @@ impl BlockParentInput {
         old_block_number: U256,
         old_min: U256,
         old_max: U256,
-        prev_left_child: HashOutput,
-        prev_right_child: HashOutput,
+        prev_left_child: Option<HashOutput>,
+        prev_right_child: Option<HashOutput>,
         old_rows_tree_hash: HashOutput,
         extraction_proof_location: ext_keys::ProofKey,
         rows_proof_location: db_keys::ProofKey,

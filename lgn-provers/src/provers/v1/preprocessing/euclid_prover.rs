@@ -3,6 +3,7 @@ use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageEx
 use alloy::primitives::{Address, U256};
 use anyhow::bail;
 use ethers::utils::rlp::{Prototype, Rlp};
+use mp2_common::poseidon::{empty_poseidon_hash, empty_poseidon_hash_as_vec};
 use mp2_common::types::HashOutput;
 use mp2_v1::api::CircuitInput::{
     BlockExtraction, BlockTree, CellsTree, ContractExtraction, FinalExtraction, LengthExtraction,
@@ -341,20 +342,23 @@ impl StorageDatabaseProver for EuclidProver {
         old_block_number: U256,
         old_min: U256,
         old_max: U256,
-        left_child: HashOutput,
-        right_child: HashOutput,
+        left_child: Option<HashOutput>,
+        right_child: Option<HashOutput>,
         old_rows_tree_hash: HashOutput,
         extraction_proof: Vec<u8>,
         rows_tree_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        let block_id: u64 = u64::from_be_bytes(block_id.to_be_bytes());
+        let left_hash =
+            left_child.unwrap_or_else(|| empty_poseidon_hash_as_vec().try_into().unwrap());
+        let right_hash =
+            right_child.unwrap_or_else(|| empty_poseidon_hash_as_vec().try_into().unwrap());
         let input = BlockTree(verifiable_db::block_tree::CircuitInput::new_parent(
             block_id,
             old_block_number,
             old_min,
             old_max,
-            &(left_child.into()),
-            &(right_child.into()),
+            &left_hash,
+            &right_hash,
             &(old_rows_tree_hash.into()),
             extraction_proof,
             rows_tree_proof,
