@@ -6,9 +6,9 @@ edition = "2021"
 [dependencies]
 mr_plonky2_circuits = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
 groth16_framework = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
-mp2_common = { path = "../../mapreduce-plonky2/mp2-common" }
-mp2_v1 = { path = "../../mapreduce-plonky2/mp2-v1" }
-verifiable-db = { path = "../../mapreduce-plonky2/verifiable-db" }
+mp2_common = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "empty_poseidon_hash_as_vec" }
+mp2_v1 = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "empty_poseidon_hash_as_vec" }
+verifiable-db = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "empty_poseidon_hash_as_vec" }
 
 anyhow = "1.0.86"
 lgn-messages = { path = "../lgn-messages" }
