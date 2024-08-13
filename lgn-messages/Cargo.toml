@@ -15,8 +15,8 @@ object_store = "0.10"
 alloy-primitives = { version = "0.7.7", default-features = false, features = ["serde"] }
 
 
-mp2_common = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "feat/optional_rows_cell_fields" }
-mp2_v1 = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "feat/optional_rows_cell_fields" }
-verifiable-db = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "feat/optional_rows_cell_fields" }
+mp2_common = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
+mp2_v1 = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
+verifiable-db = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
 alloy-serde = "0.2.1"
 serde_with = "3.9.0"
