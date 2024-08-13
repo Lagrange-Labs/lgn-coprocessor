@@ -3959,7 +3959,7 @@ dependencies = [
 [[package]]
 name = "mp2_common"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=empty_poseidon_hash_as_vec#f8d3524b561104b344d13360403bd855d9d6ed64"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/optional_rows_cell_fields#ddbf770849f6b09ccf7e4c4959bf8e8069b02232"
 dependencies = [
  "alloy",
  "anyhow",
@@ -3985,7 +3985,7 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=empty_poseidon_hash_as_vec#f8d3524b561104b344d13360403bd855d9d6ed64"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/optional_rows_cell_fields#ddbf770849f6b09ccf7e4c4959bf8e8069b02232"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4003,7 +4003,7 @@ dependencies = [
  "plonky2_crypto",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=empty_poseidon_hash_as_vec)",
+ "recursion_framework 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/optional_rows_cell_fields)",
  "rlp",
  "ryhope",
  "serde",
@@ -5040,7 +5040,7 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=empty_poseidon_hash_as_vec#f8d3524b561104b344d13360403bd855d9d6ed64"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/optional_rows_cell_fields#ddbf770849f6b09ccf7e4c4959bf8e8069b02232"
 dependencies = [
  "anyhow",
  "log",
@@ -5563,7 +5563,7 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=empty_poseidon_hash_as_vec#f8d3524b561104b344d13360403bd855d9d6ed64"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/optional_rows_cell_fields#ddbf770849f6b09ccf7e4c4959bf8e8069b02232"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6901,7 +6901,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "verifiable-db"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=empty_poseidon_hash_as_vec#f8d3524b561104b344d13360403bd855d9d6ed64"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/optional_rows_cell_fields#ddbf770849f6b09ccf7e4c4959bf8e8069b02232"
 dependencies = [
  "alloy",
  "anyhow",
@@ -6915,7 +6915,7 @@ dependencies = [
  "plonky2_ecdsa",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=empty_poseidon_hash_as_vec)",
+ "recursion_framework 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/optional_rows_cell_fields)",
  "ryhope",
  "serde",
 ]
