@@ -7,6 +7,10 @@ use thiserror::Error;
 pub mod experimental;
 pub mod v0;
 
+const REQUIRED_GAS_WORKER_SMALL_USD: u64 = 98777;
+const REQUIRED_GAS_WORKER_MEDIUM_USD: u64 = 98777;
+const REQUIRED_GAS_WORKER_LARGE_USD: u64 = 169111;
+
 /// A keyed payload contains a bunch of bytes accompanied by a storage index
 pub type KeyedPayload = (String, Vec<u8>);
 
@@ -252,6 +256,16 @@ pub enum WorkerClass {
 }
 
 impl WorkerClass {
+    /// Returns the gas needed to receive tasks per WorkerClass
+    pub fn get_worker_class_gas(&self) -> u64 {
+        match self {
+            WorkerClass::Small => REQUIRED_GAS_WORKER_SMALL_USD,
+            WorkerClass::Medium => REQUIRED_GAS_WORKER_MEDIUM_USD,
+            WorkerClass::Large => REQUIRED_GAS_WORKER_LARGE_USD,
+
+            _ => 0,
+        }
+    }
     /// Returns the minimal worker class required to process a task of the given queue
     pub fn from_queue(domain: &str) -> Self {
         let domain = domain.split('_').next().expect("invalid routing key");
