@@ -32,21 +32,21 @@ impl Display for ProofKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ProofKey::Cell(table_id, block_nr, row_id, cell_id) => {
-                // Example: V1_PREPROCESSING_CELL_1_2_3_4
-                write!(f, "{KEYS_PREPROCESSING_PREFIX}_{table_id}_{block_nr}_{CELL_PREFIX}_{row_id}_{cell_id}")
+                // Example: V1_PREPROCESSING/CELL/1/2/3/4/5
+                write!(f, "{KEYS_PREPROCESSING_PREFIX}/{table_id}/{block_nr}/{CELL_PREFIX}/{row_id}/{cell_id}")
             }
             ProofKey::Row(table_id, block_nr, row_id) => {
-                // Example: V1_PREPROCESSING_ROW_1_2_3
+                // Example: V1_PREPROCESSING/ROW/1/2/3/4
                 write!(
                     f,
-                    "{KEYS_PREPROCESSING_PREFIX}_{table_id}_{block_nr}_{ROW_PREFIX}_{row_id}"
+                    "{KEYS_PREPROCESSING_PREFIX}/{table_id}/{block_nr}/{ROW_PREFIX}/{row_id}"
                 )
             }
             ProofKey::Block(table_id, block_nr) => {
-                // Example: V1_PREPROCESSING_BLOCK_1_2
+                // Example: V1_PREPROCESSING/DB_BLOCK/1/2
                 write!(
                     f,
-                    "{KEYS_PREPROCESSING_PREFIX}_{BLOCK_PREFIX}_{table_id}_{block_nr}"
+                    "{KEYS_PREPROCESSING_PREFIX}/{BLOCK_PREFIX}/{table_id}/{block_nr}"
                 )
             }
         }

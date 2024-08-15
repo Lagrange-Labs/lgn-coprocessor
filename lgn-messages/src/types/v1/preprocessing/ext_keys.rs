@@ -46,10 +46,10 @@ impl Display for ProofKey {
                 write!(f, "PublicParams_v1")
             }
             ProofKey::MptVariable(table_id, node_version) => {
-                // Example: V1_PREPROCESSING_1_MPT_VARIABLE_1_0x1234_1
+                // Example: V1_PREPROCESSING/1/MPT_VARIABLE/1/0x1234_1
                 write!(
                     f,
-                    "{}_{}_{}_{}_{}",
+                    "{}/{}/{}/{}/{}",
                     KEYS_PREPROCESSING_PREFIX,
                     table_id,
                     MPT_VARIABLE_PREFIX,
@@ -58,34 +58,34 @@ impl Display for ProofKey {
                 )
             }
             ProofKey::MptLength(table_id, block_nr) => {
-                // Example: V1_PREPROCESSING_1_MPT_LENGTH_1_0x1234_1
+                // Example: V1_PREPROCESSING/1/MPT_LENGTH/1
                 write!(
                     f,
-                    "{}_{}_{}_{}",
+                    "{}/{}/{}/{}",
                     KEYS_PREPROCESSING_PREFIX, table_id, MPT_LENGTH_PREFIX, block_nr
                 )
             }
             ProofKey::Contract(address, block_nr) => {
-                // Example: V1_PREPROCESSING_CONTRACT_0x1234_1
+                // Example: V1_PREPROCESSING/CONTRACT/0x1234/1
                 write!(
                     f,
-                    "{}_{}_{}_{}",
+                    "{}/{}/{}/{}",
                     KEYS_PREPROCESSING_PREFIX, CONTRACT_PREFIX, address, block_nr
                 )
             }
             ProofKey::Block(block_nr) => {
-                // Example: V1_PREPROCESSING_1_MPT_BLOCK_1
+                // Example: V1_PREPROCESSING/EXT_BLOCK/1
                 write!(
                     f,
-                    "{}_{}_{}",
+                    "{}/{}/{}",
                     KEYS_PREPROCESSING_PREFIX, BLOCK_PREFIX, block_nr
                 )
             }
             ProofKey::FinalExtraction(table_id, block_nr) => {
-                // Example: V1_PREPROCESSING_1_FINAL_EXTRACTION_1
+                // Example: V1_PREPROCESSING/1/FINAL_EXTRACTION/1
                 write!(
                     f,
-                    "{}_{}_{}_{}",
+                    "{}/{}/{}/{}",
                     KEYS_PREPROCESSING_PREFIX, table_id, FINAL_EXTRACTION_PREFIX, block_nr
                 )
             }
