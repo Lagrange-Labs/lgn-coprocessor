@@ -1,4 +1,3 @@
-use ::metrics::counter;
 use anyhow::*;
 use backtrace::Backtrace;
 use clap::Parser;
@@ -211,8 +210,6 @@ where
                 match serde_json::from_str::<DownstreamPayload<T>>(&content)? {
                     DownstreamPayload::Todo { envelope } => {
                         debug!("Received task: {:?}", envelope);
-                        counter!("zkmr_worker_tasks_received").increment(1);
-
                         match provers_manager.delegate_proving(envelope) {
                             Ok(reply) => {
                                 debug!("Sending reply: {:?}", reply);
