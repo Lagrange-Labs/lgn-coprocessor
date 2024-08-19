@@ -341,7 +341,7 @@ dependencies = [
  "futures-utils-wasm",
  "lru",
  "pin-project",
- "reqwest 0.12.5",
+ "reqwest 0.12.6",
  "serde",
  "serde_json",
  "tokio",
@@ -382,7 +382,7 @@ dependencies = [
  "alloy-transport-http",
  "futures 0.3.30",
  "pin-project",
- "reqwest 0.12.5",
+ "reqwest 0.12.6",
  "serde",
  "serde_json",
  "tokio",
@@ -574,7 +574,7 @@ checksum = "2437d145d80ea1aecde8574d2058cceb8b3c9cba05f6aea8e67907c660d46698"
 dependencies = [
  "alloy-json-rpc",
  "alloy-transport",
- "reqwest 0.12.5",
+ "reqwest 0.12.6",
  "serde_json",
  "tower",
  "tracing",
@@ -3094,9 +3094,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa82e28a107a8cc405f0839610bdc9b15f1e25ec7d696aa5cf173edbcb1486ab"
+checksum = "524e8ac6999421f49a846c2d4411f337e53497d8ec55d67753beffa43c5d9205"
 dependencies = [
  "atomic-waker",
  "bytes",
@@ -3311,7 +3311,7 @@ dependencies = [
  "bytes",
  "futures-channel",
  "futures-util",
- "h2 0.4.5",
+ "h2 0.4.6",
  "http 1.1.0",
  "http-body 1.0.1",
  "httparse",
@@ -3806,7 +3806,7 @@ dependencies = [
  "mp2_v1",
  "mr_plonky2_circuits",
  "rand",
- "reqwest 0.12.5",
+ "reqwest 0.12.6",
  "serde",
  "tokio",
  "tracing",
@@ -3845,7 +3845,7 @@ dependencies = [
  "mimalloc",
  "rand",
  "redact",
- "reqwest 0.12.5",
+ "reqwest 0.12.6",
  "rpassword",
  "serde",
  "serde_derive",
@@ -4097,7 +4097,7 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "mp2_common"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/parsil-query#2b1499f76b1c81fa97622f0595924a405e6217f9"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#8134915b30774b270c0b6dd406efcd95999c6ada"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4114,6 +4114,7 @@ dependencies = [
  "plonky2_crypto",
  "plonky2_ecdsa",
  "plonky2_ecgfp5",
+ "poseidon2_plonky2",
  "rand",
  "rlp",
  "serde",
@@ -4123,7 +4124,7 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/parsil-query#2b1499f76b1c81fa97622f0595924a405e6217f9"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#8134915b30774b270c0b6dd406efcd95999c6ada"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4142,7 +4143,7 @@ dependencies = [
  "plonky2_crypto",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/parsil-query)",
+ "recursion_framework 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git)",
  "rlp",
  "ryhope",
  "serde",
@@ -4542,7 +4543,7 @@ dependencies = [
 [[package]]
 name = "parsil"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/parsil-query#2b1499f76b1c81fa97622f0595924a405e6217f9"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#8134915b30774b270c0b6dd406efcd95999c6ada"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4768,7 +4769,7 @@ checksum = "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
 [[package]]
 name = "plonky2"
 version = "0.2.2"
-source = "git+https://github.com/Lagrange-Labs/plonky2?branch=upstream#3e11b949679ffb2e69cbf2c7c917891b81f46c33"
+source = "git+https://github.com/Lagrange-Labs/plonky2?branch=upstream#3c4cc3749683a82477dcfcea19d423fe844c3ed6"
 dependencies = [
  "ahash",
  "anyhow",
@@ -4839,7 +4840,7 @@ dependencies = [
 [[package]]
 name = "plonky2_field"
 version = "0.2.2"
-source = "git+https://github.com/Lagrange-Labs/plonky2?branch=upstream#3e11b949679ffb2e69cbf2c7c917891b81f46c33"
+source = "git+https://github.com/Lagrange-Labs/plonky2?branch=upstream#3c4cc3749683a82477dcfcea19d423fe844c3ed6"
 dependencies = [
  "anyhow",
  "itertools 0.11.0",
@@ -4869,7 +4870,7 @@ dependencies = [
 [[package]]
 name = "plonky2_maybe_rayon"
 version = "0.2.0"
-source = "git+https://github.com/Lagrange-Labs/plonky2?branch=upstream#3e11b949679ffb2e69cbf2c7c917891b81f46c33"
+source = "git+https://github.com/Lagrange-Labs/plonky2?branch=upstream#3c4cc3749683a82477dcfcea19d423fe844c3ed6"
 dependencies = [
  "rayon",
 ]
@@ -4877,12 +4878,12 @@ dependencies = [
 [[package]]
 name = "plonky2_util"
 version = "0.2.0"
-source = "git+https://github.com/Lagrange-Labs/plonky2?branch=upstream#3e11b949679ffb2e69cbf2c7c917891b81f46c33"
+source = "git+https://github.com/Lagrange-Labs/plonky2?branch=upstream#3c4cc3749683a82477dcfcea19d423fe844c3ed6"
 
 [[package]]
 name = "plonky2x"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/succinctx?branch=fix-build#45f8278f90c542ded9f41eed000d53abc0f0374f"
+source = "git+https://github.com/Lagrange-Labs/succinctx?branch=fix-build#8379521e4eeb25074ac9edbf6aca6be53b9a411f"
 dependencies = [
  "anyhow",
  "array-macro",
@@ -4924,7 +4925,7 @@ dependencies = [
 [[package]]
 name = "plonky2x-derive"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/succinctx?branch=fix-build#45f8278f90c542ded9f41eed000d53abc0f0374f"
+source = "git+https://github.com/Lagrange-Labs/succinctx?branch=fix-build#8379521e4eeb25074ac9edbf6aca6be53b9a411f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4936,6 +4937,18 @@ name = "portable-atomic"
 version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da544ee218f0d287a911e9c99a39a8c9bc8fcad3cb8db5959940044ecfc67265"
+
+[[package]]
+name = "poseidon2_plonky2"
+version = "0.1.0"
+source = "git+https://github.com/Lagrange-Labs/plonky2?branch=upstream#3c4cc3749683a82477dcfcea19d423fe844c3ed6"
+dependencies = [
+ "anyhow",
+ "plonky2",
+ "rstest",
+ "serial_test",
+ "unroll",
+]
 
 [[package]]
 name = "postgres"
@@ -5216,7 +5229,7 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/parsil-query#2b1499f76b1c81fa97622f0595924a405e6217f9"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#8134915b30774b270c0b6dd406efcd95999c6ada"
 dependencies = [
  "anyhow",
  "log",
@@ -5270,9 +5283,9 @@ dependencies = [
 
 [[package]]
 name = "redox_users"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd283d9651eeda4b2a83a43c1c91b266c40fd76ecd39a50a8c630ae69dc72891"
+checksum = "ba009ff324d1fc1b900bd1fdb31564febe58a8ccc8a6fdbb93b543d33b13ca43"
 dependencies = [
  "getrandom 0.2.15",
  "libredox",
@@ -5354,7 +5367,7 @@ dependencies = [
  "serde_json",
  "serde_urlencoded",
  "sync_wrapper 0.1.2",
- "system-configuration",
+ "system-configuration 0.5.1",
  "tokio",
  "tokio-native-tls",
  "tokio-rustls 0.24.1",
@@ -5364,14 +5377,14 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "webpki-roots",
- "winreg 0.50.0",
+ "winreg",
 ]
 
 [[package]]
 name = "reqwest"
-version = "0.12.5"
+version = "0.12.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7d6d2a27d57148378eb5e111173f4276ad26340ecc5c49a4a2152167a2d6a37"
+checksum = "b6f6ddd79dc661ade721873783d159ec87d91d556ce92933e342bae8b87c48c0"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -5379,7 +5392,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
- "h2 0.4.5",
+ "h2 0.4.6",
  "http 1.1.0",
  "http-body 1.0.1",
  "http-body-util",
@@ -5400,7 +5413,7 @@ dependencies = [
  "serde_json",
  "serde_urlencoded",
  "sync_wrapper 1.0.1",
- "system-configuration",
+ "system-configuration 0.6.0",
  "tokio",
  "tokio-native-tls",
  "tower-service",
@@ -5408,7 +5421,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "winreg 0.52.0",
+ "windows-registry",
 ]
 
 [[package]]
@@ -5542,6 +5555,32 @@ dependencies = [
  "libc",
  "rtoolbox",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "rstest"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de1bb486a691878cd320c2f0d319ba91eeaa2e894066d8b5f8f117c000e9d962"
+dependencies = [
+ "futures 0.3.30",
+ "futures-timer",
+ "rstest_macros",
+ "rustc_version 0.4.0",
+]
+
+[[package]]
+name = "rstest_macros"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "290ca1a1c8ca7edb7c3283bd44dc35dd54fdec6253a3912e201ba1072018fca8"
+dependencies = [
+ "cfg-if",
+ "proc-macro2",
+ "quote",
+ "rustc_version 0.4.0",
+ "syn 1.0.109",
+ "unicode-ident",
 ]
 
 [[package]]
@@ -5761,7 +5800,7 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/parsil-query#2b1499f76b1c81fa97622f0595924a405e6217f9"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#8134915b30774b270c0b6dd406efcd95999c6ada"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6064,6 +6103,31 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.75",
+]
+
+[[package]]
+name = "serial_test"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "538c30747ae860d6fb88330addbbd3e0ddbe46d662d032855596d8a8ca260611"
+dependencies = [
+ "dashmap",
+ "futures 0.3.30",
+ "lazy_static",
+ "log",
+ "parking_lot",
+ "serial_test_derive",
+]
+
+[[package]]
+name = "serial_test_derive"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "079a83df15f85d89a68d64ae1238f142f172b1fa915d0d76b26a7cba1b659a69"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -6458,6 +6522,9 @@ name = "sync_wrapper"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7065abeca94b6a8a577f9bd45aa0867a2238b74e8eb67cf10d492bc39351394"
+dependencies = [
+ "futures-core",
+]
 
 [[package]]
 name = "system-configuration"
@@ -6467,7 +6534,18 @@ checksum = "ba3a3adc5c275d719af8cb4272ea1c4a6d668a777f37e115f6d11ddbc1c8e0e7"
 dependencies = [
  "bitflags 1.3.2",
  "core-foundation",
- "system-configuration-sys",
+ "system-configuration-sys 0.5.0",
+]
+
+[[package]]
+name = "system-configuration"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "658bc6ee10a9b4fcf576e9b0819d95ec16f4d2c02d39fd83ac1c8789785c4a42"
+dependencies = [
+ "bitflags 2.6.0",
+ "core-foundation",
+ "system-configuration-sys 0.6.0",
 ]
 
 [[package]]
@@ -6475,6 +6553,16 @@ name = "system-configuration-sys"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a75fb188eb626b924683e3b95e3a48e63551fcfb51949de2f06a9d91dbee93c9"
+dependencies = [
+ "core-foundation-sys",
+ "libc",
+]
+
+[[package]]
+name = "system-configuration-sys"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e1d1b10ced5ca923a1fcb8d03e96b8d3268065d724548c0211415ff6ac6bac4"
 dependencies = [
  "core-foundation-sys",
  "libc",
@@ -7115,7 +7203,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "verifiable-db"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/parsil-query#2b1499f76b1c81fa97622f0595924a405e6217f9"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#8134915b30774b270c0b6dd406efcd95999c6ada"
 dependencies = [
  "alloy",
  "anyhow",
@@ -7129,7 +7217,7 @@ dependencies = [
  "plonky2_ecdsa",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat/parsil-query)",
+ "recursion_framework 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git)",
  "ryhope",
  "serde",
 ]
@@ -7354,6 +7442,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "windows-registry"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e400001bb720a623c1c69032f8e3e4cf09984deec740f007dd2b03ec864804b0"
+dependencies = [
+ "windows-result",
+ "windows-strings",
+ "windows-targets 0.52.6",
+]
+
+[[package]]
+name = "windows-result"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d1043d8214f791817bab27572aaa8af63732e11bf84aa21a45a78d6c317ae0e"
+dependencies = [
+ "windows-targets 0.52.6",
+]
+
+[[package]]
+name = "windows-strings"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4cd9b125c486025df0eabcb585e62173c6c9eddcec5d117d3b6e8c30e2ee4d10"
+dependencies = [
+ "windows-result",
+ "windows-targets 0.52.6",
+]
+
+[[package]]
 name = "windows-sys"
 version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7524,16 +7642,6 @@ name = "winreg"
 version = "0.50.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "524e57b2c537c0f9b1e69f1965311ec12182b4122e45035b1508cd24d2adadb1"
-dependencies = [
- "cfg-if",
- "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "winreg"
-version = "0.52.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a277a57398d4bfa075df44f501a17cfdf8542d224f0d36095a2adc7aee4ef0a5"
 dependencies = [
  "cfg-if",
  "windows-sys 0.48.0",
