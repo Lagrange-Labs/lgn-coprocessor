@@ -7,6 +7,11 @@ members = [
     "lgn-worker"
 ]
 
+[workspace.dependencies]
+mp2_common = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "d35fb7450f1b7148d9ba85e855f26860cb717a7f" }
+mp2_v1 = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "d35fb7450f1b7148d9ba85e855f26860cb717a7f" }
+verifiable-db = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "d35fb7450f1b7148d9ba85e855f26860cb717a7f" }
+
 [patch.crates-io]
 plonky2 = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }
 plonky2_field = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }

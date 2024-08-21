@@ -16,6 +16,6 @@ serde_json = { version = "1.0.117" }
 serde_with = { version = "3.9.0"}
 thiserror = { version = "1.0.61" }
 
-mp2_common = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
-mp2_v1 = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
-verifiable-db = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
+mp2_common.workspace = true
+mp2_v1.workspace = true
+verifiable-db.workspace = true
