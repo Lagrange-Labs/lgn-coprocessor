@@ -41,7 +41,6 @@ pub enum ProofInputKind {
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct FullNodeInput {
     pub is_rows_tree_node: bool,
-    pub query_bounds: QueryBounds,
     pub left_child_proof_location: Vec<u8>,
     pub right_child_proof_location: Vec<u8>,
 }
