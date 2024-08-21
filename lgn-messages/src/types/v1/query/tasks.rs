@@ -16,9 +16,11 @@ pub struct WorkerTask {
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
 pub struct GenericQueryInput {
-    pis: Vec<u8>,
-    embedded_proof_input: Option<EmbeddedProofInput>,
-    aggregation_input_kind: Option<ProofInputKind>,
+    pub pis: Vec<u8>,
+
+    pub embedded_proof_input: Option<EmbeddedProofInput>,
+
+    pub aggregation_input_kind: Option<ProofInputKind>,
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
