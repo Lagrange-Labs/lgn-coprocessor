@@ -64,7 +64,6 @@ pub struct EmbeddedProofInput {
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct SinglePathBranchInput {
     pub node_info: NodeInfo,
-    pub subtree_proof: SubProof,
     pub left_child_info: Option<NodeInfo>,
     pub right_child_info: Option<NodeInfo>,
     pub child_position: ChildPosition,
@@ -75,7 +74,6 @@ pub struct SinglePathBranchInput {
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct SinglePathLeafInput {
     pub node_info: NodeInfo,
-    pub subtree_proof: SubProof,
     pub left_child_info: Option<NodeInfo>,
     pub right_child_info: Option<NodeInfo>,
     pub is_rows_tree_node: bool,
