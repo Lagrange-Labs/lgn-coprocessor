@@ -16,14 +16,14 @@ port = 9090
 dir = "./zkmr_params"
 checksum_expected_local_path = "/tmp/expected_checksums.txt"
 # Parameters common directory
-url = "https://pub-202881a00f674748aebc3252ef4e69d5.r2.dev"
-checksum_url = "https://pub-202881a00f674748aebc3252ef4e69d5.r2.dev/public_params.hash"
+url = "https://pub-6209c09bbc5e412a9708e493c57edbc9.r2.dev"
+checksum_url = "https://pub-6209c09bbc5e412a9708e493c57edbc9.r2.dev/public_params.hash"
 skip_checksum = false
 skip_store = false
 
 [public_params.preprocessing_params]
 # Parameters name in S3 and file name where it's will be stored
-file = "STORAGE_PREPROCESS/PUBLIC_PARAMS"
+file = "preprocessing_params.bin"
 
 [public_params.query2_params]
 # Parameters name in S3 and file name where it's will be stored
