@@ -2,7 +2,7 @@ use derive_debug_plus::Dbg;
 use serde_derive::{Deserialize, Serialize};
 use verifiable_db::query::aggregation::{ChildPosition, NodeInfo, QueryBounds, SubProof};
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::{
-    BasicOperation, Placeholders, ResultStructure, RowCells,
+    Placeholders, RowCells,
 };
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -50,17 +50,13 @@ pub struct PartialNodeInput {
     pub proven_child_proof_location: Vec<u8>,
     pub unproven_child: Option<NodeInfo>,
     pub is_rows_tree_node: bool,
-    pub query_bounds: QueryBounds,
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
 pub struct EmbeddedProofInput {
     pub column_cells: RowCells,
-    pub predicate_operations: Vec<BasicOperation>,
-    pub results: ResultStructure,
     pub placeholders: Placeholders,
     pub is_leaf: bool,
-    pub query_bounds: QueryBounds,
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
@@ -72,7 +68,6 @@ pub struct SinglePathBranchInput {
     pub child_position: ChildPosition,
     pub child_location: Vec<u8>,
     pub is_rows_tree_node: bool,
-    pub query_bounds: QueryBounds,
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
@@ -82,5 +77,4 @@ pub struct SinglePathLeafInput {
     pub left_child_info: Option<NodeInfo>,
     pub right_child_info: Option<NodeInfo>,
     pub is_rows_tree_node: bool,
-    pub query_bounds: QueryBounds,
 }
