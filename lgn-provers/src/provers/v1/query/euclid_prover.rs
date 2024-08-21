@@ -138,7 +138,7 @@ impl StorageQueryProver for EuclidQueryProver {
         let input = CircuitInput::new_partial_node(
             child_proof,
             embedded_proof,
-            input.unproven_child,
+            input.unproven_child_info,
             input.proven_child_position,
             input.is_rows_tree_node,
             &pis.bounds,
