@@ -9,15 +9,14 @@ pub struct WorkerTask {
     pub chain_id: u64,
 
     /// What we are proving.
-    pub task_type: QueryInputPart,
+    pub task_type: QueryInput,
 }
 
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct QueryInput {
     pub pis: Vec<u8>,
 
     pub parts: Vec<QueryInputPart>,
-
-    pub aggregation_input_kind: Option<ProofInputKind>,
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
