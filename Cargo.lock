@@ -3783,7 +3783,6 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "serde_with 3.9.0",
  "thiserror",
  "verifiable-db",
 ]
