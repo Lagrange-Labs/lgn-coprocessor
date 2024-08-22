@@ -161,13 +161,15 @@ fn run(config: &Config) -> Result<()> {
             }
         })?;
 
+    let mut expected_checksums_file = &String::new();
+
     if !config.public_params.skip_checksum {
         // Fetch checksum file
         // The checksum file can be generated in two ways.
         // 1- Run the worker, and it will download and spit out the checksum on disk
         // 2- Manually download the params then install with the checksums bin crate and run checksums -c -r zkmr_params -a BLAKE3
         let checksum_url = &config.public_params.checksum_url;
-        let expected_checksums_file = &config.public_params.checksum_expected_local_path;
+        expected_checksums_file = &config.public_params.checksum_expected_local_path;
         fetch_checksum_file(checksum_url, expected_checksums_file)?;
     }
 
