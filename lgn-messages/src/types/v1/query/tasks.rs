@@ -15,7 +15,7 @@ pub struct WorkerTask {
 pub struct QueryInput {
     pub pis: Vec<u8>,
 
-    pub parts: QueryInputPart,
+    pub parts: Vec<QueryInputPart>,
 
     pub aggregation_input_kind: Option<ProofInputKind>,
 }
