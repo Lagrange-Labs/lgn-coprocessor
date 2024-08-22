@@ -3,7 +3,7 @@ use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageEx
 use alloy::primitives::{Address, U256};
 use anyhow::bail;
 use ethers::utils::rlp::{Prototype, Rlp};
-use mp2_common::poseidon::{empty_poseidon_hash, empty_poseidon_hash_as_vec};
+use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::CircuitInput::{
     BlockExtraction, BlockTree, CellsTree, ContractExtraction, FinalExtraction, LengthExtraction,
@@ -359,7 +359,7 @@ impl StorageDatabaseProver for EuclidProver {
             old_max,
             &left_hash,
             &right_hash,
-            &(old_rows_tree_hash.into()),
+            &(old_rows_tree_hash),
             extraction_proof,
             rows_tree_proof,
         ));
@@ -381,8 +381,8 @@ impl StorageDatabaseProver for EuclidProver {
             index_value,
             old_min,
             old_max,
-            &(left_child.into()),
-            &(rows_tree_hash.into()),
+            &(left_child),
+            &(rows_tree_hash),
             right_child_proof,
         ));
         self.prove(input, "membership")

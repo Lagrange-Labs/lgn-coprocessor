@@ -13,7 +13,6 @@ object_store = { version = "0.10" }
 serde = { version = "1.0.202" }
 serde_derive = { version = "1.0.202" }
 serde_json = { version = "1.0.117" }
-serde_with = { version = "3.9.0"}
 thiserror = { version = "1.0.61" }
 
 mp2_common.workspace = true
