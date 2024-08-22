@@ -2,7 +2,7 @@ use crate::types::v1::preprocessing::ext_keys::ProofKey;
 use crate::types::v1::preprocessing::WorkerTaskType;
 use alloy_primitives::Address;
 use derive_debug_plus::Dbg;
-use ethers::types::H256;
+use ethers::{types::H256, utils::rlp};
 use serde_derive::{Deserialize, Serialize};
 
 pub const ROUTING_DOMAIN: &str = "sp";
@@ -187,6 +187,33 @@ pub struct Length {
     pub nodes: Vec<Vec<u8>>,
 }
 
+pub enum MPTExtractionType {
+    Branch,
+    Extension,
+    Leaf,
+}
+
+impl MPTExtractionType {
+    pub fn from_rlp_node(node: &[u8], i: usize) -> Self {
+        let list: Vec<Vec<_>> = rlp::decode_list(node);
+        match list.len() {
+            2 if i == 0 => MPTExtractionType::Leaf,
+            2 => MPTExtractionType::Extension,
+            _ => MPTExtractionType::Branch,
+        }
+    }
+}
+
+impl Length {
+    pub fn extraction_types(&self) -> Vec<MPTExtractionType> {
+        self.nodes
+            .iter()
+            .enumerate()
+            .map(|(i, n)| MPTExtractionType::from_rlp_node(n, i))
+            .collect()
+    }
+}
+
 #[derive(Dbg, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Contract {
     pub block_nr: u64,
@@ -195,6 +222,16 @@ pub struct Contract {
 
     #[dbg(placeholder = "...")]
     pub nodes: Vec<Vec<u8>>,
+}
+
+impl Contract {
+    pub fn extraction_types(&self) -> Vec<MPTExtractionType> {
+        self.nodes
+            .iter()
+            .enumerate()
+            .map(|(i, n)| MPTExtractionType::from_rlp_node(n, i))
+            .collect()
+    }
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
