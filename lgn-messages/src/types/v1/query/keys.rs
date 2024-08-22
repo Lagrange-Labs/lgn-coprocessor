@@ -10,11 +10,13 @@ type RowKeyId = String;
 
 type BlockNr = u64;
 
+type IndexNodeId = usize;
+
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]
 pub enum ProofKey {
     Row(QueryId, BlockNr, RowKeyId),
 
-    Index(QueryId, BlockNr),
+    Index(QueryId, BlockNr, IndexNodeId),
 }
 
 impl Display for ProofKey {
@@ -27,8 +29,8 @@ impl Display for ProofKey {
                     KEYS_QUERIES_PREFIX, query_id, block_nr, row_key_id
                 )
             }
-            ProofKey::Index(query_id, block_nr) => {
-                write!(f, "{}/{}/{}", KEYS_QUERIES_PREFIX, query_id, block_nr)
+            ProofKey::Index(query_id, block_nr, index_node_id) => {
+                write!(f, "{}/{}/{}/{}", KEYS_QUERIES_PREFIX, query_id, block_nr, index_node_id)
             }
         }
     }
