@@ -2,9 +2,9 @@ use lgn_messages::types::v1::preprocessing::db_tasks::{
     DatabaseType, DbBlockType, DbCellType, DbRowType,
 };
 use lgn_messages::types::v1::preprocessing::ext_tasks::{
-    ExtractionType, FinalExtractionType, MptType, WorkerTask,
+    ExtractionType, FinalExtractionType, MptType,
 };
-use lgn_messages::types::v1::preprocessing::{db_keys, ext_keys, WorkerTaskType};
+use lgn_messages::types::v1::preprocessing::{db_keys, ext_keys, WorkerTask, WorkerTaskType};
 use lgn_messages::types::{
     MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
 };

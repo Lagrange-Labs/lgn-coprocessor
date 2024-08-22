@@ -4,13 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-mp2_common.workspace = true
-mp2_v1.workspace = true
-verifiable-db.workspace = true
-parsil.workspace = true
-mr_plonky2_circuits.workspace = true
-groth16_framework.workspace = true
-
 alloy = { version = "0.2.0", features = [
     "contract",
     "node-bindings",
@@ -42,6 +35,14 @@ serde = { version = "1.0.202" }
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "json"] }
 tokio = "1.38.1"
+
+mr_plonky2_circuits = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
+groth16_framework = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
+parsil = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
+
+mp2_common.workspace = true
+mp2_v1.workspace = true
+verifiable-db.workspace = true
 
 [features]
 dummy-prover = []

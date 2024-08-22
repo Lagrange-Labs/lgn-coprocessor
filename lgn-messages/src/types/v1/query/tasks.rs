@@ -5,21 +5,18 @@ use verifiable_db::query::aggregation::{ChildPosition, NodeInfo, QueryBounds, Su
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::{Placeholders, RowCells};
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-pub struct WorkerTask {
-    /// Chain ID
-    pub chain_id: u64,
+pub struct QueryInput {
+    pub proof_key: ProofKey,
 
-    /// What we are proving.
-    pub task_type: QueryInput,
+    pub query_step: QueryStep,
+
+    pub pis: Vec<u8>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-pub struct QueryInput {
-    pub pis: Vec<u8>,
-
-    pub parts: Vec<QueryInputPart>,
-
-    pub proof_key: ProofKey,
+pub enum QueryStep {
+    Prepare(Vec<QueryInputPart>),
+    Revelation,
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]

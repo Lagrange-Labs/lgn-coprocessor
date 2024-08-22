@@ -4,8 +4,8 @@ use mp2_common::types::HashOutput;
 use serde_derive::{Deserialize, Serialize};
 use serde_with::serde_as;
 
-use crate::types::v1::preprocessing::ext_tasks::{Identifier, WorkerTask};
-use crate::types::v1::preprocessing::{db_keys, ext_keys, WorkerTaskType};
+use crate::types::v1::preprocessing::ext_tasks::{Identifier};
+use crate::types::v1::preprocessing::{db_keys, ext_keys, WorkerTask, WorkerTaskType};
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub enum DatabaseType {

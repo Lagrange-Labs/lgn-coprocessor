@@ -8,13 +8,9 @@ members = [
 ]
 
 [workspace.dependencies]
-mp2_common = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "feat/public_to_cells_for_testing" }
-mp2_v1 = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "feat/public_to_cells_for_testing" }
-verifiable-db = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" , branch = "feat/public_to_cells_for_testing"}
-parsil = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "feat/public_to_cells_for_testing" }
-
-mr_plonky2_circuits = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
-groth16_framework = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
+mp2_common = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
+mp2_v1 = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
+verifiable-db = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
 
 [patch.crates-io]
 plonky2 = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }

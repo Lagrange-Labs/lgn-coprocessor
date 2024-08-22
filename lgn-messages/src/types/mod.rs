@@ -29,8 +29,8 @@ pub enum TaskType {
     StorageQuery(v0::query::WorkerTask),
     Erc20Query(v0::query::erc20::WorkerTask),
     StorageGroth16(v0::groth16::WorkerTask),
-    V1Preprocessing(v1::preprocessing::ext_tasks::WorkerTask),
-    V1Query(v1::query::tasks::WorkerTask),
+    V1Preprocessing(v1::preprocessing::WorkerTask),
+    V1Query(v1::query::WorkerTask),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]

@@ -4,10 +4,6 @@ version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-mp2_common.workspace = true
-mp2_v1.workspace = true
-verifiable-db.workspace = true
-
 alloy-primitives = { version = "0.7.7", default-features = false, features = ["serde"] }
 alloy-serde = "0.2.1"
 anyhow = { version = "1.0.86" }
@@ -20,5 +16,6 @@ serde_json = { version = "1.0.117" }
 serde_with = { version = "3.9.0"}
 thiserror = { version = "1.0.61" }
 
-
-
+mp2_common.workspace = true
+mp2_v1.workspace = true
+verifiable-db.workspace = true
