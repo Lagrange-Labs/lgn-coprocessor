@@ -20,7 +20,9 @@ permissions:
 jobs:
   build:
     name: Build Docker Image
-    runs-on: nix-128g
+    runs-on: ['memory:32GB']
+    outputs:
+     RUNNER: ${{ steps.get-label.outputs.runner_name }}
     strategy:
       fail-fast: false
       matrix:
@@ -31,6 +33,14 @@ jobs:
             platform: linux/amd64
     environment: CI
     steps:
+      - name: Get Runner Label
+        id: get-label
+        run: |
+          if [[ "${{ runner.name }}" == *"@dedicated-7" ]]; then
+            echo "runner_name=hostname:dedicated-7" >> $GITHUB_OUTPUT
+          else
+            echo "runner_name=nix-128g" >> $GITHUB_OUTPUT
+          fi
       - name: Cleanup docker build cache
         run: |
           docker system prune --force
@@ -56,7 +66,7 @@ jobs:
   private-push:
     name: Push Docker Images to AWS
     environment: CI
-    runs-on: nix-128g
+    runs-on: ${{needs.build.outputs.RUNNER}}
     needs: build
     strategy:
       fail-fast: false
@@ -105,7 +115,7 @@ jobs:
     name: Push Docker Images to Docker hub
     environment: CI
     if: contains('main holesky mainnet v1_base', github.ref_name) || startsWith(github.ref, 'refs/tags/')
-    runs-on: nix-128g
+    runs-on: ${{needs.build.outputs.RUNNER}}
     needs: build
     steps:
       - name: Log in to Docker Hub
