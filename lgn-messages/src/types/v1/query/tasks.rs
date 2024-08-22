@@ -21,7 +21,7 @@ pub struct QueryInput {
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
 pub struct QueryInputPart {
-    pub embedded_proof_input: Option<EmbeddedProofInput>,
+    pub embedded_proof_input: Option<EmbeddedProofInputType>,
 
     pub aggregation_input_kind: Option<ProofInputKind>,
 }
@@ -54,6 +54,14 @@ pub struct PartialNodeInput {
     pub proven_child_proof_location: Vec<u8>,
     pub unproven_child_info: Option<NodeInfo>,
     pub is_rows_tree_node: bool,
+}
+
+#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
+pub enum EmbeddedProofInputType {
+    RowsTree(EmbeddedProofInput),
+
+    // FIXME - rows root location
+    IndexTree(()),
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]

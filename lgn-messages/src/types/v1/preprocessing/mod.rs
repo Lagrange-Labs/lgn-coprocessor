@@ -15,6 +15,7 @@ pub mod db_keys;
 pub mod db_tasks;
 pub mod ext_keys;
 pub mod ext_tasks;
+mod proof_type;
 
 const KEYS_PREPROCESSING_PREFIX: &str = "V1_PREPROCESSING";
 
