@@ -169,13 +169,15 @@ fn run(config: &Config) -> Result<()> {
         let checksum_url = &config.public_params.checksum_url;
         let expected_checksums_file = &config.public_params.checksum_expected_local_path;
         fetch_checksum_file(checksum_url, expected_checksums_file)?;
-
-        verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
-            .context("Failed to verify checksums")?;
     }
 
     let mut provers_manager = ProversManager::<TaskType, ReplyType>::new(&metrics);
     register_v1_provers(config, &mut provers_manager);
+
+    if !config.public_params.skip_checksum {
+        verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
+            .context("Failed to verify checksums")?;
+    }
 
     start_work(&metrics, &mut ws_socket, &mut provers_manager)?;
 
