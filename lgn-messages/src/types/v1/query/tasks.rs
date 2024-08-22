@@ -1,3 +1,4 @@
+use crate::types::v1::query::keys::ProofKey;
 use derive_debug_plus::Dbg;
 use serde_derive::{Deserialize, Serialize};
 use verifiable_db::query::aggregation::{ChildPosition, NodeInfo, QueryBounds, SubProof};
@@ -17,6 +18,8 @@ pub struct QueryInput {
     pub pis: Vec<u8>,
 
     pub parts: Vec<QueryInputPart>,
+
+    pub proof_key: ProofKey,
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
@@ -44,14 +47,14 @@ pub enum ProofInputKind {
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct FullNodeInput {
     pub is_rows_tree_node: bool,
-    pub left_child_proof_location: Vec<u8>,
-    pub right_child_proof_location: Vec<u8>,
+    pub left_child_proof_location: ProofKey,
+    pub right_child_proof_location: ProofKey,
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct PartialNodeInput {
     pub proven_child_position: ChildPosition,
-    pub proven_child_proof_location: Vec<u8>,
+    pub proven_child_proof_location: ProofKey,
     pub unproven_child_info: Option<NodeInfo>,
     pub is_rows_tree_node: bool,
 }
@@ -60,8 +63,7 @@ pub struct PartialNodeInput {
 pub enum EmbeddedProofInputType {
     RowsTree(EmbeddedProofInput),
 
-    // FIXME - rows root location
-    IndexTree(()),
+    IndexTree(ProofKey),
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
@@ -77,7 +79,7 @@ pub struct SinglePathBranchInput {
     pub left_child_info: Option<NodeInfo>,
     pub right_child_info: Option<NodeInfo>,
     pub child_position: ChildPosition,
-    pub child_location: Vec<u8>,
+    pub child_location: ProofKey,
     pub is_rows_tree_node: bool,
 }
 
