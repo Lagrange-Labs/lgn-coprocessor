@@ -160,4 +160,10 @@ pub trait StorageDatabaseProver {
         rows_tree_hash: HashOutput,
         right_child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
+
+    fn prove_ivc(
+        &self,
+        index_proof: Vec<u8>,
+        previous_proof: Option<Vec<u8>>,
+    ) -> anyhow::Result<Vec<u8>>;
 }
