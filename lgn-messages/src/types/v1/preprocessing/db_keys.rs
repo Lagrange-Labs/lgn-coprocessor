@@ -26,6 +26,8 @@ pub enum ProofKey {
     Row(TableId, BlockNr, RowId),
 
     Block(TableId, BlockNr),
+
+    IVC(TableId, BlockNr),
 }
 
 impl Display for ProofKey {
@@ -48,6 +50,10 @@ impl Display for ProofKey {
                     f,
                     "{KEYS_PREPROCESSING_PREFIX}/{BLOCK_PREFIX}/{table_id}/{block_nr}"
                 )
+            }
+            ProofKey::IVC(table_id, block_nr) => {
+                // Example: V1_PREPROCESSING/IVC/1/2
+                write!(f, "{KEYS_PREPROCESSING_PREFIX}/IVC/{table_id}/{block_nr}")
             }
         }
     }

@@ -210,6 +210,15 @@ impl StorageDatabaseProver for DummyProver {
         debug!("Proving block parent");
         Ok(prove())
     }
+
+    fn prove_ivc(
+        &self,
+        _block_proof: Vec<u8>,
+        _previous_proof: Option<Vec<u8>>,
+    ) -> anyhow::Result<Vec<u8>> {
+        debug!("Proving ivc");
+        Ok(prove())
+    }
 }
 
 #[allow(dead_code)]

@@ -17,6 +17,8 @@ pub enum DatabaseType {
 
     #[serde(rename = "3")]
     Index(IndexInputs),
+
+    IVC(IvcInput),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -326,6 +328,33 @@ impl BlockMembershipInput {
     }
 }
 
+#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+pub struct IvcInput {
+    pub table_id: u64,
+
+    pub block_nr: u64,
+
+    pub is_first_block: bool,
+
+    #[dbg(placeholder = "...")]
+    pub index_proof: Vec<u8>,
+
+    #[dbg(placeholder = "...")]
+    pub previous_ivc_proof: Option<Vec<u8>>,
+}
+
+impl IvcInput {
+    pub fn new(table_id: u64, block_nr: u64, is_first_block: bool) -> Self {
+        Self {
+            table_id,
+            block_nr,
+            is_first_block,
+            index_proof: vec![],
+            previous_ivc_proof: None,
+        }
+    }
+}
+
 impl From<&WorkerTask> for db_keys::ProofKey {
     fn from(tt: &WorkerTask) -> Self {
         match &tt.task_type {
@@ -362,6 +391,7 @@ impl From<&WorkerTask> for db_keys::ProofKey {
                     }
                 },
                 DatabaseType::Index(bt) => db_keys::ProofKey::Block(bt.table_id, tt.block_nr),
+                DatabaseType::IVC(ivc) => db_keys::ProofKey::IVC(ivc.table_id, tt.block_nr),
             },
             _ => unimplemented!("Task type not supported: {:?}", tt.task_type),
         }
