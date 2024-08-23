@@ -394,20 +394,13 @@ impl StorageDatabaseProver for EuclidProver {
         previous_proof: Option<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
         let input = match previous_proof {
-            Some(previous_proof) => {
-                println!("index_proof: {:?}", index_proof.len());
-                println!("previous_proof: {:?}", previous_proof.len());
-                IVC(verifiable_db::ivc::CircuitInput::new_subsequent_input(
-                    index_proof,
-                    previous_proof,
-                )?)
-            }
-            None => {
-                println!("index_proof: {:?}", index_proof.len());
-                IVC(verifiable_db::ivc::CircuitInput::new_first_input(
-                    index_proof,
-                )?)
-            }
+            Some(previous_proof) => IVC(verifiable_db::ivc::CircuitInput::new_subsequent_input(
+                index_proof,
+                previous_proof,
+            )?),
+            None => IVC(verifiable_db::ivc::CircuitInput::new_first_input(
+                index_proof,
+            )?),
         };
 
         self.prove(input, "ivc")
