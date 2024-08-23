@@ -201,6 +201,9 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                     }
                     last_proof.take().unwrap()
                 }
+                DatabaseType::IVC(ivc) => self
+                    .prover
+                    .prove_ivc(ivc.index_proof, ivc.previous_ivc_proof)?,
             },
         })
     }

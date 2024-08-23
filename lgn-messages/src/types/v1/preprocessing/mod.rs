@@ -3,7 +3,7 @@ use ethers::prelude::H256;
 use serde_derive::{Deserialize, Serialize};
 
 use crate::types::v1::preprocessing::db_tasks::{
-    CellFullInput, CellLeafInput, CellPartialInput, DatabaseType, RowLeafInput,
+    CellFullInput, CellLeafInput, CellPartialInput, DatabaseType, IvcInput, RowLeafInput,
 };
 use crate::types::v1::preprocessing::ext_tasks::{
     BlockExtractionInput, Contract, ExtractionType, FinalExtraction, Identifier, Length,
@@ -313,6 +313,14 @@ impl WorkerTaskType {
                 child_proofs: vec![],
                 cells_proof: vec![],
             },
+        )))
+    }
+
+    pub fn ivc(table_id: u64, block_nr: u64, is_first_block: bool) -> WorkerTaskType {
+        WorkerTaskType::Database(DatabaseType::IVC(IvcInput::new(
+            table_id,
+            block_nr,
+            is_first_block,
         )))
     }
 }

@@ -7,7 +7,7 @@ use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::CircuitInput::{
     BlockExtraction, BlockTree, CellsTree, ContractExtraction, FinalExtraction, LengthExtraction,
-    RowsTree, ValuesExtraction,
+    RowsTree, ValuesExtraction, IVC,
 };
 use mp2_v1::api::{generate_proof, CircuitInput, PublicParameters};
 use mp2_v1::length_extraction::LengthCircuitInput;
@@ -386,5 +386,23 @@ impl StorageDatabaseProver for EuclidProver {
             right_child_proof,
         ));
         self.prove(input, "membership")
+    }
+
+    fn prove_ivc(
+        &self,
+        index_proof: Vec<u8>,
+        previous_proof: Option<Vec<u8>>,
+    ) -> anyhow::Result<Vec<u8>> {
+        let input = match previous_proof {
+            Some(previous_proof) => IVC(verifiable_db::ivc::CircuitInput::new_subsequent_input(
+                index_proof,
+                previous_proof,
+            )?),
+            None => IVC(verifiable_db::ivc::CircuitInput::new_first_input(
+                index_proof,
+            )?),
+        };
+
+        self.prove(input, "ivc")
     }
 }
