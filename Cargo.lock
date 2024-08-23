@@ -3812,6 +3812,7 @@ dependencies = [
  "mp2_common",
  "mp2_v1",
  "mr_plonky2_circuits",
+ "parsil",
  "rand",
  "reqwest 0.12.7",
  "serde",

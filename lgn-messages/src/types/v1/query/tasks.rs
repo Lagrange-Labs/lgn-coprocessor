@@ -16,11 +16,14 @@ pub struct QueryInput {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub enum QueryStep {
     Prepare(Vec<QueryInputPart>),
+
     Revelation,
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
 pub struct QueryInputPart {
+    pub node_id: String,
+
     pub embedded_proof_input: Option<EmbeddedProofInputType>,
 
     pub aggregation_input_kind: Option<ProofInputKind>,
