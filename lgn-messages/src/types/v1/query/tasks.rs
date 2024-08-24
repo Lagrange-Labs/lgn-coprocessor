@@ -22,8 +22,6 @@ pub enum QueryStep {
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
 pub struct QueryInputPart {
-    pub node_id: String,
-
     pub embedded_proof_input: Option<EmbeddedProofInputType>,
 
     pub aggregation_input_kind: Option<ProofInputKind>,
