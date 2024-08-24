@@ -1,11 +1,10 @@
-use serde_derive::{Deserialize, Serialize};
 use crate::types::v1::query::tasks::QueryInput;
+use serde_derive::{Deserialize, Serialize};
 
 pub mod keys;
 pub mod tasks;
 
 pub(crate) const KEYS_QUERIES_PREFIX: &str = "V1_QUERIES";
-
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct WorkerTask {

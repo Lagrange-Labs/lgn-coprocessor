@@ -1,4 +1,4 @@
-use crate::types::v1::query::tasks::{QueryInput};
+use crate::types::v1::query::tasks::QueryInput;
 use crate::types::v1::query::KEYS_QUERIES_PREFIX;
 use object_store::path::Path;
 use serde_derive::{Deserialize, Serialize};
@@ -11,7 +11,6 @@ type RowKeyId = String;
 type BlockNr = u64;
 
 type IndexNodeId = usize;
-
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]
 pub enum ProofKey {
@@ -33,7 +32,11 @@ impl Display for ProofKey {
                 )
             }
             ProofKey::Index(query_id, block_nr, index_node_id) => {
-                write!(f, "{}/{}/{}/{}", KEYS_QUERIES_PREFIX, query_id, block_nr, index_node_id)
+                write!(
+                    f,
+                    "{}/{}/{}/{}",
+                    KEYS_QUERIES_PREFIX, query_id, block_nr, index_node_id
+                )
             }
             ProofKey::Revelation(query_id) => {
                 write!(f, "{}/{}/revelation", KEYS_QUERIES_PREFIX, query_id)

@@ -1,9 +1,9 @@
 use crate::provers::v1::query::prover::StorageQueryProver;
 use crate::provers::LgnProver;
+use lgn_messages::types::v1::query::WorkerTask;
 use lgn_messages::types::{
     MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
 };
-use lgn_messages::types::v1::query::WorkerTask;
 
 pub struct Querying<P> {
     prover: P,
