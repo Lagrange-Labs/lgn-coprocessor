@@ -51,10 +51,12 @@ pub struct FullNodeInput {
 
     pub left_child_proof_location: ProofKey,
 
+    #[dbg(placeholder = "...")]
     pub left_child_proof: Vec<u8>,
 
     pub right_child_proof_location: ProofKey,
 
+    #[dbg(placeholder = "...")]
     pub right_child_proof: Vec<u8>,
 }
 
@@ -64,6 +66,7 @@ pub struct PartialNodeInput {
 
     pub proven_child_proof_location: ProofKey,
 
+    #[dbg(placeholder = "...")]
     pub proven_child_proof: Vec<u8>,
 
     pub unproven_child_info: Option<NodeInfo>,
@@ -98,6 +101,9 @@ pub struct SinglePathBranchInput {
     pub child_position: ChildPosition,
 
     pub proven_child_location: ProofKey,
+
+    #[dbg(placeholder = "...")]
+    pub proven_child_proof: Vec<u8>,
 
     pub is_rows_tree_node: bool,
 }
