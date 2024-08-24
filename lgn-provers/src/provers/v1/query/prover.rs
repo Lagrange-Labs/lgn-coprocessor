@@ -2,13 +2,13 @@ use lgn_messages::types::v1::query::tasks::{
     EmbeddedProofInput, FullNodeInput, PartialNodeInput, SinglePathBranchInput, SinglePathLeafInput,
 };
 use parsil::assembler::DynamicCircuitPis;
+use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
 
 pub trait StorageQueryProver {
     fn prove_universal_circuit(
         &self,
         input: EmbeddedProofInput,
-        pis: DynamicCircuitPis,
-        is_leaf: bool,
+        pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>;
 
     fn prove_full_node(
@@ -16,29 +16,36 @@ pub trait StorageQueryProver {
         embedded_tree_proof: Vec<u8>,
         left_child_proof: Vec<u8>,
         right_child_proof: Vec<u8>,
-        input: FullNodeInput,
-        pis: DynamicCircuitPis,
+        pis: &DynamicCircuitPis,
+        is_rows_tree_node: bool,
     ) -> anyhow::Result<Vec<u8>>;
 
     fn prove_partial_node(
         &self,
         input: PartialNodeInput,
-        child_proof: Vec<u8>,
         embedded_proof: Vec<u8>,
-        pis: DynamicCircuitPis,
+        pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>;
 
     fn prove_single_path_leaf(
         &self,
         input: SinglePathLeafInput,
         embedded_proof: Vec<u8>,
-        pis: DynamicCircuitPis,
+        pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>;
 
     fn prove_single_path_branch(
         &self,
         input: SinglePathBranchInput,
         child_proof: Vec<u8>,
-        pis: DynamicCircuitPis,
+        pis: &DynamicCircuitPis,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    fn prove_revelation(
+        &self,
+        pis: &DynamicCircuitPis,
+        placeholders: Placeholders,
+        query_proof: Vec<u8>,
+        indexing_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
 }

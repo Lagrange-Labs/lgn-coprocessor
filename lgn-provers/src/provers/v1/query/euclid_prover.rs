@@ -7,27 +7,44 @@ use lgn_messages::types::v1::query::tasks::{
 use mp2_v1::api::PublicParameters;
 use parsil::assembler::DynamicCircuitPis;
 use tracing::{debug, info};
-use verifiable_db::api::QueryCircuitInput;
+use verifiable_db::api::{QueryCircuitInput, QueryParameters};
 use verifiable_db::query::aggregation::SubProof;
+use verifiable_db::query::api;
 use verifiable_db::query::api::{CircuitInput, Parameters};
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
+use verifiable_db::revelation;
 
 const MAX_NUM_COLUMNS: usize = 20;
 const MAX_NUM_PREDICATE_OPS: usize = 20;
 const MAX_NUM_RESULT_OPS: usize = 20;
 const MAX_NUM_RESULTS: usize = 10;
+const MAX_NUM_OUTPUTS: usize = 3;
+// Maximum number of the items per result
+const MAX_NUM_ITEMS_PER_OUTPUT: usize = 5;
+// Maximum number of the placeholders
+const MAX_NUM_PLACEHOLDERS: usize = 14;
+
 pub(crate) struct EuclidQueryProver {
-    params: Parameters<MAX_NUM_COLUMNS, MAX_NUM_PREDICATE_OPS, MAX_NUM_RESULT_OPS, MAX_NUM_RESULTS>,
+    params: QueryParameters<
+        MAX_NUM_COLUMNS,
+        MAX_NUM_PREDICATE_OPS,
+        MAX_NUM_RESULT_OPS,
+        MAX_NUM_OUTPUTS,
+        MAX_NUM_ITEMS_PER_OUTPUT,
+        MAX_NUM_PLACEHOLDERS,
+    >,
 }
 
 impl EuclidQueryProver {
     #[allow(dead_code)]
     pub fn new(
-        params: Parameters<
+        params: QueryParameters<
             MAX_NUM_COLUMNS,
             MAX_NUM_PREDICATE_OPS,
             MAX_NUM_RESULT_OPS,
-            MAX_NUM_RESULTS,
+            MAX_NUM_OUTPUTS,
+            MAX_NUM_ITEMS_PER_OUTPUT,
+            MAX_NUM_PLACEHOLDERS,
         >,
     ) -> Self {
         Self { params }
@@ -60,8 +77,7 @@ impl StorageQueryProver for EuclidQueryProver {
     fn prove_universal_circuit(
         &self,
         input: EmbeddedProofInput,
-        pis: DynamicCircuitPis,
-        is_leaf: bool,
+        pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
         info!("Proving universal circuit");
 
@@ -73,11 +89,12 @@ impl StorageQueryProver for EuclidQueryProver {
             &pis.predication_operations,
             &pis.result,
             &placeholders,
-            is_leaf,
+            input.is_leaf,
             &pis.bounds,
         )?;
 
-        let proof = self.params.generate_proof(circuit_input)?;
+        let input = QueryCircuitInput::Query(circuit_input);
+        let proof = self.params.generate_proof(input)?;
 
         info!(
             time = now.elapsed().as_secs_f32(),
@@ -95,21 +112,22 @@ impl StorageQueryProver for EuclidQueryProver {
         embedded_tree_proof: Vec<u8>,
         left_child_proof: Vec<u8>,
         right_child_proof: Vec<u8>,
-        input: FullNodeInput,
-        pis: DynamicCircuitPis,
+        pis: &DynamicCircuitPis,
+        is_rows_tree_node: bool,
     ) -> anyhow::Result<Vec<u8>> {
         info!("Proving full node");
 
         let now = std::time::Instant::now();
 
-        let input = CircuitInput::new_full_node(
+        let circuit_input = CircuitInput::new_full_node(
             left_child_proof,
             right_child_proof,
             embedded_tree_proof,
-            input.is_rows_tree_node,
+            is_rows_tree_node,
             &pis.bounds,
         )?;
 
+        let input = QueryCircuitInput::Query(circuit_input);
         let proof = self.params.generate_proof(input)?;
 
         info!(
@@ -127,16 +145,15 @@ impl StorageQueryProver for EuclidQueryProver {
     fn prove_partial_node(
         &self,
         input: PartialNodeInput,
-        child_proof: Vec<u8>,
         embedded_proof: Vec<u8>,
-        pis: DynamicCircuitPis,
+        pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
         info!("Proving partial node");
 
         let now = std::time::Instant::now();
 
-        let input = CircuitInput::new_partial_node(
-            child_proof,
+        let circuit_input = CircuitInput::new_partial_node(
+            input.proven_child_proof,
             embedded_proof,
             input.unproven_child_info,
             input.proven_child_position,
@@ -144,6 +161,7 @@ impl StorageQueryProver for EuclidQueryProver {
             &pis.bounds,
         )?;
 
+        let input = QueryCircuitInput::Query(circuit_input);
         let proof = self.params.generate_proof(input)?;
 
         info!(
@@ -162,13 +180,13 @@ impl StorageQueryProver for EuclidQueryProver {
         &self,
         input: SinglePathLeafInput,
         embedded_proof: Vec<u8>,
-        pis: DynamicCircuitPis,
+        pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
         info!("Proving single path leaf");
 
         let now = std::time::Instant::now();
 
-        let input = CircuitInput::new_single_path(
+        let circuit_input = CircuitInput::new_single_path(
             SubProof::new_embedded_tree_proof(embedded_proof)?,
             input.left_child_info,
             input.right_child_info,
@@ -176,6 +194,8 @@ impl StorageQueryProver for EuclidQueryProver {
             input.is_rows_tree_node,
             &pis.bounds,
         )?;
+
+        let input = QueryCircuitInput::Query(circuit_input);
 
         let proof = self.params.generate_proof(input)?;
 
@@ -195,13 +215,13 @@ impl StorageQueryProver for EuclidQueryProver {
         &self,
         input: SinglePathBranchInput,
         child_proof: Vec<u8>,
-        pis: DynamicCircuitPis,
+        pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
         info!("Proving single path branch");
 
         let now = std::time::Instant::now();
 
-        let input = CircuitInput::new_single_path(
+        let circuit_input = CircuitInput::new_single_path(
             SubProof::new_child_proof(child_proof, input.child_position)?,
             input.left_child_info,
             input.right_child_info,
@@ -209,6 +229,7 @@ impl StorageQueryProver for EuclidQueryProver {
             input.is_rows_tree_node,
             &pis.bounds,
         )?;
+        let input = QueryCircuitInput::Query(circuit_input);
 
         let proof = self.params.generate_proof(input)?;
 
@@ -220,6 +241,52 @@ impl StorageQueryProver for EuclidQueryProver {
         );
 
         info!("single path branch size in kB: {}", proof.len() / 1024);
+
+        Ok(proof)
+    }
+
+    fn prove_revelation(
+        &self,
+        pis: &DynamicCircuitPis,
+        placeholders: Placeholders,
+        query_proof: Vec<u8>,
+        indexing_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>> {
+        info!("Proving revelation");
+
+        let now = std::time::Instant::now();
+
+        let pis_hash = CircuitInput::<
+            MAX_NUM_COLUMNS,
+            MAX_NUM_PREDICATE_OPS,
+            MAX_NUM_RESULT_OPS,
+            MAX_NUM_RESULTS,
+        >::ids_for_placeholder_hash(
+            &pis.predication_operations,
+            &pis.result,
+            &placeholders,
+            &pis.bounds,
+        )?;
+        let circuit_input = revelation::api::CircuitInput::new_revelation_no_results_tree(
+            query_proof,
+            indexing_proof,
+            &pis.bounds,
+            &placeholders,
+            pis_hash,
+        )?;
+
+        let input = QueryCircuitInput::Revelation(circuit_input);
+
+        let proof = self.params.generate_proof(input)?;
+
+        info!(
+            time = now.elapsed().as_secs_f32(),
+            proof_type = "revelation",
+            "proof generation time: {:?}",
+            now.elapsed()
+        );
+
+        info!("revelation size in kB: {}", proof.len() / 1024);
 
         Ok(proof)
     }

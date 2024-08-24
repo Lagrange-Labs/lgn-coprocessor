@@ -4,12 +4,13 @@ use serde_derive::{Deserialize, Serialize};
 use verifiable_db::query::aggregation::{ChildPosition, NodeInfo};
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::{Placeholders, RowCells};
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
 pub struct QueryInput {
     pub proof_key: ProofKey,
 
     pub query_step: QueryStep,
 
+    #[dbg(placeholder = "...")]
     pub pis: Vec<u8>,
 }
 
@@ -17,11 +18,13 @@ pub struct QueryInput {
 pub enum QueryStep {
     Prepare(Vec<QueryInputPart>),
 
-    Revelation,
+    Revelation(RevelationInput),
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
 pub struct QueryInputPart {
+    pub proof_key: ProofKey,
+
     pub embedded_proof_input: Option<EmbeddedProofInputType>,
 
     pub aggregation_input_kind: Option<ProofInputKind>,
@@ -45,15 +48,26 @@ pub enum ProofInputKind {
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct FullNodeInput {
     pub is_rows_tree_node: bool,
+
     pub left_child_proof_location: ProofKey,
+
+    pub left_child_proof: Vec<u8>,
+
     pub right_child_proof_location: ProofKey,
+
+    pub right_child_proof: Vec<u8>,
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct PartialNodeInput {
     pub proven_child_position: ChildPosition,
+
     pub proven_child_proof_location: ProofKey,
+
+    pub proven_child_proof: Vec<u8>,
+
     pub unproven_child_info: Option<NodeInfo>,
+
     pub is_rows_tree_node: bool,
 }
 
@@ -67,24 +81,49 @@ pub enum EmbeddedProofInputType {
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
 pub struct EmbeddedProofInput {
     pub column_cells: RowCells,
+
     pub placeholders: Placeholders,
+
     pub is_leaf: bool,
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct SinglePathBranchInput {
     pub node_info: NodeInfo,
+
     pub left_child_info: Option<NodeInfo>,
+
     pub right_child_info: Option<NodeInfo>,
+
     pub child_position: ChildPosition,
-    pub child_location: ProofKey,
+
+    pub proven_child_location: ProofKey,
+
     pub is_rows_tree_node: bool,
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct SinglePathLeafInput {
     pub node_info: NodeInfo,
+
     pub left_child_info: Option<NodeInfo>,
+
     pub right_child_info: Option<NodeInfo>,
+
     pub is_rows_tree_node: bool,
+}
+
+#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
+pub struct RevelationInput {
+    pub placeholders: Placeholders,
+
+    pub indexing_proof_location: ProofKey,
+
+    pub query_proof_location: ProofKey,
+
+    #[dbg(placeholder = "...")]
+    pub indexing_proof: Vec<u8>,
+
+    #[dbg(placeholder = "...")]
+    pub query_proof: Vec<u8>,
 }

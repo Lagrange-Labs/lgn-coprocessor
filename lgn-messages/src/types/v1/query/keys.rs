@@ -37,7 +37,7 @@ impl Display for ProofKey {
             ProofKey::Index(query_id, block_nr) => {
                 write!(
                     f,
-                    "{}/{}/{INDEX_TREE}/z{}",
+                    "{}/{}/{INDEX_TREE}/{}",
                     KEYS_QUERIES_PREFIX, query_id, block_nr
                 )
             }
