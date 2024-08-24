@@ -10,8 +10,6 @@ type RowKeyId = String;
 
 type BlockNr = u64;
 
-type IndexNodeId = usize;
-
 const ROWS_TREE: &str = "rows_tree";
 
 const INDEX_TREE: &str = "index_tree";
@@ -19,7 +17,7 @@ const INDEX_TREE: &str = "index_tree";
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]
 pub enum ProofKey {
     /// Initially just storing rows tree root proof
-    Row(QueryId, BlockNr),
+    Row(QueryId, BlockNr, RowKeyId),
 
     Index(QueryId, BlockNr),
 
@@ -29,19 +27,17 @@ pub enum ProofKey {
 impl Display for ProofKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ProofKey::Row(query_id, block_nr) => {
-                // Example: V1_QUERIES/query_id/rows_tree/1
+            ProofKey::Row(query_id, block_nr, row_key_id) => {
                 write!(
                     f,
-                    "{}/{}/{}",
-                    KEYS_QUERIES_PREFIX, query_id, block_nr
+                    "{}/{}/{ROWS_TREE}/{}/{}",
+                    KEYS_QUERIES_PREFIX, query_id, block_nr, row_key_id
                 )
             }
             ProofKey::Index(query_id, block_nr) => {
-                // Example: V1_QUERIES/query_id/index_tree/1
                 write!(
                     f,
-                    "{}/{}/{INDEX_TREE}/{}",
+                    "{}/{}/{INDEX_TREE}/z{}",
                     KEYS_QUERIES_PREFIX, query_id, block_nr
                 )
             }
