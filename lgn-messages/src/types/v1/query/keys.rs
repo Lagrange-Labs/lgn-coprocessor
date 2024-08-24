@@ -1,8 +1,8 @@
-use crate::types::v1::query::tasks::QueryInput;
-use crate::types::v1::query::KEYS_QUERIES_PREFIX;
 use object_store::path::Path;
 use serde_derive::{Deserialize, Serialize};
 use std::fmt::Display;
+
+pub(crate) const KEYS_QUERIES_PREFIX: &str = "V1_QUERIES";
 
 type QueryId = String;
 
