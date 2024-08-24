@@ -8,9 +8,6 @@ pub(crate) const KEYS_QUERIES_PREFIX: &str = "V1_QUERIES";
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct WorkerTask {
-    /// Which block we are proving.
-    pub block_nr: u64,
-
     /// Chain ID
     pub chain_id: u64,
 
@@ -20,10 +17,9 @@ pub struct WorkerTask {
 
 impl WorkerTask {
     #[must_use]
-    pub fn new(chain_id: u64, block_nr: u64, task_type: WorkerTaskType) -> Self {
+    pub fn new(chain_id: u64, task_type: WorkerTaskType) -> Self {
         Self {
             chain_id,
-            block_nr,
             task_type,
         }
     }

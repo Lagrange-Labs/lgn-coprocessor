@@ -1,7 +1,7 @@
 use crate::types::v1::query::keys::ProofKey;
 use derive_debug_plus::Dbg;
 use serde_derive::{Deserialize, Serialize};
-use verifiable_db::query::aggregation::{ChildPosition, NodeInfo, QueryBounds, SubProof};
+use verifiable_db::query::aggregation::{ChildPosition, NodeInfo};
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::{Placeholders, RowCells};
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
