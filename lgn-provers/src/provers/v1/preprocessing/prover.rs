@@ -8,6 +8,7 @@ pub trait StorageExtractionProver {
         node: Vec<u8>,
         slot: usize,
         contract_address: &Address,
+        chain_id: u64,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a branch MPT node of single variable.
@@ -23,6 +24,7 @@ pub trait StorageExtractionProver {
         node: Vec<u8>,
         slot: usize,
         contract_address: &Address,
+        chain_id: u64,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a branch MPT node of mapping variable.

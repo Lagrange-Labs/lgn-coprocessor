@@ -3879,7 +3879,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4979f22fdb869068da03c9f7528f8297c6fd2606bc3a4affe42e6a823fdb8da4"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.6",
 ]
 
 [[package]]
@@ -4113,7 +4113,7 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "mp2_common"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#182c322daec89716f4c4efa3edb40a599bca5b39"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#cae28fa54ae9681c4f6c7facc82bd1ddcfd49986"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4140,7 +4140,7 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#182c322daec89716f4c4efa3edb40a599bca5b39"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#cae28fa54ae9681c4f6c7facc82bd1ddcfd49986"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4559,7 +4559,7 @@ dependencies = [
 [[package]]
 name = "parsil"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#182c322daec89716f4c4efa3edb40a599bca5b39"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#cae28fa54ae9681c4f6c7facc82bd1ddcfd49986"
 dependencies = [
  "alloy",
  "anyhow",
@@ -5245,7 +5245,7 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#182c322daec89716f4c4efa3edb40a599bca5b39"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#cae28fa54ae9681c4f6c7facc82bd1ddcfd49986"
 dependencies = [
  "anyhow",
  "log",
@@ -5818,7 +5818,7 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#182c322daec89716f4c4efa3edb40a599bca5b39"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#cae28fa54ae9681c4f6c7facc82bd1ddcfd49986"
 dependencies = [
  "anyhow",
  "bb8",
@@ -7220,7 +7220,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "verifiable-db"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#182c322daec89716f4c4efa3edb40a599bca5b39"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#cae28fa54ae9681c4f6c7facc82bd1ddcfd49986"
 dependencies = [
  "alloy",
  "anyhow",
@@ -7440,7 +7440,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
