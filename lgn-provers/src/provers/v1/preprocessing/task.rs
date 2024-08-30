@@ -59,6 +59,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         input.node.clone(),
                         input.slot,
                         &input.contract_address,
+                        task.chain_id,
                     )?,
                     MptType::MappingBranch(input) => self.prover.prove_mapping_variable_branch(
                         input.node.clone(),
@@ -68,6 +69,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         input.node.clone(),
                         input.slot,
                         &input.contract_address,
+                        task.chain_id,
                     )?,
                     MptType::VariableBranch(input) => self.prover.prove_single_variable_branch(
                         input.node.clone(),
@@ -201,6 +203,9 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                     }
                     last_proof.take().unwrap()
                 }
+                DatabaseType::IVC(ivc) => self
+                    .prover
+                    .prove_ivc(ivc.index_proof, ivc.previous_ivc_proof)?,
             },
         })
     }

@@ -8,6 +8,7 @@ pub trait StorageExtractionProver {
         node: Vec<u8>,
         slot: usize,
         contract_address: &Address,
+        chain_id: u64,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a branch MPT node of single variable.
@@ -23,6 +24,7 @@ pub trait StorageExtractionProver {
         node: Vec<u8>,
         slot: usize,
         contract_address: &Address,
+        chain_id: u64,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a branch MPT node of mapping variable.
@@ -159,5 +161,11 @@ pub trait StorageDatabaseProver {
         left_child: HashOutput,
         rows_tree_hash: HashOutput,
         right_child_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    fn prove_ivc(
+        &self,
+        index_proof: Vec<u8>,
+        previous_proof: Option<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>>;
 }

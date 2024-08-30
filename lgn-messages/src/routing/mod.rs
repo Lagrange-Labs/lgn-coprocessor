@@ -1,8 +1,6 @@
 //! Message routing high level semantic.
 use serde_derive::{Deserialize, Serialize};
 
-pub const PRIORITIES_LIMIT: u8 = 100;
-
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub enum RoutingKey {
     /// Using integers for priority, for example: p1, p2, p3... p10
@@ -19,13 +17,6 @@ pub enum RoutingKey {
 
 impl RoutingKey {
     pub fn priority(p: u8) -> anyhow::Result<Self> {
-        if p > PRIORITIES_LIMIT {
-            anyhow::bail!(
-                "Priority value {} is greater than the limit {}",
-                p,
-                PRIORITIES_LIMIT
-            );
-        }
         Ok(RoutingKey::Priority(p))
     }
 
@@ -34,13 +25,6 @@ impl RoutingKey {
     }
 
     pub fn combined(domain: String, priority: u8) -> anyhow::Result<Self> {
-        if priority > PRIORITIES_LIMIT {
-            anyhow::bail!(
-                "Priority value {} is greater than the limit {}",
-                priority,
-                PRIORITIES_LIMIT
-            );
-        }
         Ok(RoutingKey::Combined(domain, priority))
     }
 

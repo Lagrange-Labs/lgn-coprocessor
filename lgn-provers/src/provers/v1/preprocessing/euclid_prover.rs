@@ -3,11 +3,11 @@ use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageEx
 use alloy::primitives::{Address, U256};
 use anyhow::bail;
 use ethers::utils::rlp::{Prototype, Rlp};
-use mp2_common::poseidon::{empty_poseidon_hash, empty_poseidon_hash_as_vec};
+use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::CircuitInput::{
     BlockExtraction, BlockTree, CellsTree, ContractExtraction, FinalExtraction, LengthExtraction,
-    RowsTree, ValuesExtraction,
+    RowsTree, ValuesExtraction, IVC,
 };
 use mp2_v1::api::{generate_proof, CircuitInput, PublicParameters};
 use mp2_v1::length_extraction::LengthCircuitInput;
@@ -76,12 +76,15 @@ impl StorageExtractionProver for EuclidProver {
         node: Vec<u8>,
         slot: usize,
         contract_address: &Address,
+        chain_id: u64,
     ) -> anyhow::Result<Vec<u8>> {
         let alloy_address = &mut &contract_address.0.into();
         let input = ValuesExtraction(values_extraction::CircuitInput::new_single_variable_leaf(
             node,
             slot as u8,
             alloy_address,
+            chain_id,
+            vec![], // TODO: Should probably send the entire circuit input over the network
         ));
         self.prove(input, "single variable leaf")
     }
@@ -106,12 +109,15 @@ impl StorageExtractionProver for EuclidProver {
         node: Vec<u8>,
         slot: usize,
         contract_address: &Address,
+        chain_id: u64,
     ) -> anyhow::Result<Vec<u8>> {
         let input = ValuesExtraction(values_extraction::CircuitInput::new_mapping_variable_leaf(
             node,
             slot as u8,
             key,
             contract_address,
+            chain_id,
+            vec![], // TODO: Should probably send the entire circuit input over the network
         ));
         self.prove(input, "mapping variable leaf")
     }
@@ -359,7 +365,7 @@ impl StorageDatabaseProver for EuclidProver {
             old_max,
             &left_hash,
             &right_hash,
-            &(old_rows_tree_hash.into()),
+            &(old_rows_tree_hash),
             extraction_proof,
             rows_tree_proof,
         ));
@@ -381,10 +387,28 @@ impl StorageDatabaseProver for EuclidProver {
             index_value,
             old_min,
             old_max,
-            &(left_child.into()),
-            &(rows_tree_hash.into()),
+            &(left_child),
+            &(rows_tree_hash),
             right_child_proof,
         ));
         self.prove(input, "membership")
+    }
+
+    fn prove_ivc(
+        &self,
+        index_proof: Vec<u8>,
+        previous_proof: Option<Vec<u8>>,
+    ) -> anyhow::Result<Vec<u8>> {
+        let input = match previous_proof {
+            Some(previous_proof) => IVC(verifiable_db::ivc::CircuitInput::new_subsequent_input(
+                index_proof,
+                previous_proof,
+            )?),
+            None => IVC(verifiable_db::ivc::CircuitInput::new_first_input(
+                index_proof,
+            )?),
+        };
+
+        self.prove(input, "ivc")
     }
 }
