@@ -32,18 +32,18 @@ mimalloc = { version = "0.1.39", default-features = false }
 rand = { version = "0.8.5" }
 reqwest = { version = "0.12.4", features = ["blocking"] }
 serde = { version = "1.0.202" }
+serde_json = "1.0.125"
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "json"] }
 tokio = "1.38.1"
 
 mr_plonky2_circuits = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
 groth16_framework = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
-parsil = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
 
 mp2_common.workspace = true
 mp2_v1.workspace = true
+parsil.workspace = true
 verifiable-db.workspace = true
-serde_json = "1.0.125"
 
 [features]
 dummy-prover = []
