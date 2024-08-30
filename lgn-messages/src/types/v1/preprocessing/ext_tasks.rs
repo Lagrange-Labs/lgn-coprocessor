@@ -187,9 +187,9 @@ pub struct Length {
     pub nodes: Vec<Vec<u8>>,
 }
 
-/// Helper type denoting if a proof request is for a leaf or extesnion or branch node.
-/// This is used to associate the gas / time to the proof to generate, especially for tasks where
-/// there are many proofs to generate inside.
+/// Helper type denoting if a proof request is for a leaf or extesnion or branch node. This is used
+/// to associate the gas / time to the proof to generate, especially for tasks where there are many
+/// proofs to generate inside.
 pub enum MPTExtractionType {
     Branch,
     Extension,
