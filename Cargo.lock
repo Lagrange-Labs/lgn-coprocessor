@@ -3874,7 +3874,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4979f22fdb869068da03c9f7528f8297c6fd2606bc3a4affe42e6a823fdb8da4"
 dependencies = [
  "cfg-if",
- "windows-targets 0.52.6",
+ "windows-targets 0.48.5",
 ]
 
 [[package]]
@@ -4099,7 +4099,7 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "mp2_common"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#9c4e41f381b825ddd653606bdd6353af900a35ea"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#7dc18d52d89b0e92e805d5c9c990b3e7d8a90319"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4126,7 +4126,7 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#9c4e41f381b825ddd653606bdd6353af900a35ea"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#7dc18d52d89b0e92e805d5c9c990b3e7d8a90319"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4545,7 +4545,7 @@ dependencies = [
 [[package]]
 name = "parsil"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#9c4e41f381b825ddd653606bdd6353af900a35ea"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#7dc18d52d89b0e92e805d5c9c990b3e7d8a90319"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4771,7 +4771,7 @@ checksum = "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
 [[package]]
 name = "plonky2"
 version = "0.2.2"
-source = "git+https://github.com/Lagrange-Labs/plonky2?branch=upstream#3e11b949679ffb2e69cbf2c7c917891b81f46c33"
+source = "git+https://github.com/Lagrange-Labs/plonky2?branch=upstream#3c4cc3749683a82477dcfcea19d423fe844c3ed6"
 dependencies = [
  "ahash",
  "anyhow",
@@ -5231,7 +5231,7 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#9c4e41f381b825ddd653606bdd6353af900a35ea"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#7dc18d52d89b0e92e805d5c9c990b3e7d8a90319"
 dependencies = [
  "anyhow",
  "log",
@@ -5804,7 +5804,7 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#9c4e41f381b825ddd653606bdd6353af900a35ea"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#7dc18d52d89b0e92e805d5c9c990b3e7d8a90319"
 dependencies = [
  "anyhow",
  "bb8",
@@ -7182,7 +7182,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "verifiable-db"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#9c4e41f381b825ddd653606bdd6353af900a35ea"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git#7dc18d52d89b0e92e805d5c9c990b3e7d8a90319"
 dependencies = [
  "alloy",
  "anyhow",

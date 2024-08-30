@@ -2,7 +2,6 @@ use alloy_primitives::U256;
 use derive_debug_plus::Dbg;
 use mp2_common::types::HashOutput;
 use serde_derive::{Deserialize, Serialize};
-use serde_with::serde_as;
 
 use crate::types::v1::preprocessing::ext_tasks::{Identifier, WorkerTask};
 use crate::types::v1::preprocessing::{db_keys, ext_keys, WorkerTaskType};

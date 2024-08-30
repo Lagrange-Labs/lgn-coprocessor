@@ -3,7 +3,7 @@ use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageEx
 use alloy::primitives::{Address, U256};
 use anyhow::bail;
 use ethers::utils::rlp::{Prototype, Rlp};
-use mp2_common::poseidon::{empty_poseidon_hash, empty_poseidon_hash_as_vec};
+use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::CircuitInput::{
     BlockExtraction, BlockTree, CellsTree, ContractExtraction, FinalExtraction, LengthExtraction,
@@ -76,12 +76,16 @@ impl StorageExtractionProver for EuclidProver {
         node: Vec<u8>,
         slot: usize,
         contract_address: &Address,
+        chain_id: u64,
+        extra: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         let alloy_address = &mut &contract_address.0.into();
         let input = ValuesExtraction(values_extraction::CircuitInput::new_single_variable_leaf(
             node,
             slot as u8,
             alloy_address,
+            chain_id,
+            extra,
         ));
         self.prove(input, "single variable leaf")
     }
@@ -106,12 +110,16 @@ impl StorageExtractionProver for EuclidProver {
         node: Vec<u8>,
         slot: usize,
         contract_address: &Address,
+        chain_id: u64,
+        extra: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         let input = ValuesExtraction(values_extraction::CircuitInput::new_mapping_variable_leaf(
             node,
             slot as u8,
             key,
             contract_address,
+            chain_id,
+            extra,
         ));
         self.prove(input, "mapping variable leaf")
     }

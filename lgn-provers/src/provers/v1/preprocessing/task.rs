@@ -2,7 +2,7 @@ use lgn_messages::types::v1::preprocessing::db_tasks::{
     DatabaseType, DbBlockType, DbCellType, DbRowType,
 };
 use lgn_messages::types::v1::preprocessing::ext_tasks::{
-    ExtractionType, FinalExtractionType, MptType, WorkerTask,
+    ExtractionType, FinalExtractionType, IdentifierInfo, MptType, WorkerTask,
 };
 use lgn_messages::types::v1::preprocessing::{db_keys, ext_keys, WorkerTaskType};
 use lgn_messages::types::{
@@ -25,7 +25,13 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
-        if let TaskType::V1Preprocessing(task @ WorkerTask { chain_id, .. }) = envelope.inner {
+        if let TaskType::V1Preprocessing(
+            task @ WorkerTask {
+                id_info: IdentifierInfo { chain_id, .. },
+                ..
+            },
+        ) = envelope.inner
+        {
             let key = match &task.task_type {
                 WorkerTaskType::Extraction(_) => {
                     let key: ext_keys::ProofKey = (&task).into();
@@ -59,6 +65,8 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         input.node.clone(),
                         input.slot,
                         &input.contract_address,
+                        task.id_info.chain_id,
+                        task.id_info.extra,
                     )?,
                     MptType::MappingBranch(input) => self.prover.prove_mapping_variable_branch(
                         input.node.clone(),
@@ -68,6 +76,8 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         input.node.clone(),
                         input.slot,
                         &input.contract_address,
+                        task.id_info.chain_id,
+                        task.id_info.extra,
                     )?,
                     MptType::VariableBranch(input) => self.prover.prove_single_variable_branch(
                         input.node.clone(),

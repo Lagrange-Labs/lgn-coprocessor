@@ -12,7 +12,10 @@ pub type Identifier = u64;
 pub type MptNodeVersion = (u64, H256);
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct DetailsLater;
+pub struct IdentifierInfo {
+    pub chain_id: u64,
+    pub extra: Vec<u8>,
+}
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct WorkerTask {
@@ -20,7 +23,7 @@ pub struct WorkerTask {
     pub block_nr: u64,
 
     /// Chain ID
-    pub chain_id: u64,
+    pub id_info: IdentifierInfo,
 
     /// What we are proving.
     pub task_type: WorkerTaskType,
@@ -28,9 +31,9 @@ pub struct WorkerTask {
 
 impl WorkerTask {
     #[must_use]
-    pub fn new(chain_id: u64, block_nr: u64, task_type: WorkerTaskType) -> Self {
+    pub fn new(info: IdentifierInfo, block_nr: u64, task_type: WorkerTaskType) -> Self {
         Self {
-            chain_id,
+            id_info: info,
             block_nr,
             task_type,
         }

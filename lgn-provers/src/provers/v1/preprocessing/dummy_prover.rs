@@ -13,6 +13,8 @@ impl StorageExtractionProver for DummyProver {
         _node: Vec<u8>,
         _slot: usize,
         _contract_address: &Address,
+        _chain_id: u64,
+        _extra: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving single variable leaf");
         Ok(prove())
@@ -33,6 +35,8 @@ impl StorageExtractionProver for DummyProver {
         _node: Vec<u8>,
         _slot: usize,
         _contract_address: &Address,
+        _chain_id: u64,
+        _extra: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving mapping variable leaf");
         Ok(prove())
