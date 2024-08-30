@@ -51,7 +51,7 @@ impl ParamsLoader {
                 Ok(true) => {
                     info!("Loading params from local storage {:?}", file);
                     let file = File::open(&file);
-                    let reader = std::io::BufReader::new(file.unwrap());
+                    let reader = std::io::BufReader::new(file?);
 
                     return bincode::deserialize_from(reader).map_err(Into::into);
                 }

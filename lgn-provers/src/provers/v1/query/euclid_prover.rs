@@ -2,7 +2,8 @@ use crate::params::ParamsLoader;
 use crate::provers::v1::query::prover::StorageQueryProver;
 use alloy::primitives::U256;
 use lgn_messages::types::v1::query::tasks::{
-    EmbeddedProofInput, FullNodeInput, PartialNodeInput, SinglePathBranchInput, SinglePathLeafInput,
+    FullNodeInput, PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput,
+    SinglePathLeafInput,
 };
 use mp2_v1::api::PublicParameters;
 use parsil::assembler::DynamicCircuitPis;
@@ -76,7 +77,7 @@ impl EuclidQueryProver {
 impl StorageQueryProver for EuclidQueryProver {
     fn prove_universal_circuit(
         &self,
-        input: EmbeddedProofInput,
+        input: RowsEmbeddedProofInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
         info!("Proving universal circuit");

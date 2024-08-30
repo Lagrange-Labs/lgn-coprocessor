@@ -42,6 +42,7 @@ pub enum ReplyType {
     Erc20Query(WorkerReply),
     StorageGroth16(WorkerReply),
     V1Preprocessing(WorkerReply),
+    V1Query(WorkerReply),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -156,17 +157,30 @@ impl<T> MessageReplyEnvelope<T> {
     }
 }
 
+#[derive(Copy, Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
+pub enum ProofCategory {
+    Indexing,
+    Querying,
+}
+
 #[derive(Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
 pub struct WorkerReply {
     pub chain_id: u64,
+
     #[dbg(formatter = crate::types::kp_pretty)]
     pub proof: Option<KeyedPayload>,
+
+    pub proof_type: ProofCategory,
 }
 
 impl WorkerReply {
     #[must_use]
-    pub fn new(chain_id: u64, proof: Option<KeyedPayload>) -> Self {
-        Self { chain_id, proof }
+    pub fn new(chain_id: u64, proof: Option<KeyedPayload>, proof_type: ProofCategory) -> Self {
+        Self {
+            chain_id,
+            proof,
+            proof_type,
+        }
     }
 }
 
@@ -279,7 +293,7 @@ impl WorkerClass {
         let domain = domain.split('_').next().expect("invalid routing key");
         match domain {
             v0::preprocessing::ROUTING_DOMAIN => WorkerClass::Medium,
-            v0::query::ROUTING_DOMAIN => WorkerClass::Small,
+            v1::query::ROUTING_DOMAIN => WorkerClass::Small,
             v0::groth16::ROUTING_DOMAIN => WorkerClass::Large,
             _ => panic!("unknown routing domain"),
         }
@@ -335,6 +349,8 @@ pub enum ProverType {
     Query2Groth16,
 
     V1Preprocessing,
+
+    V1Query,
 }
 
 impl Display for ProverType {
@@ -348,6 +364,7 @@ impl Display for ProverType {
                 ProverType::Query2Groth16 => "Query2Groth16",
                 ProverType::QueryErc20 => "QueryErc20",
                 ProverType::V1Preprocessing => "V1Preprocessing",
+                ProverType::V1Query => "V1Query",
             }
         )
     }
@@ -365,6 +382,7 @@ impl ToProverType for TaskType {
             TaskType::StorageGroth16(_) => ProverType::Query2Groth16,
             TaskType::Erc20Query(_) => ProverType::Query2Groth16,
             TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
+            TaskType::V1Query(_) => ProverType::V1Query,
             _ => panic!("Unsupported task type: {:?}", self),
         }
     }

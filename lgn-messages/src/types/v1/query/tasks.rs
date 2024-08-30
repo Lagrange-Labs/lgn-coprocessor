@@ -1,4 +1,6 @@
+use crate::types::v1::preprocessing::db_keys;
 use crate::types::v1::query::keys::ProofKey;
+use crate::types::v1::query::{WorkerTask, WorkerTaskType};
 use derive_debug_plus::Dbg;
 use serde_derive::{Deserialize, Serialize};
 use verifiable_db::query::aggregation::{ChildPosition, NodeInfo};
@@ -16,8 +18,10 @@ pub struct QueryInput {
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub enum QueryStep {
+    #[serde(rename = "1")]
     Prepare(Vec<QueryInputPart>),
 
+    #[serde(rename = "2")]
     Revelation(RevelationInput),
 }
 
@@ -33,15 +37,19 @@ pub struct QueryInputPart {
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub enum ProofInputKind {
     /// Match in the end of path or not matched branch
+    #[serde(rename = "1")]
     SinglePathLeaf(SinglePathLeafInput),
 
     /// Match in the middle of path
+    #[serde(rename = "2")]
     SinglePathBranch(SinglePathBranchInput),
 
     /// Node in tree with only one child
+    #[serde(rename = "3")]
     PartialNode(PartialNodeInput),
 
     /// Node in tree with both children
+    #[serde(rename = "4")]
     FullNode(FullNodeInput),
 }
 
@@ -76,18 +84,28 @@ pub struct PartialNodeInput {
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub enum EmbeddedProofInputType {
-    RowsTree(EmbeddedProofInput),
+    #[serde(rename = "1")]
+    RowsTree(RowsEmbeddedProofInput),
 
-    IndexTree(ProofKey),
+    #[serde(rename = "2")]
+    IndexTree(IndexEmbeddedProofInput),
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
-pub struct EmbeddedProofInput {
+pub struct RowsEmbeddedProofInput {
     pub column_cells: RowCells,
 
     pub placeholders: Placeholders,
 
     pub is_leaf: bool,
+}
+
+#[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
+pub struct IndexEmbeddedProofInput {
+    pub rows_proof_key: ProofKey,
+
+    #[dbg(placeholder = "...")]
+    pub rows_proof: Vec<u8>,
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
@@ -123,7 +141,7 @@ pub struct SinglePathLeafInput {
 pub struct RevelationInput {
     pub placeholders: Placeholders,
 
-    pub indexing_proof_location: ProofKey,
+    pub indexing_proof_location: db_keys::ProofKey,
 
     pub query_proof_location: ProofKey,
 
@@ -132,4 +150,12 @@ pub struct RevelationInput {
 
     #[dbg(placeholder = "...")]
     pub query_proof: Vec<u8>,
+}
+
+impl From<&WorkerTask> for ProofKey {
+    fn from(task: &WorkerTask) -> Self {
+        match &task.task_type {
+            WorkerTaskType::Query(qr) => qr.proof_key.clone(),
+        }
+    }
 }

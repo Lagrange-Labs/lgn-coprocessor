@@ -1,2 +1,2 @@
 pub mod preprocessing;
-mod query;
+pub mod query;

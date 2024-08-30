@@ -1,5 +1,6 @@
 use lgn_messages::types::v1::query::tasks::{
-    EmbeddedProofInput, FullNodeInput, PartialNodeInput, SinglePathBranchInput, SinglePathLeafInput,
+    FullNodeInput, PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput,
+    SinglePathLeafInput,
 };
 use parsil::assembler::DynamicCircuitPis;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
@@ -7,7 +8,7 @@ use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placehold
 pub trait StorageQueryProver {
     fn prove_universal_circuit(
         &self,
-        input: EmbeddedProofInput,
+        input: RowsEmbeddedProofInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>;
 

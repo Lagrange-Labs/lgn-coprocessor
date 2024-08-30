@@ -1,16 +1,16 @@
 use crate::provers::v1::query::prover::StorageQueryProver;
 use crate::provers::LgnProver;
 use anyhow::{bail, Context};
-use lgn_messages::types::v1::query::tasks::{
-    EmbeddedProofInputType, ProofInputKind, QueryInput, QueryStep,
-};
+use lgn_messages::types::v1::query::keys::ProofKey;
+use lgn_messages::types::v1::query::tasks::{EmbeddedProofInputType, ProofInputKind, QueryStep};
 use lgn_messages::types::v1::query::{WorkerTask, WorkerTaskType};
 use lgn_messages::types::{
-    MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
+    MessageEnvelope, MessageReplyEnvelope, ProofCategory, ReplyType, TaskType, WorkerReply,
 };
 use parsil::assembler::DynamicCircuitPis;
 use std::collections::HashMap;
-use tracing::info;
+use std::mem;
+use tracing::debug;
 
 pub struct Querying<P> {
     prover: P,
@@ -23,14 +23,18 @@ impl<P: StorageQueryProver> LgnProver<TaskType, ReplyType> for Querying<P> {
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
+
         if let TaskType::V1Query(task @ WorkerTask { chain_id, .. }) = envelope.inner {
-            let key = todo!();
+            let key: ProofKey = (&task).into();
             let result = self.run_inner(task)?;
-            let reply_type =
-                ReplyType::V1Preprocessing(WorkerReply::new(chain_id, Some((key, result))));
+            let reply_type = ReplyType::V1Query(WorkerReply::new(
+                chain_id,
+                Some((key.to_string(), result)),
+                ProofCategory::Querying,
+            ));
             Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
         } else {
-            anyhow::bail!("Received unexpected task: {:?}", envelope);
+            bail!("Received unexpected task: {:?}", envelope);
         }
     }
 }
@@ -45,7 +49,7 @@ impl<P: StorageQueryProver> Querying<P> {
             bail!("Unexpected task type: {:?}", task.task_type);
         };
 
-        let pis: DynamicCircuitPis = bincode::deserialize(&input.pis)?;
+        let pis: DynamicCircuitPis = serde_json::from_slice(&input.pis)?;
 
         match input.query_step {
             QueryStep::Prepare(parts) => {
@@ -60,15 +64,15 @@ impl<P: StorageQueryProver> Querying<P> {
 
                                 proofs.insert(part.proof_key, proof);
                             }
-                            EmbeddedProofInputType::IndexTree(embedded_input) => {
-                                unimplemented!("IndexTree")
+                            EmbeddedProofInputType::IndexTree(_) => {
+                                bail!("IndexTree always must have aggregation input")
                             }
                         },
                         (None, Some(aggregation_input)) => match aggregation_input {
-                            ProofInputKind::SinglePathBranch(sb) => {
+                            ProofInputKind::SinglePathBranch(mut sb) => {
                                 let child_proof = proofs
                                     .remove(&sb.proven_child_location)
-                                    .context("Missing proof")?;
+                                    .unwrap_or(mem::take(&mut sb.proven_child_proof));
 
                                 let proof =
                                     self.prover
@@ -85,7 +89,7 @@ impl<P: StorageQueryProver> Querying<P> {
                                     self.prover.prove_universal_circuit(embedded_input, &pis)?
                                 }
                                 EmbeddedProofInputType::IndexTree(embedded_input) => {
-                                    unimplemented!("IndexTree")
+                                    embedded_input.rows_proof
                                 }
                             };
 
@@ -102,7 +106,7 @@ impl<P: StorageQueryProver> Querying<P> {
                                     if sp.proven_child_proof.is_empty() {
                                         sp.proven_child_proof = proofs
                                             .remove(&sp.proven_child_proof_location)
-                                            .context("Missing proof")?;
+                                            .unwrap_or(sp.proven_child_proof);
                                     }
                                     let proof =
                                         self.prover.prove_partial_node(sp, embedded_proof, &pis)?;
@@ -112,13 +116,13 @@ impl<P: StorageQueryProver> Querying<P> {
                                     if f.left_child_proof.is_empty() {
                                         f.left_child_proof = proofs
                                             .remove(&f.left_child_proof_location)
-                                            .context("Missing proof")?;
+                                            .unwrap_or(f.left_child_proof);
                                     }
 
                                     if f.right_child_proof.is_empty() {
                                         f.right_child_proof = proofs
                                             .remove(&f.right_child_proof_location)
-                                            .context("Missing proof")?;
+                                            .unwrap_or(f.right_child_proof);
                                     }
 
                                     let proof = self.prover.prove_full_node(

@@ -70,7 +70,7 @@ fn register_v0_ecr721_query_prover(
     let query2_prover = query::erc721::create_prover(
         &params_config.url,
         &params_config.dir,
-        &params_config.query2_params.file,
+        &params_config.query_params.file,
         &params_config.checksum_expected_local_path,
         params_config.skip_checksum,
         params_config.skip_store,
@@ -88,7 +88,7 @@ fn register_v0_ecr20_query_prover(
     let query3_prover = query::erc20::create_prover(
         &params_config.url,
         &params_config.dir,
-        &params_config.query2_params.file,
+        &params_config.query_params.file,
         &params_config.checksum_expected_local_path,
         params_config.skip_checksum,
         params_config.skip_store,
