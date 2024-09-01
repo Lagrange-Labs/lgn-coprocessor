@@ -27,7 +27,7 @@ file = "preprocessing_params.bin"
 
 [public_params.query_params]
 # Parameters name in S3 and file name where it's will be stored
-file = "STORAGE_QUERY/public_params"
+file = "query_params.bin"
 
 [public_params.groth16_assets]
 # Parameters name in S3 and file name where it's will be stored

@@ -7,11 +7,11 @@ pub(crate) fn register_v1_provers(
     config: &Config,
     manager: &mut ProversManager<TaskType, ReplyType>,
 ) {
-    // if config.worker.instance_type >= WorkerClass::Small {
-    //     info!("Creating v1 query prover");
-    //     register_v1_query(config, manager);
-    //     info!("Query prover created");
-    // }
+    if config.worker.instance_type >= WorkerClass::Small {
+        info!("Creating v1 query prover");
+        register_v1_query(config, manager);
+        info!("Query prover created");
+    }
 
     if config.worker.instance_type >= WorkerClass::Medium {
         info!("Creating v1 preprocessing prover");

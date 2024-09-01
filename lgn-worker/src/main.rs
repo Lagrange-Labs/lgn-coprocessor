@@ -61,12 +61,6 @@ fn main() -> anyhow::Result<()> {
     config.validate();
     info!("Loaded configuration: {:?}", config);
 
-    panic::set_hook(Box::new(|panic_info| {
-        let backtrace = Backtrace::new();
-        error!("Panic occurred: {:?}", panic_info);
-        error!("Backtrace: {:?}", backtrace);
-    }));
-
     metrics_exporter_prometheus::PrometheusBuilder::new()
         .with_http_listener(([0, 0, 0, 0], config.prometheus.port))
         .install()?;

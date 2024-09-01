@@ -135,6 +135,11 @@ pub struct SinglePathLeafInput {
     pub right_child_info: Option<NodeInfo>,
 
     pub is_rows_tree_node: bool,
+
+    pub embedded_proof_location: Option<ProofKey>,
+
+    #[dbg(placeholder = "...")]
+    pub embedded_proof: Vec<u8>,
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]

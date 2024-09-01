@@ -5,6 +5,7 @@ use lgn_messages::types::v1::query::tasks::{
     FullNodeInput, PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput,
     SinglePathLeafInput,
 };
+use mp2_common::proof::ProofWithVK;
 use mp2_v1::api::PublicParameters;
 use parsil::assembler::DynamicCircuitPis;
 use tracing::{debug, info};
@@ -15,15 +16,13 @@ use verifiable_db::query::api::{CircuitInput, Parameters};
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
 use verifiable_db::revelation;
 
-const MAX_NUM_COLUMNS: usize = 20;
-const MAX_NUM_PREDICATE_OPS: usize = 20;
-const MAX_NUM_RESULT_OPS: usize = 20;
-const MAX_NUM_RESULTS: usize = 10;
-const MAX_NUM_OUTPUTS: usize = 3;
-// Maximum number of the items per result
-const MAX_NUM_ITEMS_PER_OUTPUT: usize = 5;
-// Maximum number of the placeholders
-const MAX_NUM_PLACEHOLDERS: usize = 14;
+use super::MAX_NUM_COLUMNS;
+use super::MAX_NUM_ITEMS_PER_OUTPUT;
+use super::MAX_NUM_OUTPUTS;
+use super::MAX_NUM_PLACEHOLDERS;
+use super::MAX_NUM_PREDICATE_OPS;
+use super::MAX_NUM_RESULTS;
+use super::MAX_NUM_RESULT_OPS;
 
 pub(crate) struct EuclidQueryProver {
     params: QueryParameters<
@@ -84,12 +83,11 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let now = std::time::Instant::now();
 
-        let placeholders = Placeholders::new_empty(U256::ZERO, U256::ZERO);
         let circuit_input = CircuitInput::new_universal_circuit(
             &input.column_cells,
             &pis.predication_operations,
             &pis.result,
-            &placeholders,
+            &input.placeholders,
             input.is_leaf,
             &pis.bounds,
         )?;
@@ -278,7 +276,7 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let input = QueryCircuitInput::Revelation(circuit_input);
 
-        let proof = self.params.generate_proof(input)?;
+        let proof = self.params.generate_proof(input).unwrap();
 
         info!(
             time = now.elapsed().as_secs_f32(),

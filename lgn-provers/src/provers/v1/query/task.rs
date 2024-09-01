@@ -51,10 +51,10 @@ impl<P: StorageQueryProver> Querying<P> {
 
         let pis: DynamicCircuitPis = serde_json::from_slice(&input.pis)?;
 
+        let mut proofs = HashMap::new();
+
         match input.query_step {
             QueryStep::Prepare(parts) => {
-                let mut proofs = HashMap::new();
-
                 for part in parts {
                     match (part.embedded_proof_input, part.aggregation_input_kind) {
                         (Some(embedded_input_type), None) => match embedded_input_type {
@@ -158,6 +158,12 @@ impl<P: StorageQueryProver> Querying<P> {
             }
         }
 
-        Ok(vec![])
+        // Only one proof should be left
+        if proofs.len() > 1 {
+            bail!("Invalid number of proofs left: {}", proofs.len());
+        }
+
+        let final_proof = proofs.values().next().unwrap().clone();
+        Ok(final_proof)
     }
 }
