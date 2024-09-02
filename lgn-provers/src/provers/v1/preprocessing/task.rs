@@ -2,11 +2,11 @@ use lgn_messages::types::v1::preprocessing::db_tasks::{
     DatabaseType, DbBlockType, DbCellType, DbRowType,
 };
 use lgn_messages::types::v1::preprocessing::ext_tasks::{
-    ExtractionType, FinalExtractionType, MptType, WorkerTask,
+    ExtractionType, FinalExtractionType, MptType,
 };
-use lgn_messages::types::v1::preprocessing::{db_keys, ext_keys, WorkerTaskType};
+use lgn_messages::types::v1::preprocessing::{db_keys, ext_keys, WorkerTask, WorkerTaskType};
 use lgn_messages::types::{
-    MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
+    MessageEnvelope, MessageReplyEnvelope, ProofCategory, ReplyType, TaskType, WorkerReply,
 };
 
 use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageExtractionProver};
@@ -37,8 +37,11 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
                 }
             };
             let result = self.run_inner(task)?;
-            let reply_type =
-                ReplyType::V1Preprocessing(WorkerReply::new(chain_id, Some((key, result))));
+            let reply_type = ReplyType::V1Preprocessing(WorkerReply::new(
+                chain_id,
+                Some((key, result)),
+                ProofCategory::Querying,
+            ));
             Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
         } else {
             anyhow::bail!("Received unexpected task: {:?}", envelope);

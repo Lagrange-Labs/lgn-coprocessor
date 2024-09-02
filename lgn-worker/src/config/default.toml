@@ -25,9 +25,9 @@ skip_store = false
 # Parameters name in S3 and file name where it's will be stored
 file = "preprocessing_params.bin"
 
-[public_params.query2_params]
+[public_params.query_params]
 # Parameters name in S3 and file name where it's will be stored
-file = "STORAGE_QUERY2/public_params"
+file = "query_params.bin"
 
 [public_params.groth16_assets]
 # Parameters name in S3 and file name where it's will be stored

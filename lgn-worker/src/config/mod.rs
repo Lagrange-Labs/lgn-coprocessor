@@ -28,7 +28,7 @@ pub(crate) struct PublicParamsConfig {
     /// If set to true, the parameters will not be written to disk, ever.
     pub(crate) skip_store: bool,
     pub(crate) preprocessing_params: PreprocessingParams,
-    pub(crate) query2_params: Query2Params,
+    pub(crate) query_params: QueryParams,
     pub(crate) groth16_assets: Groth16Assets,
 }
 
@@ -42,7 +42,7 @@ impl PublicParamsConfig {
         );
         assert!(!self.dir.is_empty(), "Directory is required");
         self.preprocessing_params.validate();
-        self.query2_params.validate();
+        self.query_params.validate();
         self.groth16_assets.validate();
     }
 }
@@ -59,11 +59,11 @@ impl PreprocessingParams {
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
-pub(crate) struct Query2Params {
+pub(crate) struct QueryParams {
     pub(crate) file: String,
 }
 
-impl Query2Params {
+impl QueryParams {
     pub fn validate(&self) {
         assert!(!self.file.is_empty(), "Query2 file is required");
     }
@@ -183,7 +183,7 @@ mod test {
         QueryStorageProver::init(
             &conf.public_params.url,
             &conf.public_params.dir.clone(),
-            &conf.public_params.query2_params.file.clone(),
+            &conf.public_params.query_params.file.clone(),
             &conf.public_params.checksum_expected_local_path,
             conf.public_params.skip_checksum,
             conf.public_params.skip_store,
@@ -191,7 +191,7 @@ mod test {
         .expect("this should work");
         // test if the file exists, it should not
         let path =
-            Path::new(&conf.public_params.dir).join(conf.public_params.query2_params.file.clone());
+            Path::new(&conf.public_params.dir).join(conf.public_params.query_params.file.clone());
         // delete it in case it already exists
         std::fs::remove_file(&path).expect("should delete");
         assert!(!path.exists(), "query param file should not exist");
@@ -199,7 +199,7 @@ mod test {
         QueryStorageProver::init(
             &conf.public_params.url,
             &conf.public_params.dir.clone(),
-            &conf.public_params.query2_params.file.clone(),
+            &conf.public_params.query_params.file.clone(),
             &conf.public_params.checksum_expected_local_path,
             conf.public_params.skip_checksum,
             conf.public_params.skip_store,

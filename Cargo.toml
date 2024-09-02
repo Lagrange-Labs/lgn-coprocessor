@@ -10,6 +10,7 @@ members = [
 [workspace.dependencies]
 mp2_common = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
 mp2_v1 = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
+parsil =  { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
 verifiable-db = { git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git" }
 
 [patch.crates-io]

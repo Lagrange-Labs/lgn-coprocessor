@@ -7,7 +7,7 @@ use crate::types::{HashOutput, Position};
 pub mod erc20;
 pub mod keys;
 
-pub const ROUTING_DOMAIN: &str = "sc";
+pub const ROUTING_DOMAIN: &str = "sq";
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct WorkerTask {

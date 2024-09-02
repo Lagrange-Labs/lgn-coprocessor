@@ -1,5 +1,5 @@
 use crate::types::v1::preprocessing::ext_keys::ProofKey;
-use crate::types::v1::preprocessing::WorkerTaskType;
+use crate::types::v1::preprocessing::{WorkerTask, WorkerTaskType};
 use alloy_primitives::Address;
 use derive_debug_plus::Dbg;
 use ethers::{types::H256, utils::rlp};
@@ -10,32 +10,6 @@ pub const ROUTING_DOMAIN: &str = "sp";
 pub type Identifier = u64;
 
 pub type MptNodeVersion = (u64, H256);
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct DetailsLater;
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct WorkerTask {
-    /// Which block we are proving.
-    pub block_nr: u64,
-
-    /// Chain ID
-    pub chain_id: u64,
-
-    /// What we are proving.
-    pub task_type: WorkerTaskType,
-}
-
-impl WorkerTask {
-    #[must_use]
-    pub fn new(chain_id: u64, block_nr: u64, task_type: WorkerTaskType) -> Self {
-        Self {
-            chain_id,
-            block_nr,
-            task_type,
-        }
-    }
-}
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum ExtractionType {

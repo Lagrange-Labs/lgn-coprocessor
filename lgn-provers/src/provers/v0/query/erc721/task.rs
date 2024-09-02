@@ -2,7 +2,7 @@ use anyhow::Context;
 use lgn_messages::types::v0::query::keys::ProofKey;
 use lgn_messages::types::v0::query::{QueryBlockData, WorkerTask, WorkerTaskType};
 use lgn_messages::types::{
-    MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
+    MessageEnvelope, MessageReplyEnvelope, ProofCategory, ReplyType, TaskType, WorkerReply,
 };
 
 use crate::provers::v0::query::erc721::prover::QueryProver;
@@ -109,6 +109,10 @@ impl<P: QueryProver> Query<P> {
             }
         };
 
-        Ok(WorkerReply::new(chain_id, maybe_proof))
+        Ok(WorkerReply::new(
+            chain_id,
+            maybe_proof,
+            ProofCategory::Querying,
+        ))
     }
 }

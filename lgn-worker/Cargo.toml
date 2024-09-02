@@ -31,7 +31,8 @@ k256 = { version = "0.13.1", default-features = false, features = ["ecdsa", "std
 lazy-static-include = { version = "3.2.1" }
 lgn-auth = { path = "../lgn-auth" }
 lgn-messages = { path = "../lgn-messages" }
-lgn-provers = { path = "../lgn-provers"}
+#lgn-provers = { path = "../lgn-provers", features = ["dummy-prover"] }
+lgn-provers = { path = "../lgn-provers" }
 metrics = {version = "0.22.0" }
 metrics-exporter-prometheus = { version = "0.15.0" }
 mimalloc = { version = "0.1.39", default-features = false }
