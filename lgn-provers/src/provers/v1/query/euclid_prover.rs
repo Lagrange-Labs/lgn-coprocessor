@@ -1,18 +1,13 @@
 use crate::params::ParamsLoader;
 use crate::provers::v1::query::prover::StorageQueryProver;
-use alloy::primitives::U256;
 use lgn_messages::types::v1::query::tasks::{
-    FullNodeInput, PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput,
-    SinglePathLeafInput,
+    PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput, SinglePathLeafInput,
 };
-use mp2_common::proof::ProofWithVK;
-use mp2_v1::api::PublicParameters;
 use parsil::assembler::DynamicCircuitPis;
 use tracing::{debug, info};
 use verifiable_db::api::{QueryCircuitInput, QueryParameters};
 use verifiable_db::query::aggregation::SubProof;
-use verifiable_db::query::api;
-use verifiable_db::query::api::{CircuitInput, Parameters};
+use verifiable_db::query::api::CircuitInput;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
 use verifiable_db::revelation;
 

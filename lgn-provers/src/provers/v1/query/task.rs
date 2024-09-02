@@ -1,6 +1,6 @@
 use crate::provers::v1::query::prover::StorageQueryProver;
 use crate::provers::LgnProver;
-use anyhow::{bail, Context};
+use anyhow::bail;
 use lgn_messages::types::v1::query::keys::ProofKey;
 use lgn_messages::types::v1::query::tasks::{EmbeddedProofInputType, ProofInputKind, QueryStep};
 use lgn_messages::types::v1::query::{WorkerTask, WorkerTaskType};
@@ -10,7 +10,6 @@ use lgn_messages::types::{
 use parsil::assembler::DynamicCircuitPis;
 use std::collections::HashMap;
 use std::mem;
-use tracing::debug;
 
 pub struct Querying<P> {
     prover: P,
@@ -45,7 +44,9 @@ impl<P: StorageQueryProver> Querying<P> {
     }
 
     pub fn run_inner(&mut self, task: WorkerTask) -> anyhow::Result<Vec<u8>> {
-        let WorkerTaskType::Query(input) = task.task_type else {
+        #[allow(irrefutable_let_patterns)]
+        let WorkerTaskType::Query(input) = task.task_type
+        else {
             bail!("Unexpected task type: {:?}", task.task_type);
         };
 

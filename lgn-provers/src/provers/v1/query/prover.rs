@@ -1,6 +1,5 @@
 use lgn_messages::types::v1::query::tasks::{
-    FullNodeInput, PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput,
-    SinglePathLeafInput,
+    PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput, SinglePathLeafInput,
 };
 use parsil::assembler::DynamicCircuitPis;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
