@@ -3,10 +3,10 @@ resolver = "2"
 members = ["lgn-auth", "lgn-messages", "lgn-provers", "lgn-worker"]
 
 [workspace.dependencies]
-mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git" }
-mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git" }
-parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git" }
-verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git" }
+mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "786916f62cd6ab2f7955f1f38c8e5e06f1bffd5b"}
+mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "786916f62cd6ab2f7955f1f38c8e5e06f1bffd5b" }
+parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "786916f62cd6ab2f7955f1f38c8e5e06f1bffd5b" }
+verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "786916f62cd6ab2f7955f1f38c8e5e06f1bffd5b" }
 
 [patch.crates-io]
 plonky2 = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }
