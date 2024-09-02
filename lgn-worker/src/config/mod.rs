@@ -2,7 +2,7 @@ use config::FileFormat;
 use serde_derive::Deserialize;
 
 use lazy_static_include::*;
-use lgn_messages::types::WorkerClass;
+use lgn_messages::types::TaskDifficulty;
 use redact::Secret;
 use tracing::debug;
 
@@ -86,7 +86,7 @@ impl Groth16Assets {
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct WorkerConfig {
-    pub(crate) instance_type: WorkerClass,
+    pub(crate) instance_type: TaskDifficulty,
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]

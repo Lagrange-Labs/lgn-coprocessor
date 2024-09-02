@@ -8,9 +8,9 @@ pub mod experimental;
 pub mod v0;
 pub mod v1;
 
-const REQUIRED_GAS_WORKER_SMALL_USD: u64 = 98777;
-const REQUIRED_GAS_WORKER_MEDIUM_USD: u64 = 98777;
-const REQUIRED_GAS_WORKER_LARGE_USD: u64 = 169111;
+const REQUIRED_STAKE_SMALL_USD: Stake = 98777;
+const REQUIRED_STAKE_MEDIUM_USD: Stake = 98777;
+const REQUIRED_STAKE_LARGE_USD: Stake = 169111;
 
 /// A keyed payload contains a bunch of bytes accompanied by a storage index
 pub type KeyedPayload = (String, Vec<u8>);
@@ -260,9 +260,11 @@ pub enum DownstreamPayload<T> {
     Todo { envelope: MessageEnvelope<T> },
 }
 
+pub type Stake = u128;
+
 /// The segregation of job types according to their computational complexity
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
-pub enum WorkerClass {
+pub enum TaskDifficulty {
     // Due to the implicit ordering on which PartialOrd is built, this **MUST**
     // remain the smaller value at the top of the enum.
     // Hence, all workers of this class will always test .LT. *all* the tasks in
@@ -277,13 +279,13 @@ pub enum WorkerClass {
     Large,
 }
 
-impl WorkerClass {
-    /// Returns the gas needed to receive tasks per WorkerClass
-    pub fn get_worker_class_gas(&self) -> u64 {
+impl TaskDifficulty {
+    /// Returns the stake required in order to run such a task
+    pub fn required_stake(&self) -> Stake {
         match self {
-            WorkerClass::Small => REQUIRED_GAS_WORKER_SMALL_USD,
-            WorkerClass::Medium => REQUIRED_GAS_WORKER_MEDIUM_USD,
-            WorkerClass::Large => REQUIRED_GAS_WORKER_LARGE_USD,
+            TaskDifficulty::Small => REQUIRED_STAKE_SMALL_USD,
+            TaskDifficulty::Medium => REQUIRED_STAKE_MEDIUM_USD,
+            TaskDifficulty::Large => REQUIRED_STAKE_LARGE_USD,
 
             _ => 0,
         }
@@ -292,38 +294,38 @@ impl WorkerClass {
     pub fn from_queue(domain: &str) -> Self {
         let domain = domain.split('_').next().expect("invalid routing key");
         match domain {
-            v0::preprocessing::ROUTING_DOMAIN => WorkerClass::Medium,
-            v1::query::ROUTING_DOMAIN => WorkerClass::Small,
-            v0::groth16::ROUTING_DOMAIN => WorkerClass::Large,
+            v0::preprocessing::ROUTING_DOMAIN => TaskDifficulty::Medium,
+            v1::query::ROUTING_DOMAIN => TaskDifficulty::Small,
+            v0::groth16::ROUTING_DOMAIN => TaskDifficulty::Large,
             _ => panic!("unknown routing domain"),
         }
     }
 }
 
-impl TryFrom<&str> for WorkerClass {
+impl TryFrom<&str> for TaskDifficulty {
     type Error = String;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value.to_ascii_lowercase().as_str() {
-            "disabled" => Ok(WorkerClass::Disabled),
-            "small" => Ok(WorkerClass::Small),
-            "medium" => Ok(WorkerClass::Medium),
-            "large" => Ok(WorkerClass::Large),
+            "disabled" => Ok(TaskDifficulty::Disabled),
+            "small" => Ok(TaskDifficulty::Small),
+            "medium" => Ok(TaskDifficulty::Medium),
+            "large" => Ok(TaskDifficulty::Large),
             _ => Err(format!("unknown worker class: `{value}`")),
         }
     }
 }
 
-impl Display for WorkerClass {
+impl Display for TaskDifficulty {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
             "{}",
             match self {
-                WorkerClass::Small => "small",
-                WorkerClass::Medium => "medium",
-                WorkerClass::Large => "large",
-                WorkerClass::Disabled => "disbaled",
+                TaskDifficulty::Small => "small",
+                TaskDifficulty::Medium => "medium",
+                TaskDifficulty::Large => "large",
+                TaskDifficulty::Disabled => "disbaled",
             }
         )
     }
