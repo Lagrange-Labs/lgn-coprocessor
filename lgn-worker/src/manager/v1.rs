@@ -1,19 +1,19 @@
 use crate::config::Config;
 use crate::manager::ProversManager;
-use lgn_messages::types::{ProverType, ReplyType, TaskType, WorkerClass};
+use lgn_messages::types::{ProverType, ReplyType, TaskDifficulty, TaskType};
 use tracing::info;
 
 pub(crate) fn register_v1_provers(
     config: &Config,
     manager: &mut ProversManager<TaskType, ReplyType>,
 ) {
-    if config.worker.instance_type >= WorkerClass::Small {
+    if config.worker.instance_type >= TaskDifficulty::Small {
         info!("Creating v1 query prover");
         register_v1_query(config, manager);
         info!("Query prover created");
     }
 
-    if config.worker.instance_type >= WorkerClass::Medium {
+    if config.worker.instance_type >= TaskDifficulty::Medium {
         info!("Creating v1 preprocessing prover");
         register_v1_preprocessor(config, manager);
         info!("Preprocessing prover created");

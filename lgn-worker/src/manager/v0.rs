@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::manager::ProversManager;
-use lgn_messages::types::{ProverType, ReplyType, TaskType, WorkerClass};
+use lgn_messages::types::{ProverType, ReplyType, TaskDifficulty, TaskType};
 use lgn_provers::provers::v0::{groth16, preprocessing, query};
 use tracing::info;
 
@@ -9,20 +9,20 @@ pub(crate) fn register_v0_provers(
     config: &Config,
     router: &mut ProversManager<TaskType, ReplyType>,
 ) {
-    if config.worker.instance_type >= WorkerClass::Small {
+    if config.worker.instance_type >= TaskDifficulty::Small {
         info!("Creating query prover");
         register_v0_ecr721_query_prover(config, router);
         register_v0_ecr20_query_prover(config, router);
         info!("Query prover created");
     }
 
-    if config.worker.instance_type >= WorkerClass::Medium {
+    if config.worker.instance_type >= TaskDifficulty::Medium {
         info!("Creating preprocessing prover");
         register_v0_preprocessor(config, router);
         info!("Preprocessing prover created");
     }
 
-    if config.worker.instance_type >= WorkerClass::Large {
+    if config.worker.instance_type >= TaskDifficulty::Large {
         info!("Creating groth16 prover");
         register_v0_groth16_prover(config, router);
         info!("Groth16 prover created");
