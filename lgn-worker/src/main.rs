@@ -1,44 +1,33 @@
-use std::collections::BTreeSet;
-use std::ffi::OsStr;
-use std::path::Path;
-use std::result::Result::Ok;
-use std::time::{SystemTime, UNIX_EPOCH};
-use std::{collections::BTreeMap, str::FromStr};
-use std::{fs, panic};
-
-use std::fs::File;
-use std::io::Write;
-
-use ::metrics::counter;
 use anyhow::*;
 use backtrace::Backtrace;
-use checksums::ops::{
-    compare_hashes, create_hashes, read_hashes, write_hash_comparison_results, write_hashes,
-    CompareFileResult,
-};
-use checksums::Error;
 use clap::Parser;
 use jwt::{Claims, RegisteredClaims};
 use mimalloc::MiMalloc;
-use reqwest::IntoUrl;
+use std::fmt::Debug;
+use std::net::TcpStream;
+use std::result::Result::Ok;
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::{collections::BTreeMap, panic, str::FromStr};
 use tracing::level_filters::LevelFilter;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::EnvFilter;
 use tungstenite::client::IntoClientRequest;
-use tungstenite::{connect, Message};
+use tungstenite::{connect, Message, WebSocket};
 
-use ethers::signers::Wallet;
-use lgn_auth::jwt::JWTAuth;
-use lgn_messages::types::{DownstreamPayload, ReplyType, TaskType, UpstreamPayload, WorkerClass};
-use lgn_provers::provers::v0::{groth16, preprocessing, query};
-use lgn_provers::provers::ProverType;
-use lgn_worker::avs::utils::read_keystore;
-
+use crate::checksum::{fetch_checksum_file, verify_directory_checksums};
 use crate::config::Config;
+use crate::manager::v1::register_v1_provers;
 use crate::manager::ProversManager;
 use crate::metrics::Metrics;
+use ethers::signers::Wallet;
+use lgn_auth::jwt::JWTAuth;
+use lgn_messages::types::{DownstreamPayload, ReplyType, TaskType, ToProverType, UpstreamPayload};
+use lgn_worker::avs::utils::read_keystore;
+use serde::{Deserialize, Serialize};
+use tungstenite::stream::MaybeTlsStream;
 
+mod checksum;
 mod config;
 mod manager;
 mod metrics;
@@ -216,23 +205,40 @@ fn run(config: &Config) -> Result<()> {
             }
         })?;
 
-    // Fetch checksum file
-    // The checksum file can be generated in two ways.
-    // 1- Run the worker, and it will download and spit out the checksum on disk
-    // 2- Manually download the params then install with the checksums bin crate and run checksums -c -r zkmr_params -a BLAKE3
-    let checksum_url = &config.public_params.checksum_url;
-    let expected_checksums_file = &config.public_params.checksum_expected_local_path;
-    fetch_checksum_file(checksum_url, expected_checksums_file)?;
+    let mut expected_checksums_file = &String::new();
 
-    let mut provers_manager = ProversManager::new(&metrics);
-    register_provers(config, &mut provers_manager);
+    if !config.public_params.skip_checksum {
+        // Fetch checksum file
+        // The checksum file can be generated in two ways.
+        // 1- Run the worker, and it will download and spit out the checksum on disk
+        // 2- Manually download the params then install with the checksums bin crate and run checksums -c -r zkmr_params -a BLAKE3
+        let checksum_url = &config.public_params.checksum_url;
+        expected_checksums_file = &config.public_params.checksum_expected_local_path;
+        fetch_checksum_file(checksum_url, expected_checksums_file)?;
+    }
 
-    // Verify checksum
+    let mut provers_manager = ProversManager::<TaskType, ReplyType>::new(&metrics);
+    register_v1_provers(config, &mut provers_manager);
+
     if !config.public_params.skip_checksum {
         verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
             .context("Failed to verify checksums")?;
     }
 
+    start_work(&metrics, &mut ws_socket, &mut provers_manager)?;
+
+    Ok(())
+}
+
+fn start_work<T, R>(
+    metrics: &Metrics,
+    ws_socket: &mut WebSocket<MaybeTlsStream<TcpStream>>,
+    provers_manager: &mut ProversManager<T, R>,
+) -> Result<()>
+where
+    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone,
+    R: Serialize + Debug + Clone,
+{
     info!("ready to work");
     ws_socket
         .send(Message::Text(
@@ -249,11 +255,9 @@ fn run(config: &Config) -> Result<()> {
                 trace!("Received message: {:?}", content);
                 metrics.increment_websocket_messages_received("text");
 
-                match serde_json::from_str::<DownstreamPayload<TaskType>>(&content)? {
+                match serde_json::from_str::<DownstreamPayload<T>>(&content)? {
                     DownstreamPayload::Todo { envelope } => {
                         debug!("Received task: {:?}", envelope);
-                        counter!("zkmr_worker_tasks_received").increment(1);
-
                         match provers_manager.delegate_proving(envelope) {
                             Ok(reply) => {
                                 debug!("Sending reply: {:?}", reply);
@@ -286,179 +290,4 @@ fn run(config: &Config) -> Result<()> {
             }
         }
     }
-}
-
-fn register_provers(config: &Config, router: &mut ProversManager) {
-    if config.worker.instance_type >= WorkerClass::Small {
-        info!("Creating query prover");
-        register_v0_erc721_query_prover(config, router);
-        register_v0_erc20_query_prover(config, router);
-        info!("Query prover created");
-    }
-
-    if config.worker.instance_type >= WorkerClass::Medium {
-        info!("Creating preprocessing prover");
-        register_v0_preprocessor(config, router);
-        info!("Preprocessing prover created");
-    }
-
-    if config.worker.instance_type >= WorkerClass::Large {
-        info!("Creating groth16 prover");
-        register_v0_groth16_prover(config, router);
-        info!("Groth16 prover created");
-    }
-}
-
-fn register_v0_groth16_prover(config: &Config, router: &mut ProversManager) {
-    let params_config = &config.public_params;
-    let assets = &params_config.groth16_assets;
-    let groth16_prover = groth16::create_prover(
-        &params_config.url,
-        &params_config.dir,
-        &assets.circuit_file,
-        &params_config.checksum_expected_local_path,
-        params_config.skip_checksum,
-        &assets.r1cs_file,
-        &assets.pk_file,
-        params_config.skip_store,
-    )
-    .expect("Failed to create groth16 handler");
-
-    router.add_prover(ProverType::Query2Groth16, Box::new(groth16_prover));
-}
-
-fn register_v0_preprocessor(config: &Config, router: &mut ProversManager) {
-    let params_config = &config.public_params;
-    let preprocessing_prover = preprocessing::create_prover(
-        &params_config.url,
-        &params_config.dir,
-        &params_config.preprocessing_params.file,
-        &params_config.checksum_expected_local_path,
-        params_config.skip_checksum,
-        params_config.skip_store,
-    )
-    .expect("Failed to create preprocessing handler");
-
-    router.add_prover(ProverType::Query2Preprocess, Box::new(preprocessing_prover));
-}
-
-fn register_v0_erc721_query_prover(config: &Config, router: &mut ProversManager) {
-    let params_config = &config.public_params;
-    let query2_prover = query::erc721::create_prover(
-        &params_config.url,
-        &params_config.dir,
-        &params_config.query2_params.file,
-        &params_config.checksum_expected_local_path,
-        params_config.skip_checksum,
-        params_config.skip_store,
-    )
-    .expect("Failed to create query handler");
-
-    router.add_prover(ProverType::Query2Query, Box::new(query2_prover));
-}
-
-fn register_v0_erc20_query_prover(config: &Config, router: &mut ProversManager) {
-    let params_config = &config.public_params;
-    let query3_prover = query::erc20::create_prover(
-        &params_config.url,
-        &params_config.dir,
-        &params_config.query2_params.file,
-        &params_config.checksum_expected_local_path,
-        params_config.skip_checksum,
-        params_config.skip_store,
-    )
-    .expect("Failed to create query handler");
-
-    router.add_prover(ProverType::QueryErc20, Box::new(query3_prover));
-}
-
-fn verify_directory_checksums(
-    dir: impl AsRef<OsStr> + std::fmt::Debug,
-    expected_checksums_file: impl AsRef<Path>,
-) -> anyhow::Result<()> {
-    debug!("Computing hashes from: {:?}", dir);
-    let computed_hashes = create_hashes(
-        Path::new(dir.as_ref()),
-        BTreeSet::new(),
-        checksums::Algorithm::BLAKE3,
-        None,
-        true,
-        3,
-        &mut std::io::stdout(),
-        &mut std::io::stderr(),
-    );
-    debug!("Computed hashes: {:?}", computed_hashes);
-    write_hashes(
-        &(
-            "output".to_string(),
-            Path::new("public_params.hash").to_path_buf(),
-        ),
-        checksums::Algorithm::BLAKE3,
-        computed_hashes.clone(),
-    );
-    let expected_hashes_file = Path::new(expected_checksums_file.as_ref());
-    let expected_hashes = read_hashes(
-        &mut std::io::stderr(),
-        &("output".to_string(), expected_hashes_file.to_path_buf()),
-    );
-    debug!(
-        "expected hashes from: {:?} is {:?}",
-        expected_hashes_file, expected_hashes
-    );
-    let compare_hashes =
-        compare_hashes("compare_hashes", computed_hashes, expected_hashes.unwrap());
-    debug!("compare hashes: {:?} ", compare_hashes);
-
-    let result = write_hash_comparison_results(
-        &mut std::io::stdout(),
-        &mut std::io::stderr(),
-        compare_hashes.clone(),
-    );
-    debug!("checksum result: {:?} ", result);
-
-    match result {
-        Error::NoError => {
-            // Test result no error
-            info!("Checksum is successful");
-        }
-        Error::NFilesDiffer(count) => {
-            if let Ok((_, file_results)) = &compare_hashes {
-                let file_differs: Vec<&CompareFileResult> = file_results
-                    .iter()
-                    .filter(|f| matches!(f, CompareFileResult::FileDiffers { .. }))
-                    .collect();
-
-                for file_differ in file_differs {
-                    if let CompareFileResult::FileDiffers { file, .. } = file_differ {
-                        info!("File did not match the checksum. Deleting File {} ", file);
-                        // This will only delete the file where the checksum has failed
-                        if let Err(err) = fs::remove_file(Path::new(dir.as_ref()).join(file)) {
-                            error!("Error deleting file {}: {}", file, err);
-                        }
-                    }
-                }
-            } else {
-                error!("Failed to get file comparison results");
-            }
-            bail!("{} files do not match", count);
-        }
-        _ => {
-            error!("Checksum failure: {:?}", result)
-        }
-    }
-
-    Ok(())
-}
-
-fn fetch_checksum_file(url: impl IntoUrl, local_path: impl AsRef<Path>) -> anyhow::Result<()> {
-    let response = reqwest::blocking::get(url)
-        .context("Failed to fetch checksum file")?
-        .text()
-        .context("Failed to read response text")?;
-
-    let mut file = File::create(local_path).context("Failed to create local checksum file")?;
-    file.write_all(response.as_bytes())
-        .context("Failed to write checksum file")?;
-
-    Ok(())
 }

@@ -9,12 +9,12 @@ use lgn_messages::types::v0::preprocessing::{
     MptData, StateDbData, StorageDbData, WorkerTask, WorkerTaskType,
 };
 use lgn_messages::types::{
-    MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
+    MessageEnvelope, MessageReplyEnvelope, ProofCategory, ReplyType, TaskType, WorkerReply,
 };
 use std::time::Instant;
 use tracing::debug;
 
-impl<P: StorageProver> LgnProver for Preprocessing<P> {
+impl<P: StorageProver> LgnProver<TaskType, ReplyType> for Preprocessing<P> {
     fn run(
         &mut self,
         envelope: MessageEnvelope<TaskType>,
@@ -247,7 +247,11 @@ impl<P: StorageProver> Preprocessing<P> {
             }
         };
 
-        Ok(WorkerReply::new(task.chain_id, maybe_proof))
+        Ok(WorkerReply::new(
+            task.chain_id,
+            maybe_proof,
+            ProofCategory::Indexing,
+        ))
     }
 }
 

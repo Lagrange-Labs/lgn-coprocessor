@@ -17,7 +17,7 @@ pub enum WorkerTaskType {
     ERC20,
 }
 
-#[derive(Clone, Serialize, Deserialize, Dbg)]
+#[derive(Clone, PartialEq, Serialize, Deserialize, Dbg)]
 pub struct WorkerTask {
     /// Which contract this task is for.
     pub contract: Address,

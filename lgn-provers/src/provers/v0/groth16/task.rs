@@ -5,12 +5,12 @@ use crate::provers::LgnProver;
 use lgn_messages::types::v0::groth16::keys::ProofKey;
 use lgn_messages::types::v0::groth16::WorkerTask;
 use lgn_messages::types::{
-    MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, WorkerReply,
+    MessageEnvelope, MessageReplyEnvelope, ProofCategory, ReplyType, TaskType, WorkerReply,
 };
 use std::time::Instant;
 use tracing::{debug, info};
 
-impl<GP: Prover> LgnProver for Groth16<GP> {
+impl<GP: Prover> LgnProver<TaskType, ReplyType> for Groth16<GP> {
     fn run(
         &mut self,
         envelope: MessageEnvelope<TaskType>,
@@ -52,7 +52,11 @@ impl<GP: Prover> Groth16<GP> {
         task: &WorkerTask,
     ) -> anyhow::Result<WorkerReply> {
         let proof = self.generate_proof(&query_id, &task_id, &task.aggregated_result)?;
-        Ok(WorkerReply::new(task.chain_id, Some(proof)))
+        Ok(WorkerReply::new(
+            task.chain_id,
+            Some(proof),
+            ProofCategory::Querying,
+        ))
     }
 
     /// Generate the Groth proof.

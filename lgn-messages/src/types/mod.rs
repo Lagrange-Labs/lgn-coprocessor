@@ -6,6 +6,7 @@ use thiserror::Error;
 
 pub mod experimental;
 pub mod v0;
+pub mod v1;
 
 const REQUIRED_GAS_WORKER_SMALL_USD: u64 = 98777;
 const REQUIRED_GAS_WORKER_MEDIUM_USD: u64 = 98777;
@@ -14,9 +15,13 @@ const REQUIRED_GAS_WORKER_LARGE_USD: u64 = 169111;
 /// A keyed payload contains a bunch of bytes accompanied by a storage index
 pub type KeyedPayload = (String, Vec<u8>);
 
+pub trait ToKeyedPayload {
+    fn to_keyed_payload(&self) -> KeyedPayload;
+}
+
 pub type HashOutput = [u8; 32];
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum TaskType {
     TxTrie(experimental::tx_trie::WorkerTask),
     RecProof(experimental::rec_proof::WorkerTask),
@@ -24,6 +29,8 @@ pub enum TaskType {
     StorageQuery(v0::query::WorkerTask),
     Erc20Query(v0::query::erc20::WorkerTask),
     StorageGroth16(v0::groth16::WorkerTask),
+    V1Preprocessing(v1::preprocessing::WorkerTask),
+    V1Query(v1::query::WorkerTask),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -34,6 +41,8 @@ pub enum ReplyType {
     StorageQuery(WorkerReply),
     Erc20Query(WorkerReply),
     StorageGroth16(WorkerReply),
+    V1Preprocessing(WorkerReply),
+    V1Query(WorkerReply),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -148,17 +157,30 @@ impl<T> MessageReplyEnvelope<T> {
     }
 }
 
+#[derive(Copy, Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
+pub enum ProofCategory {
+    Indexing,
+    Querying,
+}
+
 #[derive(Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
 pub struct WorkerReply {
     pub chain_id: u64,
+
     #[dbg(formatter = crate::types::kp_pretty)]
     pub proof: Option<KeyedPayload>,
+
+    pub proof_type: ProofCategory,
 }
 
 impl WorkerReply {
     #[must_use]
-    pub fn new(chain_id: u64, proof: Option<KeyedPayload>) -> Self {
-        Self { chain_id, proof }
+    pub fn new(chain_id: u64, proof: Option<KeyedPayload>, proof_type: ProofCategory) -> Self {
+        Self {
+            chain_id,
+            proof,
+            proof_type,
+        }
     }
 }
 
@@ -271,7 +293,7 @@ impl WorkerClass {
         let domain = domain.split('_').next().expect("invalid routing key");
         match domain {
             v0::preprocessing::ROUTING_DOMAIN => WorkerClass::Medium,
-            v0::query::ROUTING_DOMAIN => WorkerClass::Small,
+            v1::query::ROUTING_DOMAIN => WorkerClass::Small,
             v0::groth16::ROUTING_DOMAIN => WorkerClass::Large,
             _ => panic!("unknown routing domain"),
         }
@@ -311,4 +333,57 @@ pub fn kp_pretty(kp: &Option<KeyedPayload>) -> String {
     kp.as_ref()
         .map(|kp| kp.0.to_owned())
         .unwrap_or("empty".to_string())
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum ProverType {
+    /// V0 query preprocessing handler.
+    Query2Preprocess,
+
+    /// V0 query handler.
+    Query2Query,
+
+    QueryErc20,
+
+    /// V0 Groth16 handler.
+    Query2Groth16,
+
+    V1Preprocessing,
+
+    V1Query,
+}
+
+impl Display for ProverType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                ProverType::Query2Preprocess => "Query2Preprocess",
+                ProverType::Query2Query => "Query2Query",
+                ProverType::Query2Groth16 => "Query2Groth16",
+                ProverType::QueryErc20 => "QueryErc20",
+                ProverType::V1Preprocessing => "V1Preprocessing",
+                ProverType::V1Query => "V1Query",
+            }
+        )
+    }
+}
+
+pub trait ToProverType {
+    fn to_prover_type(&self) -> ProverType;
+}
+
+impl ToProverType for TaskType {
+    fn to_prover_type(&self) -> ProverType {
+        match self {
+            TaskType::StoragePreprocess(_) => ProverType::Query2Preprocess,
+            TaskType::StorageQuery(_) => ProverType::Query2Query,
+            TaskType::StorageGroth16(_) => ProverType::Query2Groth16,
+            TaskType::Erc20Query(_) => ProverType::Query2Groth16,
+            TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
+            TaskType::V1Query(_) => ProverType::V1Query,
+            _ => panic!("Unsupported task type: {:?}", self),
+        }
+    }
 }
