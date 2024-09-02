@@ -8,7 +8,9 @@ use std::net::TcpStream;
 use std::result::Result::Ok;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::BTreeMap, panic, str::FromStr};
+use tracing::level_filters::LevelFilter;
 use tracing::{debug, error, info, trace};
+use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::EnvFilter;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::{connect, Message, WebSocket};
@@ -42,20 +44,68 @@ struct Cli {
     json: bool,
 }
 
+fn setup_logging(json: bool) {
+    if json {
+        let subscriber = tracing_subscriber::fmt()
+            .json()
+            .with_level(true)
+            .with_file(true)
+            .with_line_number(true)
+            .with_target(true)
+            .with_env_filter(
+                EnvFilter::builder()
+                    .with_default_directive(LevelFilter::INFO.into())
+                    .from_env_lossy(),
+            )
+            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+            .finish();
+        tracing::subscriber::set_global_default(subscriber).expect("Setting up logging failed");
+    } else {
+        let subscriber = tracing_subscriber::fmt()
+            .pretty()
+            .compact()
+            .with_level(true)
+            .with_file(true)
+            .with_line_number(true)
+            .with_target(true)
+            .with_env_filter(
+                EnvFilter::builder()
+                    .with_default_directive(LevelFilter::INFO.into())
+                    .from_env_lossy(),
+            )
+            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+            .finish();
+        tracing::subscriber::set_global_default(subscriber).expect("Setting up logging failed");
+    };
+}
+
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
-    if cli.json {
-        tracing_subscriber::fmt()
-            .json()
-            .with_env_filter(EnvFilter::from_default_env())
-            .init();
-    } else {
-        tracing_subscriber::fmt()
-            .pretty()
-            .with_env_filter(EnvFilter::from_default_env())
-            .init();
-    }
+    setup_logging(cli.json);
+
+    panic::set_hook(Box::new(|panic_info| {
+        let msg = match panic_info.payload().downcast_ref::<&'static str>() {
+            Some(s) => *s,
+            None => match panic_info.payload().downcast_ref::<String>() {
+                Some(s) => &s[..],
+                None => "Box<dyn Any>",
+            },
+        };
+        let (file, lineno, col) = match panic_info.location() {
+            Some(l) => (l.file(), l.line(), l.column()),
+            None => ("<unknown>", 0, 0),
+        };
+
+        error!(
+            msg,
+            file,
+            lineno,
+            col,
+            "Panic occurred: {:?}",
+            Backtrace::new(),
+        );
+    }));
 
     let config = Config::load(cli.config);
     config.validate();
