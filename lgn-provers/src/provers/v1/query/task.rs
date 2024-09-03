@@ -152,7 +152,7 @@ impl<P: StorageQueryProver> Querying<P> {
 
                 return self.prover.prove_revelation(
                     &pis,
-                    rev.placeholders,
+                    rev.placeholders.into(),
                     query_proof,
                     indexing_proof,
                 );

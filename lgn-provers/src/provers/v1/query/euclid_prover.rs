@@ -82,7 +82,7 @@ impl StorageQueryProver for EuclidQueryProver {
             &input.column_cells,
             &pis.predication_operations,
             &pis.result,
-            &input.placeholders,
+            &input.placeholders.into(),
             input.is_leaf,
             &pis.bounds,
         )?;
