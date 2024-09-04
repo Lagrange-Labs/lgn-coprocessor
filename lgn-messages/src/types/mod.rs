@@ -31,6 +31,7 @@ pub enum TaskType {
     StorageGroth16(v0::groth16::WorkerTask),
     V1Preprocessing(v1::preprocessing::WorkerTask),
     V1Query(v1::query::WorkerTask),
+    V1Groth16(v1::groth16::WorkerTask),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -43,6 +44,7 @@ pub enum ReplyType {
     StorageGroth16(WorkerReply),
     V1Preprocessing(WorkerReply),
     V1Query(WorkerReply),
+    V1Groth16(WorkerReply),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -296,6 +298,7 @@ impl TaskDifficulty {
         match domain {
             v0::preprocessing::ROUTING_DOMAIN => TaskDifficulty::Medium,
             v1::query::ROUTING_DOMAIN => TaskDifficulty::Small,
+            // NOTE: v0 and v1 groth16 have the same routing domain?
             v0::groth16::ROUTING_DOMAIN => TaskDifficulty::Large,
             _ => panic!("unknown routing domain"),
         }
@@ -353,6 +356,8 @@ pub enum ProverType {
     V1Preprocessing,
 
     V1Query,
+
+    V1Groth16,
 }
 
 impl Display for ProverType {
@@ -367,6 +372,7 @@ impl Display for ProverType {
                 ProverType::QueryErc20 => "QueryErc20",
                 ProverType::V1Preprocessing => "V1Preprocessing",
                 ProverType::V1Query => "V1Query",
+                ProverType::V1Groth16 => "V1Groth16",
             }
         )
     }
@@ -385,6 +391,7 @@ impl ToProverType for TaskType {
             TaskType::Erc20Query(_) => ProverType::Query2Groth16,
             TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
             TaskType::V1Query(_) => ProverType::V1Query,
+            TaskType::V1Groth16(_) => ProverType::V1Groth16,
             _ => panic!("Unsupported task type: {:?}", self),
         }
     }

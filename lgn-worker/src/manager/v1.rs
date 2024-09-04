@@ -18,6 +18,12 @@ pub(crate) fn register_v1_provers(
         register_v1_preprocessor(config, manager);
         info!("Preprocessing prover created");
     }
+
+    if config.worker.instance_type >= TaskDifficulty::Large {
+        info!("Creating groth16 prover");
+        register_v1_groth16(config, manager);
+        info!("Groth16 prover created");
+    }
 }
 
 fn register_v1_preprocessor(config: &Config, manager: &mut ProversManager<TaskType, ReplyType>) {
@@ -48,4 +54,22 @@ fn register_v1_query(config: &Config, manager: &mut ProversManager<TaskType, Rep
     .expect("Failed to create query handler");
 
     manager.add_prover(ProverType::V1Query, Box::new(query_prover));
+}
+
+fn register_v1_groth16(config: &Config, router: &mut ProversManager<TaskType, ReplyType>) {
+    let params_config = &config.public_params;
+    let assets = &params_config.groth16_assets;
+    let groth16_prover = lgn_provers::provers::v1::groth16::create_prover(
+        &params_config.url,
+        &params_config.dir,
+        &assets.circuit_file,
+        &params_config.checksum_expected_local_path,
+        params_config.skip_checksum,
+        &assets.r1cs_file,
+        &assets.pk_file,
+        params_config.skip_store,
+    )
+    .expect("Failed to create groth16 handler");
+
+    router.add_prover(ProverType::V1Groth16, Box::new(groth16_prover));
 }

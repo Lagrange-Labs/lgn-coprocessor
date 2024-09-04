@@ -2,8 +2,8 @@ use super::prover::Prover;
 use anyhow::{bail, Context};
 
 use crate::provers::LgnProver;
-use lgn_messages::types::v0::groth16::keys::ProofKey;
-use lgn_messages::types::v0::groth16::WorkerTask;
+use lgn_messages::types::v1::groth16::keys::ProofKey;
+use lgn_messages::types::v1::groth16::WorkerTask;
 use lgn_messages::types::{
     MessageEnvelope, MessageReplyEnvelope, ProofCategory, ReplyType, TaskType, WorkerReply,
 };
@@ -35,9 +35,9 @@ impl<GP: Prover> Groth16<GP> {
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
-        if let TaskType::StorageGroth16(task) = envelope.inner() {
+        if let TaskType::V1Groth16(task) = envelope.inner() {
             let reply = self.process_task(query_id.clone(), task_id.clone(), task)?;
-            let reply_type = ReplyType::StorageGroth16(reply);
+            let reply_type = ReplyType::V1Groth16(reply);
             let reply_envelope = MessageReplyEnvelope::new(query_id, task_id, reply_type);
             Ok(reply_envelope)
         } else {
@@ -84,63 +84,5 @@ impl<GP: Prover> Groth16<GP> {
         );
 
         Ok((key, proof))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::provers::v0::groth16::create_prover;
-    use groth16_framework_v0::utils::{read_file, write_file};
-    use std::path::Path;
-
-    /// Test Groth16 initialize and generate the proof.
-    ///
-    /// It should be run in the `worker` and must make the followings before
-    /// running this test:
-    /// - Edit `config/gen-groth16-assets-conf.example.toml`, then generate the
-    ///   Groth16 asset files and upload to S3 by:
-    ///   cargo run --bin gen-groth16-assets -- --config ./config/gen-groth16-assets-conf.example.toml
-    /// - Edit `config/worker-conf.example.toml` for initializing
-    ///   `Groth16TaskRunner` in this test.
-    /// - Save a query proof to file `worker/test_data/query.proof` for testing.
-    #[ignore] // Ignore for long running time in CI.
-    #[test]
-    fn test_groth16_init_and_prove() {
-        // Initialize the constants.
-        let query_id = "q-100";
-        let task_id = "t-100";
-
-        // Create a test Groth16 task runner.
-
-        let mut runner = create_prover(
-            "url",
-            "dir",
-            "test",
-            "checksum.txt",
-            true,
-            "pk_file",
-            "vk_file",
-            true,
-        )
-        .unwrap();
-
-        // Load the test query proof for generating the Groth16 proof later.
-        let payload = read_file(Path::new("test_data").join("query.proof")).unwrap();
-
-        // Initialize the Groth16 prover and generate the proof.
-        let groth16_proof = runner.generate_proof(query_id, task_id, &payload).unwrap();
-
-        // Download and save the Groth16 proof (for further verification).
-        save_groth16_proof(&groth16_proof.1).unwrap();
-    }
-
-    /// Download and save the Groth16 proof. It could be verified with the
-    /// generated verifier contract in mapreduce-plonky2.
-    fn save_groth16_proof(groth16_proof: &[u8]) -> anyhow::Result<()> {
-        // Save the generated Groth16 proof.
-        write_file(Path::new("test_data").join("groth16.proof"), groth16_proof)
-
-        // TODO: May verify the Groth16 proof off-chain here, it needs to add a
-        // conversion function for combine Groth16 proofs in mapreduce-plonky2.
     }
 }

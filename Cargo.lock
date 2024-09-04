@@ -3041,6 +3041,17 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "0.1.0"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4628ccc38b8c2b6e638fd44d4a84e7b53bcef43b#4628ccc38b8c2b6e638fd44d4a84e7b53bcef43b"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "glob",
+ "gobuild",
+]
+
+[[package]]
+name = "gnark-utils"
+version = "0.1.0"
 source = "git+https://github.com/Lagrange-Labs/Euclid-database.git#584f0255905cb65c4c7569b8db6d06362fcc8193"
 dependencies = [
  "anyhow",
@@ -3061,13 +3072,33 @@ dependencies = [
 [[package]]
 name = "groth16_framework"
 version = "0.1.0"
+source = "git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4628ccc38b8c2b6e638fd44d4a84e7b53bcef43b#4628ccc38b8c2b6e638fd44d4a84e7b53bcef43b"
+dependencies = [
+ "alloy",
+ "anyhow",
+ "gnark-utils 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4628ccc38b8c2b6e638fd44d4a84e7b53bcef43b)",
+ "hex",
+ "log",
+ "mp2_common",
+ "plonky2",
+ "plonky2x",
+ "recursion_framework 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4628ccc38b8c2b6e638fd44d4a84e7b53bcef43b)",
+ "revm",
+ "rlp",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "groth16_framework"
+version = "0.1.0"
 source = "git+https://github.com/Lagrange-Labs/Euclid-database.git#584f0255905cb65c4c7569b8db6d06362fcc8193"
 dependencies = [
  "anyhow",
  "bytes",
  "ethereum-types",
  "ethers 2.0.13",
- "gnark-utils",
+ "gnark-utils 0.1.0 (git+https://github.com/Lagrange-Labs/Euclid-database.git)",
  "hex",
  "log",
  "mr_plonky2_circuits",
@@ -3816,7 +3847,8 @@ dependencies = [
  "checksums",
  "eth_trie 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ethers 2.0.14",
- "groth16_framework",
+ "groth16_framework 0.1.0 (git+ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4628ccc38b8c2b6e638fd44d4a84e7b53bcef43b)",
+ "groth16_framework 0.1.0 (git+https://github.com/Lagrange-Labs/Euclid-database.git)",
  "hex",
  "lgn-messages",
  "metrics 0.23.0",

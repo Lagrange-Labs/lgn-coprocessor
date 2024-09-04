@@ -2,7 +2,7 @@
 
 use crate::params::ParamsLoader;
 use anyhow::Result;
-use groth16_framework_v0::Groth16Prover as InnerProver;
+use groth16_framework_v1::Groth16Prover as InnerProver;
 use tracing::debug;
 
 pub trait Prover {
