@@ -38,12 +38,13 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter", "json"] }
 tokio = "1.38.1"
 
 mr_plonky2_circuits = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
-groth16_framework = { git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
+groth16_framework_v0 = { package = "groth16_framework", git = "https://github.com/Lagrange-Labs/Euclid-database.git" }
 
 mp2_common.workspace = true
 mp2_v1.workspace = true
 parsil.workspace = true
 verifiable-db.workspace = true
+groth16_framework_v1.workspace = true
 
 [features]
 dummy-prover = []
