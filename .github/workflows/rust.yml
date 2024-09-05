@@ -40,6 +40,11 @@ jobs:
           key: >-
             rustc-test-${{ steps.rustc-toolchain.outputs.rustc_hash }}-cargo-${{
             hashFiles('**/Cargo.toml') }}
+      - name: Run cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release
   lints:
     name: Formatting and Clippy
     runs-on: ubuntu-latest

@@ -7,13 +7,11 @@ use std::sync::Arc;
 
 /// ZKMR service manager address as an argument (avs) to call the contract
 /// function `calculateOperatorAVSRegistrationDigestHash`
-/// - currently same address for mainnet and holesky
 const HOLESKY_ZKMR_SERVICE_MANAGER_ADDR: &str = "0xf98D5De1014110C65c51b85Ea55f73863215CC10";
 const MAINNET_ZKMR_SERVICE_MANAGER_ADDR: &str = "0x22CAc0e6A1465F043428e8AeF737b3cb09D0eEDa";
 
 /// ZKMRStakeRegistry contract address
 /// <https://github.com/Lagrange-Labs/lpn-relayer/blob/feat/avs-relay/src/config/chain.ts#L57>
-/// - currently same address for mainnet and holesky
 const HOLESKY_ZKMR_STAKE_REGISTRY_ADDR: &str = "0xf724cDC7C40fd6B59590C624E8F0E5E3843b4BE4";
 const MAINNET_ZKMR_STAKE_REGISTRY_ADDR: &str = "0x8dcdCc50Cc00Fe898b037bF61cCf3bf9ba46f15C";
 
@@ -202,14 +200,6 @@ mod test {
     use super::*;
     #[test]
     fn test_network() {
-        assert_eq!(
-            Network::Holesky.lagrange_registry_address(),
-            Network::Mainnet.lagrange_registry_address()
-        );
-        assert_eq!(
-            Network::Holesky.lagrange_service_manager_address(),
-            Network::Mainnet.lagrange_service_manager_address()
-        );
         assert_eq!(
             Network::Holesky.eigen_avs_directory(),
             HOLESKY_AVS_DIRECTORY_ADDR.to_string().parse().unwrap()
