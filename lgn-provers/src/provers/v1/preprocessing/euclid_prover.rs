@@ -74,17 +74,11 @@ impl StorageExtractionProver for EuclidProver {
     fn prove_single_variable_leaf(
         &self,
         node: Vec<u8>,
-        slot: usize,
-        contract_address: &Address,
-        chain_id: u64,
+        slot: u8,
+        column_id: u64,
     ) -> anyhow::Result<Vec<u8>> {
-        let alloy_address = &mut &contract_address.0.into();
         let input = ValuesExtraction(values_extraction::CircuitInput::new_single_variable_leaf(
-            node,
-            slot as u8,
-            alloy_address,
-            chain_id,
-            vec![], // TODO: Should probably send the entire circuit input over the network
+            node, slot, column_id,
         ));
         self.prove(input, "single variable leaf")
     }
@@ -107,17 +101,12 @@ impl StorageExtractionProver for EuclidProver {
         &self,
         key: Vec<u8>,
         node: Vec<u8>,
-        slot: usize,
-        contract_address: &Address,
-        chain_id: u64,
+        slot: u8,
+        key_id: u64,
+        value_id: u64,
     ) -> anyhow::Result<Vec<u8>> {
         let input = ValuesExtraction(values_extraction::CircuitInput::new_mapping_variable_leaf(
-            node,
-            slot as u8,
-            key,
-            contract_address,
-            chain_id,
-            vec![], // TODO: Should probably send the entire circuit input over the network
+            node, slot, key, key_id, value_id,
         ));
         self.prove(input, "mapping variable leaf")
     }

@@ -6,9 +6,8 @@ pub trait StorageExtractionProver {
     fn prove_single_variable_leaf(
         &self,
         node: Vec<u8>,
-        slot: usize,
-        contract_address: &Address,
-        chain_id: u64,
+        slot: u8,
+        column_id: u64,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a branch MPT node of single variable.
@@ -22,9 +21,9 @@ pub trait StorageExtractionProver {
         &self,
         key: Vec<u8>,
         node: Vec<u8>,
-        slot: usize,
-        contract_address: &Address,
-        chain_id: u64,
+        slot: u8,
+        key_id: u64,
+        value_id: u64,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a branch MPT node of mapping variable.

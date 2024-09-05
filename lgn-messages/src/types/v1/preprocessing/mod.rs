@@ -56,21 +56,20 @@ impl WorkerTaskType {
         table_id: u64,
         block_nr: u64,
         node_hash: H256,
-        key: Vec<u8>,
         node: Vec<u8>,
-        slot: usize,
-        contract_address: Address,
+        slot: u8,
+        contract_address: &Address,
+        chain_id: u64,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
             table_id,
             block_nr,
             node_hash,
             mpt_type: MptType::VariableLeaf(VariableLeafInput::new(
-                table_id,
-                key,
                 node,
                 slot,
                 contract_address,
+                chain_id,
             )),
         }))
     }
@@ -89,14 +88,17 @@ impl WorkerTaskType {
             mpt_type: MptType::VariableBranch(VariableBranchInput::new(table_id, node, children)),
         }))
     }
+
+    #[allow(clippy::too_many_arguments)]
     pub fn ext_mapping_leaf(
         table_id: u64,
         block_nr: u64,
         node_hash: H256,
         key: Vec<u8>,
         node: Vec<u8>,
-        slot: usize,
-        contract_address: Address,
+        slot: u8,
+        contract_address: &Address,
+        chain_id: u64,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
             table_id,
@@ -107,6 +109,7 @@ impl WorkerTaskType {
                 node,
                 slot,
                 contract_address,
+                chain_id,
             )),
         }))
     }

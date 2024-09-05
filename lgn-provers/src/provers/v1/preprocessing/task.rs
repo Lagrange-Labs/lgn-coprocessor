@@ -57,22 +57,21 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
         Ok(match task.task_type {
             WorkerTaskType::Extraction(ex) => match ex {
                 ExtractionType::MptExtraction(mpt) => match &mpt.mpt_type {
+                    MptType::VariableLeaf(input) => self.prover.prove_single_variable_leaf(
+                        input.node.clone(),
+                        input.slot,
+                        input.column_id,
+                    )?,
                     MptType::MappingLeaf(input) => self.prover.prove_mapping_variable_leaf(
                         input.key.clone(),
                         input.node.clone(),
                         input.slot,
-                        &input.contract_address,
-                        task.chain_id,
+                        input.key_id,
+                        input.value_id,
                     )?,
                     MptType::MappingBranch(input) => self.prover.prove_mapping_variable_branch(
                         input.node.clone(),
                         input.children_proofs.to_owned(),
-                    )?,
-                    MptType::VariableLeaf(input) => self.prover.prove_single_variable_leaf(
-                        input.node.clone(),
-                        input.slot,
-                        &input.contract_address,
-                        task.chain_id,
                     )?,
                     MptType::VariableBranch(input) => self.prover.prove_single_variable_branch(
                         input.node.clone(),
