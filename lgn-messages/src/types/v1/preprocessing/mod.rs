@@ -58,19 +58,13 @@ impl WorkerTaskType {
         node_hash: H256,
         node: Vec<u8>,
         slot: u8,
-        contract_address: &Address,
-        chain_id: u64,
+        column_id: u64,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
             table_id,
             block_nr,
             node_hash,
-            mpt_type: MptType::VariableLeaf(VariableLeafInput::new(
-                node,
-                slot,
-                contract_address,
-                chain_id,
-            )),
+            mpt_type: MptType::VariableLeaf(VariableLeafInput::new(node, slot, column_id)),
         }))
     }
 
@@ -97,19 +91,15 @@ impl WorkerTaskType {
         key: Vec<u8>,
         node: Vec<u8>,
         slot: u8,
-        contract_address: &Address,
-        chain_id: u64,
+        key_id: u64,
+        value_id: u64,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
             table_id,
             block_nr,
             node_hash,
             mpt_type: MptType::MappingLeaf(MappingLeafInput::new(
-                key,
-                node,
-                slot,
-                contract_address,
-                chain_id,
+                key, node, slot, key_id, value_id,
             )),
         }))
     }

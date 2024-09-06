@@ -3,10 +3,6 @@ use crate::types::v1::preprocessing::{WorkerTask, WorkerTaskType};
 use alloy_primitives::Address;
 use derive_debug_plus::Dbg;
 use ethers::{types::H256, utils::rlp};
-use mp2_v1::values_extraction::{
-    identifier_for_mapping_key_column, identifier_for_mapping_value_column,
-    identifier_single_var_column,
-};
 use serde_derive::{Deserialize, Serialize};
 
 pub const ROUTING_DOMAIN: &str = "sp";
@@ -77,17 +73,7 @@ pub struct MappingLeafInput {
 }
 
 impl MappingLeafInput {
-    pub fn new(
-        key: Vec<u8>,
-        node: Vec<u8>,
-        slot: u8,
-        contract_address: &Address,
-        chain_id: u64,
-    ) -> Self {
-        let key_id = identifier_for_mapping_key_column(slot, contract_address, chain_id, vec![]);
-        let value_id =
-            identifier_for_mapping_value_column(slot, contract_address, chain_id, vec![]);
-
+    pub fn new(key: Vec<u8>, node: Vec<u8>, slot: u8, key_id: u64, value_id: u64) -> Self {
         Self {
             key,
             node,
@@ -126,8 +112,7 @@ pub struct VariableLeafInput {
 }
 
 impl VariableLeafInput {
-    pub fn new(node: Vec<u8>, slot: u8, contract_address: &Address, chain_id: u64) -> Self {
-        let column_id = identifier_single_var_column(slot, contract_address, chain_id, vec![]);
+    pub fn new(node: Vec<u8>, slot: u8, column_id: u64) -> Self {
         Self {
             node,
             slot,
