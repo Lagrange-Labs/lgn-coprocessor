@@ -51,7 +51,7 @@ impl<GP: Prover> Groth16<GP> {
         task_id: String,
         task: &WorkerTask,
     ) -> anyhow::Result<WorkerReply> {
-        let proof = self.generate_proof(&query_id, &task_id, &task.aggregated_result)?;
+        let proof = self.generate_proof(&query_id, &task_id, &task.revelation_proof)?;
         Ok(WorkerReply::new(
             task.chain_id,
             Some(proof),

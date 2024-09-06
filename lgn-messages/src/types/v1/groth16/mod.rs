@@ -1,3 +1,4 @@
+use crate::types::v1::query;
 use derive_debug_plus::Dbg;
 use serde_derive::{Deserialize, Serialize};
 
@@ -11,17 +12,20 @@ pub struct WorkerTask {
     /// Chain ID
     pub chain_id: u64,
 
+    pub revelation_proof_location: query::keys::ProofKey,
+
     /// The final proof
     #[dbg(skip)]
-    pub aggregated_result: Vec<u8>,
+    pub revelation_proof: Vec<u8>,
 }
 
 impl WorkerTask {
     #[must_use]
-    pub fn new(chain_id: u64) -> Self {
+    pub fn new(chain_id: u64, revelation_proof_location: query::keys::ProofKey) -> Self {
         Self {
             chain_id,
-            aggregated_result: vec![],
+            revelation_proof_location,
+            revelation_proof: vec![],
         }
     }
 }
