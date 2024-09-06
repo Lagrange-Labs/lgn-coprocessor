@@ -40,7 +40,10 @@ jobs:
           key: >-
             rustc-test-${{ steps.rustc-toolchain.outputs.rustc_hash }}-cargo-${{
             hashFiles('**/Cargo.toml') }}
-
+      - name: Add Go to PATH
+        run: |
+          echo "/usr/local/go/bin" >> $GITHUB_PATH
+          go version  # Verify Go is available
 
       - name: Run cargo test
         uses: actions-rs/cargo@v1
