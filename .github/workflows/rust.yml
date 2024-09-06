@@ -12,7 +12,7 @@ name: Test, Format, and Lint
 jobs:
   test:
     name: Test Suite
-    runs-on: ubuntu-latest
+    runs-on: ['memory:32GB']
     environment: CI
     if: '! contains(toJSON(github.event.commits.*.message), ''[skip-ci]'')'
     steps:
@@ -47,7 +47,7 @@ jobs:
           args: --release
   lints:
     name: Formatting and Clippy
-    runs-on: ubuntu-latest
+    runs-on: ['memory:32GB']
     environment: CI
     if: '! contains(toJSON(github.event.commits.*.message), ''[skip-ci]'')'
     steps:
