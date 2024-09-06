@@ -66,7 +66,7 @@ impl Groth16Prover {
 }
 
 impl Prover for Groth16Prover {
-    fn prove(&self, aggregated_proof: &[u8]) -> Result<Vec<u8>> {
-        self.inner.prove(aggregated_proof)
+    fn prove(&self, revelation: &[u8]) -> Result<Vec<u8>> {
+        self.inner.prove(revelation)
     }
 }

@@ -64,12 +64,12 @@ impl<GP: Prover> Groth16<GP> {
         &mut self,
         query_id: &str,
         task_id: &str,
-        aggregated_proof: &[u8],
+        revelation: &[u8],
     ) -> anyhow::Result<(String, Vec<u8>)> {
         // Generate the Groth16 proof.
         let now = Instant::now();
         let key = ProofKey(query_id.to_string()).to_string();
-        let proof = self.prover.prove(aggregated_proof).with_context(|| {
+        let proof = self.prover.prove(revelation).with_context(|| {
             format!(
                 " Failed to generate the Groth16 proof: query_id = {query_id}, task_id = {task_id}"
             )
