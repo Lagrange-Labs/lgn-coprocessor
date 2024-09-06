@@ -67,19 +67,17 @@ pub enum MptType {
 pub struct MappingLeafInput {
     pub key: Vec<u8>,
     pub node: Vec<u8>,
-    pub slot: u8,
-    pub key_id: u64,
-    pub value_id: u64,
+    pub slot: usize,
+    pub contract_address: Address,
 }
 
 impl MappingLeafInput {
-    pub fn new(key: Vec<u8>, node: Vec<u8>, slot: u8, key_id: u64, value_id: u64) -> Self {
+    pub fn new(key: Vec<u8>, node: Vec<u8>, slot: usize, contract_address: Address) -> Self {
         Self {
             key,
             node,
             slot,
-            key_id,
-            value_id,
+            contract_address,
         }
     }
 }
@@ -106,17 +104,27 @@ impl MappingBranchInput {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct VariableLeafInput {
+    pub table_id: u64,
+    pub key: Vec<u8>,
     pub node: Vec<u8>,
-    pub slot: u8,
-    pub column_id: u64,
+    pub slot: usize,
+    pub contract_address: Address,
 }
 
 impl VariableLeafInput {
-    pub fn new(node: Vec<u8>, slot: u8, column_id: u64) -> Self {
+    pub fn new(
+        table_id: u64,
+        key: Vec<u8>,
+        node: Vec<u8>,
+        slot: usize,
+        contract_address: Address,
+    ) -> Self {
         Self {
+            table_id,
+            key,
             node,
             slot,
-            column_id,
+            contract_address,
         }
     }
 }
