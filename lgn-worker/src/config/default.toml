@@ -31,8 +31,8 @@ file = "query_params.bin"
 
 [public_params.groth16_assets]
 # Parameters name in S3 and file name where it's will be stored
-circuit_file = "STORAGE_QUERY2/groth16_assets/circuit.bin"
+circuit_file = "STORAGE_QUERY2__groth16_assets__circuit.bin"
 # Parameters name in S3 and file name where it's will be stored
-r1cs_file = "STORAGE_QUERY2/groth16_assets/r1cs.bin"
+r1cs_file = "STORAGE_QUERY2__groth16_assets__r1cs.bin"
 # Parameters name in S3 and file name where it's will be stored
-pk_file = "STORAGE_QUERY2/groth16_assets/pk.bin"
+pk_file = "STORAGE_QUERY2__groth16_assets__pk.bin"
