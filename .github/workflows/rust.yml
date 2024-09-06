@@ -40,10 +40,10 @@ jobs:
           key: >-
             rustc-test-${{ steps.rustc-toolchain.outputs.rustc_hash }}-cargo-${{
             hashFiles('**/Cargo.toml') }}
-      - name: Add Go to PATH
-        run: |
-          echo "/usr/local/go/bin" >> $GITHUB_PATH
-          go version  # Verify Go is available
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20' 
 
       - name: Run cargo test
         uses: actions-rs/cargo@v1
@@ -88,6 +88,10 @@ jobs:
           args: '--all -- --check'
         env:
           CARGO_INCREMENTAL: 1
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20' 
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
