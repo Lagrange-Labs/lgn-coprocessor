@@ -4,4 +4,13 @@
 
 local_assets/
 
-public_params.hash
+public_params.hash# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+lgn-worker/public_params.hash
