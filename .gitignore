@@ -13,3 +13,4 @@ devenv.local.nix
 
 # pre-commit
 .pre-commit-config.yaml
+lgn-worker/public_params.hash
