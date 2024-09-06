@@ -12,7 +12,7 @@ name: Test, Format, and Lint
 jobs:
   test:
     name: Test Suite
-    runs-on: ubuntu-latest
+    runs-on: ['memory:32GB']
     environment: CI
     if: '! contains(toJSON(github.event.commits.*.message), ''[skip-ci]'')'
     steps:
@@ -40,6 +40,11 @@ jobs:
           key: >-
             rustc-test-${{ steps.rustc-toolchain.outputs.rustc_hash }}-cargo-${{
             hashFiles('**/Cargo.toml') }}
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20' 
+
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
@@ -47,7 +52,7 @@ jobs:
           args: --release
   lints:
     name: Formatting and Clippy
-    runs-on: ubuntu-latest
+    runs-on: ['memory:32GB']
     environment: CI
     if: '! contains(toJSON(github.event.commits.*.message), ''[skip-ci]'')'
     steps:
@@ -83,6 +88,10 @@ jobs:
           args: '--all -- --check'
         env:
           CARGO_INCREMENTAL: 1
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20' 
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
