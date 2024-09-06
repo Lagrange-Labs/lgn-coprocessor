@@ -11,9 +11,8 @@ impl StorageExtractionProver for DummyProver {
     fn prove_single_variable_leaf(
         &self,
         _node: Vec<u8>,
-        _slot: usize,
-        _contract_address: &Address,
-        _chain_id: u64,
+        _slot: u8,
+        _column_id: u64,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving single variable leaf");
         Ok(prove())
@@ -32,9 +31,9 @@ impl StorageExtractionProver for DummyProver {
         &self,
         _key: Vec<u8>,
         _node: Vec<u8>,
-        _slot: usize,
-        _contract_address: &Address,
-        _chain_id: u64,
+        _slot: u8,
+        _key_id: u64,
+        _value_id: u64,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving mapping variable leaf");
         Ok(prove())
