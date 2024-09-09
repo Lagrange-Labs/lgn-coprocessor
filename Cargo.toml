@@ -7,7 +7,7 @@ mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", r
 mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2abacab44c508f4a121e245ebc5370a1f2b4ed7b" }
 parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2abacab44c508f4a121e245ebc5370a1f2b4ed7b" }
 verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2abacab44c508f4a121e245ebc5370a1f2b4ed7b" }
-groth16_framework_v1 = { package = "groth16_framework", git = "ssh://git@github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2abacab44c508f4a121e245ebc5370a1f2b4ed7b" }
+groth16_framework_v1 = { package = "groth16_framework", git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2abacab44c508f4a121e245ebc5370a1f2b4ed7b" }
 
 [patch.crates-io]
 plonky2 = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }
