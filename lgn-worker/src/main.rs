@@ -120,6 +120,7 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn run(config: &Config) -> Result<()> {
+    info!("Version: {}", env!("CARGO_PKG_VERSION"));
     let metrics = Metrics::new();
     let lagrange_wallet = match (
         &config.avs.lagr_keystore,
