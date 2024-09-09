@@ -1,8 +1,8 @@
-use ::metrics::counter;
 use anyhow::*;
 use backtrace::Backtrace;
 use clap::Parser;
 use jwt::{Claims, RegisteredClaims};
+use metrics::counter;
 use mimalloc::MiMalloc;
 use std::fmt::Debug;
 use std::net::TcpStream;
@@ -20,7 +20,6 @@ use crate::checksum::{fetch_checksum_file, verify_directory_checksums};
 use crate::config::Config;
 use crate::manager::v1::register_v1_provers;
 use crate::manager::ProversManager;
-use crate::metrics::Metrics;
 use ethers::signers::Wallet;
 use lgn_auth::jwt::JWTAuth;
 use lgn_messages::types::{DownstreamPayload, ReplyType, TaskType, ToProverType, UpstreamPayload};
@@ -31,7 +30,6 @@ use tungstenite::stream::MaybeTlsStream;
 mod checksum;
 mod config;
 mod manager;
-mod metrics;
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
@@ -121,7 +119,6 @@ fn main() -> anyhow::Result<()> {
 
 fn run(config: &Config) -> Result<()> {
     info!("Version: {}", env!("CARGO_PKG_VERSION"));
-    let metrics = Metrics::new();
     let lagrange_wallet = match (
         &config.avs.lagr_keystore,
         &config.avs.lagr_pwd,
@@ -176,7 +173,7 @@ fn run(config: &Config) -> Result<()> {
 
     // Connect to the server
     let (mut ws_socket, _) = connect(connection_request)?;
-    metrics.increment_gateway_connection_count();
+    counter!("zkmr_worker_gateway_connection_count").increment(1);
     info!("Connected to the gateway");
 
     info!("Authenticating");
@@ -219,7 +216,7 @@ fn run(config: &Config) -> Result<()> {
         fetch_checksum_file(checksum_url, expected_checksums_file)?;
     }
 
-    let mut provers_manager = ProversManager::<TaskType, ReplyType>::new(&metrics);
+    let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
     register_v1_provers(config, &mut provers_manager);
 
     if !config.public_params.skip_checksum {
@@ -227,13 +224,12 @@ fn run(config: &Config) -> Result<()> {
             .context("Failed to verify checksums")?;
     }
 
-    start_work(&metrics, &mut ws_socket, &mut provers_manager)?;
+    start_work(&mut ws_socket, &mut provers_manager)?;
 
     Ok(())
 }
 
 fn start_work<T, R>(
-    metrics: &Metrics,
     ws_socket: &mut WebSocket<MaybeTlsStream<TcpStream>>,
     provers_manager: &mut ProversManager<T, R>,
 ) -> Result<()>
@@ -255,7 +251,9 @@ where
         match msg {
             Message::Text(content) => {
                 trace!("Received message: {:?}", content);
-                metrics.increment_websocket_messages_received("text");
+
+                counter!("zkmr_worker_websocket_messages_received_total", "message_type" => "text")
+                    .increment(1);
 
                 match serde_json::from_str::<DownstreamPayload<T>>(&content)? {
                     DownstreamPayload::Todo { envelope } => {
@@ -269,11 +267,12 @@ where
                                 ws_socket.send(Message::Text(serde_json::to_string(
                                     &UpstreamPayload::Done(reply),
                                 )?))?;
-                                metrics.increment_websocket_messages_sent("text");
+                                counter!("zkmr_worker_websocket_messages_sent_total", "message_type" => "text")
+            .increment(1);
                             }
                             Err(e) => {
                                 error!("Error processing task: {:?}", e);
-                                metrics.increment_error_count("proof processing");
+                                counter!("zkmr_worker_error_count", "error_type" =>  "proof processing").increment(1);
                             }
                         }
                     }
@@ -282,7 +281,9 @@ where
             }
             Message::Ping(_) => {
                 debug!("Received ping or close message");
-                metrics.increment_websocket_messages_received("ping");
+
+                counter!("zkmr_worker_websocket_messages_received_total", "message_type" => "ping")
+                    .increment(1);
             }
             Message::Close(_) => {
                 info!("Received close message");
@@ -290,7 +291,8 @@ where
             }
             _ => {
                 error!("unexpected frame: {msg}");
-                metrics.increment_error_count("unexpected frame");
+                counter!("zkmr_worker_error_count", "error_type" => "unexpected frame")
+                    .increment(1);
             }
         }
     }
