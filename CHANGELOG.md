@@ -17,7 +17,7 @@ and this project adheres to
 ## v1.0.1
 
 ### Changed
-- mpt fixes
+- mp2 fixes
 
 ## v1.0.0
 
