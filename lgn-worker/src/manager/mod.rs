@@ -1,30 +1,28 @@
 pub(crate) mod v0;
 pub(crate) mod v1;
 
-use crate::metrics::Metrics;
 use anyhow::bail;
 use lgn_messages::types::{MessageEnvelope, MessageReplyEnvelope, ProverType, ToProverType};
 use lgn_provers::provers::LgnProver;
+use metrics::{counter, histogram};
 use std::collections::HashMap;
 use tracing::debug;
 
 /// Manages provers for different proving task types
-pub(crate) struct ProversManager<'a, T: 'a, R>
+pub(crate) struct ProversManager<T, R>
 where
     T: ToProverType,
 {
     provers: HashMap<ProverType, Box<dyn LgnProver<T, R>>>,
-    metrics: &'a Metrics,
 }
 
-impl<'a, T: 'a, R> ProversManager<'a, T, R>
+impl<'a, T: 'a, R> ProversManager<T, R>
 where
     T: ToProverType,
 {
-    pub(crate) fn new(metrics: &'a Metrics) -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             provers: HashMap::default(),
-            metrics,
         }
     }
 
@@ -50,8 +48,8 @@ where
     ) -> anyhow::Result<MessageReplyEnvelope<R>> {
         let prover_type: ProverType = envelope.inner.to_prover_type();
 
-        self.metrics
-            .increment_tasks_received(prover_type.to_string().as_str());
+        counter!("zkmr_worker_tasks_received_total", "task_type" => prover_type.to_string())
+            .increment(1);
 
         match self.provers.get_mut(&prover_type) {
             Some(prover) => {
@@ -61,18 +59,17 @@ where
 
                 let result = prover.run(envelope)?;
 
-                self.metrics
-                    .increment_tasks_processed(prover_type.to_string().as_str());
-                self.metrics.observe_task_processing_duration(
-                    prover_type.to_string().as_str(),
-                    start_time.elapsed().as_secs_f64(),
-                );
+                counter!("zkmr_worker_tasks_processed_total", "task_type" => prover_type.to_string())
+                    .increment(1);
+                histogram!("zkmr_worker_task_processing_duration_seconds", "task_type" => prover_type.to_string())
+            .record(start_time.elapsed().as_secs_f64());
 
                 Ok(result)
             }
             None => {
-                self.metrics
-                    .increment_tasks_failed(prover_type.to_string().as_str());
+                counter!("zkmr_worker_tasks_failed_total", "task_type" => prover_type.to_string())
+                    .increment(1);
+
                 bail!("No prover found for task type: {:?}", prover_type);
             }
         }
