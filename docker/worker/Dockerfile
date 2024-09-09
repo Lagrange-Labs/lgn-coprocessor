@@ -9,7 +9,6 @@ ARG INSTRUCTION_SET=native
 
 # Install necessary packages and Go
 RUN apt-get update && apt-get install -y \
-    openssh-client \
     wget \
     libssl-dev \
     git \
@@ -23,11 +22,6 @@ RUN wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
 
 ENV PATH="/usr/local/go/bin:${PATH}"
 
-# Add SSH key and known hosts setup
-RUN mkdir -p ~/.ssh && \
-    ssh-keyscan github.com >> ~/.ssh/known_hosts && \
-    chmod 600 ~/.ssh/known_hosts
-
 # Set work directory
 WORKDIR /lgn-coprocessor
 
@@ -35,8 +29,7 @@ WORKDIR /lgn-coprocessor
 COPY . .
 
 # Build with caching
-RUN --mount=type=ssh,id=default \
-    --mount=type=cache,id=lgn-worker,target=/usr/local/cargo/registry \
+RUN --mount=type=cache,id=lgn-worker,target=/usr/local/cargo/registry \
     --mount=type=cache,id=lgn-worker,target=/usr/local/cargo/git \
     RUSTFLAGS=-Ctarget-cpu=${INSTRUCTION_SET} cargo build --bin lgn-worker --bin lgn-avs ${BUILD_FLAGS}
 
