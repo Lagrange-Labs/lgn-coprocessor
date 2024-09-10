@@ -7,7 +7,9 @@ edition = "2021"
 anyhow = { version = "1.0" }
 base64 = { version = "0.22" }
 elliptic-curve = { version = "0.13", default-features = false }
-ethers = { git = "https://github.com/Lagrange-Labs/ethers-rs", default-features = false, features = ["rustls"], branch = "get-proof-0x" }
+ethers = { git = "https://github.com/Lagrange-Labs/ethers-rs", default-features = false, features = [
+  "rustls",
+], branch = "get-proof-0x" }
 ethers-core = { git = "https://github.com/Lagrange-Labs/ethers-rs", default-features = false, branch = "get-proof-0x" }
 generic-array = { version = "0.14.7", default-features = false }
 hex = { version = "0.4" }
