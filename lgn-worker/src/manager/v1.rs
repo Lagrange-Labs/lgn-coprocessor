@@ -13,17 +13,17 @@ pub(crate) fn register_v1_provers(
         info!("Query prover created");
     }
 
-    if config.worker.instance_type >= TaskDifficulty::Medium {
-        info!("Creating v1 preprocessing prover");
-        register_v1_preprocessor(config, manager);
-        info!("Preprocessing prover created");
-    }
-
-    if config.worker.instance_type >= TaskDifficulty::Large {
-        info!("Creating groth16 prover");
-        register_v1_groth16(config, manager);
-        info!("Groth16 prover created");
-    }
+    // if config.worker.instance_type >= TaskDifficulty::Medium {
+    //     info!("Creating v1 preprocessing prover");
+    //     register_v1_preprocessor(config, manager);
+    //     info!("Preprocessing prover created");
+    // }
+    //
+    // if config.worker.instance_type >= TaskDifficulty::Large {
+    //     info!("Creating groth16 prover");
+    //     register_v1_groth16(config, manager);
+    //     info!("Groth16 prover created");
+    // }
 }
 
 fn register_v1_preprocessor(config: &Config, manager: &mut ProversManager<TaskType, ReplyType>) {
