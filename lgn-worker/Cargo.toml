@@ -1,6 +1,6 @@
 [package]
 name = "lgn-worker"
-version = "1.0.3"
+version = "1.0.2"
 edition = "2021"
 
 [[bin]]
@@ -42,7 +42,7 @@ k256 = { version = "0.13.1", default-features = false, features = [
 lazy-static-include = { version = "3.2.1" }
 lgn-auth = { path = "../lgn-auth" }
 lgn-messages = { path = "../lgn-messages" }
-lgn-provers = { path = "../lgn-provers"}
+lgn-provers = { path = "../lgn-provers" }
 metrics = { version = "0.23.0" }
 metrics-exporter-prometheus = { version = "0.15.0" }
 mimalloc = { version = "0.1.39", default-features = false }

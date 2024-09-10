@@ -1,23 +1,23 @@
 [package]
 name = "lgn-provers"
-version = "1.0.3"
+version = "1.0.2"
 edition = "2021"
 
 [dependencies]
 alloy = { version = "0.2.0", features = [
-    "contract",
-    "node-bindings",
-    "providers",
-    "network",
-    "signer-local",
-    "sol-types",
-    "rpc",
-    "rpc-types",
-    "consensus",
-    "rlp",
-    "transports",
-    "transport-http",
-    "reqwest",
+  "contract",
+  "node-bindings",
+  "providers",
+  "network",
+  "signer-local",
+  "sol-types",
+  "rpc",
+  "rpc-types",
+  "consensus",
+  "rlp",
+  "transports",
+  "transport-http",
+  "reqwest",
 ] }
 anyhow = { version = "1.0.86" }
 bincode = { version = "1.3.3" }
