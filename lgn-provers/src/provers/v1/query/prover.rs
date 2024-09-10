@@ -1,5 +1,6 @@
 use lgn_messages::types::v1::query::tasks::{
-    PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput, SinglePathLeafInput,
+    NonExistenceInput, PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput,
+    SinglePathLeafInput,
 };
 use parsil::assembler::DynamicCircuitPis;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
@@ -47,5 +48,11 @@ pub trait StorageQueryProver {
         placeholders: Placeholders,
         query_proof: Vec<u8>,
         indexing_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    fn prove_non_existence(
+        &self,
+        input: NonExistenceInput,
+        pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>;
 }
