@@ -80,9 +80,11 @@ impl<P: StorageQueryProver> Querying<P> {
                                         .prove_single_path_branch(sb, child_proof, &pis)?;
                                 proofs.insert(part.proof_key, proof);
                             }
-                            _ => {
-                                bail!("Invalid inputs")
+                            ProofInputKind::NonExistence(ne) => {
+                                let proof = self.prover.prove_non_existence(ne, &pis)?;
+                                proofs.insert(part.proof_key, proof);
                             }
+                            _ => {}
                         },
                         (Some(embedded_input_type), Some(aggregation_input)) => {
                             let embedded_proof = match embedded_input_type {
