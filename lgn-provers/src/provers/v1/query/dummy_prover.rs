@@ -1,6 +1,7 @@
 use crate::provers::v1::query::prover::StorageQueryProver;
 use lgn_messages::types::v1::query::tasks::{
-    PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput, SinglePathLeafInput,
+    NonExistenceInput, PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput,
+    SinglePathLeafInput,
 };
 use parsil::assembler::DynamicCircuitPis;
 use std::thread::sleep;
@@ -61,6 +62,14 @@ impl StorageQueryProver for DummyProver {
         _placeholders: Placeholders,
         _query_proof: Vec<u8>,
         _indexing_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>> {
+        Ok(prove())
+    }
+
+    fn prove_non_existence(
+        &self,
+        _input: NonExistenceInput,
+        _pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }

@@ -1,6 +1,7 @@
 use crate::types::v1::preprocessing::db_keys;
 use crate::types::v1::query::keys::ProofKey;
 use crate::types::v1::query::{PlaceHolderLgn, WorkerTask, WorkerTaskType};
+use alloy_primitives::U256;
 use derive_debug_plus::Dbg;
 use serde_derive::{Deserialize, Serialize};
 use verifiable_db::query::aggregation::{ChildPosition, NodeInfo};
@@ -51,6 +52,8 @@ pub enum ProofInputKind {
     /// Node in tree with both children
     #[serde(rename = "4")]
     FullNode(FullNodeInput),
+
+    NonExistence(NonExistenceInput),
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
@@ -155,6 +158,23 @@ pub struct RevelationInput {
 
     #[dbg(placeholder = "...")]
     pub query_proof: Vec<u8>,
+}
+
+#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
+pub struct NonExistenceInput {
+    pub column_ids: Vec<u64>,
+
+    pub placeholders: PlaceHolderLgn,
+
+    pub is_rows_tree_node: bool,
+
+    pub node_info: NodeInfo,
+
+    pub left_child_info: Option<NodeInfo>,
+
+    pub right_child_info: Option<NodeInfo>,
+
+    pub primary_index_value: U256,
 }
 
 impl From<&WorkerTask> for ProofKey {

@@ -1,13 +1,15 @@
 use crate::params::ParamsLoader;
 use crate::provers::v1::query::prover::StorageQueryProver;
 use lgn_messages::types::v1::query::tasks::{
-    PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput, SinglePathLeafInput,
+    NonExistenceInput, PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput,
+    SinglePathLeafInput,
 };
 use parsil::assembler::DynamicCircuitPis;
 use tracing::{debug, info};
 use verifiable_db::api::{QueryCircuitInput, QueryParameters};
-use verifiable_db::query::aggregation::SubProof;
+use verifiable_db::query::aggregation::{QueryHashNonExistenceCircuits, SubProof};
 use verifiable_db::query::api::CircuitInput;
+use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
 use verifiable_db::revelation;
 
@@ -281,6 +283,64 @@ impl StorageQueryProver for EuclidQueryProver {
         );
 
         info!("revelation size in kB: {}", proof.len() / 1024);
+
+        Ok(proof)
+    }
+
+    fn prove_non_existence(
+        &self,
+        input: NonExistenceInput,
+        pis: &DynamicCircuitPis,
+    ) -> anyhow::Result<Vec<u8>> {
+        info!("Proving non-existence");
+
+        let now = std::time::Instant::now();
+
+        let primary_column_id = input.column_ids[0];
+        let secondary_column_id = input.column_ids[1];
+        let rest_column_ids = input.column_ids[2..].to_vec();
+        let v_column_ids = ColumnIDs::new(primary_column_id, secondary_column_id, rest_column_ids);
+
+        let placeholders = input.placeholders.into();
+        let query_hashes = QueryHashNonExistenceCircuits::new::<
+            MAX_NUM_COLUMNS,
+            MAX_NUM_PREDICATE_OPS,
+            MAX_NUM_RESULT_OPS,
+            MAX_NUM_ITEMS_PER_OUTPUT,
+        >(
+            &v_column_ids,
+            &pis.predication_operations,
+            &pis.result,
+            &placeholders,
+            &pis.bounds,
+            input.is_rows_tree_node,
+        )?;
+
+        let input = CircuitInput::new_non_existence_input(
+            input.node_info,
+            input.left_child_info,
+            input.right_child_info,
+            input.primary_index_value,
+            &[primary_column_id, secondary_column_id],
+            &pis.query_aggregations,
+            query_hashes,
+            input.is_rows_tree_node,
+            &pis.bounds,
+            &placeholders,
+        )?;
+
+        let input = QueryCircuitInput::Query(input);
+
+        let proof = self.params.generate_proof(input)?;
+
+        info!(
+            time = now.elapsed().as_secs_f32(),
+            proof_type = "non-existence",
+            "proof generation time: {:?}",
+            now.elapsed()
+        );
+
+        info!("non-existence size in kB: {}", proof.len() / 1024);
 
         Ok(proof)
     }
