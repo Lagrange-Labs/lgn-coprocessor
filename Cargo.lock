@@ -3035,7 +3035,7 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git#584f0255905cb65c4c7569b8db6d06362fcc8193"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd#4d5f6dd3cd8c6b1b157bf2204543824b3d991d91"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3046,7 +3046,7 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git#c487c89df67d26360884186d8b3321ecd0f6ed0e"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git#584f0255905cb65c4c7569b8db6d06362fcc8193"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3061,6 +3061,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71e156a4ddbf3deb5e8116946c111413bd9a5679bdc1536c78a60618a7a9ac9e"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "groth16_framework"
+version = "0.1.0"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd#4d5f6dd3cd8c6b1b157bf2204543824b3d991d91"
+dependencies = [
+ "alloy",
+ "anyhow",
+ "gnark-utils 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd)",
+ "hex",
+ "log",
+ "mp2_common",
+ "plonky2",
+ "plonky2x",
+ "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd)",
+ "revm",
+ "rlp",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -3085,26 +3105,6 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
-]
-
-[[package]]
-name = "groth16_framework"
-version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git#c487c89df67d26360884186d8b3321ecd0f6ed0e"
-dependencies = [
- "alloy",
- "anyhow",
- "gnark-utils 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git)",
- "hex",
- "log",
- "mp2_common",
- "plonky2",
- "plonky2x",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git)",
- "revm",
- "rlp",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -3841,8 +3841,8 @@ dependencies = [
  "checksums",
  "eth_trie 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ethers 2.0.14",
+ "groth16_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd)",
  "groth16_framework 0.1.0 (git+https://github.com/Lagrange-Labs/Euclid-database.git)",
- "groth16_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git)",
  "hex",
  "lgn-messages",
  "metrics",
@@ -4134,7 +4134,7 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "mp2_common"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git#c487c89df67d26360884186d8b3321ecd0f6ed0e"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd#4d5f6dd3cd8c6b1b157bf2204543824b3d991d91"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4161,7 +4161,7 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git#c487c89df67d26360884186d8b3321ecd0f6ed0e"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd#4d5f6dd3cd8c6b1b157bf2204543824b3d991d91"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4180,7 +4180,7 @@ dependencies = [
  "plonky2_crypto",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git)",
+ "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd)",
  "rlp",
  "ryhope",
  "serde",
@@ -4580,7 +4580,7 @@ dependencies = [
 [[package]]
 name = "parsil"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git#c487c89df67d26360884186d8b3321ecd0f6ed0e"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd#4d5f6dd3cd8c6b1b157bf2204543824b3d991d91"
 dependencies = [
  "alloy",
  "anyhow",
@@ -5267,11 +5267,11 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git#584f0255905cb65c4c7569b8db6d06362fcc8193"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd#4d5f6dd3cd8c6b1b157bf2204543824b3d991d91"
 dependencies = [
  "anyhow",
  "log",
- "mrp2_utils",
+ "mp2_common",
  "plonky2",
  "plonky2_crypto",
  "plonky2_ecgfp5",
@@ -5281,11 +5281,11 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git#c487c89df67d26360884186d8b3321ecd0f6ed0e"
+source = "git+https://github.com/Lagrange-Labs/Euclid-database.git#584f0255905cb65c4c7569b8db6d06362fcc8193"
 dependencies = [
  "anyhow",
  "log",
- "mp2_common",
+ "mrp2_utils",
  "plonky2",
  "plonky2_crypto",
  "plonky2_ecgfp5",
@@ -5831,7 +5831,7 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git#c487c89df67d26360884186d8b3321ecd0f6ed0e"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd#4d5f6dd3cd8c6b1b157bf2204543824b3d991d91"
 dependencies = [
  "anyhow",
  "bb8",
@@ -7224,7 +7224,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "verifiable-db"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git#c487c89df67d26360884186d8b3321ecd0f6ed0e"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd#4d5f6dd3cd8c6b1b157bf2204543824b3d991d91"
 dependencies = [
  "alloy",
  "anyhow",
@@ -7238,7 +7238,7 @@ dependencies = [
  "plonky2_ecdsa",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git)",
+ "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d5f6dd)",
  "ryhope",
  "serde",
 ]
