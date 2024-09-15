@@ -45,9 +45,14 @@ impl From<PlaceHolderLgn> for Placeholders {
         let min_block = ph.0.get("0").cloned().unwrap();
         let max_block = ph.0.get("1").cloned().unwrap();
         let mut placeholders = Placeholders::new_empty(min_block, max_block);
-        for (k, v) in ph.0.values().enumerate().skip(2) {
-            placeholders.insert(PlaceholderIdentifier::Generic(k - 1), *v);
+
+        for (k, v) in ph.0.into_iter() {
+            if k != "0" && k != "1" {
+                let index = k.parse::<usize>().unwrap();
+                placeholders.insert(PlaceholderIdentifier::Generic(index - 1), v);
+            }
         }
+
         placeholders
     }
 }
