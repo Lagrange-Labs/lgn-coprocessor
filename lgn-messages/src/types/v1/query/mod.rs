@@ -1,10 +1,5 @@
 use crate::types::v1::query::tasks::QueryInput;
-use alloy_primitives::U256;
-use derive_debug_plus::Dbg;
 use serde_derive::{Deserialize, Serialize};
-use std::collections::HashMap;
-use verifiable_db::query::computational_hash_ids::PlaceholderIdentifier;
-use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
 
 pub mod keys;
 pub mod tasks;
@@ -35,37 +30,4 @@ impl WorkerTask {
 pub enum WorkerTaskType {
     #[serde(rename = "1")]
     Query(QueryInput),
-}
-
-#[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
-pub struct PlaceHolderLgn(HashMap<String, U256>);
-
-impl From<PlaceHolderLgn> for Placeholders {
-    fn from(ph: PlaceHolderLgn) -> Self {
-        let min_block = ph.0.get("0").cloned().unwrap();
-        let max_block = ph.0.get("1").cloned().unwrap();
-        let mut placeholders = Placeholders::new_empty(min_block, max_block);
-        for (k, v) in ph.0.values().enumerate().skip(2) {
-            placeholders.insert(PlaceholderIdentifier::Generic(k - 1), *v);
-        }
-        placeholders
-    }
-}
-
-impl From<Placeholders> for PlaceHolderLgn {
-    fn from(ph: Placeholders) -> Self {
-        let min_block = ph.get(&PlaceholderIdentifier::MinQueryOnIdx1).unwrap();
-        let max_block = ph.get(&PlaceholderIdentifier::MaxQueryOnIdx1).unwrap();
-        let mut map = HashMap::new();
-        map.insert(0.to_string(), min_block);
-        map.insert(1.to_string(), max_block);
-
-        for (k, v) in ph.0.iter() {
-            if let PlaceholderIdentifier::Generic(i) = k {
-                map.insert((*i + 1).to_string(), *v);
-            }
-        }
-
-        PlaceHolderLgn(map)
-    }
 }

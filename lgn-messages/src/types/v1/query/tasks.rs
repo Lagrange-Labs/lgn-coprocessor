@@ -1,11 +1,11 @@
 use crate::types::v1::preprocessing::db_keys;
 use crate::types::v1::query::keys::ProofKey;
-use crate::types::v1::query::{PlaceHolderLgn, WorkerTask, WorkerTaskType};
+use crate::types::v1::query::{WorkerTask, WorkerTaskType};
 use alloy_primitives::U256;
 use derive_debug_plus::Dbg;
 use serde_derive::{Deserialize, Serialize};
 use verifiable_db::query::aggregation::{ChildPosition, NodeInfo};
-use verifiable_db::query::universal_circuit::universal_circuit_inputs::RowCells;
+use verifiable_db::query::universal_circuit::universal_circuit_inputs::{Placeholders, RowCells};
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
 pub struct QueryInput {
@@ -98,7 +98,7 @@ pub enum EmbeddedProofInputType {
 pub struct RowsEmbeddedProofInput {
     pub column_cells: RowCells,
 
-    pub placeholders: PlaceHolderLgn,
+    pub placeholders: Placeholders,
 
     pub is_leaf: bool,
 }
@@ -147,7 +147,7 @@ pub struct SinglePathLeafInput {
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct RevelationInput {
-    pub placeholders: PlaceHolderLgn,
+    pub placeholders: Placeholders,
 
     pub indexing_proof_location: db_keys::ProofKey,
 
@@ -164,7 +164,7 @@ pub struct RevelationInput {
 pub struct NonExistenceInput {
     pub column_ids: Vec<u64>,
 
-    pub placeholders: PlaceHolderLgn,
+    pub placeholders: Placeholders,
 
     pub is_rows_tree_node: bool,
 
