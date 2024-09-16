@@ -1,5 +1,6 @@
 use crate::params::ParamsLoader;
 use crate::provers::v1::query::prover::StorageQueryProver;
+use anyhow::Context;
 use lgn_messages::types::v1::query::tasks::{
     NonExistenceInput, PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput,
     SinglePathLeafInput,
@@ -64,7 +65,8 @@ impl EuclidQueryProver {
             checksum_expected_local_path,
             skip_checksum,
             skip_store,
-        )?;
+        )
+        .context("while loading bincode-serialized parameters")?;
         debug!("Preprocessing prover created");
         Ok(Self { params })
     }
@@ -87,10 +89,14 @@ impl StorageQueryProver for EuclidQueryProver {
             &input.placeholders.into(),
             input.is_leaf,
             &pis.bounds,
-        )?;
+        )
+        .context("while initializing the universal circuit")?;
 
         let input = QueryCircuitInput::Query(circuit_input);
-        let proof = self.params.generate_proof(input)?;
+        let proof = self
+            .params
+            .generate_proof(input)
+            .context("while generating proof for the universal circuit")?;
 
         info!(
             time = now.elapsed().as_secs_f32(),
@@ -121,7 +127,8 @@ impl StorageQueryProver for EuclidQueryProver {
             embedded_tree_proof,
             is_rows_tree_node,
             &pis.bounds,
-        )?;
+        )
+        .context("while initializating the full node circuit")?;
 
         let input = QueryCircuitInput::Query(circuit_input);
         let proof = self.params.generate_proof(input)?;
@@ -155,10 +162,14 @@ impl StorageQueryProver for EuclidQueryProver {
             input.proven_child_position,
             input.is_rows_tree_node,
             &pis.bounds,
-        )?;
+        )
+        .context("while initializing the partial node circuit")?;
 
         let input = QueryCircuitInput::Query(circuit_input);
-        let proof = self.params.generate_proof(input)?;
+        let proof = self
+            .params
+            .generate_proof(input)
+            .context("while generating proof from the partial node circuit")?;
 
         info!(
             time = now.elapsed().as_secs_f32(),
@@ -189,11 +200,15 @@ impl StorageQueryProver for EuclidQueryProver {
             input.node_info,
             input.is_rows_tree_node,
             &pis.bounds,
-        )?;
+        )
+        .context("while initializing the single path circuit")?;
 
         let input = QueryCircuitInput::Query(circuit_input);
 
-        let proof = self.params.generate_proof(input)?;
+        let proof = self
+            .params
+            .generate_proof(input)
+            .context("while generating proof from the single path circuit")?;
 
         info!(
             time = now.elapsed().as_secs_f32(),
@@ -224,10 +239,14 @@ impl StorageQueryProver for EuclidQueryProver {
             input.node_info,
             input.is_rows_tree_node,
             &pis.bounds,
-        )?;
+        )
+        .context("while initializing the single path circuit")?;
         let input = QueryCircuitInput::Query(circuit_input);
 
-        let proof = self.params.generate_proof(input)?;
+        let proof = self
+            .params
+            .generate_proof(input)
+            .context("while generating proof for the single path circuit")?;
 
         info!(
             time = now.elapsed().as_secs_f32(),
@@ -262,18 +281,23 @@ impl StorageQueryProver for EuclidQueryProver {
             &pis.result,
             &placeholders,
             &pis.bounds,
-        )?;
+        )
+        .context("while converting placeholders to IDs")?;
         let circuit_input = revelation::api::CircuitInput::new_revelation_no_results_tree(
             query_proof,
             indexing_proof,
             &pis.bounds,
             &placeholders,
             pis_hash,
-        )?;
+        )
+        .context("while initializing the (empty) revelation circuit")?;
 
         let input = QueryCircuitInput::Revelation(circuit_input);
 
-        let proof = self.params.generate_proof(input).unwrap();
+        let proof = self
+            .params
+            .generate_proof(input)
+            .context("while generating proof for the (empty) revelation circuit")?;
 
         info!(
             time = now.elapsed().as_secs_f32(),
@@ -327,11 +351,15 @@ impl StorageQueryProver for EuclidQueryProver {
             input.is_rows_tree_node,
             &pis.bounds,
             &placeholders,
-        )?;
+        )
+        .context("while initializing the non-existence circuit")?;
 
         let input = QueryCircuitInput::Query(input);
 
-        let proof = self.params.generate_proof(input)?;
+        let proof = self
+            .params
+            .generate_proof(input)
+            .context("while generating proof for the non-existence circuit")?;
 
         info!(
             time = now.elapsed().as_secs_f32(),
