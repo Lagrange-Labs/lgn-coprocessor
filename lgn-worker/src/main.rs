@@ -127,7 +127,10 @@ fn run(config: &Config) -> Result<()> {
         (Some(keystore_path), Some(password), None) => {
             read_keystore(keystore_path, password.expose_secret())?
         }
-        (Some(_), None, Some(pkey)) => Wallet::from_str(pkey.expose_secret())?,
+        (Some(_), None, Some(pkey)) => Wallet::from_str(pkey.expose_secret()).context(format!(
+            "while parsing private key {}",
+            pkey.expose_secret()
+        ))?,
         _ => bail!("Must specify either keystore path w/ password OR private key"),
     };
 
@@ -217,7 +220,7 @@ fn run(config: &Config) -> Result<()> {
     }
 
     let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-    register_v1_provers(config, &mut provers_manager);
+    register_v1_provers(config, &mut provers_manager).context("while registering provers")?;
 
     if !config.public_params.skip_checksum {
         verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
