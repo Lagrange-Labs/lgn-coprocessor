@@ -5,6 +5,7 @@ let
     version = "develop";
     keystore-file = "./runtime/lagr-keystore.json";
     keystore-password = "canihazsecurityplz";
+    gateway-url = "ws://localhost:4983";
   };
 
   workerConfig = {
@@ -14,11 +15,11 @@ let
     };
 
     avs = {
-      gateway_url = "ws://127.0.0.1:80";
-      issuer = "issuer";
+      gateway_url = meta.gateway-url;
+      issuer = "Some AVS partner";
       worker_id = "worker_id";
       lagr_keystore = meta.keystore-file;
-      lagr_pwd = config.env.LAGRANGE_PASSWORD;
+      lagr_pwd = meta.keystore-password;
     };
 
     prometheus.port = 9090;
@@ -44,7 +45,7 @@ let
 
   lagrangeWorkerConfig = workerConfig //
                          { avs = {
-                             gateway_url = "ws://127.0.0.1:80";
+                             gateway_url = meta.gateway-url;
                              issuer = "Lagrange";
                              worker_id = "lagrange-medium";
                              lagr_private_key = config.env.LAGRANGE_PRIVATE_KEY;
