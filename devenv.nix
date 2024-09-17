@@ -6,9 +6,10 @@ let
     keystore-file = "./runtime/lagr-keystore.json";
     keystore-password = "canihazsecurityplz";
     gateway-url = "ws://localhost:4983";
+    params-url = "https://pub-2124403768df4a0285b77bcb8d224083.r2.dev";
   };
 
-  workerConfig = {
+  avsWorkerConfig = {
     worker = {
       version = meta.version;
       instance_type = "medium";
@@ -26,8 +27,8 @@ let
 
     public_params = {
       dir = "./runtime/zkmr_params";
-      url = "https://pub-6209c09bbc5e412a9708e493c57edbc9.r2.dev";
-      checksum_url = "https://pub-6209c09bbc5e412a9708e493c57edbc9.r2.dev/public_params.hash";
+      url = meta.params-url;
+      checksum_url = "${meta.params-url}/public_params.hash";
 
       preprocessing_params = {
         file = "preprocessing_params.bin";
@@ -43,7 +44,7 @@ let
     };
   };
 
-  lagrangeWorkerConfig = workerConfig //
+  lagrangeWorkerConfig = avsWorkerConfig //
                          { avs = {
                              gateway_url = meta.gateway-url;
                              issuer = "Lagrange";
@@ -51,7 +52,7 @@ let
                              lagr_private_key = config.env.LAGRANGE_PRIVATE_KEY;
                            }; };
 
-  workerConfigFile = ((pkgs.formats.toml {}).generate "worker-avs.toml" workerConfig);
+  workerConfigFile = ((pkgs.formats.toml {}).generate "worker-avs.toml" avsWorkerConfig);
   lagrangeWorkerConfigFile = ((pkgs.formats.toml {}).generate "worker-lagrange.toml" lagrangeWorkerConfig);
 in
 
