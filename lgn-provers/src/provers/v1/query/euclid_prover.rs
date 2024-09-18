@@ -93,7 +93,7 @@ impl StorageQueryProver for EuclidQueryProver {
         let input = QueryCircuitInput::Query(circuit_input);
         let proof = self.params.generate_proof(input)?;
 
-        let proof_type = "universal circuit";
+        let proof_type = "universal_circuit";
         let time = now.elapsed().as_secs_f32();
         info!(
             time,
@@ -131,7 +131,7 @@ impl StorageQueryProver for EuclidQueryProver {
         let input = QueryCircuitInput::Query(circuit_input);
         let proof = self.params.generate_proof(input)?;
 
-        let proof_type = "full node";
+        let proof_type = "full_node";
         let time = now.elapsed().as_secs_f32();
         info!(
             time,
@@ -168,7 +168,7 @@ impl StorageQueryProver for EuclidQueryProver {
         let input = QueryCircuitInput::Query(circuit_input);
         let proof = self.params.generate_proof(input)?;
 
-        let proof_type = "partial node";
+        let proof_type = "partial_node";
         let time = now.elapsed().as_secs_f32();
         info!(
             time,
@@ -206,7 +206,7 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let proof = self.params.generate_proof(input)?;
 
-        let proof_type = "single path leaf";
+        let proof_type = "single_path_leaf";
         let time = now.elapsed().as_secs_f32();
         info!(
             time,
@@ -243,7 +243,7 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let proof = self.params.generate_proof(input)?;
 
-        let proof_type = "single path branch";
+        let proof_type = "single_path_branch";
         let time = now.elapsed().as_secs_f32();
         info!(
             time,
@@ -353,7 +353,7 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let proof = self.params.generate_proof(input)?;
 
-        let proof_type = "non-existence";
+        let proof_type = "non_existence";
         let time = now.elapsed().as_secs_f32();
         info!(
             time,
