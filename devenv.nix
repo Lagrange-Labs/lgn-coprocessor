@@ -94,17 +94,17 @@ in
 
 
   processes = {
-    avs-worker = {
-      exec = "cargo run --bin lgn-worker -- --config ${workerConfigFile}";
-      process-compose = {
-        environment = [
-          "RUST_LOG=warn,worker=debug"
-        ];
-      };
-    };
+    # avs-worker = {
+    #   exec = "cargo run --release --bin lgn-worker -- --config ${workerConfigFile}";
+    #   process-compose = {
+    #     environment = [
+    #       "RUST_LOG=warn,worker=debug"
+    #     ];
+    #   };
+    # };
 
     lagrange-worker = {
-      exec = "cargo run --bin lgn-worker -- --config ${lagrangeWorkerConfigFile}";
+      exec = "cargo run --release --bin lgn-worker -- --config ${lagrangeWorkerConfigFile}";
       process-compose = {
         environment = [
           "RUST_LOG=warn,worker=debug"
