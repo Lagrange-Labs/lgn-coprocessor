@@ -44,6 +44,7 @@ pub enum Network {
     #[default]
     Mainnet,
     Holesky,
+    Local,
 }
 
 impl Network {
@@ -51,6 +52,7 @@ impl Network {
         match self {
             Network::Mainnet => "mainnet",
             Network::Holesky => "holesky",
+            Network::Local => "local",
         }
         .to_string()
     }
@@ -59,16 +61,19 @@ impl Network {
         match self {
             Network::Mainnet => 1,
             Network::Holesky => 17000u64,
+            Network::Local => 31337,
         }
     }
     /// Returns the address of the lagrange registry necessary to register an operator
     /// on Lagrange Network AVS
     fn lagrange_registry_address(&self) -> Address {
         match self {
-            Network::Mainnet => MAINNET_ZKMR_STAKE_REGISTRY_ADDR,
-            Network::Holesky => HOLESKY_ZKMR_STAKE_REGISTRY_ADDR,
+            Network::Mainnet => MAINNET_ZKMR_STAKE_REGISTRY_ADDR.to_string(),
+            Network::Holesky => HOLESKY_ZKMR_STAKE_REGISTRY_ADDR.to_string(),
+            Network::Local => {
+                std::env::var("ZKMR_STAKE_REGISTRY_ADDR").expect("ZKMR_STAKE_REGISTRY_ADDR not set")
+            }
         }
-        .to_string()
         .parse()
         .expect("invalid registry address")
     }
@@ -76,10 +81,11 @@ impl Network {
     /// compute the right avs digest hash for the registration signature.
     fn lagrange_service_manager_address(&self) -> Address {
         match self {
-            Network::Mainnet => MAINNET_ZKMR_SERVICE_MANAGER_ADDR,
-            Network::Holesky => HOLESKY_ZKMR_SERVICE_MANAGER_ADDR,
+            Network::Mainnet => MAINNET_ZKMR_SERVICE_MANAGER_ADDR.to_string(),
+            Network::Holesky => HOLESKY_ZKMR_SERVICE_MANAGER_ADDR.to_string(),
+            Network::Local => std::env::var("ZKMR_SERVICE_REGISTRY_ADDR")
+                .expect("ZKMR_SERVICE_REGISTRY_ADDR not set"),
         }
-        .to_string()
         .parse()
         .expect("invalid service manager address")
     }
@@ -90,6 +96,9 @@ impl Network {
         match self {
             Network::Mainnet => MAINNET_DELEGATION_MANAGER_ADDR.to_string(),
             Network::Holesky => HOLESKY_DELEGATION_MANAGER_ADDR.to_string(),
+            Network::Local => {
+                std::env::var("DELEGATION_MANAGER_ADDR").expect("DELEGATION_MANAGER_ADDR not set")
+            }
         }
         .parse()
         .expect("invalid delegation manager address")
@@ -101,6 +110,9 @@ impl Network {
         match self {
             Network::Mainnet => MAINNET_AVS_DIRECTORY_ADDR.to_string(),
             Network::Holesky => HOLESKY_AVS_DIRECTORY_ADDR.to_string(),
+            Network::Local => {
+                std::env::var("AVS_DIRECTORY_ADDR").expect("AVS_DIRECTORY_ADDR not set")
+            }
         }
         .parse()
         .expect("invalid contract avs directory address")
