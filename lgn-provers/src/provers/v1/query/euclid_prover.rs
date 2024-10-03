@@ -5,6 +5,7 @@ use lgn_messages::types::v1::query::tasks::{
     NonExistenceInput, PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput,
     SinglePathLeafInput,
 };
+use metrics::histogram;
 use parsil::assembler::DynamicCircuitPis;
 use tracing::{debug, info};
 use verifiable_db::api::{QueryCircuitInput, QueryParameters};
@@ -98,12 +99,16 @@ impl StorageQueryProver for EuclidQueryProver {
             .generate_proof(input)
             .context("while generating proof for the universal circuit")?;
 
+        let proof_type = "universal_circuit";
+        let time = now.elapsed().as_secs_f32();
         info!(
-            time = now.elapsed().as_secs_f32(),
-            proof_type = "universal circuit",
+            time,
+            proof_type,
             "proof generation time: {:?}",
             now.elapsed()
         );
+        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
+
         info!("universal circuit size in kB: {}", proof.len() / 1024);
 
         Ok(proof)
@@ -133,12 +138,15 @@ impl StorageQueryProver for EuclidQueryProver {
         let input = QueryCircuitInput::Query(circuit_input);
         let proof = self.params.generate_proof(input)?;
 
+        let proof_type = "full_node";
+        let time = now.elapsed().as_secs_f32();
         info!(
-            time = now.elapsed().as_secs_f32(),
-            proof_type = "full node",
+            time,
+            proof_type,
             "proof generation time: {:?}",
             now.elapsed()
         );
+        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         info!("full node size in kB: {}", proof.len() / 1024);
 
@@ -171,12 +179,15 @@ impl StorageQueryProver for EuclidQueryProver {
             .generate_proof(input)
             .context("while generating proof from the partial node circuit")?;
 
+        let proof_type = "partial_node";
+        let time = now.elapsed().as_secs_f32();
         info!(
-            time = now.elapsed().as_secs_f32(),
-            proof_type = "partial node",
+            time,
+            proof_type,
             "proof generation time: {:?}",
             now.elapsed()
         );
+        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         info!("partial node size in kB: {}", proof.len() / 1024);
 
@@ -210,12 +221,15 @@ impl StorageQueryProver for EuclidQueryProver {
             .generate_proof(input)
             .context("while generating proof from the single path circuit")?;
 
+        let proof_type = "single_path_leaf";
+        let time = now.elapsed().as_secs_f32();
         info!(
-            time = now.elapsed().as_secs_f32(),
-            proof_type = "single path leaf",
+            time,
+            proof_type,
             "proof generation time: {:?}",
             now.elapsed()
         );
+        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         info!("single path leaf size in kB: {}", proof.len() / 1024);
 
@@ -248,12 +262,15 @@ impl StorageQueryProver for EuclidQueryProver {
             .generate_proof(input)
             .context("while generating proof for the single path circuit")?;
 
+        let proof_type = "single_path_branch";
+        let time = now.elapsed().as_secs_f32();
         info!(
-            time = now.elapsed().as_secs_f32(),
-            proof_type = "single path branch",
+            time,
+            proof_type,
             "proof generation time: {:?}",
             now.elapsed()
         );
+        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         info!("single path branch size in kB: {}", proof.len() / 1024);
 
@@ -299,12 +316,15 @@ impl StorageQueryProver for EuclidQueryProver {
             .generate_proof(input)
             .context("while generating proof for the (empty) revelation circuit")?;
 
+        let proof_type = "revelation";
+        let time = now.elapsed().as_secs_f32();
         info!(
-            time = now.elapsed().as_secs_f32(),
-            proof_type = "revelation",
+            time,
+            proof_type,
             "proof generation time: {:?}",
             now.elapsed()
         );
+        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         info!("revelation size in kB: {}", proof.len() / 1024);
 
@@ -361,12 +381,15 @@ impl StorageQueryProver for EuclidQueryProver {
             .generate_proof(input)
             .context("while generating proof for the non-existence circuit")?;
 
+        let proof_type = "non_existence";
+        let time = now.elapsed().as_secs_f32();
         info!(
-            time = now.elapsed().as_secs_f32(),
-            proof_type = "non-existence",
+            time,
+            proof_type,
             "proof generation time: {:?}",
             now.elapsed()
         );
+        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         info!("non-existence size in kB: {}", proof.len() / 1024);
 
