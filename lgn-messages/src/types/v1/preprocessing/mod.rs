@@ -1,5 +1,6 @@
 use alloy_primitives::{Address, U256};
 use ethers::prelude::H256;
+use mp2_common::digest::TableDimension;
 use serde_derive::{Deserialize, Serialize};
 
 use crate::types::v1::preprocessing::db_tasks::{
@@ -159,7 +160,7 @@ impl WorkerTaskType {
         table_id: u64,
         block_nr: u64,
         contract: Address,
-        compound: bool,
+        compound: TableDimension,
         value_proof_version: MptNodeVersion,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::FinalExtraction(FinalExtraction::new(

@@ -3,6 +3,7 @@ use crate::types::v1::preprocessing::{WorkerTask, WorkerTaskType};
 use alloy_primitives::Address;
 use derive_debug_plus::Dbg;
 use ethers::{types::H256, utils::rlp};
+use mp2_common::digest::TableDimension;
 use serde_derive::{Deserialize, Serialize};
 
 pub const ROUTING_DOMAIN: &str = "sp";
@@ -249,7 +250,7 @@ impl FinalExtraction {
         table_id: u64,
         block_nr: u64,
         contract: Address,
-        compound: Option<bool>,
+        compound: Option<TableDimension>,
         value_proof_version: MptNodeVersion,
     ) -> Self {
         let extraction_type = match compound {
@@ -273,7 +274,7 @@ impl FinalExtraction {
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum FinalExtractionType {
-    Simple(bool),
+    Simple(TableDimension),
     Lengthed,
 }
 

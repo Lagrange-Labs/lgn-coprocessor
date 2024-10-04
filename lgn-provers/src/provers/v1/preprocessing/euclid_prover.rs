@@ -3,6 +3,7 @@ use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageEx
 use alloy::primitives::{Address, U256};
 use anyhow::bail;
 use ethers::utils::rlp::{Prototype, Rlp};
+use mp2_common::digest::TableDimension;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::CircuitInput::{
@@ -195,13 +196,13 @@ impl StorageExtractionProver for EuclidProver {
         block_proof: Vec<u8>,
         contract_proof: Vec<u8>,
         value_proof: Vec<u8>,
-        compound: bool,
+        dimension: TableDimension,
     ) -> anyhow::Result<Vec<u8>> {
         let input = FinalExtraction(final_extraction::CircuitInput::new_simple_input(
             block_proof,
             contract_proof,
             value_proof,
-            compound,
+            dimension,
         )?);
         self.prove(input, "final extraction simple")
     }

@@ -1,6 +1,6 @@
 use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageExtractionProver};
 use alloy::primitives::{Address, U256};
-use mp2_common::types::HashOutput;
+use mp2_common::{digest::TableDimension, types::HashOutput};
 use std::thread::sleep;
 use tracing::debug;
 
@@ -96,7 +96,7 @@ impl StorageExtractionProver for DummyProver {
         _block_proof: Vec<u8>,
         _contract_proof: Vec<u8>,
         _value_proof: Vec<u8>,
-        _compound: bool,
+        _dimension: TableDimension,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving final extraction simple");
         Ok(prove())
