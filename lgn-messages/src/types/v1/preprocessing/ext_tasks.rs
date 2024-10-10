@@ -1,4 +1,4 @@
-use crate::types::v0::preprocessing::keys::BlockNr;
+use crate::types::v0::preprocessing::keys::{BlockNr, TableId};
 use crate::types::v1::preprocessing::ext_keys::ProofKey;
 use crate::types::v1::preprocessing::{WorkerTask, WorkerTaskType};
 use alloy_primitives::Address;
@@ -31,14 +31,14 @@ pub enum ExtractionType {
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Mpt {
-    pub table_id: u64,
+    pub table_id: TableId,
     pub block_nr: BlockNr,
     pub node_hash: H256,
     pub mpt_type: MptType,
 }
 
 impl Mpt {
-    pub fn new(table_id: u64, block_nr: BlockNr, node_hash: H256, mpt_type: MptType) -> Self {
+    pub fn new(table_id: TableId, block_nr: BlockNr, node_hash: H256, mpt_type: MptType) -> Self {
         Self {
             table_id,
             block_nr,
@@ -123,7 +123,7 @@ impl VariableLeafInput {
 
 #[derive(Dbg, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct VariableBranchInput {
-    pub table_id: u64,
+    pub table_id: TableId,
     pub node: Vec<u8>,
     pub children: Vec<MptNodeVersion>,
 
@@ -132,7 +132,7 @@ pub struct VariableBranchInput {
 }
 
 impl VariableBranchInput {
-    pub fn new(table_id: u64, node: Vec<u8>, children: Vec<MptNodeVersion>) -> Self {
+    pub fn new(table_id: TableId, node: Vec<u8>, children: Vec<MptNodeVersion>) -> Self {
         Self {
             table_id,
             node,
@@ -144,7 +144,7 @@ impl VariableBranchInput {
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct Length {
-    pub table_id: u64,
+    pub table_id: TableId,
     pub block_nr: BlockNr,
     pub length_slot: usize,
     pub variable_slot: usize,
@@ -224,7 +224,7 @@ pub enum FinalExtraction {
     Single(SingleTableExtraction),
     /// Inputs for a merge table proof.
     Merge {
-        table_id: u64,
+        table_id: TableId,
         mapping: SingleTableExtraction,
         simple: SingleTableExtraction,
     },
@@ -262,7 +262,7 @@ impl FinalExtraction {
     }
 
     pub fn new_merge_table(
-        table_id: u64,
+        table_id: TableId,
         block_nr: BlockNr,
         contract: Address,
         mapping_table_hash: u64,

@@ -1,3 +1,4 @@
+use crate::types::v0::preprocessing::keys::{BlockNr, TableId};
 use crate::types::v1::preprocessing::ext_tasks::MptNodeVersion;
 use crate::types::v1::preprocessing::KEYS_PREPROCESSING_PREFIX;
 use alloy_primitives::Address;
@@ -5,17 +6,10 @@ use object_store::path::Path;
 use serde_derive::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
-type TableId = u64;
-
-type BlockNr = u64;
-
-const MPT_VARIABLE_PREFIX: &str = "MPT_VARIABLE";
-
-const MPT_LENGTH_PREFIX: &str = "MPT_LENGTH";
-
-const CONTRACT_PREFIX: &str = "CONTRACT";
-
 const BLOCK_PREFIX: &str = "EXT_BLOCK";
+const CONTRACT_PREFIX: &str = "CONTRACT";
+const MPT_LENGTH_PREFIX: &str = "MPT_LENGTH";
+const MPT_VARIABLE_PREFIX: &str = "MPT_VARIABLE";
 
 const FINAL_EXTRACTION_PREFIX: &str = "FINAL_EXTRACTION";
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]
