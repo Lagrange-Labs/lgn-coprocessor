@@ -1,4 +1,4 @@
-use crate::types::v0::preprocessing::keys::{BlockNr, TableId};
+use crate::types::v0::preprocessing::keys::{BlockNr, TableHash, TableId};
 use crate::types::v1::preprocessing::ext_keys::ProofKey;
 use crate::types::v1::preprocessing::{WorkerTask, WorkerTaskType};
 use alloy_primitives::Address;
@@ -31,16 +31,16 @@ pub enum ExtractionType {
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Mpt {
-    pub table_id: TableId,
+    pub table_hash: TableHash,
     pub block_nr: BlockNr,
     pub node_hash: H256,
     pub mpt_type: MptType,
 }
 
 impl Mpt {
-    pub fn new(table_id: TableId, block_nr: BlockNr, node_hash: H256, mpt_type: MptType) -> Self {
+    pub fn new(table_hash: TableId, block_nr: BlockNr, node_hash: H256, mpt_type: MptType) -> Self {
         Self {
-            table_id,
+            table_hash,
             block_nr,
             node_hash,
             mpt_type,
@@ -144,7 +144,7 @@ impl VariableBranchInput {
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct Length {
-    pub table_id: TableId,
+    pub table_hash: TableHash,
     pub block_nr: BlockNr,
     pub length_slot: usize,
     pub variable_slot: usize,
@@ -295,15 +295,12 @@ impl FinalExtraction {
 /// This can be either a simple valued or a mapping table.
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct SingleTableExtraction {
-    pub table_hash: u64,
-
+    pub table_hash: TableHash,
     pub block_nr: BlockNr,
-
     pub contract: Address,
 
     /// This is always versioned because we prove values only if they changed.
     pub value_proof_version: MptNodeVersion,
-
     pub extraction_type: FinalExtractionType,
 
     #[dbg(placeholder = "...")]
@@ -321,7 +318,7 @@ pub struct SingleTableExtraction {
 
 impl SingleTableExtraction {
     pub fn new(
-        table_hash: u64,
+        table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
         compound: Option<TableDimension>,
@@ -359,31 +356,39 @@ impl From<&WorkerTask> for ProofKey {
                 ExtractionType::MptExtraction(mpt_extraction) => {
                     let node_version = (mpt_extraction.block_nr, mpt_extraction.node_hash);
                     match &mpt_extraction.mpt_type {
-                        MptType::MappingLeaf(_) => {
-                            ProofKey::MptVariable(mpt_extraction.table_id, node_version)
-                        }
-                        MptType::MappingBranch(_) => {
-                            ProofKey::MptVariable(mpt_extraction.table_id, node_version)
-                        }
-                        MptType::VariableLeaf(_) => {
-                            ProofKey::MptVariable(mpt_extraction.table_id, node_version)
-                        }
-                        MptType::VariableBranch(_) => {
-                            ProofKey::MptVariable(mpt_extraction.table_id, node_version)
-                        }
+                        MptType::MappingLeaf(_) => ProofKey::MptVariable {
+                            table_hash: mpt_extraction.table_hash,
+                            mpt_node_version: node_version,
+                        },
+                        MptType::MappingBranch(_) => ProofKey::MptVariable {
+                            table_hash: mpt_extraction.table_hash,
+                            mpt_node_version: node_version,
+                        },
+                        MptType::VariableLeaf(_) => ProofKey::MptVariable {
+                            table_hash: mpt_extraction.table_hash,
+                            mpt_node_version: node_version,
+                        },
+                        MptType::VariableBranch(_) => ProofKey::MptVariable {
+                            table_hash: mpt_extraction.table_hash,
+                            mpt_node_version: node_version,
+                        },
                     }
                 }
-                ExtractionType::LengthExtraction(length) => {
-                    ProofKey::MptLength(length.table_id, length.block_nr)
-                }
-                ExtractionType::ContractExtraction(contract) => {
-                    ProofKey::Contract(contract.contract, contract.block_nr)
-                }
-                ExtractionType::BlockExtraction(_) => ProofKey::Block(task.block_nr),
-                ExtractionType::FinalExtraction(final_extraction) => ProofKey::FinalExtraction(
-                    final_extraction.table_id(),
-                    final_extraction.block_nr(),
-                ),
+                ExtractionType::LengthExtraction(length) => ProofKey::MptLength {
+                    table_hash: length.table_hash,
+                    block_nr: length.block_nr,
+                },
+                ExtractionType::ContractExtraction(contract) => ProofKey::Contract {
+                    address: contract.contract,
+                    block_nr: contract.block_nr,
+                },
+                ExtractionType::BlockExtraction(_) => ProofKey::Block {
+                    block_nr: task.block_nr,
+                },
+                ExtractionType::FinalExtraction(final_extraction) => ProofKey::FinalExtraction {
+                    table_id: final_extraction.table_id(),
+                    block_nr: final_extraction.block_nr(),
+                },
             },
             _ => unimplemented!("WorkerTaskType not implemented"),
         }

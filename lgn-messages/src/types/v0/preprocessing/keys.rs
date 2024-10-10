@@ -13,6 +13,7 @@ pub type Contract = Address;
 pub type MptNodeHash = String;
 pub type QueryId = String;
 pub type TableId = u64;
+pub type TableHash = u64;
 
 /// Level in binary tree
 pub type Level = usize;

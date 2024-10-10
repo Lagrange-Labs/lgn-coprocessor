@@ -3,7 +3,7 @@ use ethers::prelude::H256;
 use mp2_common::digest::TableDimension;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::types::v0::preprocessing::keys::BlockNr;
+use crate::types::v0::preprocessing::keys::{BlockNr, TableHash, TableId};
 use crate::types::v1::preprocessing::db_tasks::{
     CellFullInput, CellLeafInput, CellPartialInput, DatabaseType, IvcInput, RowLeafInput,
 };
@@ -55,7 +55,7 @@ pub enum WorkerTaskType {
 
 impl WorkerTaskType {
     pub fn ext_variable_leaf(
-        table_id: u64,
+        table_hash: TableHash,
         block_nr: BlockNr,
         node_hash: H256,
         node: Vec<u8>,
@@ -63,7 +63,7 @@ impl WorkerTaskType {
         column_id: u64,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
-            table_id,
+            table_hash,
             block_nr,
             node_hash,
             mpt_type: MptType::VariableLeaf(VariableLeafInput::new(node, slot, column_id)),
@@ -71,23 +71,23 @@ impl WorkerTaskType {
     }
 
     pub fn ext_variable_branch(
-        table_id: u64,
+        table_hash: TableHash,
         block_nr: BlockNr,
         node_hash: H256,
         node: Vec<u8>,
         children: Vec<MptNodeVersion>,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
-            table_id,
+            table_hash,
             block_nr,
             node_hash,
-            mpt_type: MptType::VariableBranch(VariableBranchInput::new(table_id, node, children)),
+            mpt_type: MptType::VariableBranch(VariableBranchInput::new(table_hash, node, children)),
         }))
     }
 
     #[allow(clippy::too_many_arguments)]
     pub fn ext_mapping_leaf(
-        table_id: u64,
+        table_hash: TableHash,
         block_nr: BlockNr,
         node_hash: H256,
         key: Vec<u8>,
@@ -97,7 +97,7 @@ impl WorkerTaskType {
         value_id: u64,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
-            table_id,
+            table_hash,
             block_nr,
             node_hash,
             mpt_type: MptType::MappingLeaf(MappingLeafInput::new(
@@ -107,14 +107,14 @@ impl WorkerTaskType {
     }
 
     pub fn ext_mapping_branch(
-        table_id: u64,
+        table_hash: TableHash,
         block_nr: BlockNr,
         node_hash: H256,
         node: Vec<u8>,
         children: Vec<MptNodeVersion>,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
-            table_id,
+            table_hash,
             block_nr,
             node_hash,
             mpt_type: MptType::MappingBranch(MappingBranchInput::new(node, children)),
@@ -122,14 +122,14 @@ impl WorkerTaskType {
     }
 
     pub fn ext_length(
-        table_id: u64,
+        table_hash: TableHash,
         block_nr: BlockNr,
         nodes: Vec<Vec<u8>>,
         length_slot: usize,
         variable_slot: usize,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::LengthExtraction(Length {
-            table_id,
+            table_hash,
             block_nr,
             length_slot,
             variable_slot,
@@ -158,7 +158,7 @@ impl WorkerTaskType {
     }
 
     pub fn ext_final_extraction_simple(
-        table_id: u64,
+        table_id: TableId,
         block_nr: BlockNr,
         contract: Address,
         compound: TableDimension,
@@ -176,7 +176,7 @@ impl WorkerTaskType {
     }
 
     pub fn ext_final_extraction_lengthed(
-        table_id: u64,
+        table_id: TableId,
         block_nr: BlockNr,
         contract: Address,
         value_proof_version: MptNodeVersion,
@@ -193,7 +193,7 @@ impl WorkerTaskType {
     }
 
     pub fn ext_final_extraction_merge(
-        table_id: u64,
+        table_id: TableId,
         block_nr: BlockNr,
         contract: Address,
         mapping_table_hash: u64,
@@ -215,7 +215,7 @@ impl WorkerTaskType {
     }
 
     pub fn db_cell_leaf(
-        table_id: u64,
+        table_id: TableId,
         row_id: String,
         cell_id: usize,
         identifier: Identifier,
@@ -233,7 +233,7 @@ impl WorkerTaskType {
     }
 
     pub fn db_cell_partial(
-        table_id: u64,
+        table_id: TableId,
         row_id: String,
         cell_id: usize,
         identifier: Identifier,
@@ -254,7 +254,7 @@ impl WorkerTaskType {
     }
 
     pub fn db_cell_full(
-        table_id: u64,
+        table_id: TableId,
         row_id: String,
         cell_id: usize,
         identifier: Identifier,
@@ -275,7 +275,7 @@ impl WorkerTaskType {
     }
 
     pub fn db_row_leaf(
-        table_id: u64,
+        table_id: TableId,
         row_id: String,
         identifier: Identifier,
         value: U256,
@@ -292,7 +292,7 @@ impl WorkerTaskType {
     }
 
     pub fn db_row_partial(
-        table_id: u64,
+        table_id: TableId,
         row_id: String,
         identifier: Identifier,
         value: U256,
@@ -316,7 +316,7 @@ impl WorkerTaskType {
     }
 
     pub fn db_row_full(
-        table_id: u64,
+        table_id: TableId,
         row_id: String,
         identifier: Identifier,
         value: U256,
@@ -337,7 +337,7 @@ impl WorkerTaskType {
         )))
     }
 
-    pub fn ivc(table_id: u64, block_nr: BlockNr, is_first_block: bool) -> WorkerTaskType {
+    pub fn ivc(table_id: TableId, block_nr: BlockNr, is_first_block: bool) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::IVC(IvcInput::new(
             table_id,
             block_nr,
