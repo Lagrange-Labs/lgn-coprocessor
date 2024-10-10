@@ -77,6 +77,15 @@ pub trait StorageExtractionProver {
         value_proof: Vec<u8>,
         length_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove final extraction for merge types
+    fn prove_final_extraction_merge_simple_and_mapping(
+        &self,
+        block_proof: Vec<u8>,
+        contract_proof: Vec<u8>,
+        simple_table_proof: Vec<u8>,
+        mapping_table_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
 }
 
 pub trait StorageDatabaseProver {

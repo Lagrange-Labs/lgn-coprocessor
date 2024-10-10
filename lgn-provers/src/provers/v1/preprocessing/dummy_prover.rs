@@ -112,6 +112,17 @@ impl StorageExtractionProver for DummyProver {
         debug!("Proving final extraction lengthed");
         Ok(prove())
     }
+
+    fn prove_final_extraction_merge_simple_and_mapping(
+        &self,
+        _block_proof: Vec<u8>,
+        _contract_proof: Vec<u8>,
+        _simple_table_proof: Vec<u8>,
+        _mapping_table_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>> {
+        debug!("Proving final extraction merge table");
+        Ok(prove())
+    }
 }
 
 impl StorageDatabaseProver for DummyProver {

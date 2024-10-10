@@ -2,7 +2,7 @@ use lgn_messages::types::v1::preprocessing::db_tasks::{
     DatabaseType, DbBlockType, DbCellType, DbRowType,
 };
 use lgn_messages::types::v1::preprocessing::ext_tasks::{
-    ExtractionType, FinalExtractionType, MptType,
+    ExtractionType, FinalExtraction, FinalExtractionType, MptType,
 };
 use lgn_messages::types::v1::preprocessing::{db_keys, ext_keys, WorkerTask, WorkerTaskType};
 use lgn_messages::types::{
@@ -55,28 +55,34 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
 
     pub fn run_inner(&mut self, task: WorkerTask) -> anyhow::Result<Vec<u8>> {
         Ok(match task.task_type {
-            WorkerTaskType::Extraction(ex) => match ex {
+            WorkerTaskType::Extraction(extraction) => match extraction {
                 ExtractionType::MptExtraction(mpt) => match &mpt.mpt_type {
-                    MptType::VariableLeaf(input) => self.prover.prove_single_variable_leaf(
-                        input.node.clone(),
-                        input.slot,
-                        input.column_id,
+                    MptType::VariableLeaf(variable_leaf) => {
+                        self.prover.prove_single_variable_leaf(
+                            variable_leaf.node.clone(),
+                            variable_leaf.slot,
+                            variable_leaf.column_id,
+                        )?
+                    }
+                    MptType::MappingLeaf(mapping_leaf) => self.prover.prove_mapping_variable_leaf(
+                        mapping_leaf.key.clone(),
+                        mapping_leaf.node.clone(),
+                        mapping_leaf.slot,
+                        mapping_leaf.key_id,
+                        mapping_leaf.value_id,
                     )?,
-                    MptType::MappingLeaf(input) => self.prover.prove_mapping_variable_leaf(
-                        input.key.clone(),
-                        input.node.clone(),
-                        input.slot,
-                        input.key_id,
-                        input.value_id,
-                    )?,
-                    MptType::MappingBranch(input) => self.prover.prove_mapping_variable_branch(
-                        input.node.clone(),
-                        input.children_proofs.to_owned(),
-                    )?,
-                    MptType::VariableBranch(input) => self.prover.prove_single_variable_branch(
-                        input.node.clone(),
-                        input.children_proofs.clone(),
-                    )?,
+                    MptType::MappingBranch(mapping_branch) => {
+                        self.prover.prove_mapping_variable_branch(
+                            mapping_branch.node.clone(),
+                            mapping_branch.children_proofs.to_owned(),
+                        )?
+                    }
+                    MptType::VariableBranch(variable_branch) => {
+                        self.prover.prove_single_variable_branch(
+                            variable_branch.node.clone(),
+                            variable_branch.children_proofs.clone(),
+                        )?
+                    }
                 },
                 ExtractionType::LengthExtraction(length) => {
                     let mut proofs = vec![];
@@ -117,24 +123,40 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                     }
                     proofs.last().unwrap().clone()
                 }
-                ExtractionType::BlockExtraction(input) => {
-                    self.prover.prove_block(input.rlp_header.to_owned())?
+                ExtractionType::BlockExtraction(block) => {
+                    self.prover.prove_block(block.rlp_header.to_owned())?
                 }
-                ExtractionType::FinalExtraction(fe) => match fe.extraction_type {
-                    FinalExtractionType::Simple(compound) => {
-                        self.prover.prove_final_extraction_simple(
-                            fe.block_proof.clone(),
-                            fe.contract_proof.clone(),
-                            fe.value_proof.clone(),
-                            compound,
-                        )?
+                ExtractionType::FinalExtraction(final_extraction) => match *final_extraction {
+                    FinalExtraction::Single(single_table_extraction) => {
+                        match single_table_extraction.extraction_type {
+                            FinalExtractionType::Simple(compound) => {
+                                self.prover.prove_final_extraction_simple(
+                                    single_table_extraction.block_proof.clone(),
+                                    single_table_extraction.contract_proof.clone(),
+                                    single_table_extraction.value_proof.clone(),
+                                    compound,
+                                )?
+                            }
+                            FinalExtractionType::Lengthed => {
+                                self.prover.prove_final_extraction_lengthed(
+                                    single_table_extraction.block_proof.clone(),
+                                    single_table_extraction.contract_proof.clone(),
+                                    single_table_extraction.value_proof.clone(),
+                                    single_table_extraction.length_proof.clone(),
+                                )?
+                            }
+                        }
                     }
-                    FinalExtractionType::Lengthed => self.prover.prove_final_extraction_lengthed(
-                        fe.block_proof.clone(),
-                        fe.contract_proof.clone(),
-                        fe.value_proof.clone(),
-                        fe.length_proof.clone(),
-                    )?,
+                    FinalExtraction::Merge {
+                        mapping, simple, ..
+                    } => self
+                        .prover
+                        .prove_final_extraction_merge_simple_and_mapping(
+                            mapping.block_proof.clone(),
+                            mapping.contract_proof.clone(),
+                            simple.value_proof.clone(),
+                            mapping.value_proof.clone(),
+                        )?,
                 },
             },
             WorkerTaskType::Database(db) => match db {

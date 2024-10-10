@@ -222,6 +222,24 @@ impl StorageExtractionProver for EuclidProver {
         )?);
         self.prove(input, "final extraction lengthed")
     }
+
+    fn prove_final_extraction_merge_simple_and_mapping(
+        &self,
+        block_proof: Vec<u8>,
+        contract_proof: Vec<u8>,
+        simple_table_proof: Vec<u8>,
+        mapping_table_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>> {
+        let input = FinalExtraction(
+            final_extraction::CircuitInput::new_merge_single_and_mapping(
+                block_proof,
+                contract_proof,
+                simple_table_proof,
+                mapping_table_proof,
+            )?,
+        );
+        self.prove(input, "final extraction lengthed")
+    }
 }
 
 impl StorageDatabaseProver for EuclidProver {

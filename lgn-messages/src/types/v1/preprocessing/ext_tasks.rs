@@ -1,3 +1,4 @@
+use crate::types::v0::preprocessing::keys::BlockNr;
 use crate::types::v1::preprocessing::ext_keys::ProofKey;
 use crate::types::v1::preprocessing::{WorkerTask, WorkerTaskType};
 use alloy_primitives::Address;
@@ -7,10 +8,8 @@ use mp2_common::digest::TableDimension;
 use serde_derive::{Deserialize, Serialize};
 
 pub const ROUTING_DOMAIN: &str = "sp";
-
 pub type Identifier = u64;
-
-pub type MptNodeVersion = (u64, H256);
+pub type MptNodeVersion = (BlockNr, H256);
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum ExtractionType {
@@ -27,19 +26,19 @@ pub enum ExtractionType {
     BlockExtraction(BlockExtractionInput),
 
     #[serde(rename = "5")]
-    FinalExtraction(FinalExtraction),
+    FinalExtraction(Box<FinalExtraction>),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Mpt {
     pub table_id: u64,
-    pub block_nr: u64,
+    pub block_nr: BlockNr,
     pub node_hash: H256,
     pub mpt_type: MptType,
 }
 
 impl Mpt {
-    pub fn new(table_id: u64, block_nr: u64, node_hash: H256, mpt_type: MptType) -> Self {
+    pub fn new(table_id: u64, block_nr: BlockNr, node_hash: H256, mpt_type: MptType) -> Self {
         Self {
             table_id,
             block_nr,
@@ -146,7 +145,7 @@ impl VariableBranchInput {
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct Length {
     pub table_id: u64,
-    pub block_nr: u64,
+    pub block_nr: BlockNr,
     pub length_slot: usize,
     pub variable_slot: usize,
 
@@ -189,7 +188,7 @@ impl Length {
 
 #[derive(Dbg, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Contract {
-    pub block_nr: u64,
+    pub block_nr: BlockNr,
     pub storage_root: Vec<u8>,
     pub contract: Address,
 
@@ -219,11 +218,86 @@ impl BlockExtractionInput {
     }
 }
 
+/// Inputs for the final extraction.
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
-pub struct FinalExtraction {
-    pub table_id: u64,
+pub enum FinalExtraction {
+    Single(SingleTableExtraction),
+    /// Inputs for a merge table proof.
+    Merge {
+        table_id: u64,
+        mapping: SingleTableExtraction,
+        simple: SingleTableExtraction,
+    },
+}
 
-    pub block_nr: u64,
+impl FinalExtraction {
+    fn table_id(&self) -> BlockNr {
+        match self {
+            FinalExtraction::Single(single_table_extraction) => single_table_extraction.table_hash,
+            FinalExtraction::Merge { table_id, .. } => *table_id,
+        }
+    }
+
+    fn block_nr(&self) -> BlockNr {
+        match self {
+            FinalExtraction::Single(single_table_extraction) => single_table_extraction.block_nr,
+            FinalExtraction::Merge { mapping, .. } => mapping.block_nr,
+        }
+    }
+
+    pub fn new_single_table(
+        table_hash: u64,
+        block_nr: BlockNr,
+        contract: Address,
+        compound: Option<TableDimension>,
+        value_proof_version: MptNodeVersion,
+    ) -> Self {
+        Self::Single(SingleTableExtraction::new(
+            table_hash,
+            block_nr,
+            contract,
+            compound,
+            value_proof_version,
+        ))
+    }
+
+    pub fn new_merge_table(
+        table_id: u64,
+        block_nr: BlockNr,
+        contract: Address,
+        mapping_table_hash: u64,
+        simple_table_hash: u64,
+        mapping_table_value_proof_version: MptNodeVersion,
+        simple_table_value_proof_version: MptNodeVersion,
+    ) -> Self {
+        Self::Merge {
+            table_id,
+            mapping: SingleTableExtraction::new(
+                mapping_table_hash,
+                block_nr,
+                contract,
+                None,
+                mapping_table_value_proof_version,
+            ),
+            simple: SingleTableExtraction::new(
+                simple_table_hash,
+                block_nr,
+                contract,
+                None,
+                simple_table_value_proof_version,
+            ),
+        }
+    }
+}
+
+/// Inputs for a single table proof.
+///
+/// This can be either a simple valued or a mapping table.
+#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+pub struct SingleTableExtraction {
+    pub table_hash: u64,
+
+    pub block_nr: BlockNr,
 
     pub contract: Address,
 
@@ -245,10 +319,10 @@ pub struct FinalExtraction {
     pub length_proof: Vec<u8>,
 }
 
-impl FinalExtraction {
+impl SingleTableExtraction {
     pub fn new(
-        table_id: u64,
-        block_nr: u64,
+        table_hash: u64,
+        block_nr: BlockNr,
         contract: Address,
         compound: Option<TableDimension>,
         value_proof_version: MptNodeVersion,
@@ -259,7 +333,7 @@ impl FinalExtraction {
         };
 
         Self {
-            table_id,
+            table_hash,
             block_nr,
             contract,
             value_proof_version,
@@ -279,23 +353,23 @@ pub enum FinalExtractionType {
 }
 
 impl From<&WorkerTask> for ProofKey {
-    fn from(tt: &WorkerTask) -> Self {
-        match &tt.task_type {
-            WorkerTaskType::Extraction(ext) => match ext {
-                ExtractionType::MptExtraction(mpt) => {
-                    let node_version = (mpt.block_nr, mpt.node_hash);
-                    match &mpt.mpt_type {
+    fn from(task: &WorkerTask) -> Self {
+        match &task.task_type {
+            WorkerTaskType::Extraction(extraction) => match extraction {
+                ExtractionType::MptExtraction(mpt_extraction) => {
+                    let node_version = (mpt_extraction.block_nr, mpt_extraction.node_hash);
+                    match &mpt_extraction.mpt_type {
                         MptType::MappingLeaf(_) => {
-                            ProofKey::MptVariable(mpt.table_id, node_version)
+                            ProofKey::MptVariable(mpt_extraction.table_id, node_version)
                         }
                         MptType::MappingBranch(_) => {
-                            ProofKey::MptVariable(mpt.table_id, node_version)
+                            ProofKey::MptVariable(mpt_extraction.table_id, node_version)
                         }
                         MptType::VariableLeaf(_) => {
-                            ProofKey::MptVariable(mpt.table_id, node_version)
+                            ProofKey::MptVariable(mpt_extraction.table_id, node_version)
                         }
                         MptType::VariableBranch(_) => {
-                            ProofKey::MptVariable(mpt.table_id, node_version)
+                            ProofKey::MptVariable(mpt_extraction.table_id, node_version)
                         }
                     }
                 }
@@ -305,10 +379,11 @@ impl From<&WorkerTask> for ProofKey {
                 ExtractionType::ContractExtraction(contract) => {
                     ProofKey::Contract(contract.contract, contract.block_nr)
                 }
-                ExtractionType::BlockExtraction(_) => ProofKey::Block(tt.block_nr),
-                ExtractionType::FinalExtraction(fe) => {
-                    ProofKey::FinalExtraction(fe.table_id, fe.block_nr)
-                }
+                ExtractionType::BlockExtraction(_) => ProofKey::Block(task.block_nr),
+                ExtractionType::FinalExtraction(final_extraction) => ProofKey::FinalExtraction(
+                    final_extraction.table_id(),
+                    final_extraction.block_nr(),
+                ),
             },
             _ => unimplemented!("WorkerTaskType not implemented"),
         }
