@@ -3,7 +3,6 @@ use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageEx
 use alloy::primitives::{Address, U256};
 use anyhow::bail;
 use ethers::utils::rlp::{Prototype, Rlp};
-use mp2_common::digest::TableDimension;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::CircuitInput::{
@@ -196,13 +195,13 @@ impl StorageExtractionProver for EuclidProver {
         block_proof: Vec<u8>,
         contract_proof: Vec<u8>,
         value_proof: Vec<u8>,
-        dimension: TableDimension,
+        compound: bool,
     ) -> anyhow::Result<Vec<u8>> {
         let input = FinalExtraction(final_extraction::CircuitInput::new_simple_input(
             block_proof,
             contract_proof,
             value_proof,
-            dimension,
+            compound,
         )?);
         self.prove(input, "final extraction simple")
     }
@@ -221,24 +220,6 @@ impl StorageExtractionProver for EuclidProver {
             length_proof,
         )?);
         self.prove(input, "final extraction lengthed")
-    }
-
-    fn prove_final_extraction_merge(
-        &self,
-        block_proof: Vec<u8>,
-        contract_proof: Vec<u8>,
-        simple_table_proof: Vec<u8>,
-        mapping_table_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
-        let input = FinalExtraction(
-            final_extraction::CircuitInput::new_merge_single_and_mapping(
-                block_proof,
-                contract_proof,
-                simple_table_proof,
-                mapping_table_proof,
-            )?,
-        );
-        self.prove(input, "final extraction merge")
     }
 }
 

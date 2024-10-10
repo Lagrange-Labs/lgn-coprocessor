@@ -1,9 +1,7 @@
 use alloy_primitives::{Address, U256};
 use ethers::prelude::H256;
-use mp2_common::digest::TableDimension;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::types::v0::preprocessing::keys::{BlockNr, TableHash, TableId};
 use crate::types::v1::preprocessing::db_tasks::{
     CellFullInput, CellLeafInput, CellPartialInput, DatabaseType, IvcInput, RowLeafInput,
 };
@@ -23,7 +21,7 @@ const KEYS_PREPROCESSING_PREFIX: &str = "V1_PREPROCESSING";
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct WorkerTask {
     /// Which block we are proving.
-    pub block_nr: BlockNr,
+    pub block_nr: u64,
 
     /// Chain ID
     pub chain_id: u64,
@@ -34,7 +32,7 @@ pub struct WorkerTask {
 
 impl WorkerTask {
     #[must_use]
-    pub fn new(chain_id: u64, block_nr: BlockNr, task_type: WorkerTaskType) -> Self {
+    pub fn new(chain_id: u64, block_nr: u64, task_type: WorkerTaskType) -> Self {
         Self {
             chain_id,
             block_nr,
@@ -55,15 +53,15 @@ pub enum WorkerTaskType {
 
 impl WorkerTaskType {
     pub fn ext_variable_leaf(
-        table_hash: TableHash,
-        block_nr: BlockNr,
+        table_id: u64,
+        block_nr: u64,
         node_hash: H256,
         node: Vec<u8>,
         slot: u8,
         column_id: u64,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
-            table_hash,
+            table_id,
             block_nr,
             node_hash,
             mpt_type: MptType::VariableLeaf(VariableLeafInput::new(node, slot, column_id)),
@@ -71,24 +69,24 @@ impl WorkerTaskType {
     }
 
     pub fn ext_variable_branch(
-        table_hash: TableHash,
-        block_nr: BlockNr,
+        table_id: u64,
+        block_nr: u64,
         node_hash: H256,
         node: Vec<u8>,
         children: Vec<MptNodeVersion>,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
-            table_hash,
+            table_id,
             block_nr,
             node_hash,
-            mpt_type: MptType::VariableBranch(VariableBranchInput::new(table_hash, node, children)),
+            mpt_type: MptType::VariableBranch(VariableBranchInput::new(table_id, node, children)),
         }))
     }
 
     #[allow(clippy::too_many_arguments)]
     pub fn ext_mapping_leaf(
-        table_hash: TableHash,
-        block_nr: BlockNr,
+        table_id: u64,
+        block_nr: u64,
         node_hash: H256,
         key: Vec<u8>,
         node: Vec<u8>,
@@ -97,7 +95,7 @@ impl WorkerTaskType {
         value_id: u64,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
-            table_hash,
+            table_id,
             block_nr,
             node_hash,
             mpt_type: MptType::MappingLeaf(MappingLeafInput::new(
@@ -107,14 +105,14 @@ impl WorkerTaskType {
     }
 
     pub fn ext_mapping_branch(
-        table_hash: TableHash,
-        block_nr: BlockNr,
+        table_id: u64,
+        block_nr: u64,
         node_hash: H256,
         node: Vec<u8>,
         children: Vec<MptNodeVersion>,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
-            table_hash,
+            table_id,
             block_nr,
             node_hash,
             mpt_type: MptType::MappingBranch(MappingBranchInput::new(node, children)),
@@ -122,14 +120,14 @@ impl WorkerTaskType {
     }
 
     pub fn ext_length(
-        table_hash: TableHash,
-        block_nr: BlockNr,
+        table_id: u64,
+        block_nr: u64,
         nodes: Vec<Vec<u8>>,
         length_slot: usize,
         variable_slot: usize,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::LengthExtraction(Length {
-            table_hash,
+            table_id,
             block_nr,
             length_slot,
             variable_slot,
@@ -138,7 +136,7 @@ impl WorkerTaskType {
     }
 
     pub fn ext_contract(
-        block_nr: BlockNr,
+        block_nr: u64,
         contract_address: Address,
         nodes: Vec<Vec<u8>>,
         storage_root: Vec<u8>,
@@ -158,64 +156,38 @@ impl WorkerTaskType {
     }
 
     pub fn ext_final_extraction_simple(
-        table_id: TableId,
-        block_nr: BlockNr,
+        table_id: u64,
+        block_nr: u64,
         contract: Address,
-        compound: TableDimension,
+        compound: bool,
         value_proof_version: MptNodeVersion,
     ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
-            FinalExtraction::new_single_table(
-                table_id,
-                block_nr,
-                contract,
-                Some(compound),
-                value_proof_version,
-            ),
+        WorkerTaskType::Extraction(ExtractionType::FinalExtraction(FinalExtraction::new(
+            table_id,
+            block_nr,
+            contract,
+            Some(compound),
+            value_proof_version,
         )))
     }
 
     pub fn ext_final_extraction_lengthed(
-        table_id: TableId,
-        block_nr: BlockNr,
+        table_id: u64,
+        block_nr: u64,
         contract: Address,
         value_proof_version: MptNodeVersion,
     ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
-            FinalExtraction::new_single_table(
-                table_id,
-                block_nr,
-                contract,
-                None,
-                value_proof_version,
-            ),
-        )))
-    }
-
-    pub fn ext_final_extraction_merge(
-        table_id: TableId,
-        block_nr: BlockNr,
-        contract: Address,
-        mapping_table_hash: u64,
-        simple_table_hash: u64,
-        mapping_table_value_proof_version: MptNodeVersion,
-        simple_table_value_proof_version: MptNodeVersion,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
-            FinalExtraction::new_merge_table(
-                table_id,
-                block_nr,
-                contract,
-                mapping_table_hash,
-                simple_table_hash,
-                mapping_table_value_proof_version,
-                simple_table_value_proof_version,
-            ),
+        WorkerTaskType::Extraction(ExtractionType::FinalExtraction(FinalExtraction::new(
+            table_id,
+            block_nr,
+            contract,
+            None,
+            value_proof_version,
         )))
     }
 
     pub fn db_cell_leaf(
-        table_id: TableId,
+        table_id: u64,
         row_id: String,
         cell_id: usize,
         identifier: Identifier,
@@ -233,7 +205,7 @@ impl WorkerTaskType {
     }
 
     pub fn db_cell_partial(
-        table_id: TableId,
+        table_id: u64,
         row_id: String,
         cell_id: usize,
         identifier: Identifier,
@@ -254,7 +226,7 @@ impl WorkerTaskType {
     }
 
     pub fn db_cell_full(
-        table_id: TableId,
+        table_id: u64,
         row_id: String,
         cell_id: usize,
         identifier: Identifier,
@@ -275,7 +247,7 @@ impl WorkerTaskType {
     }
 
     pub fn db_row_leaf(
-        table_id: TableId,
+        table_id: u64,
         row_id: String,
         identifier: Identifier,
         value: U256,
@@ -292,7 +264,7 @@ impl WorkerTaskType {
     }
 
     pub fn db_row_partial(
-        table_id: TableId,
+        table_id: u64,
         row_id: String,
         identifier: Identifier,
         value: U256,
@@ -316,7 +288,7 @@ impl WorkerTaskType {
     }
 
     pub fn db_row_full(
-        table_id: TableId,
+        table_id: u64,
         row_id: String,
         identifier: Identifier,
         value: U256,
@@ -337,7 +309,7 @@ impl WorkerTaskType {
         )))
     }
 
-    pub fn ivc(table_id: TableId, block_nr: BlockNr, is_first_block: bool) -> WorkerTaskType {
+    pub fn ivc(table_id: u64, block_nr: u64, is_first_block: bool) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::IVC(IvcInput::new(
             table_id,
             block_nr,
