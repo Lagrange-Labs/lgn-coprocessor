@@ -7,15 +7,13 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::types::Position;
 
-pub type ChainId = u64;
-
-pub type QueryId = String;
-
-pub type MptNodeHash = String;
-
 pub type BlockNr = u64;
-
+pub type ChainId = u64;
 pub type Contract = Address;
+pub type MptNodeHash = String;
+pub type QueryId = String;
+pub type TableId = u64;
+pub type TableHash = u64;
 
 /// Level in binary tree
 pub type Level = usize;

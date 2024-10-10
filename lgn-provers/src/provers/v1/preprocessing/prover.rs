@@ -1,5 +1,5 @@
 use alloy::primitives::{Address, U256};
-use mp2_common::types::HashOutput;
+use mp2_common::{digest::TableDimension, types::HashOutput};
 
 pub trait StorageExtractionProver {
     /// Prove a leaf MPT node of single variable.
@@ -66,7 +66,7 @@ pub trait StorageExtractionProver {
         block_proof: Vec<u8>,
         contract_proof: Vec<u8>,
         value_proof: Vec<u8>,
-        compound: bool,
+        dimension: TableDimension,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove final extraction for lengthed types
@@ -76,6 +76,15 @@ pub trait StorageExtractionProver {
         contract_proof: Vec<u8>,
         value_proof: Vec<u8>,
         length_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
+
+    /// Prove final extraction for merge types
+    fn prove_final_extraction_merge(
+        &self,
+        block_proof: Vec<u8>,
+        contract_proof: Vec<u8>,
+        simple_table_proof: Vec<u8>,
+        mapping_table_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
 }
 
