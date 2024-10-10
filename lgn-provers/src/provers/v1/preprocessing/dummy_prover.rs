@@ -113,7 +113,7 @@ impl StorageExtractionProver for DummyProver {
         Ok(prove())
     }
 
-    fn prove_final_extraction_merge_simple_and_mapping(
+    fn prove_final_extraction_merge(
         &self,
         _block_proof: Vec<u8>,
         _contract_proof: Vec<u8>,

@@ -223,7 +223,7 @@ impl StorageExtractionProver for EuclidProver {
         self.prove(input, "final extraction lengthed")
     }
 
-    fn prove_final_extraction_merge_simple_and_mapping(
+    fn prove_final_extraction_merge(
         &self,
         block_proof: Vec<u8>,
         contract_proof: Vec<u8>,
@@ -238,7 +238,7 @@ impl StorageExtractionProver for EuclidProver {
                 mapping_table_proof,
             )?,
         );
-        self.prove(input, "final extraction lengthed")
+        self.prove(input, "final extraction merge")
     }
 }
 
