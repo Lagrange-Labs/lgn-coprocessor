@@ -157,6 +157,10 @@ impl WorkerTaskType {
         )))
     }
 
+    /// Creates a Final extraction task.
+    ///
+    /// Note: If the extraction is used for a merge table, `table_id` should be set to the
+    /// `table_hash`.
     pub fn ext_final_extraction_simple(
         table_id: TableId,
         block_nr: BlockNr,

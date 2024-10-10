@@ -149,14 +149,12 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                     }
                     FinalExtraction::Merge {
                         mapping, simple, ..
-                    } => self
-                        .prover
-                        .prove_final_extraction_merge_simple_and_mapping(
-                            mapping.block_proof.clone(),
-                            mapping.contract_proof.clone(),
-                            simple.value_proof.clone(),
-                            mapping.value_proof.clone(),
-                        )?,
+                    } => self.prover.prove_final_extraction_merge(
+                        mapping.block_proof.clone(),
+                        mapping.contract_proof.clone(),
+                        simple.value_proof.clone(),
+                        mapping.value_proof.clone(),
+                    )?,
                 },
             },
             WorkerTaskType::Database(db) => match db {

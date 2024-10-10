@@ -79,7 +79,7 @@ pub trait StorageExtractionProver {
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove final extraction for merge types
-    fn prove_final_extraction_merge_simple_and_mapping(
+    fn prove_final_extraction_merge(
         &self,
         block_proof: Vec<u8>,
         contract_proof: Vec<u8>,

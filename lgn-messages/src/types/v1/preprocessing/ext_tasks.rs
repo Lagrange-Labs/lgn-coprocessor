@@ -233,7 +233,7 @@ pub enum FinalExtraction {
 impl FinalExtraction {
     fn table_id(&self) -> BlockNr {
         match self {
-            FinalExtraction::Single(single_table_extraction) => single_table_extraction.table_hash,
+            FinalExtraction::Single(single_table_extraction) => single_table_extraction.table_id,
             FinalExtraction::Merge { table_id, .. } => *table_id,
         }
     }
@@ -295,7 +295,7 @@ impl FinalExtraction {
 /// This can be either a simple valued or a mapping table.
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct SingleTableExtraction {
-    pub table_hash: TableHash,
+    pub table_id: TableId,
     pub block_nr: BlockNr,
     pub contract: Address,
 
@@ -318,7 +318,7 @@ pub struct SingleTableExtraction {
 
 impl SingleTableExtraction {
     pub fn new(
-        table_hash: TableHash,
+        table_id: TableId,
         block_nr: BlockNr,
         contract: Address,
         compound: Option<TableDimension>,
@@ -330,7 +330,7 @@ impl SingleTableExtraction {
         };
 
         Self {
-            table_hash,
+            table_id,
             block_nr,
             contract,
             value_proof_version,
