@@ -7,6 +7,7 @@ use parsil::assembler::DynamicCircuitPis;
 use std::thread::sleep;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
 
+#[allow(dead_code)]
 pub(crate) struct DummyProver;
 
 impl StorageQueryProver for DummyProver {

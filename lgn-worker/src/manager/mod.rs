@@ -16,7 +16,7 @@ where
     provers: HashMap<ProverType, Box<dyn LgnProver<T, R>>>,
 }
 
-impl<'a, T: 'a, R> ProversManager<T, R>
+impl<T, R> ProversManager<T, R>
 where
     T: ToProverType,
 {

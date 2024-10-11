@@ -18,11 +18,37 @@ permissions:
   contents: read    # This is required for actions/checkout
 
 jobs:
-  build:
-    name: Build Docker Image
+  base:
+    name: build base
     runs-on: ['hostname:hetzner-dedicated-6']
     outputs:
      RUNNER: ${{ steps.get-label.outputs.runner_name }}
+    environment: CI
+    steps:
+      - name: Get Runner Label
+        id: get-label
+        run: |
+          if [[ "${{ runner.name }}" == *"@hetzner-dedicated-6" ]]; then
+            echo "runner_name=hostname:hetzner-dedicated-6" >> $GITHUB_OUTPUT
+          else
+            echo "runner_name=nix-128g" >> $GITHUB_OUTPUT
+          fi
+      - name: Cleanup docker build cache
+        run: |
+          docker system prune --force
+          docker builder prune --all --force
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build base
+        env:
+          DOCKER_BUILDKIT: 1
+        run: |
+          docker build --tag base --file docker/base/Dockerfile . --platform linux/amd64 --build-arg INSTRUCTION_SET="x86-64-v3"
+  build:
+    needs: base
+    runs-on: ${{needs.base.outputs.RUNNER}}
+    environment: CI
     strategy:
       fail-fast: false
       matrix:
@@ -31,7 +57,6 @@ jobs:
           - image: worker
             docker_file: docker/worker/Dockerfile
             platform: linux/amd64
-    environment: CI
     steps:
       - name: Get Runner Label
         id: get-label
@@ -59,32 +84,34 @@ jobs:
                   --build-arg INSTRUCTION_SET="x86-64-v3"
 
   lint:
-    needs: build
-    runs-on: ${{needs.build.outputs.RUNNER}}
+    needs: base
+    runs-on: ${{needs.base.outputs.RUNNER}}
     environment: CI
     steps:
 
       - name: clippy
         run: |
-            docker run --rm worker:${{ github.sha }} cargo clippy --all-targets --all -- -D warnings -A incomplete-features -A clippy::needless_return
+            docker run --rm base cargo clippy --all-targets --all -- -D warnings -A incomplete-features -A clippy::needless_return
       - name: fmt
         run: |
-            docker run --rm worker:${{ github.sha }} cargo fmt --all -- --check
+            docker run --rm base cargo fmt --all -- --check
 
   test:
-    needs: build
-    runs-on: ${{needs.build.outputs.RUNNER}}
+    needs: base
+    runs-on: ${{needs.base.outputs.RUNNER}}
     environment: CI
     steps:
       - name: test
         run: |
-            docker run --rm worker:${{ github.sha }} cargo test
+            docker run --rm base cargo test
 
   private-push:
     name: Push Docker Images to AWS
     environment: CI
-    runs-on: ${{needs.build.outputs.RUNNER}}
-    needs: build
+    runs-on: ${{needs.base.outputs.RUNNER}}
+    needs:
+      - build
+      - base
     strategy:
       fail-fast: false
       matrix:
@@ -132,8 +159,10 @@ jobs:
     name: Push Docker Images to Docker hub
     environment: CI
     if: contains('main holesky mainnet v1_base', github.ref_name) || startsWith(github.ref, 'refs/tags/')
-    runs-on: ${{needs.build.outputs.RUNNER}}
-    needs: build
+    runs-on: ${{needs.base.outputs.RUNNER}}
+    needs:
+      - build
+      - base
     steps:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
