@@ -8,7 +8,7 @@ on:
       - main
       - holesky
       - mainnet
-      - v1_base
+      - docker
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
@@ -20,7 +20,7 @@ permissions:
 jobs:
   build:
     name: Build Docker Image
-    runs-on: ['memory:32GB']
+    runs-on: ['hostname:hetzner-dedicated-6']
     outputs:
      RUNNER: ${{ steps.get-label.outputs.runner_name }}
     strategy:
