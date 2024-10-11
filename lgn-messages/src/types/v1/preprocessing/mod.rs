@@ -163,6 +163,7 @@ impl WorkerTaskType {
     /// `table_hash`.
     pub fn ext_final_extraction_simple(
         table_id: TableId,
+        table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
         compound: TableDimension,
@@ -171,6 +172,7 @@ impl WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
             FinalExtraction::new_single_table(
                 table_id,
+                table_hash,
                 block_nr,
                 contract,
                 Some(compound),
@@ -181,6 +183,7 @@ impl WorkerTaskType {
 
     pub fn ext_final_extraction_lengthed(
         table_id: TableId,
+        table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
         value_proof_version: MptNodeVersion,
@@ -188,6 +191,7 @@ impl WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
             FinalExtraction::new_single_table(
                 table_id,
+                table_hash,
                 block_nr,
                 contract,
                 None,
@@ -202,8 +206,7 @@ impl WorkerTaskType {
         contract: Address,
         mapping_table_hash: u64,
         simple_table_hash: u64,
-        mapping_table_value_proof_version: MptNodeVersion,
-        simple_table_value_proof_version: MptNodeVersion,
+        table_value_proof_version: MptNodeVersion,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
             FinalExtraction::new_merge_table(
@@ -212,8 +215,7 @@ impl WorkerTaskType {
                 contract,
                 mapping_table_hash,
                 simple_table_hash,
-                mapping_table_value_proof_version,
-                simple_table_value_proof_version,
+                table_value_proof_version,
             ),
         )))
     }
