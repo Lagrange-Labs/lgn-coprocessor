@@ -57,7 +57,6 @@ jobs:
           - image: worker
             docker_file: docker/worker/Dockerfile
             platform: linux/amd64
-    environment: CI
     steps:
       - name: Get Runner Label
         id: get-label
