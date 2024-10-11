@@ -60,7 +60,7 @@ jobs:
 
   lint:
     needs: build
-    runs-on: ${{needs.base.outputs.RUNNER}}
+    runs-on: ${{needs.build.outputs.RUNNER}}
     environment: CI
     steps:
 
@@ -73,7 +73,7 @@ jobs:
 
   test:
     needs: build
-    runs-on: ${{needs.base.outputs.RUNNER}}
+    runs-on: ${{needs.build.outputs.RUNNER}}
     environment: CI
     steps:
       - name: test
