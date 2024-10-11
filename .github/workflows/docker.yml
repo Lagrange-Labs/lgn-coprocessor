@@ -36,8 +36,8 @@ jobs:
       - name: Get Runner Label
         id: get-label
         run: |
-          if [[ "${{ runner.name }}" == *"@dedicated-7" ]]; then
-            echo "runner_name=hostname:dedicated-7" >> $GITHUB_OUTPUT
+          if [[ "${{ runner.name }}" == *"@dedicated-6" ]]; then
+            echo "runner_name=hostname:dedicated-6" >> $GITHUB_OUTPUT
           else
             echo "runner_name=nix-128g" >> $GITHUB_OUTPUT
           fi
