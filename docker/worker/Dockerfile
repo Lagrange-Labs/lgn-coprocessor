@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl3
 
+RUN rustup component add clippy rustfmt
+
 # Install Go
 RUN wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz && \

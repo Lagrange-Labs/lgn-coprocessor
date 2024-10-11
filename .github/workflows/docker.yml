@@ -58,6 +58,28 @@ jobs:
                   --platform ${{ matrix.platform }} \
                   --build-arg INSTRUCTION_SET="x86-64-v3"
 
+  lint:
+    needs: build
+    runs-on: ${{needs.base.outputs.RUNNER}}
+    environment: CI
+    steps:
+
+      - name: clippy
+        run: |
+            docker run --rm base cargo clippy --all-targets --all -- -D warnings -A incomplete-features -A clippy::needless_return
+      - name: fmt
+        run: |
+            docker run --rm base cargo fmt --all -- --check
+
+  test:
+    needs: build
+    runs-on: ${{needs.base.outputs.RUNNER}}
+    environment: CI
+    steps:
+      - name: test
+        run: |
+            docker run --rm base cargo test
+
   private-push:
     name: Push Docker Images to AWS
     environment: CI
