@@ -103,7 +103,7 @@ jobs:
     steps:
       - name: test
         run: |
-            docker run --rm worker:${{ github.sha }} cargo test
+            docker run --rm base cargo test
 
   private-push:
     name: Push Docker Images to AWS
