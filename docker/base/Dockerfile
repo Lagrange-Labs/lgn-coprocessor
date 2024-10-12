@@ -1,7 +1,6 @@
 FROM rustlang/rust:nightly-slim as base
 
 ARG GO_VERSION=1.22.2
-ARG BUILD_FLAGS="--release"
 
 # Install necessary packages and Go
 RUN apt-get update && apt-get install -y \
