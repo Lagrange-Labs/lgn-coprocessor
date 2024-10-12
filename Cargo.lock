@@ -1464,16 +1464,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3fd119d74b830634cea2a0f58bbd0d54540518a14397557951e79340abc28c0"
 
 [[package]]
-name = "colored"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbf2150cce219b664a8a70df7a1f933836724b503f8a413af9365b4dcc4d90b8"
-dependencies = [
- "lazy_static",
- "windows-sys 0.48.0",
-]
-
-[[package]]
 name = "config"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3045,7 +3035,7 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f#4d0e96f536b4640e342021b5dbc79654136a7042"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table#0f706cf85eb795a7c0fb1b25f4dbf88f073f3c57"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3076,17 +3066,17 @@ dependencies = [
 [[package]]
 name = "groth16_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f#4d0e96f536b4640e342021b5dbc79654136a7042"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table#0f706cf85eb795a7c0fb1b25f4dbf88f073f3c57"
 dependencies = [
  "alloy",
  "anyhow",
- "gnark-utils 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f)",
+ "gnark-utils 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table)",
  "hex",
  "log",
  "mp2_common",
  "plonky2",
  "plonky2x",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f)",
+ "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table)",
  "revm",
  "rlp",
  "serde",
@@ -3851,7 +3841,7 @@ dependencies = [
  "checksums",
  "eth_trie 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ethers 2.0.14",
- "groth16_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f)",
+ "groth16_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table)",
  "groth16_framework 0.1.0 (git+https://github.com/Lagrange-Labs/Euclid-database.git)",
  "hex",
  "lgn-messages",
@@ -4144,7 +4134,7 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "mp2_common"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f#4d0e96f536b4640e342021b5dbc79654136a7042"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table#0f706cf85eb795a7c0fb1b25f4dbf88f073f3c57"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4171,7 +4161,7 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f#4d0e96f536b4640e342021b5dbc79654136a7042"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table#0f706cf85eb795a7c0fb1b25f4dbf88f073f3c57"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4190,7 +4180,7 @@ dependencies = [
  "plonky2_crypto",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f)",
+ "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table)",
  "rlp",
  "ryhope",
  "serde",
@@ -4590,7 +4580,7 @@ dependencies = [
 [[package]]
 name = "parsil"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f#4d0e96f536b4640e342021b5dbc79654136a7042"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table#0f706cf85eb795a7c0fb1b25f4dbf88f073f3c57"
 dependencies = [
  "alloy",
  "anyhow",
@@ -5277,7 +5267,7 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f#4d0e96f536b4640e342021b5dbc79654136a7042"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table#0f706cf85eb795a7c0fb1b25f4dbf88f073f3c57"
 dependencies = [
  "anyhow",
  "log",
@@ -5841,7 +5831,7 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f#4d0e96f536b4640e342021b5dbc79654136a7042"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table#0f706cf85eb795a7c0fb1b25f4dbf88f073f3c57"
 dependencies = [
  "anyhow",
  "bb8",
@@ -5850,11 +5840,9 @@ dependencies = [
  "futures 0.3.30",
  "hex",
  "itertools 0.12.1",
- "log",
  "postgres-types",
  "serde",
  "serde_json",
- "simple_logger",
  "tokio",
  "tokio-postgres",
  "tracing",
@@ -6284,17 +6272,6 @@ dependencies = [
  "num-traits",
  "thiserror",
  "time",
-]
-
-[[package]]
-name = "simple_logger"
-version = "5.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8c5dfa5e08767553704aa0ffd9d9794d527103c736aba9854773851fd7497eb"
-dependencies = [
- "colored",
- "log",
- "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -7248,7 +7225,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "verifiable-db"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f#4d0e96f536b4640e342021b5dbc79654136a7042"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table#0f706cf85eb795a7c0fb1b25f4dbf88f073f3c57"
 dependencies = [
  "alloy",
  "anyhow",
@@ -7262,7 +7239,7 @@ dependencies = [
  "plonky2_ecdsa",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4d0e96f)",
+ "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fmerge_table)",
  "ryhope",
  "serde",
 ]
