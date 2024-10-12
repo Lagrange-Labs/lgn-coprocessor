@@ -3,6 +3,8 @@
 # Stage 1: Build the binary with caching
 FROM base as builder
 
+ARG BUILD_FLAGS="--release"
+
 # Build with caching
 RUN --mount=type=cache,id=lgn-worker,target=/usr/local/cargo/registry \
     --mount=type=cache,id=lgn-worker,target=/usr/local/cargo/git \
