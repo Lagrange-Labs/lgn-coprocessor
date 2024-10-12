@@ -9,6 +9,9 @@ on:
       - holesky
       - mainnet
       - docker
+  pull_request:
+    branches:
+      - '**'
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
