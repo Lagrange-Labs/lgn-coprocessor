@@ -246,13 +246,15 @@ impl FinalExtraction {
     }
 
     pub fn new_single_table(
-        table_hash: u64,
+        table_id: TableId,
+        table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
         compound: Option<TableDimension>,
         value_proof_version: MptNodeVersion,
     ) -> Self {
         Self::Single(SingleTableExtraction::new(
+            table_id,
             table_hash,
             block_nr,
             contract,
@@ -267,24 +269,27 @@ impl FinalExtraction {
         contract: Address,
         mapping_table_hash: u64,
         simple_table_hash: u64,
-        mapping_table_value_proof_version: MptNodeVersion,
-        simple_table_value_proof_version: MptNodeVersion,
+        table_value_proof_version: MptNodeVersion,
     ) -> Self {
         Self::Merge {
             table_id,
             mapping: SingleTableExtraction::new(
+                // use the table_hash as the table_id when the extraction is a sub-table
+                mapping_table_hash,
                 mapping_table_hash,
                 block_nr,
                 contract,
                 None,
-                mapping_table_value_proof_version,
+                table_value_proof_version.clone(),
             ),
             simple: SingleTableExtraction::new(
+                // use the table_hash as the table_id when the extraction is a sub-table
+                simple_table_hash,
                 simple_table_hash,
                 block_nr,
                 contract,
                 None,
-                simple_table_value_proof_version,
+                table_value_proof_version,
             ),
         }
     }
@@ -292,15 +297,23 @@ impl FinalExtraction {
 
 /// Inputs for a single table proof.
 ///
-/// This can be either a simple valued or a mapping table.
+/// # Identifiers
+///
+/// A [SingleTableExtraction] is either a final or a sub extraction. Final extractions can be
+/// either a simple table, a mapping table, or a mapping table with length. A sub extraction is
+/// either a simple or a no-length mapping table, which is later used by a merge extraction.
+///
+/// When this extraction is final, `table_id` must match the table's unique identifier. Sub
+/// extractions on the other hand should use the `table_hash`.
+///
+/// The `table_hash` is used to match identify the value extraction.
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct SingleTableExtraction {
     pub table_id: TableId,
+    pub table_hash: TableHash,
+    pub value_proof_version: MptNodeVersion,
     pub block_nr: BlockNr,
     pub contract: Address,
-
-    /// This is always versioned because we prove values only if they changed.
-    pub value_proof_version: MptNodeVersion,
     pub extraction_type: FinalExtractionType,
 
     #[dbg(placeholder = "...")]
@@ -319,6 +332,7 @@ pub struct SingleTableExtraction {
 impl SingleTableExtraction {
     pub fn new(
         table_id: TableId,
+        table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
         compound: Option<TableDimension>,
@@ -331,6 +345,7 @@ impl SingleTableExtraction {
 
         Self {
             table_id,
+            table_hash,
             block_nr,
             contract,
             value_proof_version,
