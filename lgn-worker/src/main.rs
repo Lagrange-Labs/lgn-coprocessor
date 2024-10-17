@@ -27,6 +27,10 @@ use lgn_worker::avs::utils::read_keystore;
 use serde::{Deserialize, Serialize};
 use tungstenite::stream::MaybeTlsStream;
 
+mod lagrange {
+    tonic::include_proto!("lagrange");
+}
+
 mod checksum;
 mod config;
 mod manager;

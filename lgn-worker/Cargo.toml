@@ -65,3 +65,11 @@ tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "json"] }
 tungstenite = { version = "0.21.0", features = ["rustls"] }
 url = { version = "2.5.0" }
+tonic = "0.12.3"
+prost-types = "0.13.3"
+prost = "0.13.3"
+
+[build-dependencies]
+miette = "7.2.0"
+tonic-build = "0.12.3"
+protox = "0.7.1"
