@@ -215,6 +215,17 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
 
     let mut inbound = response.into_inner();
 
+    outbound
+        .send(WorkerToGwRequest {
+            request: Some(lagrange::worker_to_gw_request::Request::WorkerReady(
+                lagrange::WorkerReady {
+                    version: env!("CARGO_PKG_VERSION").to_string(),
+                    worker_class: config.worker.instance_type.to_string(),
+                },
+            )),
+        })
+        .await?;
+
     loop {
         tokio::select! {
             Some(inbound_message) = inbound.next() => {
