@@ -30,7 +30,8 @@ use crate::manager::ProversManager;
 use ethers::signers::Wallet;
 use lgn_auth::jwt::JWTAuth;
 use lgn_messages::types::{
-    DownstreamPayload, MessageReplyEnvelope, ReplyType, TaskType, ToProverType, UpstreamPayload,
+    DownstreamPayload, MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, ToProverType,
+    UpstreamPayload,
 };
 use lgn_worker::avs::utils::read_keystore;
 use serde::{Deserialize, Serialize};
@@ -248,30 +249,24 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
 
 fn process_downstream_payload<T, R>(
     provers_manager: &mut ProversManager<T, R>,
-    downstream_payload: DownstreamPayload<T>,
+    envelope: MessageEnvelope<T>,
 ) -> Result<Option<MessageReplyEnvelope<R>>>
 where
     T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone,
     R: Serialize + Debug + Clone,
 {
-    match downstream_payload {
-        DownstreamPayload::Todo { envelope } => {
-            debug!("Received task: {:?}", envelope);
-            counter!("zkmr_worker_tasks_received_total").increment(1);
-            match provers_manager.delegate_proving(envelope) {
-                Ok(reply) => {
-                    debug!("Sending reply: {:?}", reply);
-                    counter!("zkmr_worker_tasks_processed_total").increment(1);
-                    return Ok(Some(reply));
-                }
-                Err(e) => {
-                    error!("Error processing task: {:?}", e);
-                    counter!("zkmr_worker_error_count", "error_type" =>  "proof processing")
-                        .increment(1);
-                }
-            }
+    debug!("Received task: {:?}", envelope);
+    counter!("zkmr_worker_tasks_received_total").increment(1);
+    match provers_manager.delegate_proving(envelope) {
+        Ok(reply) => {
+            debug!("Sending reply: {:?}", reply);
+            counter!("zkmr_worker_tasks_processed_total").increment(1);
+            return Ok(Some(reply));
         }
-        DownstreamPayload::Ack => bail!("unexpected ACK frame"),
+        Err(e) => {
+            error!("Error processing task: {:?}", e);
+            counter!("zkmr_worker_error_count", "error_type" =>  "proof processing").increment(1);
+        }
     }
 
     Ok(None)
@@ -285,12 +280,12 @@ async fn process_message_from_gateway(
     match &message.response {
         Some(response) => match response {
             lagrange::worker_to_gw_response::Response::Todo(json_document) => {
-                let downstream_payload =
-                    serde_json::from_str::<DownstreamPayload<TaskType>>(&json_document)?;
+                let message_envelope =
+                    serde_json::from_str::<MessageEnvelope<TaskType>>(&json_document)?;
 
                 let reply = tokio::task::block_in_place(
                     move || -> Result<Option<MessageReplyEnvelope<ReplyType>>> {
-                        process_downstream_payload(provers_manager, downstream_payload)
+                        process_downstream_payload(provers_manager, message_envelope)
                     },
                 )?;
 
@@ -468,7 +463,11 @@ where
                     .increment(1);
 
                 let downstream_payload = serde_json::from_str::<DownstreamPayload<T>>(&content)?;
-                let reply = process_downstream_payload(provers_manager, downstream_payload)?;
+                let mut reply = None;
+
+                if let DownstreamPayload::Todo { envelope } = downstream_payload {
+                    reply = process_downstream_payload(provers_manager, envelope)?;
+                }
 
                 if let Some(reply) = reply {
                     ws_socket.send(Message::Text(serde_json::to_string(
