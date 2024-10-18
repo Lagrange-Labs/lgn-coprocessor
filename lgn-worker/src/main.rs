@@ -276,7 +276,7 @@ async fn process_message_from_gateway(
     provers_manager: &mut ProversManager<TaskType, ReplyType>,
     message: &WorkerToGwResponse,
     outbound: &mut tokio::sync::mpsc::Sender<WorkerToGwRequest>,
-) -> Result<Option<MessageReplyEnvelope<ReplyType>>> {
+) -> Result<()> {
     match &message.response {
         Some(response) => match response {
             lagrange::worker_to_gw_response::Response::Todo(json_document) => {
@@ -289,24 +289,24 @@ async fn process_message_from_gateway(
                     },
                 )?;
 
-                outbound
-                    .send(WorkerToGwRequest {
-                        request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
-                            WorkerDone {
-                                query_id: String::new(),
-                                task_id: String::new(),
-                                reply: Some(Reply::ReplyString(serde_json::to_string(&reply)?)),
-                            },
-                        )),
-                    })
-                    .await?;
+                let request = WorkerToGwRequest {
+                    request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
+                        WorkerDone {
+                            query_id: String::new(),
+                            task_id: String::new(),
+                            reply: Some(Reply::ReplyString(serde_json::to_string(&reply)?)),
+                        },
+                    )),
+                };
+                info!("Sending reply {request:#?}");
+                outbound.send(request).await?;
 
-                return Ok(reply);
+                return Ok(());
             }
         },
         None => {
             tracing::warn!("Received WorkerToGwReponse with empty reponse field");
-            return Ok(None);
+            return Ok(());
         }
     }
 }
