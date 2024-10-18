@@ -202,13 +202,17 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
     let channel = tonic::transport::Channel::builder(uri).connect().await?;
     let token: MetadataValue<_> = format!("Bearer {token}").parse()?;
 
+    let message_size = 64 * 1024 * 1024;
+
     let mut client = lagrange::workers_service_client::WorkersServiceClient::with_interceptor(
         channel,
         move |mut req: Request<()>| {
             req.metadata_mut().insert("authorization", token.clone());
             Ok(req)
         },
-    );
+    )
+    .max_decoding_message_size(message_size)
+    .max_encoding_message_size(message_size);
 
     let response = client
         .worker_to_gw(tonic::Request::new(outbound_rx))
@@ -281,7 +285,7 @@ async fn process_message_from_gateway(
         Some(response) => match response {
             lagrange::worker_to_gw_response::Response::Todo(json_document) => {
                 let message_envelope =
-                    serde_json::from_str::<MessageEnvelope<TaskType>>(&json_document)?;
+                    serde_json::from_str::<MessageEnvelope<TaskType>>(json_document)?;
 
                 let reply = tokio::task::block_in_place(
                     move || -> Result<Option<MessageReplyEnvelope<ReplyType>>> {
@@ -289,26 +293,25 @@ async fn process_message_from_gateway(
                     },
                 )?;
 
-                let request = WorkerToGwRequest {
-                    request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
-                        WorkerDone {
-                            query_id: String::new(),
-                            task_id: String::new(),
-                            reply: Some(Reply::ReplyString(serde_json::to_string(&reply)?)),
-                        },
-                    )),
-                };
-                info!("Sending reply {request:#?}");
-                outbound.send(request).await?;
-
-                return Ok(());
+                if let Some(reply) = reply {
+                    let request = WorkerToGwRequest {
+                        request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
+                            WorkerDone {
+                                query_id: String::new(),
+                                task_id: String::new(),
+                                reply: Some(Reply::ReplyString(serde_json::to_string(&reply)?)),
+                            },
+                        )),
+                    };
+                    outbound.send(request).await?;
+                }
             }
         },
         None => {
             tracing::warn!("Received WorkerToGwReponse with empty reponse field");
-            return Ok(());
         }
     }
+    Ok(())
 }
 
 fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>> {
