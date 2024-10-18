@@ -47,14 +47,17 @@ impl Display for ProofKey {
             }
             ProofKey::MptVariable(table_id, node_version) => {
                 // Example: V1_PREPROCESSING/1/MPT_VARIABLE/1/0x1234_1
+                let block_nr = node_version.0;
+                let node_hash = node_version.1;
                 write!(
                     f,
-                    "{}/{}/{}/{}/{}",
+                    "{}/{}/{}/{}/{:?}",
                     KEYS_PREPROCESSING_PREFIX,
                     table_id,
                     MPT_VARIABLE_PREFIX,
-                    node_version.0,
-                    node_version.1
+                    block_nr,
+                    node_hash, // The `Display` format will shorten the hash with an ellipses,
+                               // using `Debug` instead to keep the whole hash.
                 )
             }
             ProofKey::MptLength(table_id, block_nr) => {
