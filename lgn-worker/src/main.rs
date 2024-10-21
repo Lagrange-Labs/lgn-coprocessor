@@ -132,7 +132,9 @@ fn run(config: &Config) -> Result<()> {
         (Some(keystore_path), Some(password), None) => {
             read_keystore(keystore_path, password.expose_secret())?
         }
-        (Some(_), None, Some(pkey)) => Wallet::from_str(pkey.expose_secret())?,
+        (Some(_), None, Some(pkey)) => {
+            Wallet::from_str(pkey.expose_secret()).context("Failed to create wallet")?
+        }
         _ => bail!("Must specify either keystore path w/ password OR private key"),
     };
 
@@ -265,7 +267,9 @@ where
                 )
                 .increment(1);
 
-                match serde_json::from_str::<DownstreamPayload<T>>(&content)? {
+                match serde_json::from_str::<DownstreamPayload<T>>(&content)
+                    .with_context(|| format!("Failed to decode msg. content: {}", content))?
+                {
                     DownstreamPayload::Todo { envelope } => {
                         debug!("Received task: {:?}", envelope);
                         counter!("zkmr_worker_tasks_received_total").increment(1);
