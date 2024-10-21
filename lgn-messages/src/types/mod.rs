@@ -254,7 +254,7 @@ impl<T> Display for UpstreamPayload<T> {
 }
 
 /// All the messages that may transit from the server to the worker
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum DownstreamPayload<T> {
     /// indicate a successful authentication to the worker
     Ack,

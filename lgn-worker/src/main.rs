@@ -78,7 +78,7 @@ fn setup_logging(json: bool) {
     };
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() {
     let cli = Cli::parse();
 
     setup_logging(cli.json);
@@ -108,13 +108,18 @@ fn main() -> anyhow::Result<()> {
 
     let config = Config::load(cli.config);
     config.validate();
-    info!("Loaded configuration: {:?}", config);
+    info!("Loaded configuration. config: {:?}", config);
 
-    metrics_exporter_prometheus::PrometheusBuilder::new()
+    if let Err(err) = metrics_exporter_prometheus::PrometheusBuilder::new()
         .with_http_listener(([0, 0, 0, 0], config.prometheus.port))
-        .install()?;
+        .install()
+    {
+        error!("Creating prometheus metrics failed. err: {:?}", err);
+    }
 
-    run(&config)
+    if let Err(err) = run(&config) {
+        error!("Service exiting with an error. err: {:?}", err);
+    }
 }
 
 fn run(config: &Config) -> Result<()> {
@@ -127,21 +132,19 @@ fn run(config: &Config) -> Result<()> {
         (Some(keystore_path), Some(password), None) => {
             read_keystore(keystore_path, password.expose_secret())?
         }
-        (Some(_), None, Some(pkey)) => Wallet::from_str(pkey.expose_secret()).context(format!(
-            "while parsing private key {}",
-            pkey.expose_secret()
-        ))?,
+        (Some(_), None, Some(pkey)) => Wallet::from_str(pkey.expose_secret())?,
         _ => bail!("Must specify either keystore path w/ password OR private key"),
     };
 
-    // Connect to the WS server
-    info!("Connecting to the gateway at {}", &config.avs.gateway_url);
+    info!(
+        "Connecting to the gateway. url: {}",
+        &config.avs.gateway_url
+    );
 
-    // Prepare the connection request
-    let url = url::Url::parse(&config.avs.gateway_url).with_context(|| "while parsing url")?;
+    let url = url::Url::parse(&config.avs.gateway_url).context("Gateway URL is invalid")?;
     let connection_request = url
         .into_client_request()
-        .with_context(|| "while creating connection request")?;
+        .context("Gateway URL is invalid, not a websocket")?;
 
     // Perform authentication
     let registered = RegisteredClaims {
@@ -150,7 +153,7 @@ fn run(config: &Config) -> Result<()> {
         issued_at: Some(
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .unwrap()
+                .expect("Epoch can not be in the future")
                 .as_secs(),
         ),
         ..Default::default()
@@ -174,36 +177,37 @@ fn run(config: &Config) -> Result<()> {
         private,
     };
 
-    // Connect to the server
     let (mut ws_socket, _) = connect(connection_request)?;
     counter!("zkmr_worker_gateway_connection_count").increment(1);
-    info!("Connected to the gateway");
 
     info!("Authenticating");
-    // Sign the JWT claims and encode to (Base64) bytes.
     let token = JWTAuth::new(claims, &lagrange_wallet)?.encode()?;
     // Send the authentication frame..
+    let auth_msg = UpstreamPayload::<ReplyType>::Authentication { token };
+    let auth_msg_json =
+        serde_json::to_string(&auth_msg).context("Failed to serialize Authentication message")?;
     ws_socket
-        .send(Message::Text(
-            serde_json::to_string(&UpstreamPayload::<ReplyType>::Authentication { token }).unwrap(),
-        ))
-        .context("unable to send authorization frame")?;
+        .send(Message::Text(auth_msg_json))
+        .context("Failed to send authorization message")?;
     // ...then wait for the ack.
     ws_socket
         .read()
-        .context("while waiting for authentication confirmation")
+        .context("Failed to read authentication confirmation")
         .and_then(|reply| match reply {
             Message::Text(payload) => Ok(payload),
-            _ => bail!("expected ACK frame, found `{reply}`"),
+            _ => bail!(
+                "Unexpected websocket message during authentication, expected Text. reply: {}",
+                reply
+            ),
         })
         .and_then(|payload| {
-            if let DownstreamPayload::Ack =
-                serde_json::from_str::<DownstreamPayload<ReplyType>>(&payload).unwrap()
-            {
-                info!("connection successful");
-                Ok(())
-            } else {
-                bail!("authentication issue: expected ACK frame, found `{payload}`")
+            match serde_json::from_str::<DownstreamPayload<ReplyType>>(&payload) {
+                Ok(DownstreamPayload::Ack) => Ok(()),
+                Ok(DownstreamPayload::Todo { envelope }) => bail!(
+                    "Unexpected Todo message during authentication. msg: {:?}",
+                    envelope
+                ),
+                Err(err) => bail!("Websocket error while authenticating. err: {}", err),
             }
         })?;
 
@@ -220,11 +224,11 @@ fn run(config: &Config) -> Result<()> {
     }
 
     let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-    register_v1_provers(config, &mut provers_manager).context("while registering provers")?;
+    register_v1_provers(config, &mut provers_manager).context("Failed to register V1 provers")?;
 
     if !config.public_params.skip_checksum {
         verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
-            .context("Failed to verify checksums")?;
+            .context("Public parameters verification failed")?;
     }
 
     start_work(&mut ws_socket, &mut provers_manager)?;
@@ -240,23 +244,26 @@ where
     T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone,
     R: Serialize + Debug + Clone,
 {
-    info!("ready to work");
+    info!("Sending ready to work message");
+    let ready = UpstreamPayload::<ReplyType>::Ready;
+    let ready_json = serde_json::to_string(&ready).context("Failed to encode Ready message")?;
     ws_socket
-        .send(Message::Text(
-            serde_json::to_string(&UpstreamPayload::<ReplyType>::Ready).unwrap(),
-        ))
+        .send(Message::Text(ready_json))
         .context("unable to send ready frame")?;
 
     loop {
         let msg = ws_socket
             .read()
-            .with_context(|| "unable to read from gateway socket")?;
+            .context("Failed to read from gateway socket")?;
         match msg {
             Message::Text(content) => {
                 trace!("Received message: {:?}", content);
 
-                counter!("zkmr_worker_websocket_messages_received_total", "message_type" => "text")
-                    .increment(1);
+                counter!(
+                    "zkmr_worker_websocket_messages_received_total",
+                    "message_type" => "text",
+                )
+                .increment(1);
 
                 match serde_json::from_str::<DownstreamPayload<T>>(&content)? {
                     DownstreamPayload::Todo { envelope } => {
@@ -267,35 +274,58 @@ where
                                 debug!("Sending reply: {:?}", reply);
                                 counter!("zkmr_worker_tasks_processed_total").increment(1);
 
-                                ws_socket.send(Message::Text(serde_json::to_string(
-                                    &UpstreamPayload::Done(reply),
-                                )?))?;
-                                counter!("zkmr_worker_websocket_messages_sent_total", "message_type" => "text")
-            .increment(1);
+                                let done = UpstreamPayload::Done(reply);
+                                let done_json = serde_json::to_string(&done)
+                                    .context("Failed to encode Done message")?;
+                                ws_socket
+                                    .send(Message::Text(done_json))
+                                    .context("Failed to send response to gateway socket")?;
+                                counter!(
+                                    "zkmr_worker_websocket_messages_sent_total",
+                                    "message_type" => "text",
+                                )
+                                .increment(1);
                             }
-                            Err(e) => {
-                                error!("Error processing task: {:?}", e);
-                                counter!("zkmr_worker_error_count", "error_type" =>  "proof processing").increment(1);
+                            Err(err) => {
+                                error!("Error processing task. err: {:?}", err);
+                                counter!(
+                                    "zkmr_worker_error_count",
+                                    "error_type" => "proof_processing",
+                                )
+                                .increment(1);
                             }
                         }
                     }
-                    DownstreamPayload::Ack => bail!("unexpected ACK frame"),
+                    DownstreamPayload::Ack => {
+                        counter!(
+                            "zkmr_worker_error_count",
+                            "error_type" => "unexpected_ack",
+                        )
+                        .increment(1);
+                        bail!("Unexpected ACK frame")
+                    }
                 }
             }
             Message::Ping(_) => {
                 debug!("Received ping or close message");
 
-                counter!("zkmr_worker_websocket_messages_received_total", "message_type" => "ping")
-                    .increment(1);
+                counter!(
+                    "zkmr_worker_websocket_messages_received_total",
+                    "message_type" => "ping",
+                )
+                .increment(1);
             }
             Message::Close(_) => {
                 info!("Received close message");
                 return Ok(());
             }
             _ => {
-                error!("unexpected frame: {msg}");
-                counter!("zkmr_worker_error_count", "error_type" => "unexpected frame")
-                    .increment(1);
+                error!("Unexpected frame: {msg}");
+                counter!(
+                    "zkmr_worker_error_count",
+                    "error_type" => "unexpected_frame",
+                )
+                .increment(1);
             }
         }
     }

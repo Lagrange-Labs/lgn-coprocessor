@@ -4,7 +4,6 @@ use mp2_common::{digest::TableDimension, types::HashOutput};
 use std::thread::sleep;
 use tracing::debug;
 
-#[allow(dead_code)]
 pub(crate) struct DummyProver;
 
 impl StorageExtractionProver for DummyProver {
