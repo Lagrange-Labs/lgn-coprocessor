@@ -141,7 +141,7 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn maybe_verify_checksum(config: &Config) -> Result<()> {
+async fn maybe_download_checksum(config: &Config) -> Result<()> {
     if config.public_params.skip_checksum {
         return Ok(());
     }
@@ -170,9 +170,6 @@ async fn maybe_verify_checksum(config: &Config) -> Result<()> {
 
     drop(file);
 
-    verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
-        .context("Failed to verify checksums")?;
-
     Ok(())
 }
 
@@ -182,6 +179,8 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
 
     info!("Verifying the checksums");
 
+    maybe_download_checksum(config).await?;
+
     let mut provers_manager =
         tokio::task::block_in_place(move || -> Result<ProversManager<TaskType, ReplyType>> {
             let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
@@ -190,7 +189,13 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
             Ok(provers_manager)
         })?;
 
-    maybe_verify_checksum(config).await?;
+    if !config.public_params.skip_checksum {
+        verify_directory_checksums(
+            &config.public_params.dir,
+            &config.public_params.checksum_expected_local_path,
+        )
+        .context("Failed to verify checksums")?;
+    }
 
     info!("Connecting to GW at uri {uri}");
     let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
@@ -241,7 +246,6 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
                         break;
                     }
                 };
-                info!("received an inbound message {msg:?}");
                 process_message_from_gateway(&mut provers_manager, msg, &mut outbound).await?;
             }
             else => break,
