@@ -10,7 +10,7 @@ use std::result::Result::Ok;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::BTreeMap, panic, str::FromStr};
 use tracing::level_filters::LevelFilter;
-use tracing::{debug, error, info, trace};
+use tracing::{debug, error, info, span, trace, Level};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::EnvFilter;
 use tungstenite::client::IntoClientRequest;
@@ -106,24 +106,36 @@ fn main() {
         );
     }));
 
+    if let Err(err) = run(cli) {
+        error!("Service exiting with an error. err: {:?}", err);
+    }
+}
+
+fn run(cli: Cli) -> Result<()> {
+    let version = env!("CARGO_PKG_VERSION");
+    info!("Starting worker. version: {}", version);
+
     let config = Config::load(cli.config);
     config.validate();
     info!("Loaded configuration. config: {:?}", config);
+
+    let span = span!(
+        Level::INFO,
+        "Starting node",
+        "worker" = config.avs.worker_id.to_string(),
+        "issuer" = config.avs.issuer.to_string(),
+        "version" = version,
+        "class" = config.worker.instance_type.to_string(),
+    );
+    let _guard = span.enter();
 
     if let Err(err) = metrics_exporter_prometheus::PrometheusBuilder::new()
         .with_http_listener(([0, 0, 0, 0], config.prometheus.port))
         .install()
     {
-        error!("Creating prometheus metrics failed. err: {:?}", err);
+        bail!("Creating prometheus metrics failed. err: {:?}", err);
     }
 
-    if let Err(err) = run(&config) {
-        error!("Service exiting with an error. err: {:?}", err);
-    }
-}
-
-fn run(config: &Config) -> Result<()> {
-    info!("Version: {}", env!("CARGO_PKG_VERSION"));
     let lagrange_wallet = match (
         &config.avs.lagr_keystore,
         &config.avs.lagr_pwd,
@@ -140,7 +152,7 @@ fn run(config: &Config) -> Result<()> {
 
     info!(
         "Connecting to the gateway. url: {}",
-        &config.avs.gateway_url
+        &config.avs.gateway_url,
     );
 
     let url = url::Url::parse(&config.avs.gateway_url).context("Gateway URL is invalid")?;
@@ -164,7 +176,7 @@ fn run(config: &Config) -> Result<()> {
     let private = [
         (
             "version".to_string(),
-            serde_json::Value::String(env!("CARGO_PKG_VERSION").to_string()),
+            serde_json::Value::String(version.to_string()),
         ),
         (
             "worker_class".to_string(),
@@ -226,7 +238,7 @@ fn run(config: &Config) -> Result<()> {
     }
 
     let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-    register_v1_provers(config, &mut provers_manager).context("Failed to register V1 provers")?;
+    register_v1_provers(&config, &mut provers_manager).context("Failed to register V1 provers")?;
 
     if !config.public_params.skip_checksum {
         verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
@@ -271,7 +283,16 @@ where
                     .with_context(|| format!("Failed to decode msg. content: {}", content))?
                 {
                     DownstreamPayload::Todo { envelope } => {
-                        debug!("Received task: {:?}", envelope);
+                        let span = span!(
+                            Level::INFO,
+                            "Received Todo",
+                            "query_id" = envelope.query_id,
+                            "task_id" = envelope.task_id,
+                            "db_id" = ?envelope.db_task_id,
+                        );
+                        let _guard = span.enter();
+                        debug!("Received Todo. envelope: {:?}", envelope);
+
                         counter!("zkmr_worker_tasks_received_total").increment(1);
                         match provers_manager.delegate_proving(envelope) {
                             Ok(reply) => {
