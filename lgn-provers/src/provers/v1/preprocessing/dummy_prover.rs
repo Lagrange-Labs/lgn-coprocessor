@@ -1,10 +1,9 @@
 use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageExtractionProver};
 use alloy::primitives::{Address, U256};
-use mp2_common::types::HashOutput;
+use mp2_common::{digest::TableDimension, types::HashOutput};
 use std::thread::sleep;
 use tracing::debug;
 
-#[allow(dead_code)]
 pub(crate) struct DummyProver;
 
 impl StorageExtractionProver for DummyProver {
@@ -96,7 +95,7 @@ impl StorageExtractionProver for DummyProver {
         _block_proof: Vec<u8>,
         _contract_proof: Vec<u8>,
         _value_proof: Vec<u8>,
-        _compound: bool,
+        _dimension: TableDimension,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving final extraction simple");
         Ok(prove())
@@ -110,6 +109,17 @@ impl StorageExtractionProver for DummyProver {
         _length_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving final extraction lengthed");
+        Ok(prove())
+    }
+
+    fn prove_final_extraction_merge(
+        &self,
+        _block_proof: Vec<u8>,
+        _contract_proof: Vec<u8>,
+        _simple_table_proof: Vec<u8>,
+        _mapping_table_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>> {
+        debug!("Proving final extraction merge table");
         Ok(prove())
     }
 }

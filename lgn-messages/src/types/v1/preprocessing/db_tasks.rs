@@ -3,6 +3,7 @@ use derive_debug_plus::Dbg;
 use mp2_common::types::HashOutput;
 use serde_derive::{Deserialize, Serialize};
 
+use crate::types::v0::preprocessing::keys::{BlockNr, TableId};
 use crate::types::v1::preprocessing::ext_tasks::Identifier;
 use crate::types::v1::preprocessing::{db_keys, ext_keys, WorkerTask, WorkerTaskType};
 
@@ -34,29 +35,20 @@ pub enum DbCellType {
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct CellLeafInput {
-    pub table_id: u64,
-
+    pub table_id: TableId,
     pub row_id: String,
-
     pub cell_id: usize,
-
     pub identifier: Identifier,
-
     pub value: U256,
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct CellPartialInput {
-    pub table_id: u64,
-
+    pub table_id: TableId,
     pub row_id: String,
-
     pub cell_id: usize,
-
     pub identifier: Identifier,
-
     pub value: U256,
-
     pub child_location: db_keys::ProofKey,
 
     #[dbg(placeholder = "...")]
@@ -65,16 +57,11 @@ pub struct CellPartialInput {
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct CellFullInput {
-    pub table_id: u64,
-
+    pub table_id: TableId,
     pub row_id: String,
-
     pub cell_id: usize,
-
     pub identifier: Identifier,
-
     pub value: U256,
-
     pub child_locations: Vec<db_keys::ProofKey>,
 
     #[dbg(placeholder = "...")]
@@ -95,7 +82,7 @@ pub enum DbRowType {
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct RowLeafInput {
-    pub table_id: u64,
+    pub table_id: TableId,
 
     pub row_id: String,
 
@@ -111,18 +98,12 @@ pub struct RowLeafInput {
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct RowPartialInput {
-    pub table_id: u64,
-
+    pub table_id: TableId,
     pub row_id: String,
-
     pub identifier: Identifier,
-
     pub value: U256,
-
     pub is_child_left: bool,
-
     pub child_proof_location: db_keys::ProofKey,
-
     pub cells_proof_location: Option<db_keys::ProofKey>,
 
     #[dbg(placeholder = "...")]
@@ -134,16 +115,11 @@ pub struct RowPartialInput {
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct RowFullInput {
-    pub table_id: u64,
-
+    pub table_id: TableId,
     pub row_id: String,
-
     pub identifier: Identifier,
-
     pub value: U256,
-
     pub child_proofs_locations: Vec<db_keys::ProofKey>,
-
     pub cells_proof_location: Option<db_keys::ProofKey>,
 
     #[dbg(placeholder = "...")]
@@ -155,15 +131,13 @@ pub struct RowFullInput {
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct IndexInputs {
-    pub table_id: u64,
-
-    pub block_nr: u64,
-
+    pub table_id: TableId,
+    pub block_nr: BlockNr,
     pub inputs: Vec<DbBlockType>,
 }
 
 impl IndexInputs {
-    pub fn new(table_id: u64, block_nr: u64, inputs: Vec<DbBlockType>) -> Self {
+    pub fn new(table_id: TableId, block_nr: BlockNr, inputs: Vec<DbBlockType>) -> Self {
         Self {
             table_id,
             block_nr,
@@ -186,12 +160,9 @@ pub enum DbBlockType {
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct BlockLeafInput {
-    pub table_id: u64,
-
-    pub block_id: u64,
-
+    pub table_id: TableId,
+    pub block_id: BlockNr,
     pub extraction_proof_location: ext_keys::ProofKey,
-
     pub rows_proof_location: db_keys::ProofKey,
 
     #[dbg(placeholder = "...")]
@@ -203,8 +174,8 @@ pub struct BlockLeafInput {
 
 impl BlockLeafInput {
     pub fn new(
-        table_id: u64,
-        block_id: u64,
+        table_id: TableId,
+        block_id: BlockNr,
         extraction_proof_location: ext_keys::ProofKey,
         rows_proof_location: db_keys::ProofKey,
     ) -> Self {
@@ -221,24 +192,15 @@ impl BlockLeafInput {
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct BlockParentInput {
-    pub table_id: u64,
-
-    pub block_id: u64,
-
+    pub table_id: TableId,
+    pub block_id: BlockNr,
     pub old_block_number: U256,
-
     pub old_min: U256,
-
     pub old_max: U256,
-
     pub prev_left_child: Option<HashOutput>,
-
     pub prev_right_child: Option<HashOutput>,
-
     pub old_rows_tree_hash: HashOutput,
-
     pub extraction_proof_location: ext_keys::ProofKey,
-
     pub rows_proof_location: db_keys::ProofKey,
 
     #[dbg(placeholder = "...")]
@@ -251,8 +213,8 @@ pub struct BlockParentInput {
 impl BlockParentInput {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        table_id: u64,
-        block_id: u64,
+        table_id: TableId,
+        block_id: BlockNr,
         old_block_number: U256,
         old_min: U256,
         old_max: U256,
@@ -281,20 +243,13 @@ impl BlockParentInput {
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct BlockMembershipInput {
-    pub table_id: u64,
-
-    pub block_id: u64,
-
+    pub table_id: TableId,
+    pub block_id: BlockNr,
     pub index_value: U256,
-
     pub old_min: U256,
-
     pub old_max: U256,
-
     pub left_child: HashOutput,
-
     pub rows_tree_hash: HashOutput,
-
     pub right_proof_location: db_keys::ProofKey,
 
     #[dbg(placeholder = "...")]
@@ -304,8 +259,8 @@ pub struct BlockMembershipInput {
 impl BlockMembershipInput {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        table_id: u64,
-        block_id: u64,
+        table_id: TableId,
+        block_id: BlockNr,
         index_value: U256,
         old_min: U256,
         old_max: U256,
@@ -329,10 +284,8 @@ impl BlockMembershipInput {
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct IvcInput {
-    pub table_id: u64,
-
-    pub block_nr: u64,
-
+    pub table_id: TableId,
+    pub block_nr: BlockNr,
     pub is_first_block: bool,
 
     #[dbg(placeholder = "...")]
@@ -343,7 +296,7 @@ pub struct IvcInput {
 }
 
 impl IvcInput {
-    pub fn new(table_id: u64, block_nr: u64, is_first_block: bool) -> Self {
+    pub fn new(table_id: TableId, block_nr: BlockNr, is_first_block: bool) -> Self {
         Self {
             table_id,
             block_nr,

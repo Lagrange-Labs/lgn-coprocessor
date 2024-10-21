@@ -1,7 +1,6 @@
 use lgn_messages::types::{MessageEnvelope, MessageReplyEnvelope};
 
 pub mod v0;
-
 pub mod v1;
 
 /// The prover trait that accepts [`MessageEnvelope`] and is able to process tasks of type [`TaskType`].

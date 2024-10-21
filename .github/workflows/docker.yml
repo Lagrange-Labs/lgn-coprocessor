@@ -9,6 +9,7 @@ on:
       - holesky
       - mainnet
       - docker
+      - hack-merge-table
   pull_request:
     branches:
       - '**'
@@ -161,7 +162,7 @@ jobs:
   public-push:
     name: Push Docker Images to Docker hub
     environment: CI
-    if: contains('main holesky mainnet v1_base', github.ref_name) || startsWith(github.ref, 'refs/tags/')
+    if: contains('main holesky mainnet hack-merge-table v1_base', github.ref_name) || startsWith(github.ref, 'refs/tags/')
     runs-on: ${{needs.base.outputs.RUNNER}}
     needs:
       - build
