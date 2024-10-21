@@ -280,7 +280,7 @@ impl FinalExtraction {
                 block_nr,
                 contract,
                 None,
-                table_value_proof_version.clone(),
+                table_value_proof_version,
             ),
             simple: SingleTableExtraction::new(
                 // use the table_hash as the table_id when the extraction is a sub-table
