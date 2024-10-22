@@ -479,18 +479,22 @@ where
                     DownstreamPayload::Todo { envelope } => {
                         debug!("Received task: {:?}", envelope);
                         counter!("zkmr_worker_tasks_received_total").increment(1);
-                        match provers_manager.delegate_proving(envelope.clone()) {
+                        let reply = match provers_manager.delegate_proving(envelope.clone()) {
                             Ok(reply) => {
                                 debug!("Sending reply: {:?}", reply);
                                 counter!("zkmr_worker_tasks_processed_total").increment(1);
 
-                                ws_socket.send(Message::Text(serde_json::to_string(
-                                    &UpstreamPayload::Done(reply),
-                                )?))?;
-                                counter!("zkmr_worker_websocket_messages_sent_total", "message_type" => "text")
-                                    .increment(1);
+                                counter!("zkmr_worker_websocket_messages_sent_total",
+                                    "message_type" => "text")
+                                .increment(1);
+                                UpstreamPayload::Done(reply)
                             }
                             Err(e) => {
+                                error!(
+                                    "error processing task, (envelope saved
+                                    in `{}`): {:?}",
+                                    filename, e
+                                );
                                 let filename = format!("{}.json", envelope.task_id);
                                 if let Err(e) = std::fs::File::create(&filename)
                                     .map(|mut f| f.write_all(content.as_bytes()))
@@ -498,20 +502,20 @@ where
                                     error!("failed to store failing inputs: {e:?}")
                                 }
 
-                                error!(
-                                    "error processing task, (envelope saved in `{}`): {:?}",
-                                    filename, e
-                                );
-                                counter!("zkmr_worker_error_count", "error_type" =>  "proof processing").increment(1);
+                                counter!("zkmr_worker_error_count",
+                                    "error_type" => "proof
+                                    processing")
+                                .increment(1);
+                                UpstreamPayload::ProvingError(format!("{e:?}"))
                             }
-                        }
+                        };
+                        ws_socket.send(Message::Text(serde_json::to_string(&reply)?))?;
                     }
                     DownstreamPayload::Ack => bail!("unexpected ACK frame"),
                 }
             }
             Message::Ping(_) => {
                 debug!("Received ping or close message");
-
                 counter!("zkmr_worker_websocket_messages_received_total", "message_type" => "ping")
                     .increment(1);
             }

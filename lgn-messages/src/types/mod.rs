@@ -241,6 +241,9 @@ pub enum UpstreamPayload<T> {
 
     /// the workers sends back a proof for the given task ID
     Done(MessageReplyEnvelope<T>),
+
+    /// the worker encountered an error when computing the proof
+    ProvingError(String),
 }
 
 impl<T> Display for UpstreamPayload<T> {
