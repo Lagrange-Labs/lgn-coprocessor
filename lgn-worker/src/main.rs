@@ -8,6 +8,7 @@ use lagrange::{WorkerDone, WorkerToGwRequest, WorkerToGwResponse};
 use metrics::counter;
 use mimalloc::MiMalloc;
 use std::fmt::Debug;
+use std::io::Write;
 use std::net::TcpStream;
 use std::result::Result::Ok;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -474,20 +475,38 @@ where
                 counter!("zkmr_worker_websocket_messages_received_total", "message_type" => "text")
                     .increment(1);
 
-                let downstream_payload = serde_json::from_str::<DownstreamPayload<T>>(&content)?;
-                let mut reply = None;
+                match serde_json::from_str::<DownstreamPayload<T>>(&content)? {
+                    DownstreamPayload::Todo { envelope } => {
+                        debug!("Received task: {:?}", envelope);
+                        counter!("zkmr_worker_tasks_received_total").increment(1);
+                        match provers_manager.delegate_proving(envelope.clone()) {
+                            Ok(reply) => {
+                                debug!("Sending reply: {:?}", reply);
+                                counter!("zkmr_worker_tasks_processed_total").increment(1);
 
-                if let DownstreamPayload::Todo { envelope } = downstream_payload {
-                    reply = process_downstream_payload(provers_manager, envelope)?;
-                }
+                                ws_socket.send(Message::Text(serde_json::to_string(
+                                    &UpstreamPayload::Done(reply),
+                                )?))?;
+                                counter!("zkmr_worker_websocket_messages_sent_total", "message_type" => "text")
+                                    .increment(1);
+                            }
+                            Err(e) => {
+                                let filename = format!("{}.json", envelope.task_id);
+                                if let Err(e) = std::fs::File::create(&filename)
+                                    .map(|mut f| f.write_all(content.as_bytes()))
+                                {
+                                    error!("failed to store failing inputs: {e:?}")
+                                }
 
-                if let Some(reply) = reply {
-                    ws_socket.send(Message::Text(serde_json::to_string(
-                        &UpstreamPayload::Done(reply),
-                    )?))?;
-
-                    counter!("zkmr_worker_websocket_messages_sent_total", "message_type" => "text")
-                        .increment(1);
+                                error!(
+                                    "error processing task, (envelope saved in `{}`): {:?}",
+                                    filename, e
+                                );
+                                counter!("zkmr_worker_error_count", "error_type" =>  "proof processing").increment(1);
+                            }
+                        }
+                    }
+                    DownstreamPayload::Ack => bail!("unexpected ACK frame"),
                 }
             }
             Message::Ping(_) => {
