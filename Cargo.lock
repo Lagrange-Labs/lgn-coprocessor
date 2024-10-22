@@ -3098,7 +3098,7 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8#e72e1f84edf24d96415ca1df1df49ffd139e9568"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64#013fd64862e6b214d4e5745924fafdd40500098c"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3129,17 +3129,17 @@ dependencies = [
 [[package]]
 name = "groth16_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8#e72e1f84edf24d96415ca1df1df49ffd139e9568"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64#013fd64862e6b214d4e5745924fafdd40500098c"
 dependencies = [
  "alloy",
  "anyhow",
- "gnark-utils 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8)",
+ "gnark-utils 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64)",
  "hex",
  "log",
  "mp2_common",
  "plonky2",
  "plonky2x",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8)",
+ "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64)",
  "revm",
  "rlp",
  "serde",
@@ -3917,7 +3917,7 @@ dependencies = [
  "checksums",
  "eth_trie 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ethers 2.0.14",
- "groth16_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8)",
+ "groth16_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64)",
  "groth16_framework 0.1.0 (git+https://github.com/Lagrange-Labs/Euclid-database.git)",
  "hex",
  "lgn-messages",
@@ -4280,7 +4280,7 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "mp2_common"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8#e72e1f84edf24d96415ca1df1df49ffd139e9568"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64#013fd64862e6b214d4e5745924fafdd40500098c"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4307,7 +4307,7 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8#e72e1f84edf24d96415ca1df1df49ffd139e9568"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64#013fd64862e6b214d4e5745924fafdd40500098c"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4326,7 +4326,7 @@ dependencies = [
  "plonky2_crypto",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8)",
+ "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64)",
  "rlp",
  "ryhope",
  "serde",
@@ -4732,7 +4732,7 @@ dependencies = [
 [[package]]
 name = "parsil"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8#e72e1f84edf24d96415ca1df1df49ffd139e9568"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64#013fd64862e6b214d4e5745924fafdd40500098c"
 dependencies = [
  "alloy",
  "anyhow",
@@ -5512,7 +5512,7 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8#e72e1f84edf24d96415ca1df1df49ffd139e9568"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64#013fd64862e6b214d4e5745924fafdd40500098c"
 dependencies = [
  "anyhow",
  "log",
@@ -6076,7 +6076,7 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8#e72e1f84edf24d96415ca1df1df49ffd139e9568"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64#013fd64862e6b214d4e5745924fafdd40500098c"
 dependencies = [
  "anyhow",
  "bb8",
@@ -7545,7 +7545,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "verifiable-db"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8#e72e1f84edf24d96415ca1df1df49ffd139e9568"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64#013fd64862e6b214d4e5745924fafdd40500098c"
 dependencies = [
  "alloy",
  "anyhow",
@@ -7559,7 +7559,7 @@ dependencies = [
  "plonky2_ecdsa",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=e72e1f8)",
+ "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=013fd64)",
  "ryhope",
  "serde",
 ]

@@ -252,6 +252,7 @@ impl<T> Display for UpstreamPayload<T> {
             UpstreamPayload::Done(_) => write!(f, "Task done"),
             UpstreamPayload::Authentication { .. } => write!(f, "Authentication"),
             UpstreamPayload::Ready => write!(f, "Ready"),
+            UpstreamPayload::ProvingError(_) => write!(f, "Proving error"),
         }
     }
 }

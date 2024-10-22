@@ -490,12 +490,11 @@ where
                                 UpstreamPayload::Done(reply)
                             }
                             Err(e) => {
+                                let filename = format!("{}.json", envelope.task_id);
                                 error!(
-                                    "error processing task, (envelope saved
-                                    in `{}`): {:?}",
+                                    "error processing task; attempting to save envelope in `{}`: {:?}",
                                     filename, e
                                 );
-                                let filename = format!("{}.json", envelope.task_id);
                                 if let Err(e) = std::fs::File::create(&filename)
                                     .map(|mut f| f.write_all(content.as_bytes()))
                                 {
