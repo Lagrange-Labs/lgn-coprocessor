@@ -48,6 +48,8 @@ mod manager;
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
 
+const MAX_GRPC_MESSAGE_SIZE_MB: usize = 16;
+
 #[derive(Parser, Clone, Debug)]
 struct Cli {
     #[clap(short, long)]
@@ -207,7 +209,12 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
     let channel = tonic::transport::Channel::builder(uri).connect().await?;
     let token: MetadataValue<_> = format!("Bearer {token}").parse()?;
 
-    let message_size = 64 * 1024 * 1024;
+    let max_message_size = config
+        .avs
+        .max_grpc_message_size_mb
+        .unwrap_or(MAX_GRPC_MESSAGE_SIZE_MB)
+        * 1024
+        * 1024;
 
     let mut client = lagrange::workers_service_client::WorkersServiceClient::with_interceptor(
         channel,
@@ -216,8 +223,8 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
             Ok(req)
         },
     )
-    .max_decoding_message_size(message_size)
-    .max_encoding_message_size(message_size);
+    .max_decoding_message_size(max_message_size)
+    .max_encoding_message_size(max_message_size);
 
     let response = client
         .worker_to_gw(tonic::Request::new(outbound_rx))

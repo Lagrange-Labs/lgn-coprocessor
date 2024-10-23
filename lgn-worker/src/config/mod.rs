@@ -93,6 +93,7 @@ pub(crate) struct WorkerConfig {
 pub(crate) struct AvsConfig {
     pub(crate) gateway_url: String,
     pub(crate) gateway_grpc_url: Option<String>,
+    pub(crate) max_grpc_message_size_mb: Option<usize>,
     pub(crate) issuer: String,
     pub(crate) worker_id: String,
     pub(crate) lagr_keystore: Option<String>,
