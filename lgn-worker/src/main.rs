@@ -498,12 +498,20 @@ where
                                 }
                             },
                             Err(panic) => {
-                                error!("panic encoutered during proving: {panic:?}");
+                                let msg = match panic.downcast_ref::<&'static str>() {
+                                    Some(s) => *s,
+                                    None => match panic.downcast_ref::<String>() {
+                                        Some(s) => &s[..],
+                                        None => "Box<dyn Any>",
+                                    },
+                                };
+
+                                error!("panic encountered during proving: {msg}");
                                 counter!("zkmr_worker_error_count",
                                     "error_type" => "proof
                                     processing")
                                 .increment(1);
-                                UpstreamPayload::ProvingError(format!("{panic:?}"))
+                                UpstreamPayload::ProvingError(msg.to_string())
                             }
                         };
                         counter!("zkmr_worker_websocket_messages_sent_total",
