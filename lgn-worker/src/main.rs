@@ -487,10 +487,6 @@ where
                                 Ok(reply) => {
                                     debug!("Sending reply: {:?}", reply);
                                     counter!("zkmr_worker_tasks_processed_total").increment(1);
-
-                                    counter!("zkmr_worker_websocket_messages_sent_total",
-                                    "message_type" => "text")
-                                    .increment(1);
                                     UpstreamPayload::Done(reply)
                                 }
                                 Err(e) => {
@@ -504,9 +500,16 @@ where
                             },
                             Err(panic) => {
                                 error!("panic encoutered during proving: {panic:?}");
+                                counter!("zkmr_worker_error_count",
+                                    "error_type" => "proof
+                                    processing")
+                                .increment(1);
                                 UpstreamPayload::ProvingError(format!("{panic:?}"))
                             }
                         };
+                        counter!("zkmr_worker_websocket_messages_sent_total",
+                                    "message_type" => "text")
+                        .increment(1);
                         ws_socket.send(Message::Text(serde_json::to_string(&reply)?))?;
                     }
                     DownstreamPayload::Ack => bail!("unexpected ACK frame"),
