@@ -498,6 +498,7 @@ where
                                 }
                             },
                             Err(panic) => {
+                                let bt = std::backtrace::Backtrace::force_capture();
                                 let msg = match panic.downcast_ref::<&'static str>() {
                                     Some(s) => *s,
                                     None => match panic.downcast_ref::<String>() {
@@ -506,12 +507,12 @@ where
                                     },
                                 };
 
-                                error!("panic encountered during proving: {msg}");
+                                error!("panic encountered during proving: {msg}: {bt:?}",);
                                 counter!("zkmr_worker_error_count",
                                     "error_type" => "proof
                                     processing")
                                 .increment(1);
-                                UpstreamPayload::ProvingError(msg.to_string())
+                                UpstreamPayload::ProvingError(format!("{}: {bt:?}", msg))
                             }
                         };
                         counter!("zkmr_worker_websocket_messages_sent_total",
