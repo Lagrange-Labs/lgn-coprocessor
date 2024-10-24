@@ -9,6 +9,7 @@ use metrics::counter;
 use mimalloc::MiMalloc;
 use std::fmt::Debug;
 use std::net::TcpStream;
+use std::panic::{RefUnwindSafe, UnwindSafe};
 use std::result::Result::Ok;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::BTreeMap, panic, str::FromStr};
@@ -263,16 +264,16 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
 }
 
 fn process_downstream_payload<T, R>(
-    provers_manager: &mut ProversManager<T, R>,
+    provers_manager: &ProversManager<T, R>,
     envelope: MessageEnvelope<T>,
 ) -> Result<Option<MessageReplyEnvelope<R>>>
 where
-    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone,
+    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone + UnwindSafe,
     R: Serialize + Debug + Clone,
 {
     debug!("Received task: {:?}", envelope);
     counter!("zkmr_worker_tasks_received_total").increment(1);
-    match provers_manager.delegate_proving(envelope) {
+    match provers_manager.delegate_proving(&envelope) {
         Ok(reply) => {
             debug!("Sending reply: {:?}", reply);
             counter!("zkmr_worker_tasks_processed_total").increment(1);
@@ -453,7 +454,7 @@ fn start_work<T, R>(
     provers_manager: &mut ProversManager<T, R>,
 ) -> Result<()>
 where
-    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone,
+    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone + UnwindSafe + RefUnwindSafe,
     R: Serialize + Debug + Clone,
 {
     info!("ready to work");
@@ -474,25 +475,47 @@ where
                 counter!("zkmr_worker_websocket_messages_received_total", "message_type" => "text")
                     .increment(1);
 
-                let downstream_payload = serde_json::from_str::<DownstreamPayload<T>>(&content)?;
-                let mut reply = None;
-
-                if let DownstreamPayload::Todo { envelope } = downstream_payload {
-                    reply = process_downstream_payload(provers_manager, envelope)?;
-                }
-
-                if let Some(reply) = reply {
-                    ws_socket.send(Message::Text(serde_json::to_string(
-                        &UpstreamPayload::Done(reply),
-                    )?))?;
-
-                    counter!("zkmr_worker_websocket_messages_sent_total", "message_type" => "text")
+                match serde_json::from_str::<DownstreamPayload<T>>(&content)? {
+                    DownstreamPayload::Todo { envelope } => {
+                        debug!("Received task: {:?}", envelope);
+                        counter!("zkmr_worker_tasks_received_total").increment(1);
+                        let reply = match std::panic::catch_unwind(|| {
+                            provers_manager.delegate_proving(&envelope)
+                        }) {
+                            Ok(result) => match result {
+                                Ok(reply) => {
+                                    debug!("Sending reply: {:?}", reply);
+                                    counter!("zkmr_worker_tasks_processed_total").increment(1);
+                                    UpstreamPayload::Done(reply)
+                                }
+                                Err(e) => {
+                                    error!("error encoutered during proving: {e:?}");
+                                    counter!("zkmr_worker_error_count",
+                                    "error_type" => "proof
+                                    processing")
+                                    .increment(1);
+                                    UpstreamPayload::ProvingError(format!("{e:?}"))
+                                }
+                            },
+                            Err(panic) => {
+                                error!("panic encoutered during proving: {panic:?}");
+                                counter!("zkmr_worker_error_count",
+                                    "error_type" => "proof
+                                    processing")
+                                .increment(1);
+                                UpstreamPayload::ProvingError(format!("{panic:?}"))
+                            }
+                        };
+                        counter!("zkmr_worker_websocket_messages_sent_total",
+                                    "message_type" => "text")
                         .increment(1);
+                        ws_socket.send(Message::Text(serde_json::to_string(&reply)?))?;
+                    }
+                    DownstreamPayload::Ack => bail!("unexpected ACK frame"),
                 }
             }
             Message::Ping(_) => {
                 debug!("Received ping or close message");
-
                 counter!("zkmr_worker_websocket_messages_received_total", "message_type" => "ping")
                     .increment(1);
             }

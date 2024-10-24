@@ -14,8 +14,8 @@ pub struct Query<P> {
 
 impl<P: QueryProver> LgnProver<TaskType, ReplyType> for Query<P> {
     fn run(
-        &mut self,
-        envelope: MessageEnvelope<TaskType>,
+        &self,
+        envelope: &MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         self.run_inner(envelope)
     }
@@ -27,8 +27,8 @@ impl<P: QueryProver> Query<P> {
     }
 
     pub(crate) fn run_inner(
-        &mut self,
-        envelope: MessageEnvelope<TaskType>,
+        &self,
+        envelope: &MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
@@ -43,7 +43,7 @@ impl<P: QueryProver> Query<P> {
     }
 
     fn process_task(
-        &mut self,
+        &self,
         chain_id: u64,
         query_id: String,
         task: &WorkerTask,

@@ -241,6 +241,9 @@ pub enum UpstreamPayload<T> {
 
     /// the workers sends back a proof for the given task ID
     Done(MessageReplyEnvelope<T>),
+
+    /// the worker encountered an error when computing the proof
+    ProvingError(String),
 }
 
 impl<T> Display for UpstreamPayload<T> {
@@ -249,6 +252,7 @@ impl<T> Display for UpstreamPayload<T> {
             UpstreamPayload::Done(_) => write!(f, "Task done"),
             UpstreamPayload::Authentication { .. } => write!(f, "Authentication"),
             UpstreamPayload::Ready => write!(f, "Ready"),
+            UpstreamPayload::ProvingError(_) => write!(f, "Proving error"),
         }
     }
 }

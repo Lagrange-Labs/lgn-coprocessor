@@ -16,8 +16,8 @@ pub struct Query<P> {
 
 impl<P: QueryProver> LgnProver<TaskType, ReplyType> for Query<P> {
     fn run(
-        &mut self,
-        envelope: MessageEnvelope<TaskType>,
+        &self,
+        envelope: &MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         self.run_inner(envelope)
     }
@@ -29,15 +29,15 @@ impl<P: QueryProver> Query<P> {
     }
 
     pub(crate) fn run_inner(
-        &mut self,
-        envelope: MessageEnvelope<TaskType>,
+        &self,
+        envelope: &MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         if let TaskType::Erc20Query(task) = envelope.inner() {
             let reply = self.process_task(envelope.query_id.clone(), task)?;
             let reply_type = ReplyType::Erc20Query(reply);
             Ok(MessageReplyEnvelope::new(
-                envelope.query_id,
-                envelope.task_id,
+                envelope.query_id.to_owned(),
+                envelope.task_id.to_owned(),
                 reply_type,
             ))
         } else {
@@ -45,7 +45,7 @@ impl<P: QueryProver> Query<P> {
         }
     }
 
-    fn process_task(&mut self, query_id: String, task: &WorkerTask) -> anyhow::Result<WorkerReply> {
+    fn process_task(&self, query_id: String, task: &WorkerTask) -> anyhow::Result<WorkerReply> {
         let proof = match &task.task_type {
             WorkerTaskType::StorageEntry(input) => match input {
                 StorageData::StorageLeaf(data) => {

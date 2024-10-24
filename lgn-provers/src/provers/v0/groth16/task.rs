@@ -12,8 +12,8 @@ use tracing::{debug, info};
 
 impl<GP: Prover> LgnProver<TaskType, ReplyType> for Groth16<GP> {
     fn run(
-        &mut self,
-        envelope: MessageEnvelope<TaskType>,
+        &self,
+        envelope: &MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         self.run_inner(envelope)
     }
@@ -30,8 +30,8 @@ impl<GP: Prover> Groth16<GP> {
     }
 
     pub(crate) fn run_inner(
-        &mut self,
-        envelope: MessageEnvelope<TaskType>,
+        &self,
+        envelope: &MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
@@ -46,7 +46,7 @@ impl<GP: Prover> Groth16<GP> {
     }
 
     fn process_task(
-        &mut self,
+        &self,
         query_id: String,
         task_id: String,
         task: &WorkerTask,
@@ -61,7 +61,7 @@ impl<GP: Prover> Groth16<GP> {
 
     /// Generate the Groth proof.
     fn generate_proof(
-        &mut self,
+        &self,
         query_id: &str,
         task_id: &str,
         aggregated_proof: &[u8],
@@ -112,7 +112,7 @@ mod tests {
 
         // Create a test Groth16 task runner.
 
-        let mut runner = create_prover(
+        let runner = create_prover(
             "url",
             "dir",
             "test",
