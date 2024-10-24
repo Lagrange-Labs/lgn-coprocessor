@@ -43,15 +43,15 @@ where
     /// # Returns
     /// A message reply envelope containing the result of the proving task
     pub(crate) fn delegate_proving(
-        &mut self,
-        envelope: MessageEnvelope<T>,
+        &self,
+        envelope: &MessageEnvelope<T>,
     ) -> anyhow::Result<MessageReplyEnvelope<R>> {
         let prover_type: ProverType = envelope.inner.to_prover_type();
 
         counter!("zkmr_worker_tasks_received_total", "task_type" => prover_type.to_string())
             .increment(1);
 
-        match self.provers.get_mut(&prover_type) {
+        match self.provers.get(&prover_type) {
             Some(prover) => {
                 debug!("Running prover for task type: {prover_type:?}");
 

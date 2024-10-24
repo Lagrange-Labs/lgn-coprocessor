@@ -13,5 +13,5 @@ pub trait LgnProver<T, R> {
     ///
     /// # Returns
     /// The result of processing the task as a [`MessageReplyEnvelope`].
-    fn run(&mut self, envelope: MessageEnvelope<T>) -> anyhow::Result<MessageReplyEnvelope<R>>;
+    fn run(&self, envelope: &MessageEnvelope<T>) -> anyhow::Result<MessageReplyEnvelope<R>>;
 }

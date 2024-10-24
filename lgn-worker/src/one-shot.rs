@@ -69,7 +69,7 @@ fn main() -> Result<()> {
 
     match serde_json::from_str::<DownstreamPayload<TaskType>>(&content)? {
         DownstreamPayload::Todo { envelope } => {
-            provers_manager.delegate_proving(envelope)?;
+            provers_manager.delegate_proving(&envelope)?;
         }
         DownstreamPayload::Ack => bail!("unexpected ACK frame"),
     };
