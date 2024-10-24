@@ -503,7 +503,7 @@ where
                                 }
                             },
                             Err(panic) => {
-                                error!("panic encoutered during proving: {e:?}");
+                                error!("panic encoutered during proving: {panic:?}");
                                 UpstreamPayload::ProvingError(format!("{panic:?}"))
                             }
                         };
