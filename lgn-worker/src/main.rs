@@ -264,16 +264,16 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
 }
 
 fn process_downstream_payload<T, R>(
-    provers_manager: &mut ProversManager<T, R>,
+    provers_manager: &ProversManager<T, R>,
     envelope: MessageEnvelope<T>,
 ) -> Result<Option<MessageReplyEnvelope<R>>>
 where
-    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone,
+    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone + UnwindSafe,
     R: Serialize + Debug + Clone,
 {
     debug!("Received task: {:?}", envelope);
     counter!("zkmr_worker_tasks_received_total").increment(1);
-    match provers_manager.delegate_proving(envelope) {
+    match provers_manager.delegate_proving(&envelope) {
         Ok(reply) => {
             debug!("Sending reply: {:?}", reply);
             counter!("zkmr_worker_tasks_processed_total").increment(1);
@@ -482,7 +482,6 @@ where
                         let reply = match std::panic::catch_unwind(|| {
                             provers_manager.delegate_proving(&envelope)
                         }) {
-                            // let reply = match provers_manager.delegate_proving(envelope.clone()) {
                             Ok(result) => match result {
                                 Ok(reply) => {
                                     debug!("Sending reply: {:?}", reply);
