@@ -5,20 +5,26 @@ use anyhow::bail;
 use lgn_messages::types::{MessageEnvelope, MessageReplyEnvelope, ProverType, ToProverType};
 use lgn_provers::provers::LgnProver;
 use metrics::{counter, histogram};
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    panic::{RefUnwindSafe, UnwindSafe},
+};
 use tracing::debug;
 
 /// Manages provers for different proving task types
 pub(crate) struct ProversManager<T, R>
 where
-    T: ToProverType,
+    T: ToProverType + UnwindSafe,
 {
     provers: HashMap<ProverType, Box<dyn LgnProver<T, R>>>,
 }
 
+impl<T: ToProverType + UnwindSafe, R> UnwindSafe for ProversManager<T, R> {}
+impl<T: ToProverType + UnwindSafe, R> RefUnwindSafe for ProversManager<T, R> {}
+
 impl<T, R> ProversManager<T, R>
 where
-    T: ToProverType,
+    T: ToProverType + UnwindSafe,
 {
     pub(crate) fn new() -> Self {
         Self {

@@ -8,8 +8,8 @@ use lagrange::{WorkerDone, WorkerToGwRequest, WorkerToGwResponse};
 use metrics::counter;
 use mimalloc::MiMalloc;
 use std::fmt::Debug;
-use std::io::Write;
 use std::net::TcpStream;
+use std::panic::{RefUnwindSafe, UnwindSafe};
 use std::result::Result::Ok;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::BTreeMap, panic, str::FromStr};
@@ -454,7 +454,7 @@ fn start_work<T, R>(
     provers_manager: &mut ProversManager<T, R>,
 ) -> Result<()>
 where
-    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone,
+    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone + UnwindSafe + RefUnwindSafe,
     R: Serialize + Debug + Clone,
 {
     info!("ready to work");
@@ -479,33 +479,32 @@ where
                     DownstreamPayload::Todo { envelope } => {
                         debug!("Received task: {:?}", envelope);
                         counter!("zkmr_worker_tasks_received_total").increment(1);
-                        let reply = match provers_manager.delegate_proving(envelope.clone()) {
-                            Ok(reply) => {
-                                debug!("Sending reply: {:?}", reply);
-                                counter!("zkmr_worker_tasks_processed_total").increment(1);
+                        let reply = match std::panic::catch_unwind(|| {
+                            provers_manager.delegate_proving(&envelope)
+                        }) {
+                            // let reply = match provers_manager.delegate_proving(envelope.clone()) {
+                            Ok(result) => match result {
+                                Ok(reply) => {
+                                    debug!("Sending reply: {:?}", reply);
+                                    counter!("zkmr_worker_tasks_processed_total").increment(1);
 
-                                counter!("zkmr_worker_websocket_messages_sent_total",
+                                    counter!("zkmr_worker_websocket_messages_sent_total",
                                     "message_type" => "text")
-                                .increment(1);
-                                UpstreamPayload::Done(reply)
-                            }
-                            Err(e) => {
-                                let filename = format!("{}.json", envelope.task_id);
-                                error!(
-                                    "error processing task; attempting to save envelope in `{}`: {:?}",
-                                    filename, e
-                                );
-                                if let Err(e) = std::fs::File::create(&filename)
-                                    .map(|mut f| f.write_all(content.as_bytes()))
-                                {
-                                    error!("failed to store failing inputs: {e:?}")
+                                    .increment(1);
+                                    UpstreamPayload::Done(reply)
                                 }
-
-                                counter!("zkmr_worker_error_count",
+                                Err(e) => {
+                                    error!("error encoutered during proving: {e:?}");
+                                    counter!("zkmr_worker_error_count",
                                     "error_type" => "proof
                                     processing")
-                                .increment(1);
-                                UpstreamPayload::ProvingError(format!("{e:?}"))
+                                    .increment(1);
+                                    UpstreamPayload::ProvingError(format!("{e:?}"))
+                                }
+                            },
+                            Err(panic) => {
+                                error!("panic encoutered during proving: {e:?}");
+                                UpstreamPayload::ProvingError(format!("{panic:?}"))
                             }
                         };
                         ws_socket.send(Message::Text(serde_json::to_string(&reply)?))?;
