@@ -279,7 +279,7 @@ impl FinalExtraction {
                 mapping_table_hash,
                 block_nr,
                 contract,
-                Some(TableDimension::Single),
+                Some(TableDimension::Compound),
                 table_value_proof_version,
             ),
             simple: SingleTableExtraction::new(
