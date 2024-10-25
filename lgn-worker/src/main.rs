@@ -266,26 +266,48 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
 fn process_downstream_payload<T, R>(
     provers_manager: &ProversManager<T, R>,
     envelope: MessageEnvelope<T>,
-) -> Result<Option<MessageReplyEnvelope<R>>>
+) -> std::result::Result<MessageReplyEnvelope<R>, String>
 where
-    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone + UnwindSafe,
+    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone + UnwindSafe + RefUnwindSafe,
     R: Serialize + Debug + Clone,
 {
     debug!("Received task: {:?}", envelope);
     counter!("zkmr_worker_tasks_received_total").increment(1);
-    match provers_manager.delegate_proving(&envelope) {
-        Ok(reply) => {
-            debug!("Sending reply: {:?}", reply);
-            counter!("zkmr_worker_tasks_processed_total").increment(1);
-            return Ok(Some(reply));
-        }
-        Err(e) => {
-            error!("Error processing task: {:?}", e);
-            counter!("zkmr_worker_error_count", "error_type" =>  "proof processing").increment(1);
+    match std::panic::catch_unwind(|| provers_manager.delegate_proving(&envelope)) {
+        Ok(result) => match result {
+            Ok(reply) => {
+                debug!("Sending reply: {:?}", reply);
+                counter!("zkmr_worker_tasks_processed_total").increment(1);
+                Ok(reply)
+            }
+            Err(e) => {
+                error!("Error processing task: {:?}", e);
+                counter!("zkmr_worker_error_count", "error_type" =>  "proof processing")
+                    .increment(1);
+
+                Err(format!("{e:?}"))
+            }
+        },
+        Err(panic) => {
+            // TODO: we should probably discriminate between
+            // proving error and worker error
+            counter!("zkmr_worker_error_count",
+                                    "error_type" => "proof
+                                    processing")
+            .increment(1);
+
+            let msg = match panic.downcast_ref::<&'static str>() {
+                Some(s) => *s,
+                None => match panic.downcast_ref::<String>() {
+                    Some(s) => &s[..],
+                    None => "Box<dyn Any>",
+                },
+            };
+
+            error!("panic encountered while proving {} : {msg}", envelope.id());
+            Err(format!("{}: {msg}", envelope.id()))
         }
     }
-
-    Ok(None)
 }
 
 async fn process_message_from_gateway(
@@ -300,21 +322,32 @@ async fn process_message_from_gateway(
                     serde_json::from_str::<MessageEnvelope<TaskType>>(json_document)?;
 
                 let reply = tokio::task::block_in_place(
-                    move || -> Result<Option<MessageReplyEnvelope<ReplyType>>> {
+                    move || -> Result<MessageReplyEnvelope<ReplyType>, String> {
                         process_downstream_payload(provers_manager, message_envelope)
                     },
-                )?;
+                );
 
-                if let Some(reply) = reply {
-                    let request = WorkerToGwRequest {
+                let outbound_msg = match reply {
+                    Ok(reply) => WorkerToGwRequest {
                         request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
                             WorkerDone {
                                 reply: Some(Reply::ReplyString(serde_json::to_string(&reply)?)),
                             },
                         )),
-                    };
-                    outbound.send(request).await?;
-                }
+                    },
+                    Err(error_str) => WorkerToGwRequest {
+                        request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
+                            WorkerDone {
+                                reply: Some(Reply::WorkerError(error_str)),
+                            },
+                        )),
+                    },
+                };
+                outbound.send(outbound_msg).await?;
+
+                counter!("zkmr_worker_grpc_messages_sent_total",
+                                    "message_type" => "text")
+                .increment(1);
             }
         },
         None => {
@@ -477,44 +510,12 @@ where
 
                 match serde_json::from_str::<DownstreamPayload<T>>(&content)? {
                     DownstreamPayload::Todo { envelope } => {
-                        debug!("Received task: {:?}", envelope);
-                        counter!("zkmr_worker_tasks_received_total").increment(1);
-                        let reply = match std::panic::catch_unwind(|| {
-                            provers_manager.delegate_proving(&envelope)
-                        }) {
-                            Ok(result) => match result {
-                                Ok(reply) => {
-                                    debug!("Sending reply: {:?}", reply);
-                                    counter!("zkmr_worker_tasks_processed_total").increment(1);
-                                    UpstreamPayload::Done(reply)
-                                }
-                                Err(e) => {
-                                    error!("error encoutered during proving: {e:?}");
-                                    counter!("zkmr_worker_error_count",
-                                    "error_type" => "proof
-                                    processing")
-                                    .increment(1);
-                                    UpstreamPayload::ProvingError(format!("{e:?}"))
-                                }
-                            },
-                            Err(panic) => {
-                                // TODO: we should probably discriminate between
-                                // proving error and worker error
-                                counter!("zkmr_worker_error_count",
-                                    "error_type" => "proof
-                                    processing")
-                                .increment(1);
-
-                                let msg = match panic.downcast_ref::<&'static str>() {
-                                    Some(s) => *s,
-                                    None => match panic.downcast_ref::<String>() {
-                                        Some(s) => &s[..],
-                                        None => "Box<dyn Any>",
-                                    },
-                                };
-
-                                error!("panic encountered while proving {} : {msg}", envelope.id());
-                                UpstreamPayload::ProvingError(format!("{}: {msg}", envelope.id()))
+                        let envelope_id = envelope.id();
+                        let reply = match process_downstream_payload(provers_manager, envelope) {
+                            Ok(reply) => UpstreamPayload::Done(reply),
+                            Err(msg) => {
+                                let var_name = format!("{}: {msg}", envelope_id);
+                                UpstreamPayload::ProvingError(var_name)
                             }
                         };
                         counter!("zkmr_worker_websocket_messages_sent_total",
