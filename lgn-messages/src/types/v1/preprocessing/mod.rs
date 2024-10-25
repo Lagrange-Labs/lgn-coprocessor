@@ -157,10 +157,6 @@ impl WorkerTaskType {
         )))
     }
 
-    /// Creates a Final extraction task.
-    ///
-    /// Note: If the extraction is used for a merge table, `table_id` should be set to the
-    /// `table_hash`.
     pub fn ext_final_extraction_simple(
         table_id: TableId,
         table_hash: TableHash,
@@ -202,20 +198,20 @@ impl WorkerTaskType {
 
     pub fn ext_final_extraction_merge(
         table_id: TableId,
+        simple_table_hash: TableHash,
+        mapping_table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
-        mapping_table_hash: u64,
-        simple_table_hash: u64,
-        table_value_proof_version: MptNodeVersion,
+        value_proof_version: MptNodeVersion,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
             FinalExtraction::new_merge_table(
                 table_id,
+                simple_table_hash,
+                mapping_table_hash,
                 block_nr,
                 contract,
-                mapping_table_hash,
-                simple_table_hash,
-                table_value_proof_version,
+                value_proof_version,
             ),
         )))
     }

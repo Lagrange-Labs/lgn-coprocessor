@@ -222,26 +222,21 @@ impl BlockExtractionInput {
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub enum FinalExtraction {
     Single(SingleTableExtraction),
-    /// Inputs for a merge table proof.
-    Merge {
-        table_id: TableId,
-        mapping: SingleTableExtraction,
-        simple: SingleTableExtraction,
-    },
+    Merge(MergeTableExtraction),
 }
 
 impl FinalExtraction {
     fn table_id(&self) -> BlockNr {
         match self {
             FinalExtraction::Single(single_table_extraction) => single_table_extraction.table_id,
-            FinalExtraction::Merge { table_id, .. } => *table_id,
+            FinalExtraction::Merge(merge_table_extraction) => merge_table_extraction.table_id,
         }
     }
 
     fn block_nr(&self) -> BlockNr {
         match self {
             FinalExtraction::Single(single_table_extraction) => single_table_extraction.block_nr,
-            FinalExtraction::Merge { mapping, .. } => mapping.block_nr,
+            FinalExtraction::Merge(merge_table_extraction) => merge_table_extraction.block_nr,
         }
     }
 
@@ -265,33 +260,20 @@ impl FinalExtraction {
 
     pub fn new_merge_table(
         table_id: TableId,
+        simple_table_hash: TableHash,
+        mapping_table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
-        mapping_table_hash: u64,
-        simple_table_hash: u64,
-        table_value_proof_version: MptNodeVersion,
+        value_proof_version: MptNodeVersion,
     ) -> Self {
-        Self::Merge {
+        Self::Merge(MergeTableExtraction::new(
             table_id,
-            mapping: SingleTableExtraction::new(
-                // use the table_hash as the table_id when the extraction is a sub-table
-                mapping_table_hash,
-                mapping_table_hash,
-                block_nr,
-                contract,
-                Some(TableDimension::Compound),
-                table_value_proof_version,
-            ),
-            simple: SingleTableExtraction::new(
-                // use the table_hash as the table_id when the extraction is a sub-table
-                simple_table_hash,
-                simple_table_hash,
-                block_nr,
-                contract,
-                Some(TableDimension::Single),
-                table_value_proof_version,
-            ),
-        }
+            simple_table_hash,
+            mapping_table_hash,
+            block_nr,
+            contract,
+            value_proof_version,
+        ))
     }
 }
 
@@ -299,14 +281,8 @@ impl FinalExtraction {
 ///
 /// # Identifiers
 ///
-/// A [SingleTableExtraction] is either a final or a sub extraction. Final extractions can be
-/// either a simple table, a mapping table, or a mapping table with length. A sub extraction is
-/// either a simple or a no-length mapping table, which is later used by a merge extraction.
-///
-/// When this extraction is final, `table_id` must match the table's unique identifier. Sub
-/// extractions on the other hand should use the `table_hash`.
-///
-/// The `table_hash` is used to match identify the value extraction.
+/// A [SingleTableExtraction] is either a final which binds together a block, contract, and a
+/// table. The table may be either a simple, mapping, or mapping with length
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct SingleTableExtraction {
     pub table_id: TableId,
@@ -354,6 +330,64 @@ impl SingleTableExtraction {
             contract_proof: vec![],
             value_proof: vec![],
             length_proof: vec![],
+        }
+    }
+}
+
+/// Inputs for a merge table proof.
+///
+/// # Identifiers
+///
+/// A [MergeTableExtraction] is a final extraction which binds together a block, contract, and its
+/// two sub-tables.
+#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+pub struct MergeTableExtraction {
+    pub table_id: TableId,
+    pub simple_table_hash: TableHash,
+    pub mapping_table_hash: TableHash,
+    pub block_nr: BlockNr,
+    pub contract: Address,
+
+    /// Determines the version of the storage node.
+    ///
+    /// The version is determined by the last block_nr at which the storage changed, and its hash.
+    /// A single value is necessary for the simple and mapping tables because the data comes from
+    /// the same contract.
+    pub value_proof_version: MptNodeVersion,
+
+    #[dbg(placeholder = "...")]
+    pub block_proof: Vec<u8>,
+
+    #[dbg(placeholder = "...")]
+    pub contract_proof: Vec<u8>,
+
+    #[dbg(placeholder = "...")]
+    pub simple_table_proof: Vec<u8>,
+
+    #[dbg(placeholder = "...")]
+    pub mapping_table_proof: Vec<u8>,
+}
+
+impl MergeTableExtraction {
+    pub fn new(
+        table_id: TableId,
+        simple_table_hash: TableHash,
+        mapping_table_hash: TableHash,
+        block_nr: BlockNr,
+        contract: Address,
+        value_proof_version: MptNodeVersion,
+    ) -> Self {
+        Self {
+            table_id,
+            simple_table_hash,
+            mapping_table_hash,
+            block_nr,
+            contract,
+            value_proof_version,
+            block_proof: vec![],
+            contract_proof: vec![],
+            simple_table_proof: vec![],
+            mapping_table_proof: vec![],
         }
     }
 }
