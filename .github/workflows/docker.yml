@@ -49,7 +49,7 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1
         run: |
-          docker build --tag base --file docker/base/Dockerfile . --platform linux/amd64 --build-arg INSTRUCTION_SET="x86-64-v3"
+          docker build --tag base:${{ github.sha }} --file docker/base/Dockerfile . --platform linux/amd64 --build-arg INSTRUCTION_SET="x86-64-v3"
   build:
     needs: base
     runs-on: ${{needs.base.outputs.RUNNER}}
@@ -86,7 +86,8 @@ jobs:
                   -t ${{ matrix.image }}:${{ github.sha }} \
                   -f ${{ matrix.docker_file }} . \
                   --platform ${{ matrix.platform }} \
-                  --build-arg INSTRUCTION_SET="x86-64-v3"
+                  --build-arg INSTRUCTION_SET="x86-64-v3" \
+                  --build-arg BASE_IMAGE_TAG=${{ github.sha }}
 
   lint:
     needs: base
@@ -96,10 +97,10 @@ jobs:
 
       - name: clippy
         run: |
-            docker run --rm base cargo clippy --all-targets --all -- -D warnings -A incomplete-features -A clippy::needless_return
+            docker run --rm base:${{ github.sha }} cargo clippy --all-targets --all -- -D warnings -A incomplete-features -A clippy::needless_return
       - name: fmt
         run: |
-            docker run --rm base cargo fmt --all -- --check
+            docker run --rm base:${{ github.sha }} cargo fmt --all -- --check
 
   test:
     needs: base
@@ -108,7 +109,7 @@ jobs:
     steps:
       - name: test
         run: |
-            docker run --rm base cargo test
+            docker run --rm base:${{ github.sha }} cargo test
 
   private-push:
     name: Push Docker Images to AWS
