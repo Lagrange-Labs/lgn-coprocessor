@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1.3-labs
 
 # Stage 1: Build the binary with caching
-FROM base as builder
+ARG BASE_IMAGE_TAG
+FROM base:${BASE_IMAGE_TAG} as builder
 
 ARG BUILD_FLAGS="--release"
 

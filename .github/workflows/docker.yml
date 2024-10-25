@@ -47,7 +47,7 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1
         run: |
-          docker build --tag base --file docker/base/Dockerfile . --platform linux/amd64 --build-arg INSTRUCTION_SET="x86-64-v3"
+          docker build --tag base:${{ github.sha }} --file docker/base/Dockerfile . --platform linux/amd64 --build-arg INSTRUCTION_SET="x86-64-v3"
   build:
     needs: base
     runs-on: ${{needs.base.outputs.RUNNER}}
@@ -84,7 +84,8 @@ jobs:
                   -t ${{ matrix.image }}:${{ github.sha }} \
                   -f ${{ matrix.docker_file }} . \
                   --platform ${{ matrix.platform }} \
-                  --build-arg INSTRUCTION_SET="x86-64-v3"
+                  --build-arg INSTRUCTION_SET="x86-64-v3" \
+                  --build-arg BASE_IMAGE_TAG=${{ github.sha }}
 
   lint:
     needs: base
