@@ -125,7 +125,12 @@ impl StorageExtractionProver for DummyProver {
 }
 
 impl StorageDatabaseProver for DummyProver {
-    fn prove_cell_leaf(&self, _identifier: u64, _value: U256) -> anyhow::Result<Vec<u8>> {
+    fn prove_cell_leaf(
+        &self,
+        _identifier: u64,
+        _value: U256,
+        _is_multiplier: bool,
+    ) -> anyhow::Result<Vec<u8>> {
         Ok(prove())
     }
 
@@ -133,6 +138,7 @@ impl StorageDatabaseProver for DummyProver {
         &self,
         _identifier: u64,
         _value: U256,
+        _is_multiplier: bool,
         _child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving cell partial");
@@ -143,6 +149,7 @@ impl StorageDatabaseProver for DummyProver {
         &self,
         _identifier: u64,
         _value: U256,
+        _is_multiplier: bool,
         _child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving cell full");
@@ -153,6 +160,7 @@ impl StorageDatabaseProver for DummyProver {
         &self,
         _identifier: u64,
         _value: U256,
+        _is_multiplier: bool,
         _cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving row leaf");
@@ -163,6 +171,7 @@ impl StorageDatabaseProver for DummyProver {
         &self,
         _identifier: u64,
         _value: U256,
+        _is_multiplier: bool,
         _is_child_left: bool,
         _child_proof: Vec<u8>,
         _cells_proof: Vec<u8>,
@@ -175,6 +184,7 @@ impl StorageDatabaseProver for DummyProver {
         &self,
         _identifier: u64,
         _value: U256,
+        _is_multiplier: bool,
         _child_proofs: Vec<Vec<u8>>,
         _cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {

@@ -159,28 +159,35 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
             },
             WorkerTaskType::Database(db) => match db {
                 DatabaseType::Cell(cell_type) => match cell_type {
-                    DbCellType::Leaf(leaf) => {
-                        self.prover.prove_cell_leaf(leaf.identifier, leaf.value)?
-                    }
+                    DbCellType::Leaf(leaf) => self.prover.prove_cell_leaf(
+                        leaf.identifier,
+                        leaf.value,
+                        leaf.is_multiplier,
+                    )?,
                     DbCellType::Partial(branch) => self.prover.prove_cell_partial(
                         branch.identifier,
                         branch.value,
+                        branch.is_multiplier,
                         branch.child_proof,
                     )?,
                     DbCellType::Full(full) => self.prover.prove_cell_full(
                         full.identifier,
                         full.value,
+                        full.is_multiplier,
                         full.child_proofs,
                     )?,
                 },
                 DatabaseType::Row(row_type) => match row_type {
-                    DbRowType::Leaf(leaf) => {
-                        self.prover
-                            .prove_row_leaf(leaf.identifier, leaf.value, leaf.cells_proof)?
-                    }
+                    DbRowType::Leaf(leaf) => self.prover.prove_row_leaf(
+                        leaf.identifier,
+                        leaf.value,
+                        leaf.is_multiplier,
+                        leaf.cells_proof,
+                    )?,
                     DbRowType::Partial(partial) => self.prover.prove_row_partial(
                         partial.identifier,
                         partial.value,
+                        partial.is_multiplier,
                         partial.is_child_left,
                         partial.child_proof,
                         partial.cells_proof,
@@ -188,6 +195,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                     DbRowType::Full(full) => self.prover.prove_row_full(
                         full.identifier,
                         full.value,
+                        full.is_multiplier,
                         full.child_proofs,
                         full.cells_proof,
                     )?,
