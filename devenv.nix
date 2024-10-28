@@ -57,7 +57,10 @@ let
 in
 
 {
-  cachix.enable = false;
+  cachix = {
+    enable = false;
+    pull = [];
+  };
 
   packages = [ pkgs.git pkgs.openssl pkgs.pkg-config ]
              ++ lib.optionals pkgs.stdenv.targetPlatform.isDarwin [
@@ -75,6 +78,9 @@ in
     toml-worker-avs.exec = "echo ${workerConfigFile}";
     toml-worker-lgn.exec = "echo ${lagrangeWorkerConfigFile}";
     generate-key-store.exec = "AVS__LAGR_PWD=${meta.keystore-password} cargo run --bin lgn-avs -- new-key -l ${meta.keystore-file}";
+
+    worker-lgn.exec = "RUST_LOG=warn,worker=debug cargo run --release --bin lgn-worker -- --config ${workerConfigFile}";
+    worker-lgn-dummy.exec = "RUST_LOG=warn,worker=debug cargo run --release -F dummy-prover --bin lgn-worker -- --config ${workerConfigFile}";
   };
 
   enterShell = ''
@@ -90,27 +96,6 @@ in
     rust = {
       enable = true;
       channel = "nightly";
-    };
-  };
-
-
-  processes = {
-    # avs-worker = {
-    #   exec = "cargo run --release --bin lgn-worker -- --config ${workerConfigFile}";
-    #   process-compose = {
-    #     environment = [
-    #       "RUST_LOG=warn,worker=debug"
-    #     ];
-    #   };
-    # };
-
-    lagrange-worker = {
-      exec = "cargo run --release --bin lgn-worker -- --config ${lagrangeWorkerConfigFile}";
-      process-compose = {
-        environment = [
-          "RUST_LOG=warn,worker=debug"
-        ];
-      };
     };
   };
 }
