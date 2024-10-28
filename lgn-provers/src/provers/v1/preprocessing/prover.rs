@@ -90,13 +90,19 @@ pub trait StorageExtractionProver {
 
 pub trait StorageDatabaseProver {
     /// Prove a cell tree leaf node.
-    fn prove_cell_leaf(&self, identifier: u64, value: U256) -> anyhow::Result<Vec<u8>>;
+    fn prove_cell_leaf(
+        &self,
+        identifier: u64,
+        value: U256,
+        is_multiplier: bool,
+    ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a cell tree partial branch node.
     fn prove_cell_partial(
         &self,
         identifier: u64,
         value: U256,
+        is_multiplier: bool,
         child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
 
@@ -105,6 +111,7 @@ pub trait StorageDatabaseProver {
         &self,
         identifier: u64,
         value: U256,
+        is_multiplier: bool,
         child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>>;
 
@@ -113,6 +120,7 @@ pub trait StorageDatabaseProver {
         &self,
         identifier: u64,
         value: U256,
+        is_multiplier: bool,
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
 
@@ -121,6 +129,7 @@ pub trait StorageDatabaseProver {
         &self,
         identifier: u64,
         value: U256,
+        is_multiplier: bool,
         is_child_left: bool,
         child_proof: Vec<u8>,
         cells_proof: Vec<u8>,
@@ -131,6 +140,7 @@ pub trait StorageDatabaseProver {
         &self,
         identifier: u64,
         value: U256,
+        is_multiplier: bool,
         child_proofs: Vec<Vec<u8>>,
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;

@@ -222,6 +222,7 @@ impl WorkerTaskType {
         cell_id: usize,
         identifier: Identifier,
         value: U256,
+        is_multiplier: bool,
     ) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::Cell(db_tasks::DbCellType::Leaf(
             CellLeafInput {
@@ -230,6 +231,7 @@ impl WorkerTaskType {
                 cell_id,
                 identifier,
                 value,
+                is_multiplier,
             },
         )))
     }
@@ -240,6 +242,7 @@ impl WorkerTaskType {
         cell_id: usize,
         identifier: Identifier,
         value: U256,
+        is_multiplier: bool,
         child_location: db_keys::ProofKey,
     ) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::Cell(db_tasks::DbCellType::Partial(
@@ -249,6 +252,7 @@ impl WorkerTaskType {
                 cell_id,
                 identifier,
                 value,
+                is_multiplier,
                 child_location,
                 child_proof: vec![],
             },
@@ -261,6 +265,7 @@ impl WorkerTaskType {
         cell_id: usize,
         identifier: Identifier,
         value: U256,
+        is_multiplier: bool,
         child_locations: Vec<db_keys::ProofKey>,
     ) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::Cell(db_tasks::DbCellType::Full(
@@ -270,6 +275,7 @@ impl WorkerTaskType {
                 cell_id,
                 identifier,
                 value,
+                is_multiplier,
                 child_locations,
                 child_proofs: vec![],
             },
@@ -281,6 +287,7 @@ impl WorkerTaskType {
         row_id: String,
         identifier: Identifier,
         value: U256,
+        is_multiplier: bool,
         cells_proof_location: Option<db_keys::ProofKey>,
     ) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::Row(db_tasks::DbRowType::Leaf(RowLeafInput {
@@ -288,6 +295,7 @@ impl WorkerTaskType {
             row_id,
             identifier,
             value,
+            is_multiplier,
             cells_proof_location,
             cells_proof: vec![],
         })))
@@ -298,6 +306,7 @@ impl WorkerTaskType {
         row_id: String,
         identifier: Identifier,
         value: U256,
+        is_multiplier: bool,
         is_child_left: bool,
         cells_proof_location: Option<db_keys::ProofKey>,
         child_proof_location: db_keys::ProofKey,
@@ -308,6 +317,7 @@ impl WorkerTaskType {
                 row_id,
                 identifier,
                 value,
+                is_multiplier,
                 is_child_left,
                 child_proof_location,
                 cells_proof_location,
@@ -322,6 +332,7 @@ impl WorkerTaskType {
         row_id: String,
         identifier: Identifier,
         value: U256,
+        is_multiplier: bool,
         cells_proof_location: Option<db_keys::ProofKey>,
         child_proofs_locations: Vec<db_keys::ProofKey>,
     ) -> WorkerTaskType {
@@ -331,6 +342,7 @@ impl WorkerTaskType {
                 row_id,
                 identifier,
                 value,
+                is_multiplier,
                 child_proofs_locations,
                 cells_proof_location,
                 child_proofs: vec![],

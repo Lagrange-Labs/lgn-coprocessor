@@ -40,6 +40,7 @@ pub struct CellLeafInput {
     pub cell_id: usize,
     pub identifier: Identifier,
     pub value: U256,
+    pub is_multiplier: bool,
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
@@ -49,6 +50,7 @@ pub struct CellPartialInput {
     pub cell_id: usize,
     pub identifier: Identifier,
     pub value: U256,
+    pub is_multiplier: bool,
     pub child_location: db_keys::ProofKey,
 
     #[dbg(placeholder = "...")]
@@ -62,6 +64,7 @@ pub struct CellFullInput {
     pub cell_id: usize,
     pub identifier: Identifier,
     pub value: U256,
+    pub is_multiplier: bool,
     pub child_locations: Vec<db_keys::ProofKey>,
 
     #[dbg(placeholder = "...")]
@@ -83,13 +86,10 @@ pub enum DbRowType {
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct RowLeafInput {
     pub table_id: TableId,
-
     pub row_id: String,
-
     pub identifier: Identifier,
-
     pub value: U256,
-
+    pub is_multiplier: bool,
     pub cells_proof_location: Option<db_keys::ProofKey>,
 
     #[dbg(placeholder = "...")]
@@ -102,6 +102,7 @@ pub struct RowPartialInput {
     pub row_id: String,
     pub identifier: Identifier,
     pub value: U256,
+    pub is_multiplier: bool,
     pub is_child_left: bool,
     pub child_proof_location: db_keys::ProofKey,
     pub cells_proof_location: Option<db_keys::ProofKey>,
@@ -119,6 +120,7 @@ pub struct RowFullInput {
     pub row_id: String,
     pub identifier: Identifier,
     pub value: U256,
+    pub is_multiplier: bool,
     pub child_proofs_locations: Vec<db_keys::ProofKey>,
     pub cells_proof_location: Option<db_keys::ProofKey>,
 
