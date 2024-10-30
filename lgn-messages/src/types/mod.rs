@@ -5,7 +5,6 @@ use std::fmt::{Display, Formatter};
 use thiserror::Error;
 
 pub mod experimental;
-pub mod v0;
 pub mod v1;
 
 const REQUIRED_STAKE_SMALL_USD: Stake = 98777;
@@ -25,10 +24,6 @@ pub type HashOutput = [u8; 32];
 pub enum TaskType {
     TxTrie(experimental::tx_trie::WorkerTask),
     RecProof(experimental::rec_proof::WorkerTask),
-    StoragePreprocess(v0::preprocessing::WorkerTask),
-    StorageQuery(v0::query::WorkerTask),
-    Erc20Query(v0::query::erc20::WorkerTask),
-    StorageGroth16(v0::groth16::WorkerTask),
     V1Preprocessing(v1::preprocessing::WorkerTask),
     V1Query(v1::query::WorkerTask),
     V1Groth16(v1::groth16::WorkerTask),
@@ -38,10 +33,6 @@ pub enum TaskType {
 pub enum ReplyType {
     TxTrie(experimental::tx_trie::WorkerReply),
     RecProof(experimental::rec_proof::WorkerReply),
-    StoragePreprocess(u64, WorkerReply),
-    StorageQuery(WorkerReply),
-    Erc20Query(WorkerReply),
-    StorageGroth16(WorkerReply),
     V1Preprocessing(WorkerReply),
     V1Query(WorkerReply),
     V1Groth16(WorkerReply),
@@ -300,10 +291,9 @@ impl TaskDifficulty {
     pub fn from_queue(domain: &str) -> Self {
         let domain = domain.split('_').next().expect("invalid routing key");
         match domain {
-            v0::preprocessing::ROUTING_DOMAIN => TaskDifficulty::Medium,
+            v1::preprocessing::ROUTING_DOMAIN => TaskDifficulty::Medium,
             v1::query::ROUTING_DOMAIN => TaskDifficulty::Small,
-            // NOTE: v0 and v1 groth16 have the same routing domain?
-            v0::groth16::ROUTING_DOMAIN => TaskDifficulty::Large,
+            v1::groth16::ROUTING_DOMAIN => TaskDifficulty::Large,
             _ => panic!("unknown routing domain"),
         }
     }
@@ -389,10 +379,6 @@ pub trait ToProverType {
 impl ToProverType for TaskType {
     fn to_prover_type(&self) -> ProverType {
         match self {
-            TaskType::StoragePreprocess(_) => ProverType::Query2Preprocess,
-            TaskType::StorageQuery(_) => ProverType::Query2Query,
-            TaskType::StorageGroth16(_) => ProverType::Query2Groth16,
-            TaskType::Erc20Query(_) => ProverType::Query2Groth16,
             TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
             TaskType::V1Query(_) => ProverType::V1Query,
             TaskType::V1Groth16(_) => ProverType::V1Groth16,

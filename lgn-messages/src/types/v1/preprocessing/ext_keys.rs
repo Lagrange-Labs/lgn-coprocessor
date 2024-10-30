@@ -1,6 +1,6 @@
-use crate::types::v0::preprocessing::keys::{BlockNr, TableHash, TableId};
 use crate::types::v1::preprocessing::ext_tasks::MptNodeVersion;
 use crate::types::v1::preprocessing::KEYS_PREPROCESSING_PREFIX;
+use crate::{BlockNr, TableHash, TableId};
 use alloy_primitives::Address;
 use object_store::path::Path;
 use serde_derive::{Deserialize, Serialize};

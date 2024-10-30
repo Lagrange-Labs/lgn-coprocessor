@@ -3,7 +3,6 @@ use ethers::prelude::H256;
 use mp2_common::digest::TableDimension;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::types::v0::preprocessing::keys::{BlockNr, TableHash, TableId};
 use crate::types::v1::preprocessing::db_tasks::{
     CellFullInput, CellLeafInput, CellPartialInput, DatabaseType, IvcInput, RowLeafInput,
 };
@@ -12,6 +11,7 @@ use crate::types::v1::preprocessing::ext_tasks::{
     MappingBranchInput, MappingLeafInput, Mpt, MptNodeVersion, MptType, VariableBranchInput,
     VariableLeafInput,
 };
+use crate::{BlockNr, TableHash, TableId};
 
 pub mod db_keys;
 pub mod db_tasks;
@@ -19,6 +19,7 @@ pub mod ext_keys;
 pub mod ext_tasks;
 
 const KEYS_PREPROCESSING_PREFIX: &str = "V1_PREPROCESSING";
+pub const ROUTING_DOMAIN: &str = "sp";
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct WorkerTask {
