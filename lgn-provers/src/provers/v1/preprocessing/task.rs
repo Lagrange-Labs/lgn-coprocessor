@@ -25,7 +25,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
-        if let TaskType::V1Preprocessing(task @ WorkerTask { chain_id, .. }) = envelope.inner {
+        if let TaskType::V1Preprocessing(task @ WorkerTask { chain_id, .. }) = &envelope.inner {
             let key = match &task.task_type {
                 WorkerTaskType::Extraction(_) => {
                     let key: ext_keys::ProofKey = task.into();
@@ -36,9 +36,9 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
                     key.to_string()
                 }
             };
-            let result = self.run_inner(task)?;
+            let result = self.run_inner(task.clone())?;
             let reply_type = ReplyType::V1Preprocessing(WorkerReply::new(
-                chain_id,
+                chain_id.clone(),
                 Some((key, result)),
                 ProofCategory::Querying,
             ));
@@ -53,7 +53,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
         Self { prover }
     }
 
-    pub fn run_inner(&mut self, task: WorkerTask) -> anyhow::Result<Vec<u8>> {
+    pub fn run_inner(&self, task: WorkerTask) -> anyhow::Result<Vec<u8>> {
         Ok(match task.task_type {
             WorkerTaskType::Extraction(extraction) => match extraction {
                 ExtractionType::MptExtraction(mpt) => match &mpt.mpt_type {

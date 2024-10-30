@@ -95,14 +95,9 @@ fn setup_logging(json: bool) {
     };
 }
 
-<<<<<<< HEAD
-fn main() {
-=======
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
->>>>>>> main
     let cli = Cli::parse();
-
     setup_logging(cli.json);
 
     panic::set_hook(Box::new(|panic_info| {
@@ -128,19 +123,21 @@ async fn main() -> anyhow::Result<()> {
         );
     }));
 
-<<<<<<< HEAD
-    if let Err(err) = run(cli) {
+    if let Err(err) = run(cli).await {
         error!("Service exiting with an error. err: {:?}", err);
+        bail!("Worker exited due to an error")
+    } else {
+        Ok(())
     }
 }
 
-fn run(cli: Cli) -> Result<()> {
+async fn run(cli: Cli) -> Result<()> {
     let version = env!("CARGO_PKG_VERSION");
     info!("Starting worker. version: {}", version);
 
     let config = Config::load(cli.config);
     config.validate();
-    info!("Loaded configuration. config: {:?}", config);
+    info!("Loaded configuration: {:?}", config);
 
     let span = span!(
         Level::INFO,
@@ -152,33 +149,15 @@ fn run(cli: Cli) -> Result<()> {
     );
     let _guard = span.enter();
 
-    if let Err(err) = metrics_exporter_prometheus::PrometheusBuilder::new()
-        .with_http_listener(([0, 0, 0, 0], config.prometheus.port))
-        .install()
-    {
-        bail!("Creating prometheus metrics failed. err: {:?}", err);
-    }
-
-    let lagrange_wallet = match (
-=======
-    let config = Config::load(cli.config);
-    config.validate();
-    info!("Loaded configuration: {:?}", config);
-
     metrics_exporter_prometheus::PrometheusBuilder::new()
         .with_http_listener(([0, 0, 0, 0], config.prometheus.port))
         .install()?;
 
     if let Some(grpc_url) = &config.avs.gateway_grpc_url {
-        run_with_grpc(&config, grpc_url).await?;
+        run_with_grpc(&config, grpc_url).await
     } else {
-        tokio::task::block_in_place(move || -> Result<()> {
-            run(&config)?;
-            Ok(())
-        })?;
+        tokio::task::block_in_place(move || run_with_websocket(&config))
     }
-
-    Ok(())
 }
 
 async fn maybe_download_checksum(config: &Config) -> Result<()> {
@@ -308,7 +287,16 @@ where
     T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone + UnwindSafe + RefUnwindSafe,
     R: Serialize + Debug + Clone,
 {
-    debug!("Received task: {:?}", envelope);
+    let span = span!(
+        Level::INFO,
+        "Received Task",
+        "query_id" = envelope.query_id,
+        "task_id" = envelope.task_id,
+        "db_id" = ?envelope.db_task_id,
+    );
+    let _guard = span.enter();
+
+    debug!("Received task. envelope: {:?}", envelope);
     counter!("zkmr_worker_tasks_received_total").increment(1);
     match std::panic::catch_unwind(|| provers_manager.delegate_proving(&envelope)) {
         Ok(result) => match result {
@@ -326,11 +314,10 @@ where
             }
         },
         Err(panic) => {
-            // TODO: we should probably discriminate between
-            // proving error and worker error
-            counter!("zkmr_worker_error_count",
-                                    "error_type" => "proof
-                                    processing")
+            counter!(
+                "zkmr_worker_error_count",
+                "error_type" => "proof_processing"
+            )
             .increment(1);
 
             let msg = match panic.downcast_ref::<&'static str>() {
@@ -396,7 +383,6 @@ async fn process_message_from_gateway(
 
 fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>> {
     let res = match (
->>>>>>> main
         &config.avs.lagr_keystore,
         &config.avs.lagr_pwd,
         &config.avs.lagr_private_key,
@@ -410,24 +396,10 @@ fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>> {
         _ => bail!("Must specify either keystore path w/ password OR private key"),
     };
 
-<<<<<<< HEAD
-    info!(
-        "Connecting to the gateway. url: {}",
-        &config.avs.gateway_url,
-    );
-
-    let url = url::Url::parse(&config.avs.gateway_url).context("Gateway URL is invalid")?;
-    let connection_request = url
-        .into_client_request()
-        .context("Gateway URL is invalid, not a websocket")?;
-
-    // Perform authentication
-=======
     Ok(res)
 }
 
 fn get_claims(config: &Config) -> Result<Claims> {
->>>>>>> main
     let registered = RegisteredClaims {
         issuer: Some(config.avs.issuer.clone()),
         subject: Some(config.avs.worker_id.clone()),
@@ -440,6 +412,7 @@ fn get_claims(config: &Config) -> Result<Claims> {
         ..Default::default()
     };
 
+    let version = env!("CARGO_PKG_VERSION");
     let private = [
         (
             "version".to_string(),
@@ -459,20 +432,19 @@ fn get_claims(config: &Config) -> Result<Claims> {
     })
 }
 
-fn run(config: &Config) -> Result<()> {
-    info!("Version: {}", env!("CARGO_PKG_VERSION"));
+fn run_with_websocket(config: &Config) -> Result<()> {
     let lagrange_wallet = get_wallet(config)?;
 
-    // Connect to the WS server
-    info!("Connecting to the gateway at {}", &config.avs.gateway_url);
+    info!(
+        "Connecting to the gateway. gateway_url: {}",
+        &config.avs.gateway_url
+    );
 
-    // Prepare the connection request
-    let url = url::Url::parse(&config.avs.gateway_url).with_context(|| "while parsing url")?;
+    let url = url::Url::parse(&config.avs.gateway_url).context("Gateway URL is invalid")?;
     let connection_request = url
         .into_client_request()
-        .with_context(|| "while creating connection request")?;
+        .context("Gateway URL is invalid, not a websocket")?;
 
-    // Perform authentication
     let claims = get_claims(config)?;
 
     let (mut ws_socket, _) = connect(connection_request)?;
@@ -563,45 +535,6 @@ where
                     .with_context(|| format!("Failed to decode msg. content: {}", content))?
                 {
                     DownstreamPayload::Todo { envelope } => {
-<<<<<<< HEAD
-                        let span = span!(
-                            Level::INFO,
-                            "Received Todo",
-                            "query_id" = envelope.query_id,
-                            "task_id" = envelope.task_id,
-                            "db_id" = ?envelope.db_task_id,
-                        );
-                        let _guard = span.enter();
-                        debug!("Received Todo. envelope: {:?}", envelope);
-
-                        counter!("zkmr_worker_tasks_received_total").increment(1);
-                        match provers_manager.delegate_proving(envelope) {
-                            Ok(reply) => {
-                                debug!("Sending reply: {:?}", reply);
-                                counter!("zkmr_worker_tasks_processed_total").increment(1);
-
-                                let done = UpstreamPayload::Done(reply);
-                                let done_json = serde_json::to_string(&done)
-                                    .context("Failed to encode Done message")?;
-                                ws_socket
-                                    .send(Message::Text(done_json))
-                                    .context("Failed to send response to gateway socket")?;
-                                counter!(
-                                    "zkmr_worker_websocket_messages_sent_total",
-                                    "message_type" => "text",
-                                )
-                                .increment(1);
-                            }
-                            Err(err) => {
-                                error!("Error processing task. err: {:?}", err);
-                                counter!(
-                                    "zkmr_worker_error_count",
-                                    "error_type" => "proof_processing",
-                                )
-                                .increment(1);
-                            }
-                        }
-=======
                         let envelope_id = envelope.id();
                         let reply = match process_downstream_payload(provers_manager, envelope) {
                             Ok(reply) => UpstreamPayload::Done(reply),
@@ -614,7 +547,6 @@ where
                                     "message_type" => "text")
                         .increment(1);
                         ws_socket.send(Message::Text(serde_json::to_string(&reply)?))?;
->>>>>>> main
                     }
                     DownstreamPayload::Ack => {
                         counter!(
@@ -628,17 +560,12 @@ where
             }
             Message::Ping(_) => {
                 debug!("Received ping or close message");
-<<<<<<< HEAD
 
                 counter!(
                     "zkmr_worker_websocket_messages_received_total",
                     "message_type" => "ping",
                 )
                 .increment(1);
-=======
-                counter!("zkmr_worker_websocket_messages_received_total", "message_type" => "ping")
-                    .increment(1);
->>>>>>> main
             }
             Message::Close(_) => {
                 info!("Received close message");
