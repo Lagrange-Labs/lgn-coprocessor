@@ -7,6 +7,10 @@ edition = "2021"
 name = "lgn-avs"
 path = "bin/avs.rs"
 
+[[bin]]
+name = "one-shot"
+path = "src/one-shot.rs"
+
 [dependencies]
 # The ethers macro `abigen` needs to import ethers as a crate.
 anyhow = { version = "1.0.75" }
@@ -65,3 +69,13 @@ tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "json"] }
 tungstenite = { version = "0.21.0", features = ["rustls"] }
 url = { version = "2.5.0" }
+tonic = "0.12.3"
+prost-types = "0.13.3"
+prost = "0.13.3"
+async-stream = "0.3.6"
+tokio-stream = "0.1.16"
+
+[build-dependencies]
+miette = "7.2.0"
+tonic-build = "0.12.3"
+protox = "0.7.1"

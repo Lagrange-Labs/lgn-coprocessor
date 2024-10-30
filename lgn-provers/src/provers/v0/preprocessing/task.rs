@@ -16,8 +16,8 @@ use tracing::debug;
 
 impl<P: StorageProver> LgnProver<TaskType, ReplyType> for Preprocessing<P> {
     fn run(
-        &mut self,
-        envelope: MessageEnvelope<TaskType>,
+        &self,
+        envelope: &MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         self.run_inner(envelope)
     }
@@ -33,21 +33,25 @@ impl<P: StorageProver> Preprocessing<P> {
     }
 
     pub(crate) fn run_inner(
-        &mut self,
-        envelope: MessageEnvelope<TaskType>,
+        &self,
+        envelope: &MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         debug!("Starting preprocessing task runner");
         if let TaskType::StoragePreprocess(task @ WorkerTask { block_nr, .. }) = envelope.inner() {
             let reply = self.process_task(*block_nr, task)?;
             let reply = ReplyType::StoragePreprocess(*block_nr, reply);
-            let reply = MessageReplyEnvelope::new(envelope.query_id, envelope.task_id, reply);
+            let reply = MessageReplyEnvelope::new(
+                envelope.query_id.to_owned(),
+                envelope.task_id.to_owned(),
+                reply,
+            );
             Ok(reply)
         } else {
             anyhow::bail!("Received unexpected task: {:?}", envelope);
         }
     }
 
-    fn process_task(&mut self, block_nr: u64, task: &WorkerTask) -> anyhow::Result<WorkerReply> {
+    fn process_task(&self, block_nr: u64, task: &WorkerTask) -> anyhow::Result<WorkerReply> {
         debug!(?task, "Processing task");
         counter!("zkmr_worker_task_counter").increment(1);
 

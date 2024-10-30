@@ -20,19 +20,19 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
     for Preprocessing<P>
 {
     fn run(
-        &mut self,
-        envelope: MessageEnvelope<TaskType>,
+        &self,
+        envelope: &MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
-        if let TaskType::V1Preprocessing(task @ WorkerTask { chain_id, .. }) = envelope.inner {
+        if let TaskType::V1Preprocessing(ref task @ WorkerTask { chain_id, .. }) = envelope.inner {
             let key = match &task.task_type {
                 WorkerTaskType::Extraction(_) => {
-                    let key: ext_keys::ProofKey = (&task).into();
+                    let key: ext_keys::ProofKey = task.into();
                     key.to_string()
                 }
                 WorkerTaskType::Database(_) => {
-                    let key: db_keys::ProofKey = (&task).into();
+                    let key: db_keys::ProofKey = task.into();
                     key.to_string()
                 }
             };
@@ -189,8 +189,8 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         partial.value,
                         partial.is_multiplier,
                         partial.is_child_left,
-                        partial.child_proof,
-                        partial.cells_proof,
+                        partial.child_proof.to_owned(),
+                        partial.cells_proof.to_owned(),
                     )?,
                     DbRowType::Full(full) => self.prover.prove_row_full(
                         full.identifier,
@@ -202,40 +202,41 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                 },
                 DatabaseType::Index(block) => {
                     let mut last_proof = None;
-                    for input in block.inputs {
+                    for input in &block.inputs {
                         last_proof = Some(match input {
                             DbBlockType::Leaf(leaf) => self.prover.prove_block_leaf(
                                 leaf.block_id,
-                                leaf.extraction_proof,
-                                leaf.rows_proof,
+                                leaf.extraction_proof.to_owned(),
+                                leaf.rows_proof.to_owned(),
                             )?,
                             DbBlockType::Parent(parent) => self.prover.prove_block_parent(
                                 parent.block_id,
                                 parent.old_block_number,
                                 parent.old_min,
                                 parent.old_max,
-                                parent.prev_left_child,
-                                parent.prev_right_child,
-                                parent.old_rows_tree_hash,
-                                parent.extraction_proof,
-                                parent.rows_proof,
+                                parent.prev_left_child.to_owned(),
+                                parent.prev_right_child.to_owned(),
+                                parent.old_rows_tree_hash.to_owned(),
+                                parent.extraction_proof.to_owned(),
+                                parent.rows_proof.to_owned(),
                             )?,
                             DbBlockType::Membership(membership) => self.prover.prove_membership(
                                 membership.block_id,
                                 membership.index_value,
                                 membership.old_min,
                                 membership.old_max,
-                                membership.left_child,
-                                membership.rows_tree_hash,
+                                membership.left_child.to_owned(),
+                                membership.rows_tree_hash.to_owned(),
                                 last_proof.take().unwrap(),
                             )?,
                         });
                     }
                     last_proof.take().unwrap()
                 }
-                DatabaseType::IVC(ivc) => self
-                    .prover
-                    .prove_ivc(ivc.index_proof, ivc.previous_ivc_proof)?,
+                DatabaseType::IVC(ivc) => self.prover.prove_ivc(
+                    ivc.index_proof.to_owned(),
+                    ivc.previous_ivc_proof.to_owned(),
+                )?,
             },
         })
     }
