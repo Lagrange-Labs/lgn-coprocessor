@@ -9,7 +9,6 @@ use metrics::counter;
 use mimalloc::MiMalloc;
 use std::fmt::Debug;
 use std::net::TcpStream;
-use std::panic::{RefUnwindSafe, UnwindSafe};
 use std::result::Result::Ok;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::BTreeMap, panic, str::FromStr};
@@ -31,11 +30,9 @@ use crate::manager::ProversManager;
 use ethers::signers::Wallet;
 use lgn_auth::jwt::JWTAuth;
 use lgn_messages::types::{
-    DownstreamPayload, MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, ToProverType,
-    UpstreamPayload,
+    DownstreamPayload, MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, UpstreamPayload,
 };
 use lgn_worker::avs::utils::read_keystore;
-use serde::{Deserialize, Serialize};
 use tungstenite::stream::MaybeTlsStream;
 
 pub mod lagrange {
@@ -279,14 +276,10 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
     Ok(())
 }
 
-fn process_downstream_payload<T, R>(
-    provers_manager: &ProversManager<T, R>,
-    envelope: MessageEnvelope<T>,
-) -> std::result::Result<MessageReplyEnvelope<R>, String>
-where
-    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone + UnwindSafe + RefUnwindSafe,
-    R: Serialize + Debug + Clone,
-{
+fn process_downstream_payload(
+    provers_manager: &ProversManager<TaskType, ReplyType>,
+    envelope: MessageEnvelope<TaskType>,
+) -> Result<MessageReplyEnvelope<ReplyType>, String> {
     let span = span!(
         Level::INFO,
         "Received Task",
@@ -502,14 +495,10 @@ fn run_with_websocket(config: &Config) -> Result<()> {
     Ok(())
 }
 
-fn start_work<T, R>(
+fn start_work(
     ws_socket: &mut WebSocket<MaybeTlsStream<TcpStream>>,
-    provers_manager: &mut ProversManager<T, R>,
-) -> Result<()>
-where
-    T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone + UnwindSafe + RefUnwindSafe,
-    R: Serialize + Debug + Clone,
-{
+    provers_manager: &mut ProversManager<TaskType, ReplyType>,
+) -> Result<()> {
     info!("Sending ready to work message");
     let ready = UpstreamPayload::<ReplyType>::Ready;
     let ready_json = serde_json::to_string(&ready).context("Failed to encode Ready message")?;
@@ -531,7 +520,7 @@ where
                 )
                 .increment(1);
 
-                match serde_json::from_str::<DownstreamPayload<T>>(&content)
+                match serde_json::from_str::<DownstreamPayload<TaskType>>(&content)
                     .with_context(|| format!("Failed to decode msg. content: {}", content))?
                 {
                     DownstreamPayload::Todo { envelope } => {
