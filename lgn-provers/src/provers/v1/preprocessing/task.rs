@@ -38,7 +38,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
             };
             let result = self.run_inner(task.clone())?;
             let reply_type = ReplyType::V1Preprocessing(WorkerReply::new(
-                chain_id.clone(),
+                *chain_id,
                 Some((key, result)),
                 ProofCategory::Querying,
             ));

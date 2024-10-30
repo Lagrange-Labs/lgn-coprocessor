@@ -490,7 +490,7 @@ fn run_with_websocket(config: &Config) -> Result<()> {
     fetch_checksum_file(checksum_url, expected_checksums_file)?;
 
     let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-    register_v1_provers(&config, &mut provers_manager).context("Failed to register V1 provers")?;
+    register_v1_provers(config, &mut provers_manager).context("Failed to register V1 provers")?;
 
     if !config.public_params.skip_checksum {
         verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
