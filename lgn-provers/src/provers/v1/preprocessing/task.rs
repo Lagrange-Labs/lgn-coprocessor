@@ -25,7 +25,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
-        if let TaskType::V1Preprocessing(ref task @ WorkerTask { chain_id, .. }) = envelope.inner {
+        if let TaskType::V1Preprocessing(task @ WorkerTask { chain_id, .. }) = envelope.inner {
             let key = match &task.task_type {
                 WorkerTaskType::Extraction(_) => {
                     let key: ext_keys::ProofKey = task.into();
