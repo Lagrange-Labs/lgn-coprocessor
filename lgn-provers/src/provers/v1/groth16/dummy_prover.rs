@@ -1,18 +1,13 @@
+use crate::dummy_utils::dummy_proof;
 use crate::provers::v1::groth16::prover::Prover;
-use std::thread::sleep;
 
-#[allow(dead_code)]
-pub(crate) struct DummyProver;
+const PROOF_SIZE: usize = 32;
+
+/// Prover implementation which performs no proving and returns random data as a proof.
+pub struct DummyProver;
 
 impl Prover for DummyProver {
     fn prove(&self, _aggregated_proof: &[u8]) -> anyhow::Result<Vec<u8>> {
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
-}
-
-#[allow(dead_code)]
-fn prove() -> Vec<u8> {
-    sleep(std::time::Duration::from_millis(1000));
-    let data: Vec<_> = (0..32).map(|_| rand::random::<u8>()).collect();
-    bincode::serialize(&data).unwrap()
 }

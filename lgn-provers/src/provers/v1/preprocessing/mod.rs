@@ -1,12 +1,14 @@
 use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageExtractionProver};
 use crate::provers::v1::preprocessing::task::Preprocessing;
 use tracing::info;
-pub mod euclid_prover;
 pub mod prover;
 pub mod task;
 
 #[cfg(feature = "dummy-prover")]
 mod dummy_prover;
+
+#[cfg(not(feature = "dummy-prover"))]
+pub mod euclid_prover;
 
 #[allow(unused_variables)]
 pub fn create_prover(

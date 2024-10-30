@@ -1,7 +1,5 @@
-use super::prover::Prover;
 use anyhow::{bail, Context};
 
-use crate::provers::LgnProver;
 use lgn_messages::types::v1::groth16::keys::ProofKey;
 use lgn_messages::types::v1::groth16::WorkerTask;
 use lgn_messages::types::{
@@ -9,6 +7,9 @@ use lgn_messages::types::{
 };
 use std::time::Instant;
 use tracing::{debug, info};
+
+use super::prover::Prover;
+use crate::provers::LgnProver;
 
 impl<GP: Prover> LgnProver<TaskType, ReplyType> for Groth16<GP> {
     fn run(

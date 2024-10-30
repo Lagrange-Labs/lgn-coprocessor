@@ -20,12 +20,10 @@ pub struct EuclidProver {
 }
 
 impl EuclidProver {
-    #[allow(dead_code)]
     pub fn new(params: PublicParameters) -> Self {
         Self { params }
     }
 
-    #[allow(dead_code)]
     pub(crate) fn init(
         url: &str,
         dir: &str,
