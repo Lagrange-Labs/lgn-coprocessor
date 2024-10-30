@@ -3,9 +3,9 @@ use derive_debug_plus::Dbg;
 use mp2_common::types::HashOutput;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::types::v0::preprocessing::keys::{BlockNr, TableId};
 use crate::types::v1::preprocessing::ext_tasks::Identifier;
 use crate::types::v1::preprocessing::{db_keys, ext_keys, WorkerTask, WorkerTaskType};
+use crate::{BlockNr, TableId};
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub enum DatabaseType {

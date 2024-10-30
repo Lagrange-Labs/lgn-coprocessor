@@ -1,6 +1,6 @@
-use crate::types::v0::preprocessing::keys::{BlockNr, TableHash, TableId};
 use crate::types::v1::preprocessing::ext_keys::ProofKey;
 use crate::types::v1::preprocessing::{WorkerTask, WorkerTaskType};
+use crate::{BlockNr, TableHash, TableId};
 use alloy_primitives::Address;
 use derive_debug_plus::Dbg;
 use ethers::{types::H256, utils::rlp};

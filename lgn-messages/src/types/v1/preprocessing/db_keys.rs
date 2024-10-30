@@ -1,5 +1,5 @@
-use crate::types::v0::preprocessing::keys::{BlockNr, TableId};
 use crate::types::v1::preprocessing::KEYS_PREPROCESSING_PREFIX;
+use crate::{BlockNr, TableId};
 use object_store::path::Path;
 use serde_derive::{Deserialize, Serialize};
 use std::fmt::Display;
