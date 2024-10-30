@@ -2,7 +2,7 @@ use lgn_messages::types::v1::preprocessing::db_tasks::{
     DatabaseType, DbBlockType, DbCellType, DbRowType,
 };
 use lgn_messages::types::v1::preprocessing::ext_tasks::{
-    ExtractionType, FinalExtractionType, MptType,
+    ExtractionType, FinalExtraction, FinalExtractionType, MptType,
 };
 use lgn_messages::types::v1::preprocessing::{db_keys, ext_keys, WorkerTask, WorkerTaskType};
 use lgn_messages::types::{
@@ -25,7 +25,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
-        if let TaskType::V1Preprocessing(ref task @ WorkerTask { chain_id, .. }) = envelope.inner {
+        if let TaskType::V1Preprocessing(task @ WorkerTask { chain_id, .. }) = &envelope.inner {
             let key = match &task.task_type {
                 WorkerTaskType::Extraction(_) => {
                     let key: ext_keys::ProofKey = task.into();
@@ -36,9 +36,9 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
                     key.to_string()
                 }
             };
-            let result = self.run_inner(task)?;
+            let result = self.run_inner(task.clone())?;
             let reply_type = ReplyType::V1Preprocessing(WorkerReply::new(
-                chain_id,
+                *chain_id,
                 Some((key, result)),
                 ProofCategory::Querying,
             ));
@@ -53,30 +53,36 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
         Self { prover }
     }
 
-    pub fn run_inner(&self, task: &WorkerTask) -> anyhow::Result<Vec<u8>> {
-        Ok(match &task.task_type {
-            WorkerTaskType::Extraction(ex) => match ex {
+    pub fn run_inner(&self, task: WorkerTask) -> anyhow::Result<Vec<u8>> {
+        Ok(match task.task_type {
+            WorkerTaskType::Extraction(extraction) => match extraction {
                 ExtractionType::MptExtraction(mpt) => match &mpt.mpt_type {
-                    MptType::VariableLeaf(input) => self.prover.prove_single_variable_leaf(
-                        input.node.clone(),
-                        input.slot,
-                        input.column_id,
+                    MptType::VariableLeaf(variable_leaf) => {
+                        self.prover.prove_single_variable_leaf(
+                            variable_leaf.node.clone(),
+                            variable_leaf.slot,
+                            variable_leaf.column_id,
+                        )?
+                    }
+                    MptType::MappingLeaf(mapping_leaf) => self.prover.prove_mapping_variable_leaf(
+                        mapping_leaf.key.clone(),
+                        mapping_leaf.node.clone(),
+                        mapping_leaf.slot,
+                        mapping_leaf.key_id,
+                        mapping_leaf.value_id,
                     )?,
-                    MptType::MappingLeaf(input) => self.prover.prove_mapping_variable_leaf(
-                        input.key.clone(),
-                        input.node.clone(),
-                        input.slot,
-                        input.key_id,
-                        input.value_id,
-                    )?,
-                    MptType::MappingBranch(input) => self.prover.prove_mapping_variable_branch(
-                        input.node.clone(),
-                        input.children_proofs.to_owned(),
-                    )?,
-                    MptType::VariableBranch(input) => self.prover.prove_single_variable_branch(
-                        input.node.clone(),
-                        input.children_proofs.clone(),
-                    )?,
+                    MptType::MappingBranch(mapping_branch) => {
+                        self.prover.prove_mapping_variable_branch(
+                            mapping_branch.node.clone(),
+                            mapping_branch.children_proofs.to_owned(),
+                        )?
+                    }
+                    MptType::VariableBranch(variable_branch) => {
+                        self.prover.prove_single_variable_branch(
+                            variable_branch.node.clone(),
+                            variable_branch.children_proofs.clone(),
+                        )?
+                    }
                 },
                 ExtractionType::LengthExtraction(length) => {
                     let mut proofs = vec![];
@@ -117,51 +123,71 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                     }
                     proofs.last().unwrap().clone()
                 }
-                ExtractionType::BlockExtraction(input) => {
-                    self.prover.prove_block(input.rlp_header.to_owned())?
+                ExtractionType::BlockExtraction(block) => {
+                    self.prover.prove_block(block.rlp_header.to_owned())?
                 }
-                ExtractionType::FinalExtraction(fe) => match fe.extraction_type {
-                    FinalExtractionType::Simple(compound) => {
-                        self.prover.prove_final_extraction_simple(
-                            fe.block_proof.clone(),
-                            fe.contract_proof.clone(),
-                            fe.value_proof.clone(),
-                            compound,
+                ExtractionType::FinalExtraction(final_extraction) => match *final_extraction {
+                    FinalExtraction::Single(single_table_extraction) => {
+                        match single_table_extraction.extraction_type {
+                            FinalExtractionType::Simple(compound) => {
+                                self.prover.prove_final_extraction_simple(
+                                    single_table_extraction.block_proof.clone(),
+                                    single_table_extraction.contract_proof.clone(),
+                                    single_table_extraction.value_proof.clone(),
+                                    compound,
+                                )?
+                            }
+                            FinalExtractionType::Lengthed => {
+                                self.prover.prove_final_extraction_lengthed(
+                                    single_table_extraction.block_proof.clone(),
+                                    single_table_extraction.contract_proof.clone(),
+                                    single_table_extraction.value_proof.clone(),
+                                    single_table_extraction.length_proof.clone(),
+                                )?
+                            }
+                        }
+                    }
+                    FinalExtraction::Merge(mapping_table_extraction) => {
+                        self.prover.prove_final_extraction_merge(
+                            mapping_table_extraction.block_proof.clone(),
+                            mapping_table_extraction.contract_proof.clone(),
+                            mapping_table_extraction.simple_table_proof.clone(),
+                            mapping_table_extraction.mapping_table_proof.clone(),
                         )?
                     }
-                    FinalExtractionType::Lengthed => self.prover.prove_final_extraction_lengthed(
-                        fe.block_proof.clone(),
-                        fe.contract_proof.clone(),
-                        fe.value_proof.clone(),
-                        fe.length_proof.clone(),
-                    )?,
                 },
             },
             WorkerTaskType::Database(db) => match db {
                 DatabaseType::Cell(cell_type) => match cell_type {
-                    DbCellType::Leaf(leaf) => {
-                        self.prover.prove_cell_leaf(leaf.identifier, leaf.value)?
-                    }
+                    DbCellType::Leaf(leaf) => self.prover.prove_cell_leaf(
+                        leaf.identifier,
+                        leaf.value,
+                        leaf.is_multiplier,
+                    )?,
                     DbCellType::Partial(branch) => self.prover.prove_cell_partial(
                         branch.identifier,
                         branch.value,
-                        branch.child_proof.to_owned(),
+                        branch.is_multiplier,
+                        branch.child_proof,
                     )?,
                     DbCellType::Full(full) => self.prover.prove_cell_full(
                         full.identifier,
                         full.value,
-                        full.child_proofs.to_owned(),
+                        full.is_multiplier,
+                        full.child_proofs,
                     )?,
                 },
                 DatabaseType::Row(row_type) => match row_type {
                     DbRowType::Leaf(leaf) => self.prover.prove_row_leaf(
                         leaf.identifier,
-                        leaf.value.to_owned(),
-                        leaf.cells_proof.to_owned(),
+                        leaf.value,
+                        leaf.is_multiplier,
+                        leaf.cells_proof,
                     )?,
                     DbRowType::Partial(partial) => self.prover.prove_row_partial(
                         partial.identifier,
                         partial.value,
+                        partial.is_multiplier,
                         partial.is_child_left,
                         partial.child_proof.to_owned(),
                         partial.cells_proof.to_owned(),
@@ -169,8 +195,9 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                     DbRowType::Full(full) => self.prover.prove_row_full(
                         full.identifier,
                         full.value,
-                        full.child_proofs.to_owned(),
-                        full.cells_proof.to_owned(),
+                        full.is_multiplier,
+                        full.child_proofs,
+                        full.cells_proof,
                     )?,
                 },
                 DatabaseType::Index(block) => {

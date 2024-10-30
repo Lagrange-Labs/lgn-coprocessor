@@ -18,7 +18,7 @@ use tokio_stream::StreamExt;
 use tonic::metadata::MetadataValue;
 use tonic::Request;
 use tracing::level_filters::LevelFilter;
-use tracing::{debug, error, info, trace};
+use tracing::{debug, error, info, span, trace, Level};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::EnvFilter;
 use tungstenite::client::IntoClientRequest;
@@ -98,7 +98,6 @@ fn setup_logging(json: bool) {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-
     setup_logging(cli.json);
 
     panic::set_hook(Box::new(|panic_info| {
@@ -124,24 +123,41 @@ async fn main() -> anyhow::Result<()> {
         );
     }));
 
+    if let Err(err) = run(cli).await {
+        error!("Service exiting with an error. err: {:?}", err);
+        bail!("Worker exited due to an error")
+    } else {
+        Ok(())
+    }
+}
+
+async fn run(cli: Cli) -> Result<()> {
+    let version = env!("CARGO_PKG_VERSION");
+    info!("Starting worker. version: {}", version);
+
     let config = Config::load(cli.config);
     config.validate();
     info!("Loaded configuration: {:?}", config);
+
+    let span = span!(
+        Level::INFO,
+        "Starting node",
+        "worker" = config.avs.worker_id.to_string(),
+        "issuer" = config.avs.issuer.to_string(),
+        "version" = version,
+        "class" = config.worker.instance_type.to_string(),
+    );
+    let _guard = span.enter();
 
     metrics_exporter_prometheus::PrometheusBuilder::new()
         .with_http_listener(([0, 0, 0, 0], config.prometheus.port))
         .install()?;
 
     if let Some(grpc_url) = &config.avs.gateway_grpc_url {
-        run_with_grpc(&config, grpc_url).await?;
+        run_with_grpc(&config, grpc_url).await
     } else {
-        tokio::task::block_in_place(move || -> Result<()> {
-            run(&config)?;
-            Ok(())
-        })?;
+        tokio::task::block_in_place(move || run_with_websocket(&config))
     }
-
-    Ok(())
 }
 
 async fn maybe_download_checksum(config: &Config) -> Result<()> {
@@ -271,7 +287,16 @@ where
     T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone + UnwindSafe + RefUnwindSafe,
     R: Serialize + Debug + Clone,
 {
-    debug!("Received task: {:?}", envelope);
+    let span = span!(
+        Level::INFO,
+        "Received Task",
+        "query_id" = envelope.query_id,
+        "task_id" = envelope.task_id,
+        "db_id" = ?envelope.db_task_id,
+    );
+    let _guard = span.enter();
+
+    debug!("Received task. envelope: {:?}", envelope);
     counter!("zkmr_worker_tasks_received_total").increment(1);
     match std::panic::catch_unwind(|| provers_manager.delegate_proving(&envelope)) {
         Ok(result) => match result {
@@ -289,11 +314,10 @@ where
             }
         },
         Err(panic) => {
-            // TODO: we should probably discriminate between
-            // proving error and worker error
-            counter!("zkmr_worker_error_count",
-                                    "error_type" => "proof
-                                    processing")
+            counter!(
+                "zkmr_worker_error_count",
+                "error_type" => "proof_processing"
+            )
             .increment(1);
 
             let msg = match panic.downcast_ref::<&'static str>() {
@@ -366,10 +390,9 @@ fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>> {
         (Some(keystore_path), Some(password), None) => {
             read_keystore(keystore_path, password.expose_secret())?
         }
-        (Some(_), None, Some(pkey)) => Wallet::from_str(pkey.expose_secret()).context(format!(
-            "while parsing private key {}",
-            pkey.expose_secret()
-        ))?,
+        (Some(_), None, Some(pkey)) => {
+            Wallet::from_str(pkey.expose_secret()).context("Failed to create wallet")?
+        }
         _ => bail!("Must specify either keystore path w/ password OR private key"),
     };
 
@@ -383,16 +406,17 @@ fn get_claims(config: &Config) -> Result<Claims> {
         issued_at: Some(
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .unwrap()
+                .expect("Epoch can not be in the future")
                 .as_secs(),
         ),
         ..Default::default()
     };
 
+    let version = env!("CARGO_PKG_VERSION");
     let private = [
         (
             "version".to_string(),
-            serde_json::Value::String(env!("CARGO_PKG_VERSION").to_string()),
+            serde_json::Value::String(version.to_string()),
         ),
         (
             "worker_class".to_string(),
@@ -408,52 +432,52 @@ fn get_claims(config: &Config) -> Result<Claims> {
     })
 }
 
-fn run(config: &Config) -> Result<()> {
-    info!("Version: {}", env!("CARGO_PKG_VERSION"));
+fn run_with_websocket(config: &Config) -> Result<()> {
     let lagrange_wallet = get_wallet(config)?;
 
-    // Connect to the WS server
-    info!("Connecting to the gateway at {}", &config.avs.gateway_url);
+    info!(
+        "Connecting to the gateway. gateway_url: {}",
+        &config.avs.gateway_url
+    );
 
-    // Prepare the connection request
-    let url = url::Url::parse(&config.avs.gateway_url).with_context(|| "while parsing url")?;
+    let url = url::Url::parse(&config.avs.gateway_url).context("Gateway URL is invalid")?;
     let connection_request = url
         .into_client_request()
-        .with_context(|| "while creating connection request")?;
+        .context("Gateway URL is invalid, not a websocket")?;
 
-    // Perform authentication
     let claims = get_claims(config)?;
 
-    // Connect to the server
     let (mut ws_socket, _) = connect(connection_request)?;
     counter!("zkmr_worker_gateway_connection_count").increment(1);
-    info!("Connected to the gateway");
 
     info!("Authenticating");
-    // Sign the JWT claims and encode to (Base64) bytes.
     let token = JWTAuth::new(claims, &lagrange_wallet)?.encode()?;
     // Send the authentication frame..
+    let auth_msg = UpstreamPayload::<ReplyType>::Authentication { token };
+    let auth_msg_json =
+        serde_json::to_string(&auth_msg).context("Failed to serialize Authentication message")?;
     ws_socket
-        .send(Message::Text(
-            serde_json::to_string(&UpstreamPayload::<ReplyType>::Authentication { token }).unwrap(),
-        ))
-        .context("unable to send authorization frame")?;
+        .send(Message::Text(auth_msg_json))
+        .context("Failed to send authorization message")?;
     // ...then wait for the ack.
     ws_socket
         .read()
-        .context("while waiting for authentication confirmation")
+        .context("Failed to read authentication confirmation")
         .and_then(|reply| match reply {
             Message::Text(payload) => Ok(payload),
-            _ => bail!("expected ACK frame, found `{reply}`"),
+            _ => bail!(
+                "Unexpected websocket message during authentication, expected Text. reply: {}",
+                reply
+            ),
         })
         .and_then(|payload| {
-            if let DownstreamPayload::Ack =
-                serde_json::from_str::<DownstreamPayload<ReplyType>>(&payload).unwrap()
-            {
-                info!("connection successful");
-                Ok(())
-            } else {
-                bail!("authentication issue: expected ACK frame, found `{payload}`")
+            match serde_json::from_str::<DownstreamPayload<ReplyType>>(&payload) {
+                Ok(DownstreamPayload::Ack) => Ok(()),
+                Ok(DownstreamPayload::Todo { envelope }) => bail!(
+                    "Unexpected Todo message during authentication. msg: {:?}",
+                    envelope
+                ),
+                Err(err) => bail!("Websocket error while authenticating. err: {}", err),
             }
         })?;
 
@@ -466,11 +490,11 @@ fn run(config: &Config) -> Result<()> {
     fetch_checksum_file(checksum_url, expected_checksums_file)?;
 
     let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-    register_v1_provers(config, &mut provers_manager).context("while registering provers")?;
+    register_v1_provers(config, &mut provers_manager).context("Failed to register V1 provers")?;
 
     if !config.public_params.skip_checksum {
         verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
-            .context("Failed to verify checksums")?;
+            .context("Public parameters verification failed")?;
     }
 
     start_work(&mut ws_socket, &mut provers_manager)?;
@@ -486,25 +510,30 @@ where
     T: ToProverType + for<'a> Deserialize<'a> + Debug + Clone + UnwindSafe + RefUnwindSafe,
     R: Serialize + Debug + Clone,
 {
-    info!("ready to work");
+    info!("Sending ready to work message");
+    let ready = UpstreamPayload::<ReplyType>::Ready;
+    let ready_json = serde_json::to_string(&ready).context("Failed to encode Ready message")?;
     ws_socket
-        .send(Message::Text(
-            serde_json::to_string(&UpstreamPayload::<ReplyType>::Ready).unwrap(),
-        ))
+        .send(Message::Text(ready_json))
         .context("unable to send ready frame")?;
 
     loop {
         let msg = ws_socket
             .read()
-            .with_context(|| "unable to read from gateway socket")?;
+            .context("Failed to read from gateway socket")?;
         match msg {
             Message::Text(content) => {
                 trace!("Received message: {:?}", content);
 
-                counter!("zkmr_worker_websocket_messages_received_total", "message_type" => "text")
-                    .increment(1);
+                counter!(
+                    "zkmr_worker_websocket_messages_received_total",
+                    "message_type" => "text",
+                )
+                .increment(1);
 
-                match serde_json::from_str::<DownstreamPayload<T>>(&content)? {
+                match serde_json::from_str::<DownstreamPayload<T>>(&content)
+                    .with_context(|| format!("Failed to decode msg. content: {}", content))?
+                {
                     DownstreamPayload::Todo { envelope } => {
                         let envelope_id = envelope.id();
                         let reply = match process_downstream_payload(provers_manager, envelope) {
@@ -519,22 +548,36 @@ where
                         .increment(1);
                         ws_socket.send(Message::Text(serde_json::to_string(&reply)?))?;
                     }
-                    DownstreamPayload::Ack => bail!("unexpected ACK frame"),
+                    DownstreamPayload::Ack => {
+                        counter!(
+                            "zkmr_worker_error_count",
+                            "error_type" => "unexpected_ack",
+                        )
+                        .increment(1);
+                        bail!("Unexpected ACK frame")
+                    }
                 }
             }
             Message::Ping(_) => {
                 debug!("Received ping or close message");
-                counter!("zkmr_worker_websocket_messages_received_total", "message_type" => "ping")
-                    .increment(1);
+
+                counter!(
+                    "zkmr_worker_websocket_messages_received_total",
+                    "message_type" => "ping",
+                )
+                .increment(1);
             }
             Message::Close(_) => {
                 info!("Received close message");
                 return Ok(());
             }
             _ => {
-                error!("unexpected frame: {msg}");
-                counter!("zkmr_worker_error_count", "error_type" => "unexpected frame")
-                    .increment(1);
+                error!("Unexpected frame: {msg}");
+                counter!(
+                    "zkmr_worker_error_count",
+                    "error_type" => "unexpected_frame",
+                )
+                .increment(1);
             }
         }
     }

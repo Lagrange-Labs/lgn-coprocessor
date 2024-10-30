@@ -3,6 +3,7 @@ use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageEx
 use alloy::primitives::{Address, U256};
 use anyhow::bail;
 use ethers::utils::rlp::{Prototype, Rlp};
+use mp2_common::digest::TableDimension;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::CircuitInput::{
@@ -195,13 +196,13 @@ impl StorageExtractionProver for EuclidProver {
         block_proof: Vec<u8>,
         contract_proof: Vec<u8>,
         value_proof: Vec<u8>,
-        compound: bool,
+        dimension: TableDimension,
     ) -> anyhow::Result<Vec<u8>> {
         let input = FinalExtraction(final_extraction::CircuitInput::new_simple_input(
             block_proof,
             contract_proof,
             value_proof,
-            compound,
+            dimension,
         )?);
         self.prove(input, "final extraction simple")
     }
@@ -221,12 +222,37 @@ impl StorageExtractionProver for EuclidProver {
         )?);
         self.prove(input, "final extraction lengthed")
     }
+
+    fn prove_final_extraction_merge(
+        &self,
+        block_proof: Vec<u8>,
+        contract_proof: Vec<u8>,
+        simple_table_proof: Vec<u8>,
+        mapping_table_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>> {
+        let input = FinalExtraction(
+            final_extraction::CircuitInput::new_merge_single_and_mapping(
+                block_proof,
+                contract_proof,
+                simple_table_proof,
+                mapping_table_proof,
+            )?,
+        );
+        self.prove(input, "final extraction merge")
+    }
 }
 
 impl StorageDatabaseProver for EuclidProver {
-    fn prove_cell_leaf(&self, identifier: u64, value: U256) -> anyhow::Result<Vec<u8>> {
+    fn prove_cell_leaf(
+        &self,
+        identifier: u64,
+        value: U256,
+        is_multiplier: bool,
+    ) -> anyhow::Result<Vec<u8>> {
         let input = CellsTree(verifiable_db::cells_tree::CircuitInput::leaf(
-            identifier, value,
+            identifier,
+            value,
+            is_multiplier,
         ));
         self.prove(input, "cell leaf")
     }
@@ -235,11 +261,13 @@ impl StorageDatabaseProver for EuclidProver {
         &self,
         identifier: u64,
         value: U256,
+        is_multiplier: bool,
         child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         let input = CellsTree(verifiable_db::cells_tree::CircuitInput::partial(
             identifier,
             value,
+            is_multiplier,
             child_proof,
         ));
         self.prove(input, "cell partial")
@@ -249,12 +277,14 @@ impl StorageDatabaseProver for EuclidProver {
         &self,
         identifier: u64,
         value: U256,
+        is_multiplier: bool,
         child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
         let child_proofs = [child_proofs[0].to_owned(), child_proofs[1].to_vec()];
         let input = CellsTree(verifiable_db::cells_tree::CircuitInput::full(
             identifier,
             value,
+            is_multiplier,
             child_proofs,
         ));
         self.prove(input, "cell full")
@@ -264,6 +294,7 @@ impl StorageDatabaseProver for EuclidProver {
         &self,
         identifier: u64,
         value: U256,
+        is_multiplier: bool,
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         let cells_proof = if !cells_proof.is_empty() {
@@ -276,6 +307,7 @@ impl StorageDatabaseProver for EuclidProver {
         let input = RowsTree(verifiable_db::row_tree::CircuitInput::leaf(
             identifier,
             value,
+            is_multiplier,
             cells_proof,
         )?);
         self.prove(input, "row leaf")
@@ -285,6 +317,7 @@ impl StorageDatabaseProver for EuclidProver {
         &self,
         identifier: u64,
         value: U256,
+        is_multiplier: bool,
         is_child_left: bool,
         child_proof: Vec<u8>,
         cells_proof: Vec<u8>,
@@ -292,6 +325,7 @@ impl StorageDatabaseProver for EuclidProver {
         let input = RowsTree(verifiable_db::row_tree::CircuitInput::partial(
             identifier,
             value,
+            is_multiplier,
             is_child_left,
             child_proof,
             cells_proof,
@@ -303,12 +337,14 @@ impl StorageDatabaseProver for EuclidProver {
         &self,
         identifier: u64,
         value: U256,
+        is_multiplier: bool,
         child_proofs: Vec<Vec<u8>>,
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         let input = RowsTree(verifiable_db::row_tree::CircuitInput::full(
             identifier,
             value,
+            is_multiplier,
             child_proofs[0].to_owned(),
             child_proofs[1].to_owned(),
             cells_proof,
