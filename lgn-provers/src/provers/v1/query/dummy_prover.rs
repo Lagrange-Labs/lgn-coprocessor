@@ -1,14 +1,15 @@
-use crate::provers::v1::query::prover::StorageQueryProver;
+use crate::{dummy_utils::dummy_proof, provers::v1::query::prover::StorageQueryProver};
 use lgn_messages::types::v1::query::tasks::{
     NonExistenceInput, PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput,
     SinglePathLeafInput,
 };
 use parsil::assembler::DynamicCircuitPis;
-use std::thread::sleep;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
 
-#[allow(dead_code)]
-pub(crate) struct DummyProver;
+const PROOF_SIZE: usize = 120;
+
+/// Prover implementation which performs no proving and returns random data as a proof.
+pub struct DummyProver;
 
 impl StorageQueryProver for DummyProver {
     fn prove_universal_circuit(
@@ -16,7 +17,7 @@ impl StorageQueryProver for DummyProver {
         _input: RowsEmbeddedProofInput,
         _pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_full_node(
@@ -27,7 +28,7 @@ impl StorageQueryProver for DummyProver {
         _pis: &DynamicCircuitPis,
         _is_rows_tree_node: bool,
     ) -> anyhow::Result<Vec<u8>> {
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_partial_node(
@@ -36,7 +37,7 @@ impl StorageQueryProver for DummyProver {
         _embedded_proof: Vec<u8>,
         _pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_single_path_leaf(
@@ -45,7 +46,7 @@ impl StorageQueryProver for DummyProver {
         _embedded_proof: Vec<u8>,
         _pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_single_path_branch(
@@ -54,7 +55,7 @@ impl StorageQueryProver for DummyProver {
         _child_proof: Vec<u8>,
         _pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_revelation(
@@ -64,7 +65,7 @@ impl StorageQueryProver for DummyProver {
         _query_proof: Vec<u8>,
         _indexing_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_non_existence(
@@ -72,13 +73,6 @@ impl StorageQueryProver for DummyProver {
         _input: NonExistenceInput,
         _pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
-}
-
-#[allow(dead_code)]
-fn prove() -> Vec<u8> {
-    sleep(std::time::Duration::from_millis(100));
-    let data: Vec<_> = (0..120).map(|_| rand::random::<u8>()).collect();
-    bincode::serialize(&data).unwrap()
 }

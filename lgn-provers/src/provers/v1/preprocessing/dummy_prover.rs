@@ -1,10 +1,15 @@
-use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageExtractionProver};
+use crate::{
+    dummy_utils::dummy_proof,
+    provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageExtractionProver},
+};
 use alloy::primitives::{Address, U256};
 use mp2_common::{digest::TableDimension, types::HashOutput};
-use std::thread::sleep;
 use tracing::debug;
 
-pub(crate) struct DummyProver;
+const PROOF_SIZE: usize = 120;
+
+/// Prover implementation which performs no proving and returns random data as a proof.
+pub struct DummyProver;
 
 impl StorageExtractionProver for DummyProver {
     fn prove_single_variable_leaf(
@@ -14,7 +19,7 @@ impl StorageExtractionProver for DummyProver {
         _column_id: u64,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving single variable leaf");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_single_variable_branch(
@@ -23,7 +28,7 @@ impl StorageExtractionProver for DummyProver {
         _child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving single variable branch");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_mapping_variable_leaf(
@@ -35,7 +40,7 @@ impl StorageExtractionProver for DummyProver {
         _value_id: u64,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving mapping variable leaf");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_mapping_variable_branch(
@@ -44,7 +49,7 @@ impl StorageExtractionProver for DummyProver {
         _child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving mapping variable branch");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_length_leaf(
@@ -54,7 +59,7 @@ impl StorageExtractionProver for DummyProver {
         _variable_slot: usize,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving length leaf");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_length_branch(
@@ -63,7 +68,7 @@ impl StorageExtractionProver for DummyProver {
         _child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving length branch");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_contract_leaf(
@@ -73,7 +78,7 @@ impl StorageExtractionProver for DummyProver {
         _contract_address: Address,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving contract leaf");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_contract_branch(
@@ -82,12 +87,12 @@ impl StorageExtractionProver for DummyProver {
         _child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving contract branch");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_block(&self, _rlp_header: Vec<u8>) -> anyhow::Result<Vec<u8>> {
         debug!("Proving block");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_final_extraction_simple(
@@ -98,7 +103,7 @@ impl StorageExtractionProver for DummyProver {
         _dimension: TableDimension,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving final extraction simple");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_final_extraction_lengthed(
@@ -109,7 +114,7 @@ impl StorageExtractionProver for DummyProver {
         _length_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving final extraction lengthed");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_final_extraction_merge(
@@ -120,7 +125,7 @@ impl StorageExtractionProver for DummyProver {
         _mapping_table_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving final extraction merge table");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 }
 
@@ -131,7 +136,7 @@ impl StorageDatabaseProver for DummyProver {
         _value: U256,
         _is_multiplier: bool,
     ) -> anyhow::Result<Vec<u8>> {
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_cell_partial(
@@ -142,7 +147,7 @@ impl StorageDatabaseProver for DummyProver {
         _child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving cell partial");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_cell_full(
@@ -153,7 +158,7 @@ impl StorageDatabaseProver for DummyProver {
         _child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving cell full");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_row_leaf(
@@ -164,7 +169,7 @@ impl StorageDatabaseProver for DummyProver {
         _cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving row leaf");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_row_partial(
@@ -177,7 +182,7 @@ impl StorageDatabaseProver for DummyProver {
         _cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving row partial");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_row_full(
@@ -189,7 +194,7 @@ impl StorageDatabaseProver for DummyProver {
         _cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving row full");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_membership(
@@ -203,7 +208,7 @@ impl StorageDatabaseProver for DummyProver {
         _right_child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving membership");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_block_leaf(
@@ -213,7 +218,7 @@ impl StorageDatabaseProver for DummyProver {
         _rows_tree_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving block leaf");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_block_parent(
@@ -229,7 +234,7 @@ impl StorageDatabaseProver for DummyProver {
         _rows_tree_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving block parent");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_ivc(
@@ -238,13 +243,6 @@ impl StorageDatabaseProver for DummyProver {
         _previous_proof: Option<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving ivc");
-        Ok(prove())
+        Ok(dummy_proof(PROOF_SIZE))
     }
-}
-
-#[allow(dead_code)]
-fn prove() -> Vec<u8> {
-    sleep(std::time::Duration::from_millis(100));
-    let data: Vec<_> = (0..120).map(|_| rand::random::<u8>()).collect();
-    bincode::serialize(&data).unwrap()
 }

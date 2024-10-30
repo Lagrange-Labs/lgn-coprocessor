@@ -1,12 +1,16 @@
 //! This module contains logic of generating the Groth16 proofs which could be verified on-chain.
-
-use self::prover::Prover;
 use crate::provers::v1::groth16::task::Groth16;
+use prover::Prover;
 use tracing::info;
 
-mod dummy_prover;
 mod prover;
 mod task;
+
+#[cfg(feature = "dummy-prover")]
+mod dummy_prover;
+
+#[cfg(not(feature = "dummy-prover"))]
+mod euclid_prover;
 
 #[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
@@ -29,7 +33,7 @@ pub fn create_prover(
         #[cfg(not(feature = "dummy-prover"))]
         {
             info!("Creating Groth16Prover");
-            prover::Groth16Prover::init(
+            euclid_prover::Groth16Prover::init(
                 url,
                 dir,
                 circuit_file,

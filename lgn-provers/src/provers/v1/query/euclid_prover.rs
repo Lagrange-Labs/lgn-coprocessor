@@ -49,7 +49,6 @@ impl EuclidQueryProver {
         Self { params }
     }
 
-    #[allow(dead_code)]
     pub(crate) fn init(
         url: &str,
         dir: &str,
