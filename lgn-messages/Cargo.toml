@@ -11,7 +11,7 @@ alloy-serde = "0.2.1"
 anyhow = { version = "1.0.86" }
 derive-debug-plus = { version = "0.5.0" }
 ethers = { version = "2.0.14" }
-object_store = { version = "0.10" }
+object_store.workspace = true
 serde = { version = "1.0.202" }
 serde_derive = { version = "1.0.202" }
 serde_json = { version = "1.0.117" }
