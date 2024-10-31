@@ -2215,20 +2215,6 @@ dependencies = [
 [[package]]
 name = "eth_trie"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec3aeb0284b473041df2419a28e3cdf0c64a78d2b9511af4b6e40bad3964b172"
-dependencies = [
- "ethereum-types",
- "hashbrown 0.14.5",
- "keccak-hash 0.10.0",
- "log",
- "parking_lot",
- "rlp",
-]
-
-[[package]]
-name = "eth_trie"
-version = "0.4.0"
 source = "git+https://github.com/nikkolasg/eth-trie.rs#18da363bb378579ccb62504b704b545f93d1e369"
 dependencies = [
  "ethereum-types",
@@ -3145,17 +3131,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gnark-utils"
-version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git#584f0255905cb65c4c7569b8db6d06362fcc8193"
-dependencies = [
- "anyhow",
- "base64 0.22.1",
- "glob",
- "gobuild",
-]
-
-[[package]]
 name = "gobuild"
 version = "0.1.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3171,41 +3146,17 @@ source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=0959914
 dependencies = [
  "alloy",
  "anyhow",
- "gnark-utils 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=0959914)",
+ "gnark-utils",
  "hex",
  "log",
  "mp2_common",
  "plonky2",
  "plonky2x",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=0959914)",
+ "recursion_framework",
  "revm",
  "rlp",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "groth16_framework"
-version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git#584f0255905cb65c4c7569b8db6d06362fcc8193"
-dependencies = [
- "anyhow",
- "bytes",
- "ethereum-types",
- "ethers 2.0.13",
- "gnark-utils 0.1.0 (git+https://github.com/Lagrange-Labs/Euclid-database.git)",
- "hex",
- "log",
- "mr_plonky2_circuits",
- "mrp2_utils",
- "plonky2",
- "plonky2x",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/Euclid-database.git)",
- "revm",
- "rlp",
- "serde",
- "serde_json",
- "sha3",
 ]
 
 [[package]]
@@ -3498,7 +3449,6 @@ dependencies = [
  "http 1.1.0",
  "hyper 1.5.0",
  "hyper-util",
- "log",
  "rustls 0.23.16",
  "rustls-native-certs",
  "rustls-pki-types",
@@ -3934,16 +3884,12 @@ name = "lgn-messages"
 version = "1.0.2"
 dependencies = [
  "alloy-primitives 0.7.7",
- "alloy-serde",
- "anyhow",
  "derive-debug-plus",
  "ethers 2.0.14",
  "mp2_common",
- "mp2_v1",
  "object_store",
  "serde",
  "serde_derive",
- "serde_json",
  "thiserror",
  "verifiable-db",
 ]
@@ -3957,25 +3903,18 @@ dependencies = [
  "bincode",
  "bytes",
  "checksums",
- "eth_trie 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ethers 2.0.14",
- "groth16_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=0959914)",
- "groth16_framework 0.1.0 (git+https://github.com/Lagrange-Labs/Euclid-database.git)",
- "hex",
+ "groth16_framework",
  "lgn-messages",
  "metrics",
- "mimalloc",
  "mp2_common",
  "mp2_v1",
- "mr_plonky2_circuits",
  "parsil",
  "rand",
  "reqwest 0.12.9",
  "serde",
  "serde_json",
- "tokio",
  "tracing",
- "tracing-subscriber",
  "verifiable-db",
 ]
 
@@ -3984,22 +3923,13 @@ name = "lgn-worker"
 version = "1.0.2"
 dependencies = [
  "anyhow",
- "async-stream",
- "async-trait",
  "backtrace",
- "bincode",
- "bytes",
- "cfg-if",
  "checksums",
  "clap 4.5.20",
  "config",
  "elliptic-curve",
- "eth-keystore",
- "eth_trie 0.4.0 (git+https://github.com/nikkolasg/eth-trie.rs)",
  "ethers 2.0.13",
- "futures-util",
  "hex",
- "hmac",
  "jwt",
  "k256",
  "lazy-static-include",
@@ -4011,7 +3941,6 @@ dependencies = [
  "miette",
  "mimalloc",
  "prost",
- "prost-types",
  "protox",
  "rand",
  "redact",
@@ -4020,16 +3949,13 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "sha2",
- "thiserror",
  "tokio",
  "tokio-stream",
  "tonic",
  "tonic-build",
  "tracing",
  "tracing-subscriber",
- "tungstenite 0.21.0",
- "url",
+ "tungstenite 0.24.0",
 ]
 
 [[package]]
@@ -4204,9 +4130,9 @@ checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
 name = "metrics"
-version = "0.23.0"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "884adb57038347dfbaf2d5065887b6cf4312330dc8e94bc30a1a839bd79d3261"
+checksum = "8ae428771d17306715c5091d446327d1cfdedc82185c65ba8423ab404e45bf10"
 dependencies = [
  "ahash",
  "portable-atomic",
@@ -4214,9 +4140,9 @@ dependencies = [
 
 [[package]]
 name = "metrics-exporter-prometheus"
-version = "0.15.3"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4f0c8427b39666bf970460908b213ec09b3b350f20c0c2eabcbba51704a08e6"
+checksum = "85b6f8152da6d7892ff1b7a1c0fa3f435e92b5918ad67035c3bb432111d9a29b"
 dependencies = [
  "base64 0.22.1",
  "http-body-util",
@@ -4235,15 +4161,14 @@ dependencies = [
 
 [[package]]
 name = "metrics-util"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4259040465c955f9f2f1a4a8a16dc46726169bca0f88e8fb2dbeced487c3e828"
+checksum = "15b482df36c13dd1869d73d14d28cd4855fbd6cfc32294bee109908a9f4a4ed7"
 dependencies = [
  "crossbeam-epoch",
  "crossbeam-utils",
- "hashbrown 0.14.5",
+ "hashbrown 0.15.0",
  "metrics",
- "num_cpus",
  "quanta",
  "sketches-ddsketch",
 ]
@@ -4328,7 +4253,7 @@ dependencies = [
  "anyhow",
  "bincode",
  "derive_more 0.99.18",
- "eth_trie 0.4.0 (git+https://github.com/nikkolasg/eth-trie.rs)",
+ "eth_trie",
  "ethereum-types",
  "hashbrown 0.14.5",
  "hex",
@@ -4356,7 +4281,7 @@ dependencies = [
  "bincode",
  "derive_more 0.99.18",
  "env_logger 0.11.5",
- "eth_trie 0.4.0 (git+https://github.com/nikkolasg/eth-trie.rs)",
+ "eth_trie",
  "hashbrown 0.14.5",
  "hex",
  "itertools 0.12.1",
@@ -4368,7 +4293,7 @@ dependencies = [
  "plonky2_crypto",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=0959914)",
+ "recursion_framework",
  "rlp",
  "ryhope",
  "serde",
@@ -4376,54 +4301,6 @@ dependencies = [
  "serde_json",
  "sha3",
  "verifiable-db",
-]
-
-[[package]]
-name = "mr_plonky2_circuits"
-version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git#584f0255905cb65c4c7569b8db6d06362fcc8193"
-dependencies = [
- "anyhow",
- "bincode",
- "env_logger 0.11.5",
- "eth_trie 0.4.0 (git+https://github.com/nikkolasg/eth-trie.rs)",
- "ethers 2.0.13",
- "hashbrown 0.14.5",
- "itertools 0.12.1",
- "log",
- "mrp2_utils",
- "paste",
- "plonky2",
- "plonky2_crypto",
- "plonky2_ecgfp5",
- "rand",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/Euclid-database.git)",
- "rlp",
- "serde",
- "serde_arrays",
- "sha3",
-]
-
-[[package]]
-name = "mrp2_utils"
-version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git#584f0255905cb65c4c7569b8db6d06362fcc8193"
-dependencies = [
- "anyhow",
- "bincode",
- "eth_trie 0.4.0 (git+https://github.com/nikkolasg/eth-trie.rs)",
- "ethers 2.0.13",
- "hashbrown 0.14.5",
- "hex",
- "itertools 0.12.1",
- "log",
- "plonky2",
- "plonky2_crypto",
- "plonky2_ecgfp5",
- "rlp",
- "serde",
- "serde_arrays",
- "sha3",
 ]
 
 [[package]]
@@ -5566,20 +5443,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "recursion_framework"
-version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/Euclid-database.git#584f0255905cb65c4c7569b8db6d06362fcc8193"
-dependencies = [
- "anyhow",
- "log",
- "mrp2_utils",
- "plonky2",
- "plonky2_crypto",
- "plonky2_ecgfp5",
- "serde",
-]
-
-[[package]]
 name = "redact"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6010,26 +5873,11 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.22.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf4ef73721ac7bcd79b2b315da7779d8fc09718c6b3d2d1b2d94850eb8c18432"
-dependencies = [
- "log",
- "ring 0.17.8",
- "rustls-pki-types",
- "rustls-webpki 0.102.8",
- "subtle",
- "zeroize",
-]
-
-[[package]]
-name = "rustls"
 version = "0.23.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eee87ff5d9b36712a58574e12e9f0ea80f915a5b0ac518d322b24a465617925e"
 dependencies = [
  "aws-lc-rs",
- "log",
  "once_cell",
  "rustls-pki-types",
  "rustls-webpki 0.102.8",
@@ -6581,9 +6429,9 @@ checksum = "38b58827f4464d87d377d175e90bf58eb00fd8716ff0a62f80356b5e61555d0d"
 
 [[package]]
 name = "sketches-ddsketch"
-version = "0.2.2"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85636c14b73d81f541e525f585c0a2109e6744e1565b5c1668e31c70c10ed65c"
+checksum = "c1e9a774a6c28142ac54bb25d25562e6bcf957493a184f15ad4eebccb23e410a"
 
 [[package]]
 name = "slab"
@@ -7413,9 +7261,9 @@ dependencies = [
 
 [[package]]
 name = "tungstenite"
-version = "0.21.0"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ef1a641ea34f399a848dea702823bbecfb4c486f911735368f1f137cb8257e1"
+checksum = "18e5b8366ee7a95b16d32197d0b2604b43a0be89dc5fac9f8e96ccafbaedda8a"
 dependencies = [
  "byteorder",
  "bytes",
@@ -7424,10 +7272,9 @@ dependencies = [
  "httparse",
  "log",
  "rand",
- "rustls 0.22.4",
+ "rustls 0.23.16",
  "sha1",
  "thiserror",
- "url",
  "utf-8",
 ]
 
@@ -7599,7 +7446,7 @@ dependencies = [
  "plonky2_ecdsa",
  "plonky2_ecgfp5",
  "rand",
- "recursion_framework 0.1.0 (git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=0959914)",
+ "recursion_framework",
  "ryhope",
  "serde",
 ]

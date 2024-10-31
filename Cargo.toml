@@ -3,14 +3,57 @@ resolver = "2"
 members = ["lgn-auth", "lgn-messages", "lgn-provers", "lgn-worker"]
 
 [workspace.dependencies]
+groth16_framework_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "0959914", package = "groth16_framework" }
 mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "0959914" }
 mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "0959914" }
 parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "0959914" }
 verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "0959914" }
-ryhope = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "0959914" }
-groth16_framework_v1 = { package = "groth16_framework", git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "0959914" }
-object_store = "0.11"
+
+anyhow = { version = "1.0" }
+bincode = { version = "1.0" }
+checksums = { version = "0.9" }
+ethers = { version = "2.0" }
+hex = { version = "0.4" }
+object_store = { version = "0.11" }
+rand = { version = "0.8", default-features = false }
+reqwest = { version = "0.12", features = ["blocking"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+thiserror = { version = "1.0" }
+tokio = { version = "1.0" }
+tracing = { version = "0.1" }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+alloy = "0.2"
+alloy-primitives = "0.7.7"
+backtrace = "0.3"
+base64 = "0.22"
+bytes = "1.0"
+clap = { version = "4.4", default-features = false }
+config = { version = "0.14", default-features = false }
+derive-debug-plus = "0.5"
+elliptic-curve = { version = "0.13", default-features = false }
+ethers-core = { git = "https://github.com/Lagrange-Labs/ethers-rs", branch = "get-proof-0x", default-features = false }
+generic-array = { version = "0.14", default-features = false }
+jwt = "0.16"
+k256 = { version = "0.13", default-features = false }
+lazy-static-include = "3.2.1"
+metrics = "0.24"
+metrics-exporter-prometheus = "0.16"
+miette = "7.2.0"
+mimalloc = { version = "0.1", default-features = false }
+prost = "0.13"
+protox = "0.7.1"
+redact = "0.1"
+rpassword = "7.0"
+serde_derive = "1.0"
+tokio-stream = "0.1"
+tonic = "0.12"
+tonic-build = "0.12.3"
+tungstenite = "0.24"
 
 [patch.crates-io]
 plonky2 = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }
 plonky2_field = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }
+
+[workspace.metadata.cargo-machete]
+ignored = ["serde", "prost"]
