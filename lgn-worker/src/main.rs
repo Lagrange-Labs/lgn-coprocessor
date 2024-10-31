@@ -20,7 +20,6 @@ use tracing::level_filters::LevelFilter;
 use tracing::{debug, error, info, span, trace, Level};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::EnvFilter;
-use tungstenite::client::IntoClientRequest;
 use tungstenite::{connect, Message, WebSocket};
 
 use crate::checksum::{fetch_checksum_file, verify_directory_checksums};
@@ -433,14 +432,9 @@ fn run_with_websocket(config: &Config) -> Result<()> {
         &config.avs.gateway_url
     );
 
-    let url = url::Url::parse(&config.avs.gateway_url).context("Gateway URL is invalid")?;
-    let connection_request = url
-        .into_client_request()
-        .context("Gateway URL is invalid, not a websocket")?;
-
     let claims = get_claims(config)?;
 
-    let (mut ws_socket, _) = connect(connection_request)?;
+    let (mut ws_socket, _) = connect(&config.avs.gateway_url)?;
     counter!("zkmr_worker_gateway_connection_count").increment(1);
 
     info!("Authenticating");
