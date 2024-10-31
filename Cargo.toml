@@ -9,6 +9,7 @@ parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev =
 verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "0959914" }
 ryhope = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "0959914" }
 groth16_framework_v1 = { package = "groth16_framework", git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "0959914" }
+object_store = "0.11"
 
 [patch.crates-io]
 plonky2 = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }
