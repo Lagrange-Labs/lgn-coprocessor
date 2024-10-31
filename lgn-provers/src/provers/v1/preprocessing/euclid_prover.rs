@@ -7,7 +7,6 @@ use mp2_common::digest::TableDimension;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::generate_proof;
-use mp2_v1::api::CircuitInput;
 use mp2_v1::api::CircuitInput::BlockExtraction;
 use mp2_v1::api::CircuitInput::BlockTree;
 use mp2_v1::api::CircuitInput::CellsTree;
@@ -17,6 +16,9 @@ use mp2_v1::api::CircuitInput::LengthExtraction;
 use mp2_v1::api::CircuitInput::RowsTree;
 use mp2_v1::api::CircuitInput::ValuesExtraction;
 use mp2_v1::api::CircuitInput::IVC;
+use mp2_v1::api::CircuitInput::{
+    self,
+};
 use mp2_v1::api::PublicParameters;
 use mp2_v1::block_extraction;
 use mp2_v1::contract_extraction;
@@ -378,14 +380,12 @@ impl StorageDatabaseProver for EuclidProver
         &self,
         identifier: u64,
         value: U256,
-        is_multiplier: bool,
     ) -> anyhow::Result<Vec<u8>>
     {
         let input = CellsTree(
             verifiable_db::cells_tree::CircuitInput::leaf(
                 identifier,
                 value,
-                is_multiplier,
             ),
         );
         self.prove(
@@ -398,7 +398,6 @@ impl StorageDatabaseProver for EuclidProver
         &self,
         identifier: u64,
         value: U256,
-        is_multiplier: bool,
         child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>
     {
@@ -406,7 +405,6 @@ impl StorageDatabaseProver for EuclidProver
             verifiable_db::cells_tree::CircuitInput::partial(
                 identifier,
                 value,
-                is_multiplier,
                 child_proof,
             ),
         );
@@ -420,7 +418,6 @@ impl StorageDatabaseProver for EuclidProver
         &self,
         identifier: u64,
         value: U256,
-        is_multiplier: bool,
         child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>>
     {
@@ -432,7 +429,6 @@ impl StorageDatabaseProver for EuclidProver
             verifiable_db::cells_tree::CircuitInput::full(
                 identifier,
                 value,
-                is_multiplier,
                 child_proofs,
             ),
         );
@@ -446,7 +442,6 @@ impl StorageDatabaseProver for EuclidProver
         &self,
         identifier: u64,
         value: U256,
-        is_multiplier: bool,
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>
     {
@@ -464,7 +459,6 @@ impl StorageDatabaseProver for EuclidProver
             verifiable_db::row_tree::CircuitInput::leaf(
                 identifier,
                 value,
-                is_multiplier,
                 cells_proof,
             )?,
         );
@@ -478,7 +472,6 @@ impl StorageDatabaseProver for EuclidProver
         &self,
         identifier: u64,
         value: U256,
-        is_multiplier: bool,
         is_child_left: bool,
         child_proof: Vec<u8>,
         cells_proof: Vec<u8>,
@@ -488,7 +481,6 @@ impl StorageDatabaseProver for EuclidProver
             verifiable_db::row_tree::CircuitInput::partial(
                 identifier,
                 value,
-                is_multiplier,
                 is_child_left,
                 child_proof,
                 cells_proof,
@@ -504,7 +496,6 @@ impl StorageDatabaseProver for EuclidProver
         &self,
         identifier: u64,
         value: U256,
-        is_multiplier: bool,
         child_proofs: Vec<Vec<u8>>,
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>
@@ -513,7 +504,6 @@ impl StorageDatabaseProver for EuclidProver
             verifiable_db::row_tree::CircuitInput::full(
                 identifier,
                 value,
-                is_multiplier,
                 child_proofs[0].to_owned(),
                 child_proofs[1].to_owned(),
                 cells_proof,

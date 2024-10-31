@@ -74,7 +74,6 @@ pub struct CellFullInput
     pub cell_id: usize,
     pub identifier: Identifier,
     pub value: U256,
-    pub is_multiplier: bool,
     pub child_locations: Vec<db_keys::ProofKey>,
 
     #[dbg(placeholder = "...")]

@@ -58,3 +58,10 @@ plonky2_field = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "up
 
 [workspace.metadata.cargo-machete]
 ignored = ["serde", "prost"]
+[patch."https://github.com/Lagrange-Labs/mapreduce-plonky2.git"]
+mp2_common = { path = "../mapreduce-plonky2/main/mp2-common/" }
+mp2_v1 = { path = "../mapreduce-plonky2/main/mp2-v1/" }
+parsil = { path = "../mapreduce-plonky2/main/parsil/" }
+verifiable-db = { path = "../mapreduce-plonky2/main/verifiable-db/" }
+ryhope = { path = "../mapreduce-plonky2/main/ryhope/" }
+groth16_framework_v1 = { package = "groth16_framework", path = "../mapreduce-plonky2/main/groth16-framework/" }

@@ -1906,6 +1906,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_builder"
+version = "0.20.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "507dfb09ea8b7fa618fcf76e953f4f5e192547945816d5358edffe39f6f94947"
+dependencies = [
+ "derive_builder_macro",
+]
+
+[[package]]
+name = "derive_builder_core"
+version = "0.20.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d5bcf7b024d6835cfb3d473887cd966994907effbe9227e8c8219824d06c4e8"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.85",
+]
+
+[[package]]
+name = "derive_builder_macro"
+version = "0.20.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab63b0e2bf4d5928aff72e83a7dace85d7bba5fe12dcc3c5a572d78caffd3f3c"
+dependencies = [
+ "derive_builder_core",
+ "syn 2.0.85",
+]
+
+[[package]]
 name = "derive_more"
 version = "0.99.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3099,7 +3130,6 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4255ab1#4255ab177fc6e7d5c1f4be55f62b1a380295b134"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3119,7 +3149,6 @@ dependencies = [
 [[package]]
 name = "groth16_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4255ab1#4255ab177fc6e7d5c1f4be55f62b1a380295b134"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4222,7 +4251,6 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "mp2_common"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4255ab1#4255ab177fc6e7d5c1f4be55f62b1a380295b134"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4249,7 +4277,6 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4255ab1#4255ab177fc6e7d5c1f4be55f62b1a380295b134"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4627,11 +4654,11 @@ dependencies = [
 [[package]]
 name = "parsil"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4255ab1#4255ab177fc6e7d5c1f4be55f62b1a380295b134"
 dependencies = [
  "alloy",
  "anyhow",
  "camelpaste",
+ "derive_builder",
  "log",
  "ryhope",
  "serde",
@@ -5390,7 +5417,6 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4255ab1#4255ab177fc6e7d5c1f4be55f62b1a380295b134"
 dependencies = [
  "anyhow",
  "log",
@@ -5922,7 +5948,6 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4255ab1#4255ab177fc6e7d5c1f4be55f62b1a380295b134"
 dependencies = [
  "anyhow",
  "bb8",
@@ -7380,7 +7405,6 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "verifiable-db"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=4255ab1#4255ab177fc6e7d5c1f4be55f62b1a380295b134"
 dependencies = [
  "alloy",
  "anyhow",

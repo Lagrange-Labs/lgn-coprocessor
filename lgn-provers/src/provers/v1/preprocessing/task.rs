@@ -332,7 +332,6 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                         .prove_cell_leaf(
                                             leaf.identifier,
                                             leaf.value,
-                                            leaf.is_multiplier,
                                         )?
                                 },
                                 DbCellType::Partial(branch) =>
@@ -341,7 +340,6 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                         .prove_cell_partial(
                                             branch.identifier,
                                             branch.value,
-                                            branch.is_multiplier,
                                             branch.child_proof,
                                         )?
                                 },
@@ -351,7 +349,6 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                         .prove_cell_full(
                                             full.identifier,
                                             full.value,
-                                            full.is_multiplier,
                                             full.child_proofs,
                                         )?
                                 },
@@ -367,7 +364,6 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                         .prove_row_leaf(
                                             leaf.identifier,
                                             leaf.value,
-                                            leaf.is_multiplier,
                                             leaf.cells_proof,
                                         )?
                                 },
@@ -377,7 +373,6 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                         .prove_row_partial(
                                             partial.identifier,
                                             partial.value,
-                                            partial.is_multiplier,
                                             partial.is_child_left,
                                             partial
                                                 .child_proof
@@ -393,7 +388,6 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                         .prove_row_full(
                                             full.identifier,
                                             full.value,
-                                            full.is_multiplier,
                                             full.child_proofs,
                                             full.cells_proof,
                                         )?
