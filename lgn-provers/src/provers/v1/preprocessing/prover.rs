@@ -1,7 +1,10 @@
-use alloy::primitives::{Address, U256};
-use mp2_common::{digest::TableDimension, types::HashOutput};
+use alloy::primitives::Address;
+use alloy::primitives::U256;
+use mp2_common::digest::TableDimension;
+use mp2_common::types::HashOutput;
 
-pub trait StorageExtractionProver {
+pub trait StorageExtractionProver
+{
     /// Prove a leaf MPT node of single variable.
     fn prove_single_variable_leaf(
         &self,
@@ -42,7 +45,11 @@ pub trait StorageExtractionProver {
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove the length extraction of a branch MPT node.
-    fn prove_length_branch(&self, node: Vec<u8>, child_proof: Vec<u8>) -> anyhow::Result<Vec<u8>>;
+    fn prove_length_branch(
+        &self,
+        node: Vec<u8>,
+        child_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a leaf MPT node of contract.
     fn prove_contract_leaf(
@@ -53,12 +60,18 @@ pub trait StorageExtractionProver {
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a branch MPT node of contract.
-    fn prove_contract_branch(&self, node: Vec<u8>, child_proof: Vec<u8>)
-        -> anyhow::Result<Vec<u8>>;
+    fn prove_contract_branch(
+        &self,
+        node: Vec<u8>,
+        child_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a block.
     /// TODO: implement this
-    fn prove_block(&self, rlp_header: Vec<u8>) -> anyhow::Result<Vec<u8>>;
+    fn prove_block(
+        &self,
+        rlp_header: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove final extraction for simple types
     fn prove_final_extraction_simple(
@@ -88,7 +101,8 @@ pub trait StorageExtractionProver {
     ) -> anyhow::Result<Vec<u8>>;
 }
 
-pub trait StorageDatabaseProver {
+pub trait StorageDatabaseProver
+{
     /// Prove a cell tree leaf node.
     fn prove_cell_leaf(
         &self,

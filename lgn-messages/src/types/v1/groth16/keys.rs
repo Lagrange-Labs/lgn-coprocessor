@@ -1,7 +1,10 @@
-use crate::types::v1::query::keys::KEYS_QUERIES_PREFIX;
-use object_store::path::Path;
-use serde_derive::{Deserialize, Serialize};
 use std::fmt::Display;
+
+use object_store::path::Path;
+use serde_derive::Deserialize;
+use serde_derive::Serialize;
+
+use crate::types::v1::query::keys::KEYS_QUERIES_PREFIX;
 
 pub type QueryId = String;
 
@@ -9,15 +12,25 @@ pub type QueryId = String;
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]
 pub struct ProofKey(pub QueryId);
 
-impl Display for ProofKey {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for ProofKey
+{
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result
+    {
         let query_id = &self.0;
-        write!(f, "{KEYS_QUERIES_PREFIX}/{query_id}/groth16")
+        write!(
+            f,
+            "{KEYS_QUERIES_PREFIX}/{query_id}/groth16"
+        )
     }
 }
 
-impl From<ProofKey> for Path {
-    fn from(key: ProofKey) -> Self {
+impl From<ProofKey> for Path
+{
+    fn from(key: ProofKey) -> Self
+    {
         Path::from(key.to_string())
     }
 }
@@ -33,7 +46,8 @@ pub const ALL_ASSET_KEYS: [AssetKey; 5] = [
 
 /// Where to store the Groth16 asset files
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]
-pub enum AssetKey {
+pub enum AssetKey
+{
     /// Asset file `circuit.bin`
     Circuit,
 
@@ -50,11 +64,14 @@ pub enum AssetKey {
     VerifierContract,
 }
 
-impl AssetKey {
+impl AssetKey
+{
     /// Return the asset filename.
     #[must_use]
-    pub fn filename(&self) -> &str {
-        match self {
+    pub fn filename(&self) -> &str
+    {
+        match self
+        {
             AssetKey::Circuit => "circuit.bin",
             AssetKey::R1CS => "r1cs.bin",
             AssetKey::PK => "pk.bin",

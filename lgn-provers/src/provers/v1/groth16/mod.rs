@@ -1,7 +1,8 @@
 //! This module contains logic of generating the Groth16 proofs which could be verified on-chain.
-use crate::provers::v1::groth16::task::Groth16;
 use prover::Prover;
 use tracing::info;
+
+use crate::provers::v1::groth16::task::Groth16;
 
 mod prover;
 mod task;
@@ -23,7 +24,8 @@ pub fn create_prover(
     pk_file: &str,
     vk_file: &str,
     skip_store: bool,
-) -> anyhow::Result<Groth16<impl Prover>> {
+) -> anyhow::Result<Groth16<impl Prover>>
+{
     let prover = {
         #[cfg(feature = "dummy-prover")]
         {
