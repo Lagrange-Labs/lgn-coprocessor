@@ -1,8 +1,12 @@
-use crate::routing::RoutingKey;
+use std::fmt::Display;
+use std::fmt::Formatter;
+
 use derive_debug_plus::Dbg;
-use serde_derive::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
+use serde_derive::Deserialize;
+use serde_derive::Serialize;
 use thiserror::Error;
+
+use crate::routing::RoutingKey;
 
 pub mod experimental;
 pub mod v1;
@@ -12,16 +16,21 @@ const REQUIRED_STAKE_MEDIUM_USD: Stake = 98777;
 const REQUIRED_STAKE_LARGE_USD: Stake = 169111;
 
 /// A keyed payload contains a bunch of bytes accompanied by a storage index
-pub type KeyedPayload = (String, Vec<u8>);
+pub type KeyedPayload = (
+    String,
+    Vec<u8>,
+);
 
-pub trait ToKeyedPayload {
+pub trait ToKeyedPayload
+{
     fn to_keyed_payload(&self) -> KeyedPayload;
 }
 
 pub type HashOutput = [u8; 32];
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub enum TaskType {
+pub enum TaskType
+{
     TxTrie(experimental::tx_trie::WorkerTask),
     RecProof(experimental::rec_proof::WorkerTask),
     V1Preprocessing(v1::preprocessing::WorkerTask),
@@ -30,7 +39,8 @@ pub enum TaskType {
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub enum ReplyType {
+pub enum ReplyType
+{
     TxTrie(experimental::tx_trie::WorkerReply),
     RecProof(experimental::rec_proof::WorkerReply),
     V1Preprocessing(WorkerReply),
@@ -39,7 +49,8 @@ pub enum ReplyType {
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct MessageEnvelope<T> {
+pub struct MessageEnvelope<T>
+{
     /// Query id is unique for each query and shared between all its tasks
     pub query_id: String,
 
@@ -50,10 +61,10 @@ pub struct MessageEnvelope<T> {
     pub db_task_id: Option<i32>,
 
     /// Estimate how long it takes this task to finish.
-    /// This includes may factors like: redis queue current length, workers count, parallel queries count, etc.
-    /// Ideally assigned by an "intelligent" algorithm. Not important for now though.
-    /// Might become relevant then we have clients waiting for results, and we can process queries
-    /// relatively fast.
+    /// This includes may factors like: redis queue current length, workers count, parallel queries
+    /// count, etc. Ideally assigned by an "intelligent" algorithm. Not important for now
+    /// though. Might become relevant then we have clients waiting for results, and we can
+    /// process queries relatively fast.
     pub rtt: u64,
 
     /// How much work prover has to do
@@ -66,8 +77,15 @@ pub struct MessageEnvelope<T> {
     pub inner: T,
 }
 
-impl<T> MessageEnvelope<T> {
-    pub fn new(query_id: String, task_id: String, inner: T, routing_key: RoutingKey) -> Self {
+impl<T> MessageEnvelope<T>
+{
+    pub fn new(
+        query_id: String,
+        task_id: String,
+        inner: T,
+        routing_key: RoutingKey,
+    ) -> Self
+    {
         Self {
             query_id,
             inner,
@@ -79,29 +97,38 @@ impl<T> MessageEnvelope<T> {
         }
     }
 
-    pub fn query_id(&self) -> &str {
+    pub fn query_id(&self) -> &str
+    {
         &self.query_id
     }
 
-    pub fn task_id(&self) -> &str {
+    pub fn task_id(&self) -> &str
+    {
         &self.task_id
     }
 
-    pub fn id(&self) -> String {
-        format!("{}-{}", self.query_id, self.task_id)
+    pub fn id(&self) -> String
+    {
+        format!(
+            "{}-{}",
+            self.query_id, self.task_id
+        )
     }
 
-    pub fn inner(&self) -> &T {
+    pub fn inner(&self) -> &T
+    {
         &self.inner
     }
 
-    pub fn inner_mut(&mut self) -> &mut T {
+    pub fn inner_mut(&mut self) -> &mut T
+    {
         &mut self.inner
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct MessageReplyEnvelope<T> {
+pub struct MessageReplyEnvelope<T>
+{
     /// Query id is unique for each query and shared between all its tasks
     pub query_id: String,
 
@@ -113,8 +140,14 @@ pub struct MessageReplyEnvelope<T> {
     error: Option<WorkerError>,
 }
 
-impl<T> MessageReplyEnvelope<T> {
-    pub fn new(query_id: String, task_id: String, inner: T) -> Self {
+impl<T> MessageReplyEnvelope<T>
+{
+    pub fn new(
+        query_id: String,
+        task_id: String,
+        inner: T,
+    ) -> Self
+    {
         Self {
             query_id,
             task_id,
@@ -123,41 +156,54 @@ impl<T> MessageReplyEnvelope<T> {
         }
     }
 
-    pub fn id(&self) -> String {
-        format!("{}-{}", self.query_id, self.task_id)
+    pub fn id(&self) -> String
+    {
+        format!(
+            "{}-{}",
+            self.query_id, self.task_id
+        )
     }
 
     /// Flatten `inner`, returning either Ok(successful_proof) or
     /// Err(WorkerError)
-    pub fn inner(&self) -> Result<&T, &WorkerError> {
-        match self.error.as_ref() {
+    pub fn inner(&self) -> Result<&T, &WorkerError>
+    {
+        match self
+            .error
+            .as_ref()
+        {
             None => Ok(&self.inner),
             Some(t) => Err(t),
         }
     }
 
     /// Return the proof in this envelope, be it successful or not.
-    pub fn content(&self) -> &T {
+    pub fn content(&self) -> &T
+    {
         &self.inner
     }
 
-    pub fn query_id(&self) -> &str {
+    pub fn query_id(&self) -> &str
+    {
         &self.query_id
     }
 
-    pub fn task_id(&self) -> &str {
+    pub fn task_id(&self) -> &str
+    {
         &self.task_id
     }
 }
 
 #[derive(Copy, Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
-pub enum ProofCategory {
+pub enum ProofCategory
+{
     Indexing,
     Querying,
 }
 
 #[derive(Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
-pub struct WorkerReply {
+pub struct WorkerReply
+{
     pub chain_id: u64,
 
     #[dbg(formatter = crate::types::kp_pretty)]
@@ -166,9 +212,15 @@ pub struct WorkerReply {
     pub proof_type: ProofCategory,
 }
 
-impl WorkerReply {
+impl WorkerReply
+{
     #[must_use]
-    pub fn new(chain_id: u64, proof: Option<KeyedPayload>, proof_type: ProofCategory) -> Self {
+    pub fn new(
+        chain_id: u64,
+        proof: Option<KeyedPayload>,
+        proof_type: ProofCategory,
+    ) -> Self
+    {
         Self {
             chain_id,
             proof,
@@ -178,7 +230,8 @@ impl WorkerReply {
 }
 
 #[derive(Error, Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub enum WorkerError {
+pub enum WorkerError
+{
     // Start with general error to introduce the errors to replies
     #[error("{0}")]
     GeneralError(String),
@@ -187,45 +240,99 @@ pub enum WorkerError {
 #[derive(
     Default, Debug, Copy, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize,
 )]
-pub struct Position {
+pub struct Position
+{
     pub level: usize,
     pub index: usize,
 }
 
-impl Position {
+impl Position
+{
     #[must_use]
-    pub fn new(level: usize, index: usize) -> Self {
-        Self { level, index }
+    pub fn new(
+        level: usize,
+        index: usize,
+    ) -> Self
+    {
+        Self {
+            level,
+            index,
+        }
     }
 
-    pub fn as_tuple(&self) -> (usize, usize) {
-        (self.level, self.index)
+    pub fn as_tuple(
+        &self
+    ) -> (
+        usize,
+        usize,
+    )
+    {
+        (
+            self.level,
+            self.index,
+        )
     }
 }
 
-impl Display for Position {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}/{}", self.level, self.index)
+impl Display for Position
+{
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result
+    {
+        write!(
+            f,
+            "{}/{}",
+            self.level, self.index
+        )
     }
 }
 
-impl From<(usize, usize)> for Position {
-    fn from((level, index): (usize, usize)) -> Self {
-        Self { level, index }
+impl
+    From<(
+        usize,
+        usize,
+    )> for Position
+{
+    fn from(
+        (level, index): (
+            usize,
+            usize,
+        )
+    ) -> Self
+    {
+        Self {
+            level,
+            index,
+        }
     }
 }
 
-impl From<Position> for (usize, usize) {
-    fn from(position: Position) -> Self {
-        (position.level, position.index)
+impl From<Position>
+    for (
+        usize,
+        usize,
+    )
+{
+    fn from(position: Position) -> Self
+    {
+        (
+            position.level,
+            position.index,
+        )
     }
 }
 
 /// All the messages that may transit from the worker to the server
 #[derive(Debug, Serialize, Deserialize)]
-pub enum UpstreamPayload<T> {
+pub enum UpstreamPayload<T>
+{
     /// The worker is authenticating
-    Authentication { token: String },
+    Authentication
+    {
+        token: String,
+    },
 
     /// The worker is ready to start working(after params loading)
     Ready,
@@ -237,31 +344,68 @@ pub enum UpstreamPayload<T> {
     ProvingError(String),
 }
 
-impl<T> Display for UpstreamPayload<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            UpstreamPayload::Done(_) => write!(f, "Task done"),
-            UpstreamPayload::Authentication { .. } => write!(f, "Authentication"),
-            UpstreamPayload::Ready => write!(f, "Ready"),
-            UpstreamPayload::ProvingError(_) => write!(f, "Proving error"),
+impl<T> Display for UpstreamPayload<T>
+{
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result
+    {
+        match self
+        {
+            UpstreamPayload::Done(_) =>
+            {
+                write!(
+                    f,
+                    "Task done"
+                )
+            },
+            UpstreamPayload::Authentication {
+                ..
+            } =>
+            {
+                write!(
+                    f,
+                    "Authentication"
+                )
+            },
+            UpstreamPayload::Ready =>
+            {
+                write!(
+                    f,
+                    "Ready"
+                )
+            },
+            UpstreamPayload::ProvingError(_) =>
+            {
+                write!(
+                    f,
+                    "Proving error"
+                )
+            },
         }
     }
 }
 
 /// All the messages that may transit from the server to the worker
 #[derive(Debug, Serialize, Deserialize)]
-pub enum DownstreamPayload<T> {
+pub enum DownstreamPayload<T>
+{
     /// indicate a successful authentication to the worker
     Ack,
     /// order the worker to process the given task
-    Todo { envelope: MessageEnvelope<T> },
+    Todo
+    {
+        envelope: MessageEnvelope<T>,
+    },
 }
 
 pub type Stake = u128;
 
 /// The segregation of job types according to their computational complexity
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
-pub enum TaskDifficulty {
+pub enum TaskDifficulty
+{
     // Due to the implicit ordering on which PartialOrd is built, this **MUST**
     // remain the smaller value at the top of the enum.
     // Hence, all workers of this class will always test .LT. *all* the tasks in
@@ -276,10 +420,13 @@ pub enum TaskDifficulty {
     Large,
 }
 
-impl TaskDifficulty {
+impl TaskDifficulty
+{
     /// Returns the stake required in order to run such a task
-    pub fn required_stake(&self) -> Stake {
-        match self {
+    pub fn required_stake(&self) -> Stake
+    {
+        match self
+        {
             TaskDifficulty::Small => REQUIRED_STAKE_SMALL_USD,
             TaskDifficulty::Medium => REQUIRED_STAKE_MEDIUM_USD,
             TaskDifficulty::Large => REQUIRED_STAKE_LARGE_USD,
@@ -287,10 +434,16 @@ impl TaskDifficulty {
             _ => 0,
         }
     }
+
     /// Returns the minimal worker class required to process a task of the given queue
-    pub fn from_queue(domain: &str) -> Self {
-        let domain = domain.split('_').next().expect("invalid routing key");
-        match domain {
+    pub fn from_queue(domain: &str) -> Self
+    {
+        let domain = domain
+            .split('_')
+            .next()
+            .expect("invalid routing key");
+        match domain
+        {
             v1::preprocessing::ROUTING_DOMAIN => TaskDifficulty::Medium,
             v1::query::ROUTING_DOMAIN => TaskDifficulty::Small,
             v1::groth16::ROUTING_DOMAIN => TaskDifficulty::Large,
@@ -299,11 +452,16 @@ impl TaskDifficulty {
     }
 }
 
-impl TryFrom<&str> for TaskDifficulty {
+impl TryFrom<&str> for TaskDifficulty
+{
     type Error = String;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value.to_ascii_lowercase().as_str() {
+    fn try_from(value: &str) -> Result<Self, Self::Error>
+    {
+        match value
+            .to_ascii_lowercase()
+            .as_str()
+        {
             "disabled" => Ok(TaskDifficulty::Disabled),
             "small" => Ok(TaskDifficulty::Small),
             "medium" => Ok(TaskDifficulty::Medium),
@@ -313,12 +471,18 @@ impl TryFrom<&str> for TaskDifficulty {
     }
 }
 
-impl Display for TaskDifficulty {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl Display for TaskDifficulty
+{
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result
+    {
         write!(
             f,
             "{}",
-            match self {
+            match self
+            {
                 TaskDifficulty::Small => "small",
                 TaskDifficulty::Medium => "medium",
                 TaskDifficulty::Large => "large",
@@ -328,14 +492,20 @@ impl Display for TaskDifficulty {
     }
 }
 
-pub fn kp_pretty(kp: &Option<KeyedPayload>) -> String {
+pub fn kp_pretty(kp: &Option<KeyedPayload>) -> String
+{
     kp.as_ref()
-        .map(|kp| kp.0.to_owned())
+        .map(
+            |kp| {
+                kp.0.to_owned()
+            },
+        )
         .unwrap_or("empty".to_string())
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum ProverType {
+pub enum ProverType
+{
     /// V0 query preprocessing handler.
     Query2Preprocess,
 
@@ -354,12 +524,18 @@ pub enum ProverType {
     V1Groth16,
 }
 
-impl Display for ProverType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl Display for ProverType
+{
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result
+    {
         write!(
             f,
             "{}",
-            match self {
+            match self
+            {
                 ProverType::Query2Preprocess => "Query2Preprocess",
                 ProverType::Query2Query => "Query2Query",
                 ProverType::Query2Groth16 => "Query2Groth16",
@@ -372,17 +548,27 @@ impl Display for ProverType {
     }
 }
 
-pub trait ToProverType {
+pub trait ToProverType
+{
     fn to_prover_type(&self) -> ProverType;
 }
 
-impl ToProverType for TaskType {
-    fn to_prover_type(&self) -> ProverType {
-        match self {
+impl ToProverType for TaskType
+{
+    fn to_prover_type(&self) -> ProverType
+    {
+        match self
+        {
             TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
             TaskType::V1Query(_) => ProverType::V1Query,
             TaskType::V1Groth16(_) => ProverType::V1Groth16,
-            _ => panic!("Unsupported task type: {:?}", self),
+            _ =>
+            {
+                panic!(
+                    "Unsupported task type: {:?}",
+                    self
+                )
+            },
         }
     }
 }

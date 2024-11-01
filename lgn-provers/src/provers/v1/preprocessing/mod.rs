@@ -1,6 +1,8 @@
-use crate::provers::v1::preprocessing::prover::{StorageDatabaseProver, StorageExtractionProver};
-use crate::provers::v1::preprocessing::task::Preprocessing;
 use tracing::info;
+
+use crate::provers::v1::preprocessing::prover::StorageDatabaseProver;
+use crate::provers::v1::preprocessing::prover::StorageExtractionProver;
+use crate::provers::v1::preprocessing::task::Preprocessing;
 pub mod prover;
 pub mod task;
 
@@ -18,7 +20,8 @@ pub fn create_prover(
     checksum_expected_local_path: &str,
     skip_checksum: bool,
     skip_store: bool,
-) -> anyhow::Result<Preprocessing<impl StorageExtractionProver + StorageDatabaseProver>> {
+) -> anyhow::Result<Preprocessing<impl StorageExtractionProver + StorageDatabaseProver>>
+{
     let prover = {
         #[cfg(feature = "dummy-prover")]
         {

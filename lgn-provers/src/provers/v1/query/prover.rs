@@ -1,11 +1,13 @@
-use lgn_messages::types::v1::query::tasks::{
-    NonExistenceInput, PartialNodeInput, RowsEmbeddedProofInput, SinglePathBranchInput,
-    SinglePathLeafInput,
-};
+use lgn_messages::types::v1::query::tasks::NonExistenceInput;
+use lgn_messages::types::v1::query::tasks::PartialNodeInput;
+use lgn_messages::types::v1::query::tasks::RowsEmbeddedProofInput;
+use lgn_messages::types::v1::query::tasks::SinglePathBranchInput;
+use lgn_messages::types::v1::query::tasks::SinglePathLeafInput;
 use parsil::assembler::DynamicCircuitPis;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
 
-pub trait StorageQueryProver {
+pub trait StorageQueryProver
+{
     fn prove_universal_circuit(
         &self,
         input: RowsEmbeddedProofInput,

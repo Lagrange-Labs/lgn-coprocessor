@@ -1,40 +1,59 @@
+use std::collections::BTreeMap;
+use std::fmt::Debug;
+use std::net::TcpStream;
+use std::panic;
+use std::result::Result::Ok;
+use std::str::FromStr;
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
+
 use anyhow::*;
 use backtrace::Backtrace;
 use clap::Parser;
-use jwt::{Claims, RegisteredClaims};
+use ethers::signers::Wallet;
+use jwt::Claims;
+use jwt::RegisteredClaims;
 use k256::ecdsa::SigningKey;
 use lagrange::worker_done::Reply;
-use lagrange::{WorkerDone, WorkerToGwRequest, WorkerToGwResponse};
+use lagrange::WorkerDone;
+use lagrange::WorkerToGwRequest;
+use lagrange::WorkerToGwResponse;
+use lgn_auth::jwt::JWTAuth;
+use lgn_messages::types::DownstreamPayload;
+use lgn_messages::types::MessageEnvelope;
+use lgn_messages::types::MessageReplyEnvelope;
+use lgn_messages::types::ReplyType;
+use lgn_messages::types::TaskType;
+use lgn_messages::types::UpstreamPayload;
+use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
 use mimalloc::MiMalloc;
-use std::fmt::Debug;
-use std::net::TcpStream;
-use std::result::Result::Ok;
-use std::time::{SystemTime, UNIX_EPOCH};
-use std::{collections::BTreeMap, panic, str::FromStr};
 use tokio::io::AsyncWriteExt;
 use tokio_stream::StreamExt;
 use tonic::metadata::MetadataValue;
 use tonic::Request;
+use tracing::debug;
+use tracing::error;
+use tracing::info;
 use tracing::level_filters::LevelFilter;
-use tracing::{debug, error, info, span, trace, Level};
+use tracing::span;
+use tracing::trace;
+use tracing::Level;
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::EnvFilter;
-use tungstenite::{connect, Message, WebSocket};
+use tungstenite::connect;
+use tungstenite::stream::MaybeTlsStream;
+use tungstenite::Message;
+use tungstenite::WebSocket;
 
-use crate::checksum::{fetch_checksum_file, verify_directory_checksums};
+use crate::checksum::fetch_checksum_file;
+use crate::checksum::verify_directory_checksums;
 use crate::config::Config;
 use crate::manager::v1::register_v1_provers;
 use crate::manager::ProversManager;
-use ethers::signers::Wallet;
-use lgn_auth::jwt::JWTAuth;
-use lgn_messages::types::{
-    DownstreamPayload, MessageEnvelope, MessageReplyEnvelope, ReplyType, TaskType, UpstreamPayload,
-};
-use lgn_worker::avs::utils::read_keystore;
-use tungstenite::stream::MaybeTlsStream;
 
-pub mod lagrange {
+pub mod lagrange
+{
     tonic::include_proto!("lagrange");
 }
 
@@ -48,16 +67,26 @@ static GLOBAL: MiMalloc = MiMalloc;
 const MAX_GRPC_MESSAGE_SIZE_MB: usize = 16;
 
 #[derive(Parser, Clone, Debug)]
-struct Cli {
-    #[clap(short, long)]
+struct Cli
+{
+    #[clap(
+        short,
+        long
+    )]
     config: Option<String>,
 
-    #[clap(short, long, action)]
+    #[clap(
+        short,
+        long,
+        action
+    )]
     json: bool,
 }
 
-fn setup_logging(json: bool) {
-    if json {
+fn setup_logging(json: bool)
+{
+    if json
+    {
         let subscriber = tracing_subscriber::fmt()
             .json()
             .with_level(true)
@@ -72,7 +101,9 @@ fn setup_logging(json: bool) {
             .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("Setting up logging failed");
-    } else {
+    }
+    else
+    {
         let subscriber = tracing_subscriber::fmt()
             .pretty()
             .compact()
@@ -92,81 +123,162 @@ fn setup_logging(json: bool) {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> anyhow::Result<()>
+{
     let cli = Cli::parse();
     setup_logging(cli.json);
 
-    panic::set_hook(Box::new(|panic_info| {
-        let msg = match panic_info.payload().downcast_ref::<&'static str>() {
-            Some(s) => *s,
-            None => match panic_info.payload().downcast_ref::<String>() {
-                Some(s) => &s[..],
-                None => "Box<dyn Any>",
+    panic::set_hook(
+        Box::new(
+            |panic_info| {
+                let msg = match panic_info
+                    .payload()
+                    .downcast_ref::<&'static str>()
+                {
+                    Some(s) => *s,
+                    None =>
+                    {
+                        match panic_info
+                            .payload()
+                            .downcast_ref::<String>()
+                        {
+                            Some(s) => &s[..],
+                            None => "Box<dyn Any>",
+                        }
+                    },
+                };
+                let (file, lineno, col) = match panic_info.location()
+                {
+                    Some(l) =>
+                    {
+                        (
+                            l.file(),
+                            l.line(),
+                            l.column(),
+                        )
+                    },
+                    None =>
+                    {
+                        (
+                            "<unknown>",
+                            0,
+                            0,
+                        )
+                    },
+                };
+
+                error!(
+                    msg,
+                    file,
+                    lineno,
+                    col,
+                    "Panic occurred: {:?}",
+                    Backtrace::new(),
+                );
             },
-        };
-        let (file, lineno, col) = match panic_info.location() {
-            Some(l) => (l.file(), l.line(), l.column()),
-            None => ("<unknown>", 0, 0),
-        };
+        ),
+    );
 
+    if let Err(err) = run(cli).await
+    {
         error!(
-            msg,
-            file,
-            lineno,
-            col,
-            "Panic occurred: {:?}",
-            Backtrace::new(),
+            "Service exiting with an error. err: {:?}",
+            err
         );
-    }));
-
-    if let Err(err) = run(cli).await {
-        error!("Service exiting with an error. err: {:?}", err);
         bail!("Worker exited due to an error")
-    } else {
+    }
+    else
+    {
         Ok(())
     }
 }
 
-async fn run(cli: Cli) -> Result<()> {
+async fn run(cli: Cli) -> Result<()>
+{
     let version = env!("CARGO_PKG_VERSION");
-    info!("Starting worker. version: {}", version);
+    info!(
+        "Starting worker. version: {}",
+        version
+    );
 
     let config = Config::load(cli.config);
     config.validate();
-    info!("Loaded configuration: {:?}", config);
+    info!(
+        "Loaded configuration: {:?}",
+        config
+    );
 
     let span = span!(
         Level::INFO,
         "Starting node",
-        "worker" = config.avs.worker_id.to_string(),
-        "issuer" = config.avs.issuer.to_string(),
+        "worker" = config
+            .avs
+            .worker_id
+            .to_string(),
+        "issuer" = config
+            .avs
+            .issuer
+            .to_string(),
         "version" = version,
-        "class" = config.worker.instance_type.to_string(),
+        "class" = config
+            .worker
+            .instance_type
+            .to_string(),
     );
     let _guard = span.enter();
 
     metrics_exporter_prometheus::PrometheusBuilder::new()
-        .with_http_listener(([0, 0, 0, 0], config.prometheus.port))
+        .with_http_listener(
+            (
+                [
+                    0,
+                    0,
+                    0,
+                    0,
+                ],
+                config
+                    .prometheus
+                    .port,
+            ),
+        )
         .install()?;
 
-    if let Some(grpc_url) = &config.avs.gateway_grpc_url {
-        run_with_grpc(&config, grpc_url).await
-    } else {
+    if let Some(grpc_url) = &config
+        .avs
+        .gateway_grpc_url
+    {
+        run_with_grpc(
+            &config,
+            grpc_url,
+        )
+        .await
+    }
+    else
+    {
         tokio::task::block_in_place(move || run_with_websocket(&config))
     }
 }
 
-async fn maybe_download_checksum(config: &Config) -> Result<()> {
-    if config.public_params.skip_checksum {
+async fn maybe_download_checksum(config: &Config) -> Result<()>
+{
+    if config
+        .public_params
+        .skip_checksum
+    {
         return Ok(());
     }
 
     // Fetch checksum file
     // The checksum file can be generated in two ways.
     // 1- Run the worker, and it will download and spit out the checksum on disk
-    // 2- Manually download the params then install with the checksums bin crate and run checksums -c -r zkmr_params -a BLAKE3
-    let checksum_url = &config.public_params.checksum_url;
-    let expected_checksums_file = &config.public_params.checksum_expected_local_path;
+    // 2- Manually download the params then install with the checksums bin crate and run checksums
+    // -c -r zkmr_params -a BLAKE3
+    let checksum_url = &config
+        .public_params
+        .checksum_url;
+    let expected_checksums_file = &config
+        .public_params
+        .checksum_expected_local_path;
 
     let response = reqwest::get(checksum_url)
         .await
@@ -188,7 +300,11 @@ async fn maybe_download_checksum(config: &Config) -> Result<()> {
     Ok(())
 }
 
-async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
+async fn run_with_grpc(
+    config: &Config,
+    grpc_url: &str,
+) -> Result<()>
+{
     let uri = grpc_url.parse::<tonic::transport::Uri>()?;
     let (mut outbound, outbound_rx) = tokio::sync::mpsc::channel(1024);
 
@@ -196,18 +312,29 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
 
     maybe_download_checksum(config).await?;
 
-    let mut provers_manager =
-        tokio::task::block_in_place(move || -> Result<ProversManager<TaskType, ReplyType>> {
+    let mut provers_manager = tokio::task::block_in_place(
+        move || -> Result<ProversManager<TaskType, ReplyType>> {
             let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-            register_v1_provers(config, &mut provers_manager)
-                .context("while registering provers")?;
+            register_v1_provers(
+                config,
+                &mut provers_manager,
+            )
+            .context("while registering provers")?;
             Ok(provers_manager)
-        })?;
+        },
+    )?;
 
-    if !config.public_params.skip_checksum {
+    if !config
+        .public_params
+        .skip_checksum
+    {
         verify_directory_checksums(
-            &config.public_params.dir,
-            &config.public_params.checksum_expected_local_path,
+            &config
+                .public_params
+                .dir,
+            &config
+                .public_params
+                .checksum_expected_local_path,
         )
         .context("Failed to verify checksums")?;
     }
@@ -217,9 +344,15 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
 
     let wallet = get_wallet(config)?;
     let claims = get_claims(config)?;
-    let token = JWTAuth::new(claims, &wallet)?.encode()?;
+    let token = JWTAuth::new(
+        claims,
+        &wallet,
+    )?
+    .encode()?;
 
-    let channel = tonic::transport::Channel::builder(uri).connect().await?;
+    let channel = tonic::transport::Channel::builder(uri)
+        .connect()
+        .await?;
     let token: MetadataValue<_> = format!("Bearer {token}").parse()?;
 
     let max_message_size = config
@@ -232,7 +365,11 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
     let mut client = lagrange::workers_service_client::WorkersServiceClient::with_interceptor(
         channel,
         move |mut req: Request<()>| {
-            req.metadata_mut().insert("authorization", token.clone());
+            req.metadata_mut()
+                .insert(
+                    "authorization",
+                    token.clone(),
+                );
             Ok(req)
         },
     )
@@ -246,17 +383,25 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
     let mut inbound = response.into_inner();
 
     outbound
-        .send(WorkerToGwRequest {
-            request: Some(lagrange::worker_to_gw_request::Request::WorkerReady(
-                lagrange::WorkerReady {
-                    version: env!("CARGO_PKG_VERSION").to_string(),
-                    worker_class: config.worker.instance_type.to_string(),
-                },
-            )),
-        })
+        .send(
+            WorkerToGwRequest {
+                request: Some(
+                    lagrange::worker_to_gw_request::Request::WorkerReady(
+                        lagrange::WorkerReady {
+                            version: env!("CARGO_PKG_VERSION").to_string(),
+                            worker_class: config
+                                .worker
+                                .instance_type
+                                .to_string(),
+                        },
+                    ),
+                ),
+            },
+        )
         .await?;
 
-    loop {
+    loop
+    {
         tokio::select! {
             Some(inbound_message) = inbound.next() => {
                 let msg = match inbound_message {
@@ -278,7 +423,8 @@ async fn run_with_grpc(config: &Config, grpc_url: &str) -> Result<()> {
 fn process_downstream_payload(
     provers_manager: &ProversManager<TaskType, ReplyType>,
     envelope: MessageEnvelope<TaskType>,
-) -> Result<MessageReplyEnvelope<ReplyType>, String> {
+) -> Result<MessageReplyEnvelope<ReplyType>, String>
+{
     let span = span!(
         Level::INFO,
         "Received Task",
@@ -288,41 +434,71 @@ fn process_downstream_payload(
     );
     let _guard = span.enter();
 
-    debug!("Received task. envelope: {:?}", envelope);
+    debug!(
+        "Received task. envelope: {:?}",
+        envelope
+    );
     counter!("zkmr_worker_tasks_received_total").increment(1);
-    match std::panic::catch_unwind(|| provers_manager.delegate_proving(&envelope)) {
-        Ok(result) => match result {
-            Ok(reply) => {
-                debug!("Sending reply: {:?}", reply);
-                counter!("zkmr_worker_tasks_processed_total").increment(1);
-                Ok(reply)
-            }
-            Err(e) => {
-                error!("Error processing task: {:?}", e);
-                counter!("zkmr_worker_error_count", "error_type" =>  "proof processing")
-                    .increment(1);
+    match std::panic::catch_unwind(|| provers_manager.delegate_proving(&envelope))
+    {
+        Ok(result) =>
+        {
+            match result
+            {
+                Ok(reply) =>
+                {
+                    debug!(
+                        "Sending reply: {:?}",
+                        reply
+                    );
+                    counter!("zkmr_worker_tasks_processed_total").increment(1);
+                    Ok(reply)
+                },
+                Err(e) =>
+                {
+                    error!(
+                        "Error processing task: {:?}",
+                        e
+                    );
+                    counter!("zkmr_worker_error_count", "error_type" =>  "proof processing")
+                        .increment(1);
 
-                Err(format!("{e:?}"))
+                    Err(format!("{e:?}"))
+                },
             }
         },
-        Err(panic) => {
+        Err(panic) =>
+        {
             counter!(
                 "zkmr_worker_error_count",
                 "error_type" => "proof_processing"
             )
             .increment(1);
 
-            let msg = match panic.downcast_ref::<&'static str>() {
+            let msg = match panic.downcast_ref::<&'static str>()
+            {
                 Some(s) => *s,
-                None => match panic.downcast_ref::<String>() {
-                    Some(s) => &s[..],
-                    None => "Box<dyn Any>",
+                None =>
+                {
+                    match panic.downcast_ref::<String>()
+                    {
+                        Some(s) => &s[..],
+                        None => "Box<dyn Any>",
+                    }
                 },
             };
 
-            error!("panic encountered while proving {} : {msg}", envelope.id());
-            Err(format!("{}: {msg}", envelope.id()))
-        }
+            error!(
+                "panic encountered while proving {} : {msg}",
+                envelope.id()
+            );
+            Err(
+                format!(
+                    "{}: {msg}",
+                    envelope.id()
+                ),
+            )
+        },
     }
 }
 
@@ -330,71 +506,121 @@ async fn process_message_from_gateway(
     provers_manager: &mut ProversManager<TaskType, ReplyType>,
     message: &WorkerToGwResponse,
     outbound: &mut tokio::sync::mpsc::Sender<WorkerToGwRequest>,
-) -> Result<()> {
-    match &message.response {
-        Some(response) => match response {
-            lagrange::worker_to_gw_response::Response::Todo(json_document) => {
-                let message_envelope =
-                    serde_json::from_str::<MessageEnvelope<TaskType>>(json_document)?;
+) -> Result<()>
+{
+    match &message.response
+    {
+        Some(response) =>
+        {
+            match response
+            {
+                lagrange::worker_to_gw_response::Response::Todo(json_document) =>
+                {
+                    let message_envelope =
+                        serde_json::from_str::<MessageEnvelope<TaskType>>(json_document)?;
 
-                let reply = tokio::task::block_in_place(
-                    move || -> Result<MessageReplyEnvelope<ReplyType>, String> {
-                        process_downstream_payload(provers_manager, message_envelope)
-                    },
-                );
+                    let reply = tokio::task::block_in_place(
+                        move || -> Result<MessageReplyEnvelope<ReplyType>, String> {
+                            process_downstream_payload(
+                                provers_manager,
+                                message_envelope,
+                            )
+                        },
+                    );
 
-                let outbound_msg = match reply {
-                    Ok(reply) => WorkerToGwRequest {
-                        request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
-                            WorkerDone {
-                                reply: Some(Reply::ReplyString(serde_json::to_string(&reply)?)),
-                            },
-                        )),
-                    },
-                    Err(error_str) => WorkerToGwRequest {
-                        request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
-                            WorkerDone {
-                                reply: Some(Reply::WorkerError(error_str)),
-                            },
-                        )),
-                    },
-                };
-                outbound.send(outbound_msg).await?;
+                    let outbound_msg = match reply
+                    {
+                        Ok(reply) =>
+                        {
+                            WorkerToGwRequest {
+                                request: Some(
+                                    lagrange::worker_to_gw_request::Request::WorkerDone(
+                                        WorkerDone {
+                                            reply: Some(
+                                                Reply::ReplyString(serde_json::to_string(&reply)?),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                            }
+                        },
+                        Err(error_str) =>
+                        {
+                            WorkerToGwRequest {
+                                request: Some(
+                                    lagrange::worker_to_gw_request::Request::WorkerDone(
+                                        WorkerDone {
+                                            reply: Some(Reply::WorkerError(error_str)),
+                                        },
+                                    ),
+                                ),
+                            }
+                        },
+                    };
+                    outbound
+                        .send(outbound_msg)
+                        .await?;
 
-                counter!("zkmr_worker_grpc_messages_sent_total",
+                    counter!("zkmr_worker_grpc_messages_sent_total",
                                     "message_type" => "text")
-                .increment(1);
+                    .increment(1);
+                },
             }
         },
-        None => {
+        None =>
+        {
             tracing::warn!("Received WorkerToGwReponse with empty reponse field");
-        }
+        },
     }
     Ok(())
 }
 
-fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>> {
+fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>>
+{
     let res = match (
-        &config.avs.lagr_keystore,
-        &config.avs.lagr_pwd,
-        &config.avs.lagr_private_key,
-    ) {
-        (Some(keystore_path), Some(password), None) => {
-            read_keystore(keystore_path, password.expose_secret())?
-        }
-        (Some(_), None, Some(pkey)) => {
+        &config
+            .avs
+            .lagr_keystore,
+        &config
+            .avs
+            .lagr_pwd,
+        &config
+            .avs
+            .lagr_private_key,
+    )
+    {
+        (Some(keystore_path), Some(password), None) =>
+        {
+            read_keystore(
+                keystore_path,
+                password.expose_secret(),
+            )?
+        },
+        (Some(_), None, Some(pkey)) =>
+        {
             Wallet::from_str(pkey.expose_secret()).context("Failed to create wallet")?
-        }
+        },
         _ => bail!("Must specify either keystore path w/ password OR private key"),
     };
 
     Ok(res)
 }
 
-fn get_claims(config: &Config) -> Result<Claims> {
+fn get_claims(config: &Config) -> Result<Claims>
+{
     let registered = RegisteredClaims {
-        issuer: Some(config.avs.issuer.clone()),
-        subject: Some(config.avs.worker_id.clone()),
+        issuer: Some(
+            config
+                .avs
+                .issuer
+                .clone(),
+        ),
+        subject: Some(
+            config
+                .avs
+                .worker_id
+                .clone(),
+        ),
         issued_at: Some(
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
@@ -412,35 +638,55 @@ fn get_claims(config: &Config) -> Result<Claims> {
         ),
         (
             "worker_class".to_string(),
-            serde_json::Value::String(config.worker.instance_type.to_string()),
+            serde_json::Value::String(
+                config
+                    .worker
+                    .instance_type
+                    .to_string(),
+            ),
         ),
     ]
     .into_iter()
     .collect::<BTreeMap<String, serde_json::Value>>();
 
-    Ok(Claims {
-        registered,
-        private,
-    })
+    Ok(
+        Claims {
+            registered,
+            private,
+        },
+    )
 }
 
-fn run_with_websocket(config: &Config) -> Result<()> {
+fn run_with_websocket(config: &Config) -> Result<()>
+{
     let lagrange_wallet = get_wallet(config)?;
 
     info!(
         "Connecting to the gateway. gateway_url: {}",
-        &config.avs.gateway_url
+        &config
+            .avs
+            .gateway_url
     );
 
     let claims = get_claims(config)?;
 
-    let (mut ws_socket, _) = connect(&config.avs.gateway_url)?;
+    let (mut ws_socket, _) = connect(
+        &config
+            .avs
+            .gateway_url,
+    )?;
     counter!("zkmr_worker_gateway_connection_count").increment(1);
 
     info!("Authenticating");
-    let token = JWTAuth::new(claims, &lagrange_wallet)?.encode()?;
+    let token = JWTAuth::new(
+        claims,
+        &lagrange_wallet,
+    )?
+    .encode()?;
     // Send the authentication frame..
-    let auth_msg = UpstreamPayload::<ReplyType>::Authentication { token };
+    let auth_msg = UpstreamPayload::<ReplyType>::Authentication {
+        token,
+    };
     let auth_msg_json =
         serde_json::to_string(&auth_msg).context("Failed to serialize Authentication message")?;
     ws_socket
@@ -450,41 +696,86 @@ fn run_with_websocket(config: &Config) -> Result<()> {
     ws_socket
         .read()
         .context("Failed to read authentication confirmation")
-        .and_then(|reply| match reply {
-            Message::Text(payload) => Ok(payload),
-            _ => bail!(
+        .and_then(
+            |reply| {
+                match reply
+                {
+                    Message::Text(payload) => Ok(payload),
+                    _ =>
+                    {
+                        bail!(
                 "Unexpected websocket message during authentication, expected Text. reply: {}",
                 reply
-            ),
-        })
-        .and_then(|payload| {
-            match serde_json::from_str::<DownstreamPayload<ReplyType>>(&payload) {
-                Ok(DownstreamPayload::Ack) => Ok(()),
-                Ok(DownstreamPayload::Todo { envelope }) => bail!(
-                    "Unexpected Todo message during authentication. msg: {:?}",
-                    envelope
-                ),
-                Err(err) => bail!("Websocket error while authenticating. err: {}", err),
-            }
-        })?;
+            )
+                    },
+                }
+            },
+        )
+        .and_then(
+            |payload| {
+                match serde_json::from_str::<DownstreamPayload<ReplyType>>(&payload)
+                {
+                    Ok(DownstreamPayload::Ack) => Ok(()),
+                    Ok(DownstreamPayload::Todo {
+                        envelope,
+                    }) =>
+                    {
+                        bail!(
+                            "Unexpected Todo message during authentication. msg: {:?}",
+                            envelope
+                        )
+                    },
+                    Err(err) =>
+                    {
+                        bail!(
+                            "Websocket error while authenticating. err: {}",
+                            err
+                        )
+                    },
+                }
+            },
+        )?;
 
     // Fetch checksum file
     // The checksum file can be generated in two ways.
     // 1- Run the worker, and it will download and spit out the checksum on disk
-    // 2- Manually download the params then install with the checksums bin crate and run checksums -c -r zkmr_params -a BLAKE3
-    let checksum_url = &config.public_params.checksum_url;
-    let expected_checksums_file = &config.public_params.checksum_expected_local_path;
-    fetch_checksum_file(checksum_url, expected_checksums_file)?;
+    // 2- Manually download the params then install with the checksums bin crate and run checksums
+    // -c -r zkmr_params -a BLAKE3
+    let checksum_url = &config
+        .public_params
+        .checksum_url;
+    let expected_checksums_file = &config
+        .public_params
+        .checksum_expected_local_path;
+    fetch_checksum_file(
+        checksum_url,
+        expected_checksums_file,
+    )?;
 
     let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-    register_v1_provers(config, &mut provers_manager).context("Failed to register V1 provers")?;
+    register_v1_provers(
+        config,
+        &mut provers_manager,
+    )
+    .context("Failed to register V1 provers")?;
 
-    if !config.public_params.skip_checksum {
-        verify_directory_checksums(&config.public_params.dir, expected_checksums_file)
-            .context("Public parameters verification failed")?;
+    if !config
+        .public_params
+        .skip_checksum
+    {
+        verify_directory_checksums(
+            &config
+                .public_params
+                .dir,
+            expected_checksums_file,
+        )
+        .context("Public parameters verification failed")?;
     }
 
-    start_work(&mut ws_socket, &mut provers_manager)?;
+    start_work(
+        &mut ws_socket,
+        &mut provers_manager,
+    )?;
 
     Ok(())
 }
@@ -492,7 +783,8 @@ fn run_with_websocket(config: &Config) -> Result<()> {
 fn start_work(
     ws_socket: &mut WebSocket<MaybeTlsStream<TcpStream>>,
     provers_manager: &mut ProversManager<TaskType, ReplyType>,
-) -> Result<()> {
+) -> Result<()>
+{
     info!("Sending ready to work message");
     let ready = UpstreamPayload::<ReplyType>::Ready;
     let ready_json = serde_json::to_string(&ready).context("Failed to encode Ready message")?;
@@ -500,13 +792,19 @@ fn start_work(
         .send(Message::Text(ready_json))
         .context("unable to send ready frame")?;
 
-    loop {
+    loop
+    {
         let msg = ws_socket
             .read()
             .context("Failed to read from gateway socket")?;
-        match msg {
-            Message::Text(content) => {
-                trace!("Received message: {:?}", content);
+        match msg
+        {
+            Message::Text(content) =>
+            {
+                trace!(
+                    "Received message: {:?}",
+                    content
+                );
 
                 counter!(
                     "zkmr_worker_websocket_messages_received_total",
@@ -514,34 +812,53 @@ fn start_work(
                 )
                 .increment(1);
 
-                match serde_json::from_str::<DownstreamPayload<TaskType>>(&content)
-                    .with_context(|| format!("Failed to decode msg. content: {}", content))?
+                match serde_json::from_str::<DownstreamPayload<TaskType>>(&content).with_context(
+                    || {
+                        format!(
+                            "Failed to decode msg. content: {}",
+                            content
+                        )
+                    },
+                )?
                 {
-                    DownstreamPayload::Todo { envelope } => {
+                    DownstreamPayload::Todo {
+                        envelope,
+                    } =>
+                    {
                         let envelope_id = envelope.id();
-                        let reply = match process_downstream_payload(provers_manager, envelope) {
+                        let reply = match process_downstream_payload(
+                            provers_manager,
+                            envelope,
+                        )
+                        {
                             Ok(reply) => UpstreamPayload::Done(reply),
-                            Err(msg) => {
-                                let var_name = format!("{}: {msg}", envelope_id);
+                            Err(msg) =>
+                            {
+                                let var_name = format!(
+                                    "{}: {msg}",
+                                    envelope_id
+                                );
                                 UpstreamPayload::ProvingError(var_name)
-                            }
+                            },
                         };
                         counter!("zkmr_worker_websocket_messages_sent_total",
                                     "message_type" => "text")
                         .increment(1);
                         ws_socket.send(Message::Text(serde_json::to_string(&reply)?))?;
-                    }
-                    DownstreamPayload::Ack => {
+                    },
+                    DownstreamPayload::Ack =>
+                    {
                         counter!(
                             "zkmr_worker_error_count",
                             "error_type" => "unexpected_ack",
                         )
                         .increment(1);
                         bail!("Unexpected ACK frame")
-                    }
+                    },
                 }
-            }
-            Message::Ping(_) => {
+            },
+            Message::Ping(_) =>
+            {
                 debug!("Received ping or close message");
 
                 counter!(
@@ -549,19 +866,21 @@ fn start_work(
                     "message_type" => "ping",
                 )
                 .increment(1);
-            }
-            Message::Close(_) => {
+            },
+            Message::Close(_) =>
+            {
                 info!("Received close message");
                 return Ok(());
-            }
-            _ => {
+            },
+            _ =>
+            {
                 error!("Unexpected frame: {msg}");
                 counter!(
                     "zkmr_worker_error_count",
                     "error_type" => "unexpected_frame",
                 )
                 .increment(1);
-            }
+            },
         }
     }
 }

@@ -1,14 +1,20 @@
-use crate::types::v1::preprocessing::db_keys;
-use crate::types::v1::query::keys::ProofKey;
-use crate::types::v1::query::{PlaceHolderLgn, WorkerTask, WorkerTaskType};
 use alloy_primitives::U256;
 use derive_debug_plus::Dbg;
-use serde_derive::{Deserialize, Serialize};
-use verifiable_db::query::aggregation::{ChildPosition, NodeInfo};
+use serde_derive::Deserialize;
+use serde_derive::Serialize;
+use verifiable_db::query::aggregation::ChildPosition;
+use verifiable_db::query::aggregation::NodeInfo;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::RowCells;
 
+use crate::types::v1::preprocessing::db_keys;
+use crate::types::v1::query::keys::ProofKey;
+use crate::types::v1::query::PlaceHolderLgn;
+use crate::types::v1::query::WorkerTask;
+use crate::types::v1::query::WorkerTaskType;
+
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
-pub struct QueryInput {
+pub struct QueryInput
+{
     pub proof_key: ProofKey,
 
     pub query_step: QueryStep,
@@ -18,7 +24,8 @@ pub struct QueryInput {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-pub enum QueryStep {
+pub enum QueryStep
+{
     #[serde(rename = "1")]
     Prepare(Vec<QueryInputPart>),
 
@@ -27,7 +34,8 @@ pub enum QueryStep {
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
-pub struct QueryInputPart {
+pub struct QueryInputPart
+{
     pub proof_key: ProofKey,
 
     pub embedded_proof_input: Option<EmbeddedProofInputType>,
@@ -36,7 +44,8 @@ pub struct QueryInputPart {
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub enum ProofInputKind {
+pub enum ProofInputKind
+{
     /// Match in the end of path or not matched branch
     #[serde(rename = "1")]
     SinglePathLeaf(SinglePathLeafInput),
@@ -57,7 +66,8 @@ pub enum ProofInputKind {
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct FullNodeInput {
+pub struct FullNodeInput
+{
     pub is_rows_tree_node: bool,
 
     pub left_child_proof_location: ProofKey,
@@ -72,7 +82,8 @@ pub struct FullNodeInput {
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct PartialNodeInput {
+pub struct PartialNodeInput
+{
     pub proven_child_position: ChildPosition,
 
     pub proven_child_proof_location: ProofKey,
@@ -86,7 +97,8 @@ pub struct PartialNodeInput {
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub enum EmbeddedProofInputType {
+pub enum EmbeddedProofInputType
+{
     #[serde(rename = "1")]
     RowsTree(RowsEmbeddedProofInput),
 
@@ -95,7 +107,8 @@ pub enum EmbeddedProofInputType {
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
-pub struct RowsEmbeddedProofInput {
+pub struct RowsEmbeddedProofInput
+{
     pub column_cells: RowCells,
 
     pub placeholders: PlaceHolderLgn,
@@ -104,7 +117,8 @@ pub struct RowsEmbeddedProofInput {
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
-pub struct IndexEmbeddedProofInput {
+pub struct IndexEmbeddedProofInput
+{
     pub rows_proof_key: ProofKey,
 
     #[dbg(placeholder = "...")]
@@ -112,7 +126,8 @@ pub struct IndexEmbeddedProofInput {
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct SinglePathBranchInput {
+pub struct SinglePathBranchInput
+{
     pub node_info: NodeInfo,
 
     pub left_child_info: Option<NodeInfo>,
@@ -130,7 +145,8 @@ pub struct SinglePathBranchInput {
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct SinglePathLeafInput {
+pub struct SinglePathLeafInput
+{
     pub node_info: NodeInfo,
 
     pub left_child_info: Option<NodeInfo>,
@@ -146,7 +162,8 @@ pub struct SinglePathLeafInput {
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct RevelationInput {
+pub struct RevelationInput
+{
     pub placeholders: PlaceHolderLgn,
 
     pub indexing_proof_location: db_keys::ProofKey,
@@ -161,7 +178,8 @@ pub struct RevelationInput {
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct NonExistenceInput {
+pub struct NonExistenceInput
+{
     pub column_ids: Vec<u64>,
 
     pub placeholders: PlaceHolderLgn,
@@ -177,10 +195,17 @@ pub struct NonExistenceInput {
     pub primary_index_value: U256,
 }
 
-impl From<&WorkerTask> for ProofKey {
-    fn from(task: &WorkerTask) -> Self {
-        match &task.task_type {
-            WorkerTaskType::Query(qr) => qr.proof_key.clone(),
+impl From<&WorkerTask> for ProofKey
+{
+    fn from(task: &WorkerTask) -> Self
+    {
+        match &task.task_type
+        {
+            WorkerTaskType::Query(qr) =>
+            {
+                qr.proof_key
+                    .clone()
+            },
         }
     }
 }

@@ -1,14 +1,20 @@
 use alloy_primitives::U256;
 use derive_debug_plus::Dbg;
 use mp2_common::types::HashOutput;
-use serde_derive::{Deserialize, Serialize};
+use serde_derive::Deserialize;
+use serde_derive::Serialize;
 
+use crate::types::v1::preprocessing::db_keys;
+use crate::types::v1::preprocessing::ext_keys;
 use crate::types::v1::preprocessing::ext_tasks::Identifier;
-use crate::types::v1::preprocessing::{db_keys, ext_keys, WorkerTask, WorkerTaskType};
-use crate::{BlockNr, TableId};
+use crate::types::v1::preprocessing::WorkerTask;
+use crate::types::v1::preprocessing::WorkerTaskType;
+use crate::BlockNr;
+use crate::TableId;
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
-pub enum DatabaseType {
+pub enum DatabaseType
+{
     #[serde(rename = "1")]
     Cell(DbCellType),
 
@@ -22,7 +28,8 @@ pub enum DatabaseType {
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub enum DbCellType {
+pub enum DbCellType
+{
     #[serde(rename = "1")]
     Leaf(CellLeafInput),
 
@@ -34,7 +41,8 @@ pub enum DbCellType {
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct CellLeafInput {
+pub struct CellLeafInput
+{
     pub table_id: TableId,
     pub row_id: String,
     pub cell_id: usize,
@@ -44,7 +52,8 @@ pub struct CellLeafInput {
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
-pub struct CellPartialInput {
+pub struct CellPartialInput
+{
     pub table_id: TableId,
     pub row_id: String,
     pub cell_id: usize,
@@ -58,7 +67,8 @@ pub struct CellPartialInput {
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
-pub struct CellFullInput {
+pub struct CellFullInput
+{
     pub table_id: TableId,
     pub row_id: String,
     pub cell_id: usize,
@@ -72,7 +82,8 @@ pub struct CellFullInput {
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub enum DbRowType {
+pub enum DbRowType
+{
     #[serde(rename = "1")]
     Leaf(RowLeafInput),
 
@@ -84,7 +95,8 @@ pub enum DbRowType {
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
-pub struct RowLeafInput {
+pub struct RowLeafInput
+{
     pub table_id: TableId,
     pub row_id: String,
     pub identifier: Identifier,
@@ -97,7 +109,8 @@ pub struct RowLeafInput {
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
-pub struct RowPartialInput {
+pub struct RowPartialInput
+{
     pub table_id: TableId,
     pub row_id: String,
     pub identifier: Identifier,
@@ -115,7 +128,8 @@ pub struct RowPartialInput {
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
-pub struct RowFullInput {
+pub struct RowFullInput
+{
     pub table_id: TableId,
     pub row_id: String,
     pub identifier: Identifier,
@@ -132,14 +146,21 @@ pub struct RowFullInput {
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct IndexInputs {
+pub struct IndexInputs
+{
     pub table_id: TableId,
     pub block_nr: BlockNr,
     pub inputs: Vec<DbBlockType>,
 }
 
-impl IndexInputs {
-    pub fn new(table_id: TableId, block_nr: BlockNr, inputs: Vec<DbBlockType>) -> Self {
+impl IndexInputs
+{
+    pub fn new(
+        table_id: TableId,
+        block_nr: BlockNr,
+        inputs: Vec<DbBlockType>,
+    ) -> Self
+    {
         Self {
             table_id,
             block_nr,
@@ -149,7 +170,8 @@ impl IndexInputs {
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub enum DbBlockType {
+pub enum DbBlockType
+{
     #[serde(rename = "1")]
     Leaf(BlockLeafInput),
 
@@ -161,7 +183,8 @@ pub enum DbBlockType {
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
-pub struct BlockLeafInput {
+pub struct BlockLeafInput
+{
     pub table_id: TableId,
     pub block_id: BlockNr,
     pub extraction_proof_location: ext_keys::ProofKey,
@@ -174,13 +197,15 @@ pub struct BlockLeafInput {
     pub rows_proof: Vec<u8>,
 }
 
-impl BlockLeafInput {
+impl BlockLeafInput
+{
     pub fn new(
         table_id: TableId,
         block_id: BlockNr,
         extraction_proof_location: ext_keys::ProofKey,
         rows_proof_location: db_keys::ProofKey,
-    ) -> Self {
+    ) -> Self
+    {
         Self {
             table_id,
             block_id,
@@ -193,7 +218,8 @@ impl BlockLeafInput {
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
-pub struct BlockParentInput {
+pub struct BlockParentInput
+{
     pub table_id: TableId,
     pub block_id: BlockNr,
     pub old_block_number: U256,
@@ -212,7 +238,8 @@ pub struct BlockParentInput {
     pub rows_proof: Vec<u8>,
 }
 
-impl BlockParentInput {
+impl BlockParentInput
+{
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         table_id: TableId,
@@ -225,7 +252,8 @@ impl BlockParentInput {
         old_rows_tree_hash: HashOutput,
         extraction_proof_location: ext_keys::ProofKey,
         rows_proof_location: db_keys::ProofKey,
-    ) -> Self {
+    ) -> Self
+    {
         Self {
             table_id,
             block_id,
@@ -244,7 +272,8 @@ impl BlockParentInput {
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
-pub struct BlockMembershipInput {
+pub struct BlockMembershipInput
+{
     pub table_id: TableId,
     pub block_id: BlockNr,
     pub index_value: U256,
@@ -258,7 +287,8 @@ pub struct BlockMembershipInput {
     pub right_proof: Vec<u8>,
 }
 
-impl BlockMembershipInput {
+impl BlockMembershipInput
+{
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         table_id: TableId,
@@ -269,7 +299,8 @@ impl BlockMembershipInput {
         left_child: HashOutput,
         rows_tree_hash: HashOutput,
         right_proof_location: db_keys::ProofKey,
-    ) -> Self {
+    ) -> Self
+    {
         Self {
             table_id,
             block_id,
@@ -285,7 +316,8 @@ impl BlockMembershipInput {
 }
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
-pub struct IvcInput {
+pub struct IvcInput
+{
     pub table_id: TableId,
     pub block_nr: BlockNr,
     pub is_first_block: bool,
@@ -297,8 +329,14 @@ pub struct IvcInput {
     pub previous_ivc_proof: Option<Vec<u8>>,
 }
 
-impl IvcInput {
-    pub fn new(table_id: TableId, block_nr: BlockNr, is_first_block: bool) -> Self {
+impl IvcInput
+{
+    pub fn new(
+        table_id: TableId,
+        block_nr: BlockNr,
+        is_first_block: bool,
+    ) -> Self
+    {
         Self {
             table_id,
             block_nr,
@@ -309,45 +347,108 @@ impl IvcInput {
     }
 }
 
-impl From<&WorkerTask> for db_keys::ProofKey {
-    fn from(tt: &WorkerTask) -> Self {
-        match &tt.task_type {
-            WorkerTaskType::Database(db) => match db {
-                DatabaseType::Cell(ct) => match ct {
-                    DbCellType::Leaf(cl) => db_keys::ProofKey::Cell(
-                        cl.table_id,
-                        tt.block_nr,
-                        cl.row_id.to_owned(),
-                        cl.cell_id,
-                    ),
-                    DbCellType::Partial(cp) => db_keys::ProofKey::Cell(
-                        cp.table_id,
-                        tt.block_nr,
-                        cp.row_id.to_owned(),
-                        cp.cell_id,
-                    ),
-                    DbCellType::Full(cf) => db_keys::ProofKey::Cell(
-                        cf.table_id,
-                        tt.block_nr,
-                        cf.row_id.to_owned(),
-                        cf.cell_id,
-                    ),
-                },
-                DatabaseType::Row(rt) => match rt {
-                    DbRowType::Leaf(rl) => {
-                        db_keys::ProofKey::Row(rl.table_id, tt.block_nr, rl.row_id.to_string())
-                    }
-                    DbRowType::Partial(rp) => {
-                        db_keys::ProofKey::Row(rp.table_id, tt.block_nr, rp.row_id.to_string())
-                    }
-                    DbRowType::Full(rf) => {
-                        db_keys::ProofKey::Row(rf.table_id, tt.block_nr, rf.row_id.to_string())
-                    }
-                },
-                DatabaseType::Index(bt) => db_keys::ProofKey::Block(bt.table_id, tt.block_nr),
-                DatabaseType::IVC(ivc) => db_keys::ProofKey::IVC(ivc.table_id, tt.block_nr),
+impl From<&WorkerTask> for db_keys::ProofKey
+{
+    fn from(tt: &WorkerTask) -> Self
+    {
+        match &tt.task_type
+        {
+            WorkerTaskType::Database(db) =>
+            {
+                match db
+                {
+                    DatabaseType::Cell(ct) =>
+                    {
+                        match ct
+                        {
+                            DbCellType::Leaf(cl) =>
+                            {
+                                db_keys::ProofKey::Cell(
+                                    cl.table_id,
+                                    tt.block_nr,
+                                    cl.row_id
+                                        .to_owned(),
+                                    cl.cell_id,
+                                )
+                            },
+                            DbCellType::Partial(cp) =>
+                            {
+                                db_keys::ProofKey::Cell(
+                                    cp.table_id,
+                                    tt.block_nr,
+                                    cp.row_id
+                                        .to_owned(),
+                                    cp.cell_id,
+                                )
+                            },
+                            DbCellType::Full(cf) =>
+                            {
+                                db_keys::ProofKey::Cell(
+                                    cf.table_id,
+                                    tt.block_nr,
+                                    cf.row_id
+                                        .to_owned(),
+                                    cf.cell_id,
+                                )
+                            },
+                        }
+                    },
+                    DatabaseType::Row(rt) =>
+                    {
+                        match rt
+                        {
+                            DbRowType::Leaf(rl) =>
+                            {
+                                db_keys::ProofKey::Row(
+                                    rl.table_id,
+                                    tt.block_nr,
+                                    rl.row_id
+                                        .to_string(),
+                                )
+                            },
+                            DbRowType::Partial(rp) =>
+                            {
+                                db_keys::ProofKey::Row(
+                                    rp.table_id,
+                                    tt.block_nr,
+                                    rp.row_id
+                                        .to_string(),
+                                )
+                            },
+                            DbRowType::Full(rf) =>
+                            {
+                                db_keys::ProofKey::Row(
+                                    rf.table_id,
+                                    tt.block_nr,
+                                    rf.row_id
+                                        .to_string(),
+                                )
+                            },
+                        }
+                    },
+                    DatabaseType::Index(bt) =>
+                    {
+                        db_keys::ProofKey::Block(
+                            bt.table_id,
+                            tt.block_nr,
+                        )
+                    },
+                    DatabaseType::IVC(ivc) =>
+                    {
+                        db_keys::ProofKey::IVC(
+                            ivc.table_id,
+                            tt.block_nr,
+                        )
+                    },
+                }
             },
-            _ => unimplemented!("Task type not supported: {:?}", tt.task_type),
+            _ =>
+            {
+                unimplemented!(
+                    "Task type not supported: {:?}",
+                    tt.task_type
+                )
+            },
         }
     }
 }
