@@ -14,7 +14,7 @@ pub mod tasks;
 
 pub const ROUTING_DOMAIN: &str = "sc";
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct WorkerTask
 {
     /// Chain ID
@@ -39,7 +39,7 @@ impl WorkerTask
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum WorkerTaskType
 {

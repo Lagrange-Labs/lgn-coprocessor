@@ -28,7 +28,7 @@ pub trait ToKeyedPayload
 
 pub type HashOutput = [u8; 32];
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum TaskType
 {
     TxTrie(experimental::tx_trie::WorkerTask),
