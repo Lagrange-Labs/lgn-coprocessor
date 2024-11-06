@@ -315,8 +315,8 @@ impl<P: StorageQueryProver> Querying<P>
                                 placeholders
                                     .clone()
                                     .into(),
-                                query_proof.to_owned(),
-                                indexing_proof.to_owned(),
+                                query_proof.clone_proof(),
+                                indexing_proof.clone_proof(),
                             );
                     },
                     RevelationInput::Tabular {
@@ -336,9 +336,7 @@ impl<P: StorageQueryProver> Querying<P>
                                 placeholders
                                     .clone()
                                     .into(),
-                                preprocessing_proof
-                                    .clone()
-                                    .into_proof(),
+                                preprocessing_proof.clone_proof(),
                                 matching_rows
                                     .into_iter()
                                     .cloned()
@@ -347,7 +345,7 @@ impl<P: StorageQueryProver> Querying<P>
                                 column_ids,
                                 *limit,
                                 *offset,
-                            );
+                            )
                     },
                 }
             },

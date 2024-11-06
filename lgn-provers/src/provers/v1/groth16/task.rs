@@ -87,7 +87,10 @@ impl<GP: Prover> Groth16<GP>
         let proof = self.generate_proof(
             &query_id,
             &task_id,
-            &task.revelation_proof,
+            &task
+                .revelation_proof
+                .proof()
+                .as_slice(),
         )?;
         Ok(
             WorkerReply::new(

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use alloy_primitives::U256;
 use derive_debug_plus::Dbg;
 use serde_derive::Deserialize;
@@ -177,7 +179,7 @@ impl HydratableMatchingRow
     {
         MatchingRow::new(
             self.proof
-                .into_proof(),
+                .clone_proof(),
             self.path,
             self.result,
         )
@@ -190,7 +192,7 @@ impl HydratableMatchingRow
 pub enum Hydratable<K: Clone + std::fmt::Debug>
 {
     Dehydrated(K),
-    Hydrated(Vec<u8>),
+    Hydrated(Arc<Vec<u8>>),
 }
 
 impl<T: Clone + std::fmt::Debug> std::fmt::Debug for Hydratable<T>
@@ -230,12 +232,28 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K>
 
     /// Consume a `Hydrated` variant into its embedded proof; panic if it is
     /// not hydrated.
-    pub fn into_proof(self) -> Vec<u8>
+    pub fn proof(&self) -> Arc<Vec<u8>>
     {
         match self
         {
             Hydratable::Dehydrated(_) => unreachable!(),
-            Hydratable::Hydrated(proof) => proof,
+            Hydratable::Hydrated(proof) => proof.clone(),
+        }
+    }
+
+    /// Consume a `Hydrated` variant into its embedded proof; panic if it is
+    /// not hydrated.
+    pub fn clone_proof(&self) -> Vec<u8>
+    {
+        match self
+        {
+            Hydratable::Dehydrated(_) => unreachable!(),
+            Hydratable::Hydrated(proof) =>
+            {
+                proof
+                    .clone()
+                    .to_vec()
+            },
         }
     }
 
@@ -262,7 +280,7 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K>
                 Hydratable::Dehydrated(_)
             )
         );
-        *self = Hydratable::Hydrated(proof)
+        *self = Hydratable::Hydrated(Arc::new(proof))
     }
 }
 
@@ -273,15 +291,11 @@ pub enum RevelationInput
     {
         placeholders: PlaceHolderLgn,
 
-        indexing_proof_location: db_keys::ProofKey,
-
-        query_proof_location: ProofKey,
+        #[dbg(placeholder = "...")]
+        indexing_proof: Hydratable<db_keys::ProofKey>,
 
         #[dbg(placeholder = "...")]
-        indexing_proof: Vec<u8>,
-
-        #[dbg(placeholder = "...")]
-        query_proof: Vec<u8>,
+        query_proof: Hydratable<ProofKey>,
     },
     Tabular
     {
