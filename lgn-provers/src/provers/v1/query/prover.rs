@@ -4,13 +4,9 @@ use lgn_messages::types::v1::query::tasks::RowsEmbeddedProofInput;
 use lgn_messages::types::v1::query::tasks::SinglePathBranchInput;
 use lgn_messages::types::v1::query::tasks::SinglePathLeafInput;
 use parsil::assembler::DynamicCircuitPis;
-use verifiable_db::{
-    query::{
-        computational_hash_ids::ColumnIDs,
-        universal_circuit::universal_circuit_inputs::Placeholders,
-    },
-    revelation::api::MatchingRow,
-};
+use verifiable_db::query::computational_hash_ids::ColumnIDs;
+use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
+use verifiable_db::revelation::api::MatchingRow;
 
 pub trait StorageQueryProver
 {
@@ -65,8 +61,8 @@ pub trait StorageQueryProver
         preprocessing_proof: Vec<u8>,
         matching_rows: Vec<MatchingRow>,
         column_ids: &ColumnIDs,
-        limit: u64,
-        offset: u64,
+        limit: u32,
+        offset: u32,
     ) -> anyhow::Result<Vec<u8>>;
 
     fn prove_non_existence(

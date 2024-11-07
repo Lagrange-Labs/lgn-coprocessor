@@ -369,6 +369,7 @@ impl WorkerTaskType
         cell_id: usize,
         identifier: Identifier,
         value: U256,
+        is_multiplier: bool,
         child_locations: Vec<db_keys::ProofKey>,
     ) -> WorkerTaskType
     {
@@ -381,6 +382,7 @@ impl WorkerTaskType
                         cell_id,
                         identifier,
                         value,
+                        is_multiplier,
                         child_locations,
                         child_proofs: vec![],
                     },

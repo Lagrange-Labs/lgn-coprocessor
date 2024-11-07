@@ -303,8 +303,8 @@ pub enum RevelationInput
         indexing_proof: Hydratable<db_keys::ProofKey>,
         matching_rows: Vec<HydratableMatchingRow>,
         column_ids: ColumnIDs,
-        limit: u64,
-        offset: u64,
+        limit: u32,
+        offset: u32,
     },
 }
 

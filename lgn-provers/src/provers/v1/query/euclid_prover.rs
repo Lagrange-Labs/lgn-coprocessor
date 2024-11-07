@@ -391,8 +391,8 @@ impl StorageQueryProver for EuclidQueryProver
         indexing_proof: Vec<u8>,
         matching_rows: Vec<MatchingRow>,
         column_ids: &ColumnIDs,
-        limit: u64,
-        offset: u64,
+        limit: u32,
+        offset: u32,
     ) -> anyhow::Result<Vec<u8>>
     {
         info!("proving tabular revelation");
