@@ -859,7 +859,7 @@ fn start_work(
             },
             Message::Ping(_) =>
             {
-                debug!("Received ping or close message");
+                trace!("Received ping or close message");
 
                 counter!(
                     "zkmr_worker_websocket_messages_received_total",
