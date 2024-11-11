@@ -27,7 +27,6 @@ jobs:
     runs-on: ['hostname:hetzner-dedicated-6']
     outputs:
      RUNNER: ${{ steps.get-label.outputs.runner_name }}
-    environment: CI
     steps:
       - name: Get Runner Label
         id: get-label
@@ -54,7 +53,6 @@ jobs:
   build:
     needs: base
     runs-on: ${{needs.base.outputs.RUNNER}}
-    environment: CI
     strategy:
       fail-fast: false
       matrix:
@@ -93,7 +91,6 @@ jobs:
   lint:
     needs: base
     runs-on: ${{needs.base.outputs.RUNNER}}
-    environment: CI
     steps:
 
       - name: clippy
@@ -106,7 +103,6 @@ jobs:
   test:
     needs: base
     runs-on: ${{needs.base.outputs.RUNNER}}
-    environment: CI
     steps:
       - name: test
         run: |
@@ -114,7 +110,6 @@ jobs:
 
   private-push:
     name: Push Docker Images to AWS
-    environment: CI
     runs-on: ${{needs.base.outputs.RUNNER}}
     needs:
       - build
@@ -137,7 +132,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::${{ matrix.aws_account_id }}:role/github-actions-ecr-access-role
           role-session-name: github-actions-ecr-access-role
-          aws-region: ${{ vars.AWS_REGION }}
+          aws-region: ${{ vars.ZKMR_AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -164,7 +159,6 @@ jobs:
               fi
   public-push:
     name: Push Docker Images to Docker hub
-    environment: CI
     if: contains('main holesky mainnet hack-merge-table v1_base', github.ref_name) || startsWith(github.ref, 'refs/tags/')
     runs-on: ${{needs.base.outputs.RUNNER}}
     needs:
