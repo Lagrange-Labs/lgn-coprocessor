@@ -16,9 +16,9 @@ port = 9090
 dir = "./zkmr_params"
 checksum_expected_local_path = "/tmp/expected_checksums.txt"
 # Parameters common directory
-# dev-0 PPs
-url = "https://pub-64a4eb6e897e425083647b3e0e8539a1.r2.dev"
-checksum_url = "https://pub-64a4eb6e897e425083647b3e0e8539a1.r2.dev/public_params.hash"
+# v1.1.x PPs
+url = "https://pub-fbb5db8dc9ee4e8da9daf13e07d27c24.r2.dev"
+checksum_url = "https://pub-fbb5db8dc9ee4e8da9daf13e07d27c24.r2.dev/public_params.hash"
 skip_checksum = false
 skip_store = false
 
