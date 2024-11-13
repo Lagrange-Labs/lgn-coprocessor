@@ -7,7 +7,6 @@ use mp2_common::digest::TableDimension;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::generate_proof;
-use mp2_v1::api::CircuitInput;
 use mp2_v1::api::CircuitInput::BlockExtraction;
 use mp2_v1::api::CircuitInput::BlockTree;
 use mp2_v1::api::CircuitInput::CellsTree;
@@ -17,6 +16,9 @@ use mp2_v1::api::CircuitInput::LengthExtraction;
 use mp2_v1::api::CircuitInput::RowsTree;
 use mp2_v1::api::CircuitInput::ValuesExtraction;
 use mp2_v1::api::CircuitInput::IVC;
+use mp2_v1::api::CircuitInput::{
+    self,
+};
 use mp2_v1::api::PublicParameters;
 use mp2_v1::block_extraction;
 use mp2_v1::contract_extraction;

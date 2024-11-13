@@ -15,21 +15,27 @@ use verifiable_db::query::aggregation::SubProof;
 use verifiable_db::query::api::CircuitInput;
 use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
-use verifiable_db::revelation;
+use verifiable_db::revelation::api::MatchingRow;
+use verifiable_db::revelation::{
+    self,
+};
 
+use super::prover::StorageQueryProver;
+use super::INDEX_TREE_MAX_DEPTH;
 use super::MAX_NUM_COLUMNS;
 use super::MAX_NUM_ITEMS_PER_OUTPUT;
 use super::MAX_NUM_OUTPUTS;
 use super::MAX_NUM_PLACEHOLDERS;
 use super::MAX_NUM_PREDICATE_OPS;
-use super::MAX_NUM_RESULTS;
 use super::MAX_NUM_RESULT_OPS;
+use super::ROW_TREE_MAX_DEPTH;
 use crate::params::ParamsLoader;
-use crate::provers::v1::query::prover::StorageQueryProver;
 
 pub(crate) struct EuclidQueryProver
 {
     params: QueryParameters<
+        ROW_TREE_MAX_DEPTH,
+        INDEX_TREE_MAX_DEPTH,
         MAX_NUM_COLUMNS,
         MAX_NUM_PREDICATE_OPS,
         MAX_NUM_RESULT_OPS,
@@ -44,6 +50,8 @@ impl EuclidQueryProver
     #[allow(dead_code)]
     pub fn new(
         params: QueryParameters<
+            ROW_TREE_MAX_DEPTH,
+            INDEX_TREE_MAX_DEPTH,
             MAX_NUM_COLUMNS,
             MAX_NUM_PREDICATE_OPS,
             MAX_NUM_RESULT_OPS,
@@ -328,7 +336,7 @@ impl StorageQueryProver for EuclidQueryProver
         Ok(proof)
     }
 
-    fn prove_revelation(
+    fn prove_aggregated_revelation(
         &self,
         pis: &DynamicCircuitPis,
         placeholders: Placeholders,
@@ -336,28 +344,70 @@ impl StorageQueryProver for EuclidQueryProver
         indexing_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>
     {
-        info!("Proving revelation");
-
+        info!("proving aggregated revelation");
         let now = std::time::Instant::now();
 
-        let pis_hash = CircuitInput::<
-            MAX_NUM_COLUMNS,
-            MAX_NUM_PREDICATE_OPS,
-            MAX_NUM_RESULT_OPS,
-            MAX_NUM_RESULTS,
-        >::ids_for_placeholder_hash(
-            &pis.predication_operations,
-            &pis.result,
-            &placeholders,
-            &pis.bounds,
-        )
-        .context("while converting placeholders to IDs")?;
-        let circuit_input = revelation::api::CircuitInput::new_revelation_no_results_tree(
+        let circuit_input = revelation::api::CircuitInput::new_revelation_aggregated(
             query_proof,
             indexing_proof,
             &pis.bounds,
             &placeholders,
-            pis_hash,
+            &pis.predication_operations,
+            &pis.result,
+        )
+        .context("while initializing the (empty) revelation circuit")?;
+
+        let input = QueryCircuitInput::Revelation(circuit_input);
+
+        let proof = self
+            .params
+            .generate_proof(input)
+            .context("while generating proof for the (empty) revelation circuit")?;
+
+        let proof_type = "revelation";
+        let time = now
+            .elapsed()
+            .as_secs_f32();
+        info!(
+            time,
+            proof_type,
+            "proof generation time: {:?}",
+            now.elapsed()
+        );
+        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
+
+        info!(
+            "revelation size in kB: {}",
+            proof.len() / 1024
+        );
+
+        Ok(proof)
+    }
+
+    fn prove_tabular_revelation(
+        &self,
+        pis: &DynamicCircuitPis,
+        placeholders: Placeholders,
+        indexing_proof: Vec<u8>,
+        matching_rows: Vec<MatchingRow>,
+        column_ids: &ColumnIDs,
+        limit: u32,
+        offset: u32,
+    ) -> anyhow::Result<Vec<u8>>
+    {
+        info!("proving tabular revelation");
+        let now = std::time::Instant::now();
+
+        let circuit_input = revelation::api::CircuitInput::new_revelation_tabular(
+            indexing_proof,
+            matching_rows,
+            &pis.bounds,
+            &placeholders,
+            column_ids,
+            &pis.predication_operations,
+            &pis.result,
+            limit,
+            offset,
         )
         .context("while initializing the (empty) revelation circuit")?;
 

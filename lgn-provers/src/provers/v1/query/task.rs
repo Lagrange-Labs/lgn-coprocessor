@@ -3,8 +3,10 @@ use std::collections::HashMap;
 use anyhow::bail;
 use lgn_messages::types::v1::query::keys::ProofKey;
 use lgn_messages::types::v1::query::tasks::EmbeddedProofInputType;
+use lgn_messages::types::v1::query::tasks::HydratableMatchingRow;
 use lgn_messages::types::v1::query::tasks::ProofInputKind;
 use lgn_messages::types::v1::query::tasks::QueryStep;
+use lgn_messages::types::v1::query::tasks::RevelationInput;
 use lgn_messages::types::v1::query::WorkerTask;
 use lgn_messages::types::v1::query::WorkerTaskType;
 use lgn_messages::types::MessageEnvelope;
@@ -297,18 +299,55 @@ impl<P: StorageQueryProver> Querying<P>
             },
             QueryStep::Revelation(rev) =>
             {
-                return self
-                    .prover
-                    .prove_revelation(
-                        &pis,
-                        rev.placeholders
-                            .clone()
-                            .into(),
-                        rev.query_proof
-                            .to_owned(),
-                        rev.indexing_proof
-                            .to_owned(),
-                    );
+                match rev
+                {
+                    RevelationInput::Aggregated {
+                        placeholders,
+                        indexing_proof,
+                        query_proof,
+                        ..
+                    } =>
+                    {
+                        return self
+                            .prover
+                            .prove_aggregated_revelation(
+                                &pis,
+                                placeholders
+                                    .clone()
+                                    .into(),
+                                query_proof.clone_proof(),
+                                indexing_proof.clone_proof(),
+                            );
+                    },
+                    RevelationInput::Tabular {
+                        placeholders,
+                        indexing_proof: preprocessing_proof,
+                        matching_rows,
+                        column_ids,
+                        limit,
+                        offset,
+                        ..
+                    } =>
+                    {
+                        return self
+                            .prover
+                            .prove_tabular_revelation(
+                                &pis,
+                                placeholders
+                                    .clone()
+                                    .into(),
+                                preprocessing_proof.clone_proof(),
+                                matching_rows
+                                    .into_iter()
+                                    .cloned()
+                                    .map(HydratableMatchingRow::into_matching_row)
+                                    .collect(),
+                                column_ids,
+                                *limit,
+                                *offset,
+                            )
+                    },
+                }
             },
         }
 

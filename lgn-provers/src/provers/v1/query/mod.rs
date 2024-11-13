@@ -12,6 +12,8 @@ pub(crate) mod dummy_prover;
 #[cfg(not(feature = "dummy-prover"))]
 pub(crate) mod euclid_prover;
 
+pub const ROW_TREE_MAX_DEPTH: usize = 24;
+pub const INDEX_TREE_MAX_DEPTH: usize = 24;
 pub const MAX_NUM_RESULT_OPS: usize = 20;
 pub const MAX_NUM_RESULTS: usize = 10;
 pub const MAX_NUM_OUTPUTS: usize = 3;
