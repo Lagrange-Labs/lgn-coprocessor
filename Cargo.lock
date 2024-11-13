@@ -4260,6 +4260,7 @@ dependencies = [
  "itertools 0.12.1",
  "log",
  "mp2_common",
+ "parsil",
  "paste",
  "plonky2",
  "plonky2_crypto",

@@ -12,16 +12,6 @@ pub(crate) mod dummy_prover;
 #[cfg(not(feature = "dummy-prover"))]
 pub(crate) mod euclid_prover;
 
-// TODO: what value?
-pub const ROW_TREE_MAX_DEPTH: usize = 20;
-pub const INDEX_TREE_MAX_DEPTH: usize = 20;
-pub const MAX_NUM_RESULT_OPS: usize = 20;
-pub const MAX_NUM_RESULTS: usize = 10;
-pub const MAX_NUM_OUTPUTS: usize = 3;
-pub const MAX_NUM_ITEMS_PER_OUTPUT: usize = 5;
-pub const MAX_NUM_PLACEHOLDERS: usize = 10;
-pub const MAX_NUM_COLUMNS: usize = 20;
-pub const MAX_NUM_PREDICATE_OPS: usize = 20;
 #[allow(unused_variables)]
 pub fn create_prover(
     url: &str,
