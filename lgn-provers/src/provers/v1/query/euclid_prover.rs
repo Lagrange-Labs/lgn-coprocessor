@@ -19,16 +19,16 @@ use verifiable_db::revelation::api::MatchingRow;
 use verifiable_db::revelation::{
     self,
 };
-use verifiable_db::test_utils::INDEX_TREE_MAX_DEPTH;
-use verifiable_db::test_utils::MAX_NUM_COLUMNS;
-use verifiable_db::test_utils::MAX_NUM_ITEMS_PER_OUTPUT;
-use verifiable_db::test_utils::MAX_NUM_OUTPUTS;
-use verifiable_db::test_utils::MAX_NUM_PLACEHOLDERS;
-use verifiable_db::test_utils::MAX_NUM_PREDICATE_OPS;
-use verifiable_db::test_utils::MAX_NUM_RESULT_OPS;
-use verifiable_db::test_utils::ROW_TREE_MAX_DEPTH;
 
 use super::prover::StorageQueryProver;
+use super::INDEX_TREE_MAX_DEPTH;
+use super::MAX_NUM_COLUMNS;
+use super::MAX_NUM_ITEMS_PER_OUTPUT;
+use super::MAX_NUM_OUTPUTS;
+use super::MAX_NUM_PLACEHOLDERS;
+use super::MAX_NUM_PREDICATE_OPS;
+use super::MAX_NUM_RESULT_OPS;
+use super::ROW_TREE_MAX_DEPTH;
 use crate::params::ParamsLoader;
 
 pub(crate) struct EuclidQueryProver
