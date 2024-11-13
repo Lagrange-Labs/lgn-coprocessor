@@ -292,9 +292,13 @@ pub enum RevelationInput
         placeholders: PlaceHolderLgn,
 
         #[dbg(placeholder = "...")]
+        // Used in DQ
+        #[allow(unused_variables)]
         indexing_proof: Hydratable<db_keys::ProofKey>,
 
         #[dbg(placeholder = "...")]
+        // Used in DQ
+        #[allow(unused_variables)]
         query_proof: Hydratable<ProofKey>,
     },
     Tabular
