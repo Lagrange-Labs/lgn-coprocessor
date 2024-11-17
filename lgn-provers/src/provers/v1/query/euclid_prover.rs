@@ -102,7 +102,7 @@ impl StorageQueryProver for EuclidQueryProver
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>
     {
-        info!("Proving universal circuit");
+        debug!("Proving universal circuit");
 
         let now = std::time::Instant::now();
 
@@ -136,7 +136,7 @@ impl StorageQueryProver for EuclidQueryProver
         );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        info!(
+        debug!(
             "universal circuit size in kB: {}",
             proof.len() / 1024
         );
@@ -153,7 +153,7 @@ impl StorageQueryProver for EuclidQueryProver
         is_rows_tree_node: bool,
     ) -> anyhow::Result<Vec<u8>>
     {
-        info!("Proving full node");
+        debug!("Proving full node");
 
         let now = std::time::Instant::now();
 
@@ -183,7 +183,7 @@ impl StorageQueryProver for EuclidQueryProver
         );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        info!(
+        debug!(
             "full node size in kB: {}",
             proof.len() / 1024
         );
@@ -198,7 +198,7 @@ impl StorageQueryProver for EuclidQueryProver
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>
     {
-        info!("Proving partial node");
+        debug!("Proving partial node");
 
         let now = std::time::Instant::now();
 
@@ -230,7 +230,7 @@ impl StorageQueryProver for EuclidQueryProver
         );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        info!(
+        debug!(
             "partial node size in kB: {}",
             proof.len() / 1024
         );
@@ -245,7 +245,7 @@ impl StorageQueryProver for EuclidQueryProver
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>
     {
-        info!("Proving single path leaf");
+        debug!("Proving single path leaf");
 
         let now = std::time::Instant::now();
 
@@ -278,7 +278,7 @@ impl StorageQueryProver for EuclidQueryProver
         );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        info!(
+        debug!(
             "single path leaf size in kB: {}",
             proof.len() / 1024
         );
@@ -293,7 +293,7 @@ impl StorageQueryProver for EuclidQueryProver
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>
     {
-        info!("Proving single path branch");
+        debug!("Proving single path branch");
 
         let now = std::time::Instant::now();
 
@@ -328,7 +328,7 @@ impl StorageQueryProver for EuclidQueryProver
         );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        info!(
+        debug!(
             "single path branch size in kB: {}",
             proof.len() / 1024
         );
@@ -344,7 +344,7 @@ impl StorageQueryProver for EuclidQueryProver
         indexing_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>
     {
-        info!("proving aggregated revelation");
+        debug!("proving aggregated revelation");
         let now = std::time::Instant::now();
 
         let circuit_input = revelation::api::CircuitInput::new_revelation_aggregated(
@@ -376,7 +376,7 @@ impl StorageQueryProver for EuclidQueryProver
         );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        info!(
+        debug!(
             "revelation size in kB: {}",
             proof.len() / 1024
         );
@@ -395,7 +395,7 @@ impl StorageQueryProver for EuclidQueryProver
         offset: u32,
     ) -> anyhow::Result<Vec<u8>>
     {
-        info!("proving tabular revelation");
+        debug!("proving tabular revelation");
         let now = std::time::Instant::now();
 
         let circuit_input = revelation::api::CircuitInput::new_revelation_tabular(
@@ -430,7 +430,7 @@ impl StorageQueryProver for EuclidQueryProver
         );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        info!(
+        debug!(
             "revelation size in kB: {}",
             proof.len() / 1024
         );
@@ -444,7 +444,7 @@ impl StorageQueryProver for EuclidQueryProver
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>
     {
-        info!("Proving non-existence");
+        debug!("Proving non-existence");
 
         let now = std::time::Instant::now();
 
@@ -510,7 +510,7 @@ impl StorageQueryProver for EuclidQueryProver
         );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        info!(
+        debug!(
             "non-existence size in kB: {}",
             proof.len() / 1024
         );
