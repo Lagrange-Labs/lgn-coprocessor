@@ -125,14 +125,14 @@ impl<GP: Prover> Groth16<GP>
             )
                 },
             )?;
-        info!("Finish generating the Groth16 proof: query_id = {query_id}, task_id = {task_id}",);
+        debug!("Finish generating the Groth16 proof: query_id = {query_id}, task_id = {task_id}",);
 
-        debug!(
+        info!(
             time = now
                 .elapsed()
                 .as_secs_f32(),
             proof_type = "groth16",
-            "Groth16 proof generation time: {:?}",
+            "proof generation time: {:?}",
             now.elapsed()
         );
 

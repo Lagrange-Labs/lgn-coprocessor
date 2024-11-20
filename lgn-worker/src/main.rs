@@ -32,7 +32,6 @@ use tokio::io::AsyncWriteExt;
 use tokio_stream::StreamExt;
 use tonic::metadata::MetadataValue;
 use tonic::Request;
-use tracing::debug;
 use tracing::error;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
@@ -69,12 +68,14 @@ const MAX_GRPC_MESSAGE_SIZE_MB: usize = 16;
 #[derive(Parser, Clone, Debug)]
 struct Cli
 {
+    /// Path to the configuration file.
     #[clap(
         short,
         long
     )]
     config: Option<String>,
 
+    /// If set, output logs in JSON format.
     #[clap(
         short,
         long,
@@ -259,7 +260,7 @@ async fn run(cli: Cli) -> Result<()>
     }
 }
 
-async fn maybe_download_checksum(config: &Config) -> Result<()>
+async fn maybe_verify_checksums(config: &Config) -> Result<()>
 {
     if config
         .public_params
@@ -267,6 +268,8 @@ async fn maybe_download_checksum(config: &Config) -> Result<()>
     {
         return Ok(());
     }
+
+    info!("Verifying the checksums");
 
     // Fetch checksum file
     // The checksum file can be generated in two ways.
@@ -287,17 +290,22 @@ async fn maybe_download_checksum(config: &Config) -> Result<()>
         .await
         .context("Failed to read response text")?;
 
-    let mut file = tokio::fs::File::create(expected_checksums_file)
+    tokio::fs::File::create(expected_checksums_file)
         .await
-        .context("Failed to create local checksum file")?;
-
-    file.write_all(response.as_bytes())
+        .context("Failed to create local checksum file")?
+        .write_all(response.as_bytes())
         .await
         .context("Failed to write checksum file")?;
 
-    drop(file);
-
-    Ok(())
+    verify_directory_checksums(
+        &config
+            .public_params
+            .dir,
+        &config
+            .public_params
+            .checksum_expected_local_path,
+    )
+    .context("Failed to verify checksums")
 }
 
 async fn run_with_grpc(
@@ -307,10 +315,6 @@ async fn run_with_grpc(
 {
     let uri = grpc_url.parse::<tonic::transport::Uri>()?;
     let (mut outbound, outbound_rx) = tokio::sync::mpsc::channel(1024);
-
-    info!("Verifying the checksums");
-
-    maybe_download_checksum(config).await?;
 
     let mut provers_manager = tokio::task::block_in_place(
         move || -> Result<ProversManager<TaskType, ReplyType>> {
@@ -324,22 +328,9 @@ async fn run_with_grpc(
         },
     )?;
 
-    if !config
-        .public_params
-        .skip_checksum
-    {
-        verify_directory_checksums(
-            &config
-                .public_params
-                .dir,
-            &config
-                .public_params
-                .checksum_expected_local_path,
-        )
-        .context("Failed to verify checksums")?;
-    }
+    maybe_verify_checksums(config).await?;
 
-    info!("Connecting to GW at uri {uri}");
+    info!("Connecting to Gateway at uri `{uri}`");
     let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
 
     let wallet = get_wallet(config)?;
@@ -407,7 +398,7 @@ async fn run_with_grpc(
                 let msg = match inbound_message {
                     Ok(ref msg) => msg,
                     Err(e) => {
-                        error!("connection to the gateway ended with a status: {e}");
+                        error!("connection to the gateway ended with status: {e}");
                         break;
                     }
                 };
@@ -434,7 +425,7 @@ fn process_downstream_payload(
     );
     let _guard = span.enter();
 
-    debug!(
+    trace!(
         "Received task. envelope: {:?}",
         envelope
     );
@@ -447,7 +438,7 @@ fn process_downstream_payload(
             {
                 Ok(reply) =>
                 {
-                    debug!(
+                    trace!(
                         "Sending reply: {:?}",
                         reply
                     );
@@ -785,7 +776,6 @@ fn start_work(
     provers_manager: &mut ProversManager<TaskType, ReplyType>,
 ) -> Result<()>
 {
-    info!("Sending ready to work message");
     let ready = UpstreamPayload::<ReplyType>::Ready;
     let ready_json = serde_json::to_string(&ready).context("Failed to encode Ready message")?;
     ws_socket

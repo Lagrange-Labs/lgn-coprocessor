@@ -12,7 +12,7 @@ use lgn_messages::types::ToProverType;
 use lgn_provers::provers::LgnProver;
 use metrics::counter;
 use metrics::histogram;
-use tracing::debug;
+use tracing::info;
 
 /// Manages provers for different proving task types
 pub(crate) struct ProversManager<T, R>
@@ -83,7 +83,7 @@ where
         {
             Some(prover) =>
             {
-                debug!("Running prover for task type: {prover_type:?}");
+                info!("Running prover for task type: {prover_type:?}");
 
                 let start_time = std::time::Instant::now();
 
