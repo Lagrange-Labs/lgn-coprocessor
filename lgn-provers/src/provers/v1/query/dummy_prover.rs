@@ -4,7 +4,9 @@ use lgn_messages::types::v1::query::tasks::RowsEmbeddedProofInput;
 use lgn_messages::types::v1::query::tasks::SinglePathBranchInput;
 use lgn_messages::types::v1::query::tasks::SinglePathLeafInput;
 use parsil::assembler::DynamicCircuitPis;
+use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
+use verifiable_db::revelation::api::MatchingRow;
 
 use crate::dummy_utils::dummy_proof;
 use crate::provers::v1::query::prover::StorageQueryProver;
@@ -67,12 +69,26 @@ impl StorageQueryProver for DummyProver
         Ok(dummy_proof(PROOF_SIZE))
     }
 
-    fn prove_revelation(
+    fn prove_aggregated_revelation(
         &self,
         _pis: &DynamicCircuitPis,
         _placeholders: Placeholders,
         _query_proof: Vec<u8>,
         _indexing_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>>
+    {
+        Ok(dummy_proof(PROOF_SIZE))
+    }
+
+    fn prove_tabular_revelation(
+        &self,
+        _pis: &DynamicCircuitPis,
+        _placeholders: Placeholders,
+        _preprocessing_proof: Vec<u8>,
+        _matching_rows: Vec<MatchingRow>,
+        _column_ids: &ColumnIDs,
+        _limit: u32,
+        _offset: u32,
     ) -> anyhow::Result<Vec<u8>>
     {
         Ok(dummy_proof(PROOF_SIZE))
