@@ -419,6 +419,23 @@ fn process_downstream_payload(
     envelope: MessageEnvelope<TaskType>,
 ) -> Result<MessageReplyEnvelope<ReplyType>, String>
 {
+    if let TaskType::Flat(_) = envelope.inner
+    {
+        println!("Processing FLAT proof");
+        std::thread::sleep(std::time::Duration::from_secs(3));
+        return Ok(
+            MessageReplyEnvelope::new(
+                envelope
+                    .query_id
+                    .clone(),
+                envelope
+                    .task_id
+                    .clone(),
+                ReplyType::Flat(vec![32; 150]),
+            ),
+        );
+    }
+
     let span = span!(
         Level::INFO,
         "Received Task",
