@@ -7,6 +7,9 @@ fn main() -> miette::Result<()>
         ["../lagrange-protobuf/"],
     )?;
 
+    // Bulid gRPC codegen
+    println!("cargo:rerun-if-changed=../lagrange-protobuf/");
+
     tonic_build::configure()
         .build_server(true)
         .compile_fds(file_descriptors)
