@@ -54,6 +54,7 @@ pub trait StorageQueryProver
         indexing_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
 
+    #[allow(clippy::too_many_arguments)]
     fn prove_tabular_revelation(
         &self,
         pis: &DynamicCircuitPis,
