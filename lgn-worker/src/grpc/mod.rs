@@ -8,6 +8,8 @@ use tonic::Request;
 use tracing::error;
 use tracing::info;
 
+pub mod test;
+
 pub mod protobuf
 {
     tonic::include_proto!("lagrange");
