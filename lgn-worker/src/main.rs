@@ -27,7 +27,6 @@ use lgn_worker::grpc::protobuf::worker_done::Reply;
 use lgn_worker::grpc::protobuf::WorkerDone;
 use lgn_worker::grpc::protobuf::WorkerToGwRequest;
 use lgn_worker::grpc::protobuf::WorkerToGwResponse;
-use lgn_worker::grpc::run_grpc;
 use lgn_worker::grpc::GrpcConfig;
 use metrics::counter;
 use mimalloc::MiMalloc;
@@ -345,7 +344,9 @@ async fn run_with_grpc(
             .avs
             .max_grpc_message_size_mb,
     };
-    let (mut from_gw, mut to_gw) = run_grpc(&grpc_config).await?;
+    let (mut from_gw, mut to_gw) = grpc_config
+        .connect()
+        .await?;
 
     while let Some(msg) = from_gw
         .recv()

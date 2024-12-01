@@ -47,6 +47,8 @@ tokio-stream = { workspace = true }
 lgn-auth = { path = "../lgn-auth" }
 lgn-messages = { path = "../lgn-messages" }
 lgn-provers = { path = "../lgn-provers" }
+async-stream = "0.3.6"
+async-std = "1.13.0"
 
 [build-dependencies]
 miette = { workspace = true }
