@@ -5,13 +5,10 @@ use anyhow::Context;
 use async_std::channel;
 use tokio_stream::Stream;
 use tokio_stream::StreamExt;
-use tonic::metadata::MetadataMap;
 use tonic::Response;
 
 use super::protobuf::worker_to_gw_request;
 use super::protobuf::worker_to_gw_response;
-use super::protobuf::WorkerToGwRequest;
-use super::protobuf::WorkerToGwResponse;
 use super::protobuf::{
     self,
 };
@@ -174,8 +171,6 @@ mod grpc_test
     use crate::grpc::protobuf::worker_to_gw_request;
     use crate::grpc::protobuf::worker_to_gw_response;
     use crate::grpc::protobuf::WorkerDone;
-    use crate::grpc::protobuf::WorkerReady;
-    use crate::grpc::protobuf::WorkerToGwRequest;
     use crate::grpc::protobuf::WorkerToGwResponse;
     use crate::grpc::GrpcConfig;
 
