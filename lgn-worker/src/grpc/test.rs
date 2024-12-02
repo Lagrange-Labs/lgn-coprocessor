@@ -23,6 +23,7 @@ struct TestGateway
 
 impl TestGateway
 {
+    #[allow(dead_code)]
     pub async fn run(
         listen: &str
     ) -> anyhow::Result<(
@@ -63,7 +64,7 @@ impl TestGateway
         )
     }
 
-    pub fn new() -> (
+    fn new() -> (
         Self,
         channel::Receiver<worker_to_gw_request::Request>,
         channel::Sender<worker_to_gw_response::Response>,

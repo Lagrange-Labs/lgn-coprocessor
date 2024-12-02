@@ -4119,6 +4119,7 @@ dependencies = [
  "redact",
  "reqwest 0.12.9",
  "rpassword",
+ "semver 1.0.23",
  "serde",
  "serde_derive",
  "serde_json",
