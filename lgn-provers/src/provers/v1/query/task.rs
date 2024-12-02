@@ -338,7 +338,7 @@ impl<P: StorageQueryProver> Querying<P>
                                     .into(),
                                 preprocessing_proof.clone_proof(),
                                 matching_rows
-                                    .into_iter()
+                                    .iter()
                                     .cloned()
                                     .map(HydratableMatchingRow::into_matching_row)
                                     .collect(),
