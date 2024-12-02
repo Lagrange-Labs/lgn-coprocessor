@@ -170,7 +170,12 @@ mod grpc_test
     use anyhow::bail;
 
     use super::TestGateway;
+    use crate::grpc::protobuf::worker_done::Reply;
+    use crate::grpc::protobuf::worker_to_gw_request;
     use crate::grpc::protobuf::worker_to_gw_response;
+    use crate::grpc::protobuf::WorkerDone;
+    use crate::grpc::protobuf::WorkerReady;
+    use crate::grpc::protobuf::WorkerToGwRequest;
     use crate::grpc::protobuf::WorkerToGwResponse;
     use crate::grpc::GrpcConfig;
 
@@ -195,6 +200,31 @@ mod grpc_test
         let (mut from_gw, to_gw) = worker_config
             .connect()
             .await?;
+
+        // first check if worker ready is being sent
+        // expect to see task output
+        let msg_from_worker = async_std::future::timeout(
+            std::time::Duration::from_millis(1000),
+            from_worker.recv(),
+        )
+        .await?;
+        let Ok(worker_to_gw_request::Request::WorkerReady(ready)) = msg_from_worker
+        else
+        {
+            bail!(
+                "unregonized worker ready msg: {:?}",
+                msg_from_worker
+            );
+        };
+        assert_eq!(
+            ready.version,
+            worker_config.version
+        );
+        assert_eq!(
+            ready.worker_class,
+            worker_config.class
+        );
+
         // send first task
         let todo_sent = "this is big task".to_string();
         to_worker
@@ -217,6 +247,47 @@ mod grpc_test
             todo_sent,
             todo_received
         );
+        // send first reply
+        let reply_sent = "this is big reply";
+        to_gw
+            .send(
+                crate::grpc::protobuf::WorkerToGwRequest {
+                    request: Some(
+                        worker_to_gw_request::Request::WorkerDone(
+                            crate::grpc::protobuf::WorkerDone {
+                                reply: Some(Reply::ReplyString(reply_sent.to_string())),
+                            },
+                        ),
+                    ),
+                },
+            )
+            .await?;
+        // expect to see task output
+        let recv_output = async_std::future::timeout(
+            std::time::Duration::from_millis(1000),
+            from_worker.recv(),
+        )
+        .await?;
+        let Ok(worker_to_gw_request::Request::WorkerDone(WorkerDone {
+            reply,
+        })) = recv_output
+        else
+        {
+            bail!(
+                "unregonized reply task: {:?}",
+                recv_output
+            );
+        };
+        let Reply::ReplyString(recv_output) = reply.expect("no reply message?")
+        else
+        {
+            bail!("unregonized reply string");
+        };
+        assert_eq!(
+            reply_sent,
+            recv_output
+        );
+
         Ok(())
     }
 }
