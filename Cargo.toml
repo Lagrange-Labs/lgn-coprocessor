@@ -46,10 +46,12 @@ protox = "0.7.1"
 redact = "0.1"
 rpassword = "7.0"
 serde_derive = "1.0"
-tokio-stream = "0.1"
+tokio-stream = "^0.1"
 tonic = "0.12"
 tonic-build = "0.12.3"
 tungstenite = "0.24"
+
+grpc-worker = { git = "https://github.com/Lagrange-Labs/worker-grpc-rs", branch = "main" }
 
 [patch.crates-io]
 plonky2 = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }

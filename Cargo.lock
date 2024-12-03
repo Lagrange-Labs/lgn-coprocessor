@@ -3342,6 +3342,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "grpc-worker"
+version = "0.1.0"
+source = "git+https://github.com/Lagrange-Labs/worker-grpc-rs?branch=main#bdd97dabb8be92c3e8e131bcbdc9def807c9206a"
+dependencies = [
+ "anyhow",
+ "async-std",
+ "async-stream",
+ "miette",
+ "prost",
+ "prost-types",
+ "protox",
+ "rand",
+ "tokio",
+ "tokio-stream",
+ "tonic",
+ "tonic-build",
+ "tracing",
+]
+
+[[package]]
 name = "h2"
 version = "0.3.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4117,6 +4137,7 @@ dependencies = [
  "config",
  "elliptic-curve",
  "ethers 2.0.13",
+ "grpc-worker",
  "hex",
  "jwt",
  "k256",
@@ -5463,7 +5484,7 @@ checksum = "0c1318b19085f08681016926435853bbf7858f9c082d0999b80550ff5d9abe15"
 dependencies = [
  "bytes",
  "heck",
- "itertools 0.13.0",
+ "itertools 0.10.5",
  "log",
  "multimap",
  "once_cell",
@@ -5483,7 +5504,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9552f850d5f0964a4e4d0bf306459ac29323ddfbae05e35a7c0d35cb0803cc5"
 dependencies = [
  "anyhow",
- "itertools 0.13.0",
+ "itertools 0.10.5",
  "proc-macro2",
  "quote",
  "syn 2.0.85",

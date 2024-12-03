@@ -19,17 +19,30 @@ serde_json = { workspace = true }
 checksums = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "json"] }
-tokio = { workspace = true, features = ["rt-multi-thread", "macros"]  }
-rand = { workspace = true, default-features = false, features = [ "std", "std_rng", "getrandom", "min_const_gen" ]  }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+rand = { workspace = true, default-features = false, features = [
+  "std",
+  "std_rng",
+  "getrandom",
+  "min_const_gen",
+] }
 reqwest = { workspace = true, features = ["blocking"] }
 
 # The ethers macro `abigen` needs to import ethers as a crate.
 backtrace = { workspace = true }
-clap = { workspace = true, features = ["derive", "env", "help", "std", "suggestions"] }
+clap = { workspace = true, features = [
+  "derive",
+  "env",
+  "help",
+  "std",
+  "suggestions",
+] }
 config = { workspace = true, features = ["toml"] }
 elliptic-curve = { workspace = true }
 # The ethers macro `abigen` needs to import ethers as a crate.
-ethers = { git = "https://github.com/Lagrange-Labs/ethers-rs", default-features = false, features = [ "rustls" ], branch = "get-proof-0x" }
+ethers = { git = "https://github.com/Lagrange-Labs/ethers-rs", default-features = false, features = [
+  "rustls",
+], branch = "get-proof-0x" }
 jwt = { workspace = true }
 k256 = { workspace = true, features = ["ecdsa", "std"] }
 lazy-static-include = { workspace = true }
@@ -51,6 +64,8 @@ async-stream = "0.3.6"
 async-std = "1.13.0"
 semver = "1.0.23"
 prost-types = "0.13.3"
+
+grpc-worker = { workspace = true }
 
 [build-dependencies]
 miette = { workspace = true }

@@ -11,6 +11,11 @@ use anyhow::*;
 use backtrace::Backtrace;
 use clap::Parser;
 use ethers::signers::Wallet;
+use grpc_worker::protobuf;
+use grpc_worker::protobuf::worker_done::Reply;
+use grpc_worker::protobuf::WorkerDone;
+use grpc_worker::protobuf::WorkerToGwRequest;
+use grpc_worker::protobuf::WorkerToGwResponse;
 use jwt::Claims;
 use jwt::RegisteredClaims;
 use k256::ecdsa::SigningKey;
@@ -22,12 +27,6 @@ use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::UpstreamPayload;
 use lgn_worker::avs::utils::read_keystore;
-use lgn_worker::grpc::protobuf;
-use lgn_worker::grpc::protobuf::worker_done::Reply;
-use lgn_worker::grpc::protobuf::WorkerDone;
-use lgn_worker::grpc::protobuf::WorkerToGwRequest;
-use lgn_worker::grpc::protobuf::WorkerToGwResponse;
-use lgn_worker::grpc::GrpcConfig;
 use metrics::counter;
 use mimalloc::MiMalloc;
 use tokio::io::AsyncWriteExt;
@@ -320,7 +319,7 @@ async fn run_with_grpc(
     )?
     .encode()?;
 
-    let grpc_config = GrpcConfig {
+    let grpc_config = grpc_worker::GrpcConfig {
         gateway: grpc_url.to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
         token,
