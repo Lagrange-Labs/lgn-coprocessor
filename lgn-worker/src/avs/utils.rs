@@ -40,17 +40,12 @@ pub fn read_password(
     prompt_msg: &str,
 ) -> Result<String>
 {
-    match env::var(env_name)
-    {
+    match env::var(env_name) {
         Ok(password) if !password.is_empty() => Ok(password),
-        _ =>
-        {
-            if cfg!(test)
-            {
+        _ => {
+            if cfg!(test) {
                 test_prompt_password(prompt_msg)
-            }
-            else
-            {
+            } else {
                 prompt_password(prompt_msg)
             }
         },

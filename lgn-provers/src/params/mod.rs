@@ -46,37 +46,30 @@ impl ParamsLoader
             file_path
         );
         let mut retries = 0;
-        loop
-        {
+        loop {
             debug!(
                 "checksum attempt number:  {:?}",
                 retries
             );
-            if retries >= DOWNLOAD_MAX_RETRIES
-            {
+            if retries >= DOWNLOAD_MAX_RETRIES {
                 bail!(
                     "Downloading file {:?} failed",
                     file_path
                 );
             }
-            let result = if !skip_checksum
-            {
+            let result = if !skip_checksum {
                 Self::verify_file_checksum(
                     file_name,
                     &file_path,
                     checksum_expected_local_path,
                     skip_checksum,
                 )
-            }
-            else
-            {
+            } else {
                 Ok(true)
             };
 
-            match result
-            {
-                Result::Ok(true) =>
-                {
+            match result {
+                Result::Ok(true) => {
                     info!(
                         "Loading params from local storage {:?}",
                         file_path
@@ -101,8 +94,7 @@ impl ParamsLoader
                         },
                     );
                 },
-                _ =>
-                {
+                _ => {
                     info!("public params are not locally stored yet, or checksum mismatch");
                     retries += 1;
 
@@ -110,8 +102,7 @@ impl ParamsLoader
                         base_url,
                         file_name,
                     )?;
-                    if skip_checksum
-                    {
+                    if skip_checksum {
                         info!(
                             "skipping checksum and loading file from local storage {:?}",
                             file_path
@@ -119,8 +110,7 @@ impl ParamsLoader
                         let reader = std::io::BufReader::new(params.as_ref());
                         return bincode::deserialize_from(reader).map_err(Into::into);
                     }
-                    if !skip_store
-                    {
+                    if !skip_store {
                         Self::store_file(
                             &file_path,
                             &params,
@@ -157,43 +147,35 @@ impl ParamsLoader
             file
         );
         let mut retries = 0;
-        loop
-        {
+        loop {
             debug!(
                 "checksum attempt number:  {:?}",
                 retries
             );
-            if retries >= DOWNLOAD_MAX_RETRIES
-            {
+            if retries >= DOWNLOAD_MAX_RETRIES {
                 bail!(
                     "Downloading file {:?} failed",
                     file
                 );
             }
-            let result = if !skip_checksum
-            {
+            let result = if !skip_checksum {
                 Self::verify_file_checksum(
                     file_name,
                     &file,
                     checksum_expected_local_path,
                     skip_checksum,
                 )
-            }
-            else
-            {
+            } else {
                 Ok(true)
             };
 
-            match result
-            {
-                Result::Ok(true) =>
-                {
+            match result {
+                Result::Ok(true) => {
                     let file = File::open(&file)?;
                     return Self::read_file(file);
                 },
 
-                _ =>
-                {
+                _ => {
                     info!("public params are not locally stored yet, or checksum mismatch");
                     retries += 1;
 
@@ -201,8 +183,7 @@ impl ParamsLoader
                         base_url,
                         file_name,
                     )?;
-                    if !skip_store
-                    {
+                    if !skip_store {
                         Self::store_file(
                             &file,
                             &params,
@@ -264,10 +245,8 @@ impl ParamsLoader
     ) -> anyhow::Result<bool>
     {
         // checking if file exists
-        if File::open(file).is_err()
-        {
-            if let Err(err) = fs::remove_file(Path::new(file))
-            {
+        if File::open(file).is_err() {
+            if let Err(err) = fs::remove_file(Path::new(file)) {
                 debug!(
                     "non existing file {:?}: {}",
                     file, err
@@ -364,23 +343,18 @@ impl ParamsLoader
             result
         );
 
-        match result
-        {
-            checksums::Error::NoError =>
-            {
+        match result {
+            checksums::Error::NoError => {
                 // Test result no error
                 info!("Checksum is successful");
                 Ok(true)
             },
 
-            _ =>
-            {
-                if skip_checksum
-                {
+            _ => {
+                if skip_checksum {
                     return Ok(false);
                 }
-                if let Err(err) = fs::remove_file(Path::new(file))
-                {
+                if let Err(err) = fs::remove_file(Path::new(file)) {
                     error!(
                         "Error deleting file {:?}: {}",
                         file, err
@@ -426,8 +400,7 @@ impl ParamsLoader
             file
         );
 
-        if let Some(parent) = std::path::Path::new(file).parent()
-        {
+        if let Some(parent) = std::path::Path::new(file).parent() {
             std::fs::create_dir_all(parent)
                 .context("Failed to create directories for local storage")?;
         }

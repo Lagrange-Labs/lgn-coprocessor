@@ -221,8 +221,7 @@ impl MPTExtractionType
     ) -> Self
     {
         let list: Vec<Vec<_>> = rlp::decode_list(node);
-        match list.len()
-        {
+        match list.len() {
             // assuming the first node in the path is the leaf
             2 if i == 0 => MPTExtractionType::Leaf,
             2 => MPTExtractionType::Extension,
@@ -310,8 +309,7 @@ impl FinalExtraction
 {
     fn table_id(&self) -> BlockNr
     {
-        match self
-        {
+        match self {
             FinalExtraction::Single(single_table_extraction) => single_table_extraction.table_id,
             FinalExtraction::Merge(merge_table_extraction) => merge_table_extraction.table_id,
         }
@@ -319,8 +317,7 @@ impl FinalExtraction
 
     fn block_nr(&self) -> BlockNr
     {
-        match self
-        {
+        match self {
             FinalExtraction::Single(single_table_extraction) => single_table_extraction.block_nr,
             FinalExtraction::Merge(merge_table_extraction) => merge_table_extraction.block_nr,
         }
@@ -409,8 +406,7 @@ impl SingleTableExtraction
         value_proof_version: MptNodeVersion,
     ) -> Self
     {
-        let extraction_type = match compound
-        {
+        let extraction_type = match compound {
             Some(compound) => FinalExtractionType::Simple(compound),
             None => FinalExtractionType::Lengthed,
         };
@@ -502,43 +498,34 @@ impl From<&WorkerTask> for ProofKey
 {
     fn from(task: &WorkerTask) -> Self
     {
-        match &task.task_type
-        {
-            WorkerTaskType::Extraction(extraction) =>
-            {
-                match extraction
-                {
-                    ExtractionType::MptExtraction(mpt_extraction) =>
-                    {
+        match &task.task_type {
+            WorkerTaskType::Extraction(extraction) => {
+                match extraction {
+                    ExtractionType::MptExtraction(mpt_extraction) => {
                         let node_version = (
                             mpt_extraction.block_nr,
                             mpt_extraction.node_hash,
                         );
-                        match &mpt_extraction.mpt_type
-                        {
-                            MptType::MappingLeaf(_) =>
-                            {
+                        match &mpt_extraction.mpt_type {
+                            MptType::MappingLeaf(_) => {
                                 ProofKey::MptVariable {
                                     table_hash: mpt_extraction.table_hash,
                                     mpt_node_version: node_version,
                                 }
                             },
-                            MptType::MappingBranch(_) =>
-                            {
+                            MptType::MappingBranch(_) => {
                                 ProofKey::MptVariable {
                                     table_hash: mpt_extraction.table_hash,
                                     mpt_node_version: node_version,
                                 }
                             },
-                            MptType::VariableLeaf(_) =>
-                            {
+                            MptType::VariableLeaf(_) => {
                                 ProofKey::MptVariable {
                                     table_hash: mpt_extraction.table_hash,
                                     mpt_node_version: node_version,
                                 }
                             },
-                            MptType::VariableBranch(_) =>
-                            {
+                            MptType::VariableBranch(_) => {
                                 ProofKey::MptVariable {
                                     table_hash: mpt_extraction.table_hash,
                                     mpt_node_version: node_version,
@@ -546,28 +533,24 @@ impl From<&WorkerTask> for ProofKey
                             },
                         }
                     },
-                    ExtractionType::LengthExtraction(length) =>
-                    {
+                    ExtractionType::LengthExtraction(length) => {
                         ProofKey::MptLength {
                             table_hash: length.table_hash,
                             block_nr: length.block_nr,
                         }
                     },
-                    ExtractionType::ContractExtraction(contract) =>
-                    {
+                    ExtractionType::ContractExtraction(contract) => {
                         ProofKey::Contract {
                             address: contract.contract,
                             block_nr: contract.block_nr,
                         }
                     },
-                    ExtractionType::BlockExtraction(_) =>
-                    {
+                    ExtractionType::BlockExtraction(_) => {
                         ProofKey::Block {
                             block_nr: task.block_nr,
                         }
                     },
-                    ExtractionType::FinalExtraction(final_extraction) =>
-                    {
+                    ExtractionType::FinalExtraction(final_extraction) => {
                         ProofKey::FinalExtraction {
                             table_id: final_extraction.table_id(),
                             block_nr: final_extraction.block_nr(),

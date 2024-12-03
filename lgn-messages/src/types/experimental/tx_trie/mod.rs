@@ -184,10 +184,8 @@ impl Computation
     #[must_use]
     pub fn id(&self) -> String
     {
-        match self
-        {
-            Computation::SumOfGasFees(computation) =>
-            {
+        match self {
+            Computation::SumOfGasFees(computation) => {
                 format!(
                     "sum_of_gas_fees_{}",
                     computation.dest_address

@@ -202,17 +202,14 @@ impl<T: Clone + std::fmt::Debug> std::fmt::Debug for Hydratable<T>
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result
     {
-        match self
-        {
-            Hydratable::Dehydrated(k) =>
-            {
+        match self {
+            Hydratable::Dehydrated(k) => {
                 write!(
                     f,
                     "dehydrated: {k:?}"
                 )
             },
-            Hydratable::Hydrated(_) =>
-            {
+            Hydratable::Hydrated(_) => {
                 write!(
                     f,
                     "hydrated"
@@ -234,8 +231,7 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K>
     /// not hydrated.
     pub fn proof(&self) -> Arc<Vec<u8>>
     {
-        match self
-        {
+        match self {
             Hydratable::Dehydrated(_) => unreachable!(),
             Hydratable::Hydrated(proof) => proof.clone(),
         }
@@ -245,11 +241,9 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K>
     /// not hydrated.
     pub fn clone_proof(&self) -> Vec<u8>
     {
-        match self
-        {
+        match self {
             Hydratable::Dehydrated(_) => unreachable!(),
-            Hydratable::Hydrated(proof) =>
-            {
+            Hydratable::Hydrated(proof) => {
                 proof
                     .clone()
                     .to_vec()
@@ -261,8 +255,7 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K>
     /// not hydrated.
     pub fn key(&self) -> K
     {
-        match self
-        {
+        match self {
             Hydratable::Dehydrated(k) => k.clone(),
             Hydratable::Hydrated(_) => unreachable!(),
         }
@@ -334,10 +327,8 @@ impl From<&WorkerTask> for ProofKey
 {
     fn from(task: &WorkerTask) -> Self
     {
-        match &task.task_type
-        {
-            WorkerTaskType::Query(qr) =>
-            {
+        match &task.task_type {
+            WorkerTaskType::Query(qr) => {
                 qr.proof_key
                     .clone()
             },

@@ -351,18 +351,12 @@ impl From<&WorkerTask> for db_keys::ProofKey
 {
     fn from(tt: &WorkerTask) -> Self
     {
-        match &tt.task_type
-        {
-            WorkerTaskType::Database(db) =>
-            {
-                match db
-                {
-                    DatabaseType::Cell(ct) =>
-                    {
-                        match ct
-                        {
-                            DbCellType::Leaf(cl) =>
-                            {
+        match &tt.task_type {
+            WorkerTaskType::Database(db) => {
+                match db {
+                    DatabaseType::Cell(ct) => {
+                        match ct {
+                            DbCellType::Leaf(cl) => {
                                 db_keys::ProofKey::Cell(
                                     cl.table_id,
                                     tt.block_nr,
@@ -371,8 +365,7 @@ impl From<&WorkerTask> for db_keys::ProofKey
                                     cl.cell_id,
                                 )
                             },
-                            DbCellType::Partial(cp) =>
-                            {
+                            DbCellType::Partial(cp) => {
                                 db_keys::ProofKey::Cell(
                                     cp.table_id,
                                     tt.block_nr,
@@ -381,8 +374,7 @@ impl From<&WorkerTask> for db_keys::ProofKey
                                     cp.cell_id,
                                 )
                             },
-                            DbCellType::Full(cf) =>
-                            {
+                            DbCellType::Full(cf) => {
                                 db_keys::ProofKey::Cell(
                                     cf.table_id,
                                     tt.block_nr,
@@ -393,12 +385,9 @@ impl From<&WorkerTask> for db_keys::ProofKey
                             },
                         }
                     },
-                    DatabaseType::Row(rt) =>
-                    {
-                        match rt
-                        {
-                            DbRowType::Leaf(rl) =>
-                            {
+                    DatabaseType::Row(rt) => {
+                        match rt {
+                            DbRowType::Leaf(rl) => {
                                 db_keys::ProofKey::Row(
                                     rl.table_id,
                                     tt.block_nr,
@@ -406,8 +395,7 @@ impl From<&WorkerTask> for db_keys::ProofKey
                                         .to_string(),
                                 )
                             },
-                            DbRowType::Partial(rp) =>
-                            {
+                            DbRowType::Partial(rp) => {
                                 db_keys::ProofKey::Row(
                                     rp.table_id,
                                     tt.block_nr,
@@ -415,8 +403,7 @@ impl From<&WorkerTask> for db_keys::ProofKey
                                         .to_string(),
                                 )
                             },
-                            DbRowType::Full(rf) =>
-                            {
+                            DbRowType::Full(rf) => {
                                 db_keys::ProofKey::Row(
                                     rf.table_id,
                                     tt.block_nr,
@@ -426,15 +413,13 @@ impl From<&WorkerTask> for db_keys::ProofKey
                             },
                         }
                     },
-                    DatabaseType::Index(bt) =>
-                    {
+                    DatabaseType::Index(bt) => {
                         db_keys::ProofKey::Block(
                             bt.table_id,
                             tt.block_nr,
                         )
                     },
-                    DatabaseType::IVC(ivc) =>
-                    {
+                    DatabaseType::IVC(ivc) => {
                         db_keys::ProofKey::IVC(
                             ivc.table_id,
                             tt.block_nr,
@@ -442,8 +427,7 @@ impl From<&WorkerTask> for db_keys::ProofKey
                     },
                 }
             },
-            _ =>
-            {
+            _ => {
                 unimplemented!(
                     "Task type not supported: {:?}",
                     tt.task_type

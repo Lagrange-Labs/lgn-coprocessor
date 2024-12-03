@@ -351,10 +351,8 @@ impl<T> Display for UpstreamPayload<T>
         f: &mut Formatter<'_>,
     ) -> std::fmt::Result
     {
-        match self
-        {
-            UpstreamPayload::Done(_) =>
-            {
+        match self {
+            UpstreamPayload::Done(_) => {
                 write!(
                     f,
                     "Task done"
@@ -362,22 +360,19 @@ impl<T> Display for UpstreamPayload<T>
             },
             UpstreamPayload::Authentication {
                 ..
-            } =>
-            {
+            } => {
                 write!(
                     f,
                     "Authentication"
                 )
             },
-            UpstreamPayload::Ready =>
-            {
+            UpstreamPayload::Ready => {
                 write!(
                     f,
                     "Ready"
                 )
             },
-            UpstreamPayload::ProvingError(_) =>
-            {
+            UpstreamPayload::ProvingError(_) => {
                 write!(
                     f,
                     "Proving error"
@@ -425,8 +420,7 @@ impl TaskDifficulty
     /// Returns the stake required in order to run such a task
     pub fn required_stake(&self) -> Stake
     {
-        match self
-        {
+        match self {
             TaskDifficulty::Small => REQUIRED_STAKE_SMALL_USD,
             TaskDifficulty::Medium => REQUIRED_STAKE_MEDIUM_USD,
             TaskDifficulty::Large => REQUIRED_STAKE_LARGE_USD,
@@ -442,8 +436,7 @@ impl TaskDifficulty
             .split('_')
             .next()
             .expect("invalid routing key");
-        match domain
-        {
+        match domain {
             v1::preprocessing::ROUTING_DOMAIN => TaskDifficulty::Medium,
             v1::query::ROUTING_DOMAIN => TaskDifficulty::Small,
             v1::groth16::ROUTING_DOMAIN => TaskDifficulty::Large,
@@ -481,8 +474,7 @@ impl Display for TaskDifficulty
         write!(
             f,
             "{}",
-            match self
-            {
+            match self {
                 TaskDifficulty::Small => "small",
                 TaskDifficulty::Medium => "medium",
                 TaskDifficulty::Large => "large",
@@ -534,8 +526,7 @@ impl Display for ProverType
         write!(
             f,
             "{}",
-            match self
-            {
+            match self {
                 ProverType::Query2Preprocess => "Query2Preprocess",
                 ProverType::Query2Query => "Query2Query",
                 ProverType::Query2Groth16 => "Query2Groth16",
@@ -557,13 +548,11 @@ impl ToProverType for TaskType
 {
     fn to_prover_type(&self) -> ProverType
     {
-        match self
-        {
+        match self {
             TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
             TaskType::V1Query(_) => ProverType::V1Query,
             TaskType::V1Groth16(_) => ProverType::V1Groth16,
-            _ =>
-            {
+            _ => {
                 panic!(
                     "Unsupported task type: {:?}",
                     self

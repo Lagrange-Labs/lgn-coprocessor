@@ -70,8 +70,7 @@ impl AssetKey
     #[must_use]
     pub fn filename(&self) -> &str
     {
-        match self
-        {
+        match self {
             AssetKey::Circuit => "circuit.bin",
             AssetKey::R1CS => "r1cs.bin",
             AssetKey::PK => "pk.bin",

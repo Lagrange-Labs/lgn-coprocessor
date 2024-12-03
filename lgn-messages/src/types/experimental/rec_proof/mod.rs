@@ -62,8 +62,7 @@ impl From<String> for Experiment
 {
     fn from(experiment: String) -> Self
     {
-        match experiment.as_str()
-        {
+        match experiment.as_str() {
             "inclusion" => Self::Inclusion,
             "digest_translation" => Self::DigestTranslation,
             "bucketing" => Self::Bucketing,

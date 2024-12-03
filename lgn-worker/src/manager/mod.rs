@@ -81,8 +81,7 @@ where
             .provers
             .get(&prover_type)
         {
-            Some(prover) =>
-            {
+            Some(prover) => {
                 info!("Running prover for task type: {prover_type:?}");
 
                 let start_time = std::time::Instant::now();
@@ -96,8 +95,7 @@ where
 
                 Ok(result)
             },
-            None =>
-            {
+            None => {
                 counter!("zkmr_worker_tasks_failed_total", "task_type" => prover_type.to_string())
                     .increment(1);
 

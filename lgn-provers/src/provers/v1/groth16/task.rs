@@ -53,8 +53,7 @@ impl<GP: Prover> Groth16<GP>
         let task_id = envelope
             .task_id
             .clone();
-        if let TaskType::V1Groth16(task) = envelope.inner()
-        {
+        if let TaskType::V1Groth16(task) = envelope.inner() {
             let reply = self.process_task(
                 query_id.clone(),
                 task_id.clone(),
@@ -67,9 +66,7 @@ impl<GP: Prover> Groth16<GP>
                 reply_type,
             );
             Ok(reply_envelope)
-        }
-        else
-        {
+        } else {
             bail!(
                 "Unexpected task type: {:?}",
                 envelope.inner()

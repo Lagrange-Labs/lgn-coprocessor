@@ -41,18 +41,14 @@ impl From<ProofKey> for Path
 {
     fn from(key: ProofKey) -> Self
     {
-        let path_str = match &key
-        {
-            ProofKey::PublicParams(experiment, log_max_capacity) =>
-            {
+        let path_str = match &key {
+            ProofKey::PublicParams(experiment, log_max_capacity) => {
                 format!("recproof/{experiment:?}/public_params/{log_max_capacity}")
             },
-            ProofKey::Inputs(experiment, log_max_capacity, log_subset_size) =>
-            {
+            ProofKey::Inputs(experiment, log_max_capacity, log_subset_size) => {
                 format!("recproof/{experiment:?}/inputs/{log_max_capacity}/{log_subset_size}")
             },
-            ProofKey::Compute(query_id, level, index) =>
-            {
+            ProofKey::Compute(query_id, level, index) => {
                 format!("recproof/node/{query_id}/{level}-{index}")
             },
         };

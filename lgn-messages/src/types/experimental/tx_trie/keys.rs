@@ -172,38 +172,32 @@ impl Display for ProofKey
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result
     {
-        match self
-        {
-            ProofKey::Transaction(computation_id, block_nr, tx_hash) =>
-            {
+        match self {
+            ProofKey::Transaction(computation_id, block_nr, tx_hash) => {
                 write!(
                     f,
                     "tx_{computation_id}_{block_nr}_{tx_hash}"
                 )
             },
-            ProofKey::Intermediate(computation_id, block_nr, intermediate_node_hash) =>
-            {
+            ProofKey::Intermediate(computation_id, block_nr, intermediate_node_hash) => {
                 write!(
                     f,
                     "intermediate_{computation_id}_{block_nr}_{intermediate_node_hash}"
                 )
             },
-            ProofKey::Block(computation_id, block_nr) =>
-            {
+            ProofKey::Block(computation_id, block_nr) => {
                 write!(
                     f,
                     "block_{computation_id}_{block_nr}"
                 )
             },
-            ProofKey::Aggregation(computation_id, aggregation_node_hash) =>
-            {
+            ProofKey::Aggregation(computation_id, aggregation_node_hash) => {
                 write!(
                     f,
                     "aggregation_{computation_id}_{aggregation_node_hash}"
                 )
             },
-            ProofKey::Result(query_id) =>
-            {
+            ProofKey::Result(query_id) => {
                 write!(
                     f,
                     "result_{query_id}"

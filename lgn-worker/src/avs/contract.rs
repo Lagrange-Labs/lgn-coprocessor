@@ -60,8 +60,7 @@ impl Network
 {
     pub fn describe(&self) -> String
     {
-        match self
-        {
+        match self {
             Network::Mainnet => "mainnet",
             Network::Holesky => "holesky",
         }
@@ -70,8 +69,7 @@ impl Network
 
     pub fn chain_id(&self) -> u64
     {
-        match self
-        {
+        match self {
             Network::Mainnet => 1,
             Network::Holesky => 17000u64,
         }
@@ -81,8 +79,7 @@ impl Network
     /// on Lagrange Network AVS
     fn lagrange_registry_address(&self) -> Address
     {
-        match self
-        {
+        match self {
             Network::Mainnet => MAINNET_ZKMR_STAKE_REGISTRY_ADDR,
             Network::Holesky => HOLESKY_ZKMR_STAKE_REGISTRY_ADDR,
         }
@@ -95,8 +92,7 @@ impl Network
     /// compute the right avs digest hash for the registration signature.
     fn lagrange_service_manager_address(&self) -> Address
     {
-        match self
-        {
+        match self {
             Network::Mainnet => MAINNET_ZKMR_SERVICE_MANAGER_ADDR,
             Network::Holesky => HOLESKY_ZKMR_SERVICE_MANAGER_ADDR,
         }
@@ -110,8 +106,7 @@ impl Network
     /// From https://github.com/Layr-Labs/eigenlayer-contracts?tab=readme-ov-file#deployments
     fn eigen_delegation_manager_address(&self) -> Address
     {
-        match self
-        {
+        match self {
             Network::Mainnet => MAINNET_DELEGATION_MANAGER_ADDR.to_string(),
             Network::Holesky => HOLESKY_DELEGATION_MANAGER_ADDR.to_string(),
         }
@@ -123,8 +118,7 @@ impl Network
     /// hash - since that hash is computed onchain as well during registration time.
     fn eigen_avs_directory(&self) -> Address
     {
-        match self
-        {
+        match self {
             Network::Mainnet => MAINNET_AVS_DIRECTORY_ADDR.to_string(),
             Network::Holesky => HOLESKY_AVS_DIRECTORY_ADDR.to_string(),
         }
@@ -216,16 +210,14 @@ pub async fn register_operator(
         .whitelist(operator_address)
         .call()
         .await?;
-    if !is_whitelisted
-    {
+    if !is_whitelisted {
         bail!("operator address {operator_address} is not whitelisted on the Lagrange contract. Contact Lagrange admin.");
     }
     let is_registered = contract
         .is_registered(operator_address)
         .call()
         .await?;
-    if is_registered
-    {
+    if is_registered {
         bail!(
             "operator address {operator_address} is already registered on our contract! Exiting."
         );

@@ -231,8 +231,7 @@ impl Register
             operator,
         )
         .await?;
-        if !is_operator
-        {
+        if !is_operator {
             bail!("
 Please register the main key as an operator of EigenLayer first:
 https://docs.eigenlayer.xyz/eigenlayer/operator-guides/operator-installation#operator-configuration-and-registration
@@ -259,14 +258,11 @@ https://docs.eigenlayer.xyz/eigenlayer/operator-guides/operator-installation#ope
 #[tokio::main]
 async fn main() -> anyhow::Result<()>
 {
-    if std::io::stdout().is_terminal()
-    {
+    if std::io::stdout().is_terminal() {
         tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::from_default_env())
             .init();
-    }
-    else
-    {
+    } else {
         tracing_subscriber::fmt()
             .json()
             .with_env_filter(EnvFilter::from_default_env())
@@ -276,11 +272,9 @@ async fn main() -> anyhow::Result<()>
     let cli = Cli::parse();
     info!("Run the cli: {cli:?}");
 
-    match cli
-    {
+    match cli {
         Cli::NewKey(new_key) => new_key.run(),
-        Cli::Register(register) =>
-        {
+        Cli::Register(register) => {
             register
                 .run()
                 .await
