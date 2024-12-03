@@ -14,10 +14,6 @@ use ethers::signers::Wallet;
 use jwt::Claims;
 use jwt::RegisteredClaims;
 use k256::ecdsa::SigningKey;
-use lagrange::worker_done::Reply;
-use lagrange::WorkerDone;
-use lagrange::WorkerToGwRequest;
-use lagrange::WorkerToGwResponse;
 use lgn_auth::jwt::JWTAuth;
 use lgn_messages::types::DownstreamPayload;
 use lgn_messages::types::MessageEnvelope;
@@ -26,12 +22,15 @@ use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::UpstreamPayload;
 use lgn_worker::avs::utils::read_keystore;
+use lgn_worker::grpc::protobuf;
+use lgn_worker::grpc::protobuf::worker_done::Reply;
+use lgn_worker::grpc::protobuf::WorkerDone;
+use lgn_worker::grpc::protobuf::WorkerToGwRequest;
+use lgn_worker::grpc::protobuf::WorkerToGwResponse;
+use lgn_worker::grpc::GrpcConfig;
 use metrics::counter;
 use mimalloc::MiMalloc;
 use tokio::io::AsyncWriteExt;
-use tokio_stream::StreamExt;
-use tonic::metadata::MetadataValue;
-use tonic::Request;
 use tracing::error;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
@@ -62,8 +61,6 @@ mod manager;
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
-
-const MAX_GRPC_MESSAGE_SIZE_MB: usize = 16;
 
 #[derive(Parser, Clone, Debug)]
 struct Cli
@@ -313,9 +310,6 @@ async fn run_with_grpc(
     grpc_url: &str,
 ) -> Result<()>
 {
-    let uri = grpc_url.parse::<tonic::transport::Uri>()?;
-    let (mut outbound, outbound_rx) = tokio::sync::mpsc::channel(1024);
-
     let mut provers_manager = tokio::task::block_in_place(
         move || -> Result<ProversManager<TaskType, ReplyType>> {
             let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
@@ -330,9 +324,6 @@ async fn run_with_grpc(
 
     maybe_verify_checksums(config).await?;
 
-    info!("Connecting to Gateway at uri `{uri}`");
-    let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
-
     let wallet = get_wallet(config)?;
     let claims = get_claims(config)?;
     let token = JWTAuth::new(
@@ -341,73 +332,33 @@ async fn run_with_grpc(
     )?
     .encode()?;
 
-    let channel = tonic::transport::Channel::builder(uri)
+    let grpc_config = GrpcConfig {
+        gateway: grpc_url.to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
+        token,
+        class: config
+            .worker
+            .instance_type
+            .to_string(),
+        max_grpc_message_size_mb: config
+            .avs
+            .max_grpc_message_size_mb,
+    };
+    let (mut from_gw, mut to_gw) = grpc_config
         .connect()
         .await?;
-    let token: MetadataValue<_> = format!("Bearer {token}").parse()?;
 
-    let max_message_size = config
-        .avs
-        .max_grpc_message_size_mb
-        .unwrap_or(MAX_GRPC_MESSAGE_SIZE_MB)
-        * 1024
-        * 1024;
-
-    let mut client = lagrange::workers_service_client::WorkersServiceClient::with_interceptor(
-        channel,
-        move |mut req: Request<()>| {
-            req.metadata_mut()
-                .insert(
-                    "authorization",
-                    token.clone(),
-                );
-            Ok(req)
-        },
-    )
-    .max_decoding_message_size(max_message_size)
-    .max_encoding_message_size(max_message_size);
-
-    let response = client
-        .worker_to_gw(tonic::Request::new(outbound_rx))
-        .await?;
-
-    let mut inbound = response.into_inner();
-
-    outbound
-        .send(
-            WorkerToGwRequest {
-                request: Some(
-                    lagrange::worker_to_gw_request::Request::WorkerReady(
-                        lagrange::WorkerReady {
-                            version: env!("CARGO_PKG_VERSION").to_string(),
-                            worker_class: config
-                                .worker
-                                .instance_type
-                                .to_string(),
-                        },
-                    ),
-                ),
-            },
+    while let Some(msg) = from_gw
+        .recv()
+        .await
+    {
+        process_message_from_gateway(
+            &mut provers_manager,
+            &msg,
+            &mut to_gw,
         )
         .await?;
-
-    loop
-    {
-        tokio::select! {
-            Some(inbound_message) = inbound.next() => {
-                let msg = match inbound_message {
-                    Ok(ref msg) => msg,
-                    Err(e) => {
-                        error!("connection to the gateway ended with status: {e}");
-                        break;
-                    }
-                };
-                process_message_from_gateway(&mut provers_manager, msg, &mut outbound).await?;
-            }
-            else => break,
-        }
     }
-
     Ok(())
 }
 
@@ -505,7 +456,7 @@ async fn process_message_from_gateway(
         {
             match response
             {
-                lagrange::worker_to_gw_response::Response::Todo(json_document) =>
+                protobuf::worker_to_gw_response::Response::Todo(json_document) =>
                 {
                     let message_envelope =
                         serde_json::from_str::<MessageEnvelope<TaskType>>(json_document)?;
@@ -525,7 +476,7 @@ async fn process_message_from_gateway(
                         {
                             WorkerToGwRequest {
                                 request: Some(
-                                    lagrange::worker_to_gw_request::Request::WorkerDone(
+                                    protobuf::worker_to_gw_request::Request::WorkerDone(
                                         WorkerDone {
                                             reply: Some(
                                                 Reply::ReplyString(serde_json::to_string(&reply)?),
@@ -539,7 +490,7 @@ async fn process_message_from_gateway(
                         {
                             WorkerToGwRequest {
                                 request: Some(
-                                    lagrange::worker_to_gw_request::Request::WorkerDone(
+                                    protobuf::worker_to_gw_request::Request::WorkerDone(
                                         WorkerDone {
                                             reply: Some(Reply::WorkerError(error_str)),
                                         },
