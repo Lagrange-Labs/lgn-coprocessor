@@ -83,8 +83,7 @@ struct Cli
 
 fn setup_logging(json: bool)
 {
-    if json
-    {
+    if json {
         let subscriber = tracing_subscriber::fmt()
             .json()
             .with_level(true)
@@ -99,9 +98,7 @@ fn setup_logging(json: bool)
             .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("Setting up logging failed");
-    }
-    else
-    {
+    } else {
         let subscriber = tracing_subscriber::fmt()
             .pretty()
             .compact()
@@ -134,8 +131,7 @@ async fn main() -> anyhow::Result<()>
                     .downcast_ref::<&'static str>()
                 {
                     Some(s) => *s,
-                    None =>
-                    {
+                    None => {
                         match panic_info
                             .payload()
                             .downcast_ref::<String>()
@@ -145,18 +141,15 @@ async fn main() -> anyhow::Result<()>
                         }
                     },
                 };
-                let (file, lineno, col) = match panic_info.location()
-                {
-                    Some(l) =>
-                    {
+                let (file, lineno, col) = match panic_info.location() {
+                    Some(l) => {
                         (
                             l.file(),
                             l.line(),
                             l.column(),
                         )
                     },
-                    None =>
-                    {
+                    None => {
                         (
                             "<unknown>",
                             0,
@@ -177,16 +170,13 @@ async fn main() -> anyhow::Result<()>
         ),
     );
 
-    if let Err(err) = run(cli).await
-    {
+    if let Err(err) = run(cli).await {
         error!(
             "Service exiting with an error. err: {:?}",
             err
         );
         bail!("Worker exited due to an error")
-    }
-    else
-    {
+    } else {
         Ok(())
     }
 }
@@ -250,9 +240,7 @@ async fn run(cli: Cli) -> Result<()>
             grpc_url,
         )
         .await
-    }
-    else
-    {
+    } else {
         tokio::task::block_in_place(move || run_with_websocket(&config))
     }
 }
@@ -381,14 +369,10 @@ fn process_downstream_payload(
         envelope
     );
     counter!("zkmr_worker_tasks_received_total").increment(1);
-    match std::panic::catch_unwind(|| provers_manager.delegate_proving(&envelope))
-    {
-        Ok(result) =>
-        {
-            match result
-            {
-                Ok(reply) =>
-                {
+    match std::panic::catch_unwind(|| provers_manager.delegate_proving(&envelope)) {
+        Ok(result) => {
+            match result {
+                Ok(reply) => {
                     trace!(
                         "Sending reply: {:?}",
                         reply
@@ -396,8 +380,7 @@ fn process_downstream_payload(
                     counter!("zkmr_worker_tasks_processed_total").increment(1);
                     Ok(reply)
                 },
-                Err(e) =>
-                {
+                Err(e) => {
                     error!(
                         "Error processing task: {:?}",
                         e
@@ -409,21 +392,17 @@ fn process_downstream_payload(
                 },
             }
         },
-        Err(panic) =>
-        {
+        Err(panic) => {
             counter!(
                 "zkmr_worker_error_count",
                 "error_type" => "proof_processing"
             )
             .increment(1);
 
-            let msg = match panic.downcast_ref::<&'static str>()
-            {
+            let msg = match panic.downcast_ref::<&'static str>() {
                 Some(s) => *s,
-                None =>
-                {
-                    match panic.downcast_ref::<String>()
-                    {
+                None => {
+                    match panic.downcast_ref::<String>() {
                         Some(s) => &s[..],
                         None => "Box<dyn Any>",
                     }
@@ -450,14 +429,10 @@ async fn process_message_from_gateway(
     outbound: &mut tokio::sync::mpsc::Sender<WorkerToGwRequest>,
 ) -> Result<()>
 {
-    match &message.response
-    {
-        Some(response) =>
-        {
-            match response
-            {
-                protobuf::worker_to_gw_response::Response::Todo(json_document) =>
-                {
+    match &message.response {
+        Some(response) => {
+            match response {
+                protobuf::worker_to_gw_response::Response::Todo(json_document) => {
                     let message_envelope =
                         serde_json::from_str::<MessageEnvelope<TaskType>>(json_document)?;
 
@@ -470,14 +445,15 @@ async fn process_message_from_gateway(
                         },
                     );
 
-                    let outbound_msg = match reply
-                    {
-                        Ok(reply) =>
-                        {
+                    let outbound_msg = match reply {
+                        Ok(reply) => {
                             WorkerToGwRequest {
                                 request: Some(
                                     protobuf::worker_to_gw_request::Request::WorkerDone(
                                         WorkerDone {
+                                            task_id: message
+                                                .task_id
+                                                .clone(),
                                             reply: Some(
                                                 Reply::ReplyString(serde_json::to_string(&reply)?),
                                             ),
@@ -486,12 +462,14 @@ async fn process_message_from_gateway(
                                 ),
                             }
                         },
-                        Err(error_str) =>
-                        {
+                        Err(error_str) => {
                             WorkerToGwRequest {
                                 request: Some(
                                     protobuf::worker_to_gw_request::Request::WorkerDone(
                                         WorkerDone {
+                                            task_id: message
+                                                .task_id
+                                                .clone(),
                                             reply: Some(Reply::WorkerError(error_str)),
                                         },
                                     ),
@@ -509,8 +487,7 @@ async fn process_message_from_gateway(
                 },
             }
         },
-        None =>
-        {
+        None => {
             tracing::warn!("Received WorkerToGwReponse with empty reponse field");
         },
     }
@@ -529,17 +506,14 @@ fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>>
         &config
             .avs
             .lagr_private_key,
-    )
-    {
-        (Some(keystore_path), Some(password), None) =>
-        {
+    ) {
+        (Some(keystore_path), Some(password), None) => {
             read_keystore(
                 keystore_path,
                 password.expose_secret(),
             )?
         },
-        (Some(_), None, Some(pkey)) =>
-        {
+        (Some(_), None, Some(pkey)) => {
             Wallet::from_str(pkey.expose_secret()).context("Failed to create wallet")?
         },
         _ => bail!("Must specify either keystore path w/ password OR private key"),
@@ -640,11 +614,9 @@ fn run_with_websocket(config: &Config) -> Result<()>
         .context("Failed to read authentication confirmation")
         .and_then(
             |reply| {
-                match reply
-                {
+                match reply {
                     Message::Text(payload) => Ok(payload),
-                    _ =>
-                    {
+                    _ => {
                         bail!(
                 "Unexpected websocket message during authentication, expected Text. reply: {}",
                 reply
@@ -655,20 +627,17 @@ fn run_with_websocket(config: &Config) -> Result<()>
         )
         .and_then(
             |payload| {
-                match serde_json::from_str::<DownstreamPayload<ReplyType>>(&payload)
-                {
+                match serde_json::from_str::<DownstreamPayload<ReplyType>>(&payload) {
                     Ok(DownstreamPayload::Ack) => Ok(()),
                     Ok(DownstreamPayload::Todo {
                         envelope,
-                    }) =>
-                    {
+                    }) => {
                         bail!(
                             "Unexpected Todo message during authentication. msg: {:?}",
                             envelope
                         )
                     },
-                    Err(err) =>
-                    {
+                    Err(err) => {
                         bail!(
                             "Websocket error while authenticating. err: {}",
                             err
@@ -733,15 +702,12 @@ fn start_work(
         .send(Message::Text(ready_json))
         .context("unable to send ready frame")?;
 
-    loop
-    {
+    loop {
         let msg = ws_socket
             .read()
             .context("Failed to read from gateway socket")?;
-        match msg
-        {
-            Message::Text(content) =>
-            {
+        match msg {
+            Message::Text(content) => {
                 trace!(
                     "Received message: {:?}",
                     content
@@ -760,21 +726,17 @@ fn start_work(
                             content
                         )
                     },
-                )?
-                {
+                )? {
                     DownstreamPayload::Todo {
                         envelope,
-                    } =>
-                    {
+                    } => {
                         let envelope_id = envelope.id();
                         let reply = match process_downstream_payload(
                             provers_manager,
                             envelope,
-                        )
-                        {
+                        ) {
                             Ok(reply) => UpstreamPayload::Done(reply),
-                            Err(msg) =>
-                            {
+                            Err(msg) => {
                                 let var_name = format!(
                                     "{}: {msg}",
                                     envelope_id
@@ -787,8 +749,7 @@ fn start_work(
                         .increment(1);
                         ws_socket.send(Message::Text(serde_json::to_string(&reply)?))?;
                     },
-                    DownstreamPayload::Ack =>
-                    {
+                    DownstreamPayload::Ack => {
                         counter!(
                             "zkmr_worker_error_count",
                             "error_type" => "unexpected_ack",
@@ -798,8 +759,7 @@ fn start_work(
                     },
                 }
             },
-            Message::Ping(_) =>
-            {
+            Message::Ping(_) => {
                 trace!("Received ping or close message");
 
                 counter!(
@@ -808,13 +768,11 @@ fn start_work(
                 )
                 .increment(1);
             },
-            Message::Close(_) =>
-            {
+            Message::Close(_) => {
                 info!("Received close message");
                 return Ok(());
             },
-            _ =>
-            {
+            _ => {
                 error!("Unexpected frame: {msg}");
                 counter!(
                     "zkmr_worker_error_count",

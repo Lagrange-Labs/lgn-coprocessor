@@ -50,11 +50,13 @@ lgn-provers = { path = "../lgn-provers" }
 async-stream = "0.3.6"
 async-std = "1.13.0"
 semver = "1.0.23"
+prost-types = "0.13.3"
 
 [build-dependencies]
 miette = { workspace = true }
 tonic-build = { workspace = true }
 protox = { workspace = true }
+prost-types = "0.13.3"
 
 [package.metadata.cargo-shear]
 ignored = ["prost"]

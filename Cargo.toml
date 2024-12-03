@@ -39,7 +39,7 @@ k256 = { version = "0.13", default-features = false }
 lazy-static-include = "3.2.1"
 metrics = "0.24"
 metrics-exporter-prometheus = "0.16"
-miette = "7.2.0"
+miette = { version = "7.2.0", features = ["fancy"] }
 mimalloc = { version = "0.1", default-features = false }
 prost = "0.13"
 protox = "0.7.1"
