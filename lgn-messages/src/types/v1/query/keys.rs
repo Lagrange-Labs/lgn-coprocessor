@@ -41,26 +41,22 @@ impl Display for ProofKey
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result
     {
-        match self
-        {
-            ProofKey::Row(query_id, block_nr, row_key_id) =>
-            {
+        match self {
+            ProofKey::Row(query_id, block_nr, row_key_id) => {
                 write!(
                     f,
                     "{}/{}/{ROWS_TREE}/{}/{}",
                     KEYS_QUERIES_PREFIX, query_id, block_nr, row_key_id
                 )
             },
-            ProofKey::Index(query_id, block_nr) =>
-            {
+            ProofKey::Index(query_id, block_nr) => {
                 write!(
                     f,
                     "{}/{}/{INDEX_TREE}/{}",
                     KEYS_QUERIES_PREFIX, query_id, block_nr
                 )
             },
-            ProofKey::Revelation(query_id) =>
-            {
+            ProofKey::Revelation(query_id) => {
                 write!(
                     f,
                     "{}/{}/revelation",

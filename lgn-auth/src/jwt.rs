@@ -143,8 +143,7 @@ impl JWTAuth
         // Normalize into "low S" form. See:
         // - https://github.com/RustCrypto/elliptic-curves/issues/988
         // - https://github.com/bluealloy/revm/pull/870
-        if let Some(normalized) = signature.normalize_s()
-        {
+        if let Some(normalized) = signature.normalize_s() {
             signature = normalized;
             recovery_id = RecoveryId::from_byte(recovery_id.to_byte() ^ 1).unwrap();
         }
@@ -208,13 +207,11 @@ mod tests
 
         // We use another method (different with `recover_public_key`) to get
         // the coordinates of public key, then combine the big-endian bytes.
-        let [x, y] = match public_key.coordinates()
-        {
+        let [x, y] = match public_key.coordinates() {
             Coordinates::Uncompressed {
                 x,
                 y,
-            } =>
-            {
+            } => {
                 [
                     x,
                     y,

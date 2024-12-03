@@ -43,8 +43,7 @@ fn main() -> Result<()>
                     .downcast_ref::<&'static str>()
                 {
                     Some(s) => *s,
-                    None =>
-                    {
+                    None => {
                         match panic_info
                             .payload()
                             .downcast_ref::<String>()
@@ -54,18 +53,15 @@ fn main() -> Result<()>
                         }
                     },
                 };
-                let (file, lineno, col) = match panic_info.location()
-                {
-                    Some(l) =>
-                    {
+                let (file, lineno, col) = match panic_info.location() {
+                    Some(l) => {
                         (
                             l.file(),
                             l.line(),
                             l.column(),
                         )
                     },
-                    None =>
-                    {
+                    None => {
                         (
                             "<unknown>",
                             0,

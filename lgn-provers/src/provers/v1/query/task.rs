@@ -67,9 +67,7 @@ impl<P: StorageQueryProver> LgnProver<TaskType, ReplyType> for Querying<P>
                     reply_type,
                 ),
             )
-        }
-        else
-        {
+        } else {
             bail!(
                 "Received unexpected task: {:?}",
                 envelope
@@ -94,8 +92,7 @@ impl<P: StorageQueryProver> Querying<P>
     {
         #[allow(irrefutable_let_patterns)]
         let WorkerTaskType::Query(ref input) = task.task_type
-        else
-        {
+        else {
             bail!(
                 "Unexpected task type: {:?}",
                 task.task_type
@@ -106,23 +103,16 @@ impl<P: StorageQueryProver> Querying<P>
 
         let mut proofs = HashMap::new();
 
-        match &input.query_step
-        {
-            QueryStep::Prepare(ref parts) =>
-            {
-                for part in parts
-                {
+        match &input.query_step {
+            QueryStep::Prepare(ref parts) => {
+                for part in parts {
                     match (
                         &part.embedded_proof_input,
                         &part.aggregation_input_kind,
-                    )
-                    {
-                        (Some(embedded_input_type), None) =>
-                        {
-                            match embedded_input_type
-                            {
-                                EmbeddedProofInputType::RowsTree(embedded_input) =>
-                                {
+                    ) {
+                        (Some(embedded_input_type), None) => {
+                            match embedded_input_type {
+                                EmbeddedProofInputType::RowsTree(embedded_input) => {
                                     let proof = self
                                         .prover
                                         .prove_universal_circuit(
@@ -136,18 +126,14 @@ impl<P: StorageQueryProver> Querying<P>
                                         proof,
                                     );
                                 },
-                                EmbeddedProofInputType::IndexTree(_) =>
-                                {
+                                EmbeddedProofInputType::IndexTree(_) => {
                                     bail!("IndexTree always must have aggregation input")
                                 },
                             }
                         },
-                        (None, Some(aggregation_input)) =>
-                        {
-                            match &aggregation_input
-                            {
-                                ProofInputKind::SinglePathBranch(sb) =>
-                                {
+                        (None, Some(aggregation_input)) => {
+                            match &aggregation_input {
+                                ProofInputKind::SinglePathBranch(sb) => {
                                     let child_proof = proofs
                                         .remove(&sb.proven_child_location)
                                         .unwrap_or(
@@ -168,8 +154,7 @@ impl<P: StorageQueryProver> Querying<P>
                                         proof,
                                     );
                                 },
-                                ProofInputKind::NonExistence(ne) =>
-                                {
+                                ProofInputKind::NonExistence(ne) => {
                                     let proof = self
                                         .prover
                                         .prove_non_existence(
@@ -182,34 +167,27 @@ impl<P: StorageQueryProver> Querying<P>
                                         proof,
                                     );
                                 },
-                                _ =>
-                                {},
+                                _ => {},
                             }
                         },
-                        (Some(embedded_input_type), Some(ref aggregation_input)) =>
-                        {
-                            let embedded_proof = match embedded_input_type
-                            {
-                                EmbeddedProofInputType::RowsTree(embedded_input) =>
-                                {
+                        (Some(embedded_input_type), Some(ref aggregation_input)) => {
+                            let embedded_proof = match embedded_input_type {
+                                EmbeddedProofInputType::RowsTree(embedded_input) => {
                                     self.prover
                                         .prove_universal_circuit(
                                             embedded_input.to_owned(),
                                             &pis,
                                         )?
                                 },
-                                EmbeddedProofInputType::IndexTree(embedded_input) =>
-                                {
+                                EmbeddedProofInputType::IndexTree(embedded_input) => {
                                     embedded_input
                                         .rows_proof
                                         .to_owned()
                                 },
                             };
 
-                            match aggregation_input
-                            {
-                                ProofInputKind::SinglePathLeaf(sp) =>
-                                {
+                            match aggregation_input {
+                                ProofInputKind::SinglePathLeaf(sp) => {
                                     let proof = self
                                         .prover
                                         .prove_single_path_leaf(
@@ -223,8 +201,7 @@ impl<P: StorageQueryProver> Querying<P>
                                         proof,
                                     );
                                 },
-                                ProofInputKind::PartialNode(sp) =>
-                                {
+                                ProofInputKind::PartialNode(sp) => {
                                     let mut sp = sp.clone();
                                     if sp
                                         .proven_child_proof
@@ -250,8 +227,7 @@ impl<P: StorageQueryProver> Querying<P>
                                         proof,
                                     );
                                 },
-                                ProofInputKind::FullNode(f) =>
-                                {
+                                ProofInputKind::FullNode(f) => {
                                     let mut f = f.clone();
                                     if f.left_child_proof
                                         .is_empty()
@@ -284,30 +260,25 @@ impl<P: StorageQueryProver> Querying<P>
                                         proof,
                                     );
                                 },
-                                _ =>
-                                {
+                                _ => {
                                     bail!("Invalid inputs")
                                 },
                             }
                         },
-                        (None, None) =>
-                        {
+                        (None, None) => {
                             bail!("Invalid inputs")
                         },
                     }
                 }
             },
-            QueryStep::Revelation(rev) =>
-            {
-                match rev
-                {
+            QueryStep::Revelation(rev) => {
+                match rev {
                     RevelationInput::Aggregated {
                         placeholders,
                         indexing_proof,
                         query_proof,
                         ..
-                    } =>
-                    {
+                    } => {
                         return self
                             .prover
                             .prove_aggregated_revelation(
@@ -327,8 +298,7 @@ impl<P: StorageQueryProver> Querying<P>
                         limit,
                         offset,
                         ..
-                    } =>
-                    {
+                    } => {
                         return self
                             .prover
                             .prove_tabular_revelation(
@@ -352,8 +322,7 @@ impl<P: StorageQueryProver> Querying<P>
         }
 
         // Only one proof should be left
-        if proofs.len() > 1
-        {
+        if proofs.len() > 1 {
             bail!(
                 "Invalid number of proofs left: {}",
                 proofs.len()

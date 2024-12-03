@@ -111,8 +111,7 @@ impl GrpcConfig
         info!("Worker entering loop task");
         tokio::spawn(
             async move {
-                loop
-                {
+                loop {
                     tokio::select! {
                         Some(inbound_message) = inbound.next() => {
                             let msg = match inbound_message {

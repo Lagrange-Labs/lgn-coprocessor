@@ -66,10 +66,8 @@ impl Display for ProofKey
         f: &mut Formatter<'_>,
     ) -> std::fmt::Result
     {
-        match self
-        {
-            ProofKey::PublicParams =>
-            {
+        match self {
+            ProofKey::PublicParams => {
                 write!(
                     f,
                     "PublicParams_v1"
@@ -78,8 +76,7 @@ impl Display for ProofKey
             ProofKey::MptVariable {
                 table_hash,
                 mpt_node_version,
-            } =>
-            {
+            } => {
                 // Example: V1_PREPROCESSING/1/MPT_VARIABLE/1/0x1234_1
                 let block_nr = mpt_node_version.0;
                 let node_hash = mpt_node_version.1;
@@ -97,8 +94,7 @@ impl Display for ProofKey
             ProofKey::MptLength {
                 table_hash,
                 block_nr,
-            } =>
-            {
+            } => {
                 // Example: V1_PREPROCESSING/1/MPT_LENGTH/1
                 write!(
                     f,
@@ -109,8 +105,7 @@ impl Display for ProofKey
             ProofKey::Contract {
                 address,
                 block_nr,
-            } =>
-            {
+            } => {
                 // Example: V1_PREPROCESSING/CONTRACT/0x1234/1
                 write!(
                     f,
@@ -120,8 +115,7 @@ impl Display for ProofKey
             },
             ProofKey::Block {
                 block_nr,
-            } =>
-            {
+            } => {
                 // Example: V1_PREPROCESSING/EXT_BLOCK/1
                 write!(
                     f,
@@ -132,8 +126,7 @@ impl Display for ProofKey
             ProofKey::FinalExtraction {
                 table_id,
                 block_nr,
-            } =>
-            {
+            } => {
                 // Example: V1_PREPROCESSING/1/FINAL_EXTRACTION/1
                 write!(
                     f,

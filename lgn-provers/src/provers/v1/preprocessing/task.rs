@@ -47,15 +47,12 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
             },
         ) = &envelope.inner
         {
-            let key = match &task.task_type
-            {
-                WorkerTaskType::Extraction(_) =>
-                {
+            let key = match &task.task_type {
+                WorkerTaskType::Extraction(_) => {
                     let key: ext_keys::ProofKey = task.into();
                     key.to_string()
                 },
-                WorkerTaskType::Database(_) =>
-                {
+                WorkerTaskType::Database(_) => {
                     let key: db_keys::ProofKey = task.into();
                     key.to_string()
                 },
@@ -80,9 +77,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
                     reply_type,
                 ),
             )
-        }
-        else
-        {
+        } else {
             anyhow::bail!(
                 "Received unexpected task: {:?}",
                 envelope
@@ -105,18 +100,12 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
     ) -> anyhow::Result<Vec<u8>>
     {
         Ok(
-            match task.task_type
-            {
-                WorkerTaskType::Extraction(extraction) =>
-                {
-                    match extraction
-                    {
-                        ExtractionType::MptExtraction(mpt) =>
-                        {
-                            match &mpt.mpt_type
-                            {
-                                MptType::VariableLeaf(variable_leaf) =>
-                                {
+            match task.task_type {
+                WorkerTaskType::Extraction(extraction) => {
+                    match extraction {
+                        ExtractionType::MptExtraction(mpt) => {
+                            match &mpt.mpt_type {
+                                MptType::VariableLeaf(variable_leaf) => {
                                     self.prover
                                         .prove_single_variable_leaf(
                                             variable_leaf
@@ -126,8 +115,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                             variable_leaf.column_id,
                                         )?
                                 },
-                                MptType::MappingLeaf(mapping_leaf) =>
-                                {
+                                MptType::MappingLeaf(mapping_leaf) => {
                                     self.prover
                                         .prove_mapping_variable_leaf(
                                             mapping_leaf
@@ -141,8 +129,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                             mapping_leaf.value_id,
                                         )?
                                 },
-                                MptType::MappingBranch(mapping_branch) =>
-                                {
+                                MptType::MappingBranch(mapping_branch) => {
                                     self.prover
                                         .prove_mapping_variable_branch(
                                             mapping_branch
@@ -153,8 +140,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                                 .to_owned(),
                                         )?
                                 },
-                                MptType::VariableBranch(variable_branch) =>
-                                {
+                                MptType::VariableBranch(variable_branch) => {
                                     self.prover
                                         .prove_single_variable_branch(
                                             variable_branch
@@ -167,16 +153,14 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                 },
                             }
                         },
-                        ExtractionType::LengthExtraction(length) =>
-                        {
+                        ExtractionType::LengthExtraction(length) => {
                             let mut proofs = vec![];
                             for (i, node) in length
                                 .nodes
                                 .iter()
                                 .enumerate()
                             {
-                                if i == 0
-                                {
+                                if i == 0 {
                                     let proof = self
                                         .prover
                                         .prove_length_leaf(
@@ -185,9 +169,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                             length.variable_slot,
                                         )?;
                                     proofs.push(proof);
-                                }
-                                else
-                                {
+                                } else {
                                     self.prover
                                         .prove_length_branch(
                                             node.clone(),
@@ -203,16 +185,14 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                 .unwrap()
                                 .clone()
                         },
-                        ExtractionType::ContractExtraction(contract) =>
-                        {
+                        ExtractionType::ContractExtraction(contract) => {
                             let mut proofs = vec![];
                             for (i, node) in contract
                                 .nodes
                                 .iter()
                                 .enumerate()
                             {
-                                if i == 0
-                                {
+                                if i == 0 {
                                     let proof = self
                                         .prover
                                         .prove_contract_leaf(
@@ -223,9 +203,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                             contract.contract,
                                         )?;
                                     proofs.push(proof);
-                                }
-                                else
-                                {
+                                } else {
                                     let proof = self
                                         .prover
                                         .prove_contract_branch(
@@ -243,8 +221,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                 .unwrap()
                                 .clone()
                         },
-                        ExtractionType::BlockExtraction(block) =>
-                        {
+                        ExtractionType::BlockExtraction(block) => {
                             self.prover
                                 .prove_block(
                                     block
@@ -252,16 +229,11 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                         .to_owned(),
                                 )?
                         },
-                        ExtractionType::FinalExtraction(final_extraction) =>
-                        {
-                            match *final_extraction
-                            {
-                                FinalExtraction::Single(single_table_extraction) =>
-                                {
-                                    match single_table_extraction.extraction_type
-                                    {
-                                        FinalExtractionType::Simple(compound) =>
-                                        {
+                        ExtractionType::FinalExtraction(final_extraction) => {
+                            match *final_extraction {
+                                FinalExtraction::Single(single_table_extraction) => {
+                                    match single_table_extraction.extraction_type {
+                                        FinalExtractionType::Simple(compound) => {
                                             self.prover
                                                 .prove_final_extraction_simple(
                                                     single_table_extraction
@@ -276,8 +248,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                                     compound,
                                                 )?
                                         },
-                                        FinalExtractionType::Lengthed =>
-                                        {
+                                        FinalExtractionType::Lengthed => {
                                             self.prover
                                                 .prove_final_extraction_lengthed(
                                                     single_table_extraction
@@ -296,8 +267,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                         },
                                     }
                                 },
-                                FinalExtraction::Merge(mapping_table_extraction) =>
-                                {
+                                FinalExtraction::Merge(mapping_table_extraction) => {
                                     self.prover
                                         .prove_final_extraction_merge(
                                             mapping_table_extraction
@@ -318,16 +288,11 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                         },
                     }
                 },
-                WorkerTaskType::Database(db) =>
-                {
-                    match db
-                    {
-                        DatabaseType::Cell(cell_type) =>
-                        {
-                            match cell_type
-                            {
-                                DbCellType::Leaf(leaf) =>
-                                {
+                WorkerTaskType::Database(db) => {
+                    match db {
+                        DatabaseType::Cell(cell_type) => {
+                            match cell_type {
+                                DbCellType::Leaf(leaf) => {
                                     self.prover
                                         .prove_cell_leaf(
                                             leaf.identifier,
@@ -335,8 +300,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                             leaf.is_multiplier,
                                         )?
                                 },
-                                DbCellType::Partial(branch) =>
-                                {
+                                DbCellType::Partial(branch) => {
                                     self.prover
                                         .prove_cell_partial(
                                             branch.identifier,
@@ -345,8 +309,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                             branch.child_proof,
                                         )?
                                 },
-                                DbCellType::Full(full) =>
-                                {
+                                DbCellType::Full(full) => {
                                     self.prover
                                         .prove_cell_full(
                                             full.identifier,
@@ -357,12 +320,9 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                 },
                             }
                         },
-                        DatabaseType::Row(row_type) =>
-                        {
-                            match row_type
-                            {
-                                DbRowType::Leaf(leaf) =>
-                                {
+                        DatabaseType::Row(row_type) => {
+                            match row_type {
+                                DbRowType::Leaf(leaf) => {
                                     self.prover
                                         .prove_row_leaf(
                                             leaf.identifier,
@@ -371,8 +331,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                             leaf.cells_proof,
                                         )?
                                 },
-                                DbRowType::Partial(partial) =>
-                                {
+                                DbRowType::Partial(partial) => {
                                     self.prover
                                         .prove_row_partial(
                                             partial.identifier,
@@ -387,8 +346,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                                 .to_owned(),
                                         )?
                                 },
-                                DbRowType::Full(full) =>
-                                {
+                                DbRowType::Full(full) => {
                                     self.prover
                                         .prove_row_full(
                                             full.identifier,
@@ -400,16 +358,12 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                 },
                             }
                         },
-                        DatabaseType::Index(block) =>
-                        {
+                        DatabaseType::Index(block) => {
                             let mut last_proof = None;
-                            for input in &block.inputs
-                            {
+                            for input in &block.inputs {
                                 last_proof = Some(
-                                    match input
-                                    {
-                                        DbBlockType::Leaf(leaf) =>
-                                        {
+                                    match input {
+                                        DbBlockType::Leaf(leaf) => {
                                             self.prover
                                                 .prove_block_leaf(
                                                     leaf.block_id,
@@ -419,8 +373,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                                         .to_owned(),
                                                 )?
                                         },
-                                        DbBlockType::Parent(parent) =>
-                                        {
+                                        DbBlockType::Parent(parent) => {
                                             self.prover
                                                 .prove_block_parent(
                                                     parent.block_id,
@@ -444,8 +397,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                                         .to_owned(),
                                                 )?
                                         },
-                                        DbBlockType::Membership(membership) =>
-                                        {
+                                        DbBlockType::Membership(membership) => {
                                             self.prover
                                                 .prove_membership(
                                                     membership.block_id,
@@ -470,8 +422,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P>
                                 .take()
                                 .unwrap()
                         },
-                        DatabaseType::IVC(ivc) =>
-                        {
+                        DatabaseType::IVC(ivc) => {
                             self.prover
                                 .prove_ivc(
                                     ivc.index_proof

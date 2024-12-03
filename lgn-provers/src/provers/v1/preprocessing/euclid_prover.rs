@@ -87,10 +87,8 @@ impl EuclidProver
         match generate_proof(
             &self.params,
             input,
-        )
-        {
-            Ok(proof) =>
-            {
+        ) {
+            Ok(proof) => {
                 debug!(
                     time = now
                         .elapsed()
@@ -105,8 +103,7 @@ impl EuclidProver
                 );
                 Ok(proof)
             },
-            Err(err) =>
-            {
+            Err(err) => {
                 debug!(
                     "Proof generation failed in {:?}",
                     now.elapsed()
@@ -187,10 +184,8 @@ impl StorageExtractionProver for EuclidProver
     ) -> anyhow::Result<Vec<u8>>
     {
         let rlp = Rlp::new(&node);
-        match rlp.prototype()?
-        {
-            Prototype::List(2) =>
-            {
+        match rlp.prototype()? {
+            Prototype::List(2) => {
                 let input = ValuesExtraction(
                     values_extraction::CircuitInput::new_extension(
                         node,
@@ -202,8 +197,7 @@ impl StorageExtractionProver for EuclidProver
                     "mapping variable extension",
                 )
             },
-            Prototype::List(17) =>
-            {
+            Prototype::List(17) => {
                 let input = ValuesExtraction(
                     values_extraction::CircuitInput::new_mapping_variable_branch(
                         node,
@@ -452,12 +446,9 @@ impl StorageDatabaseProver for EuclidProver
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>
     {
-        let cells_proof = if !cells_proof.is_empty()
-        {
+        let cells_proof = if !cells_proof.is_empty() {
             cells_proof
-        }
-        else
-        {
+        } else {
             // TODO: provide empty
             unimplemented!("No cells proof provided")
         };
@@ -628,10 +619,8 @@ impl StorageDatabaseProver for EuclidProver
         previous_proof: Option<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>>
     {
-        let input = match previous_proof
-        {
-            Some(previous_proof) =>
-            {
+        let input = match previous_proof {
+            Some(previous_proof) => {
                 IVC(
                     verifiable_db::ivc::CircuitInput::new_subsequent_input(
                         index_proof,

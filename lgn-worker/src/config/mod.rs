@@ -193,10 +193,8 @@ impl AvsConfig
             &self.lagr_keystore,
             &self.lagr_pwd,
             &self.lagr_private_key,
-        )
-        {
-            (Some(kpath), Some(pwd), _) =>
-            {
+        ) {
+            (Some(kpath), Some(pwd), _) => {
                 assert!(
                     !kpath.is_empty(),
                     "Keystore path is empty"
@@ -207,8 +205,7 @@ impl AvsConfig
                     "Password is empty"
                 );
             },
-            (None, None, Some(pkey)) =>
-            {
+            (None, None, Some(pkey)) => {
                 assert!(
                     !pkey
                         .expose_secret()
@@ -233,8 +230,7 @@ impl Config
             ),
         );
 
-        if let Some(local_file) = local_file
-        {
+        if let Some(local_file) = local_file {
             debug!(
                 "Loading local configuration from {}",
                 local_file

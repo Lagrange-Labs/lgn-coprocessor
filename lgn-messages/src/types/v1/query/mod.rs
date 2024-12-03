@@ -70,8 +70,7 @@ impl From<PlaceHolderLgn> for Placeholders
         for (k, v) in
             ph.0.into_iter()
         {
-            if k != "0" && k != "1"
-            {
+            if k != "0" && k != "1" {
                 let index = k
                     .parse::<usize>()
                     .unwrap();
@@ -109,8 +108,7 @@ impl From<Placeholders> for PlaceHolderLgn
         for (k, v) in
             ph.0.iter()
         {
-            if let PlaceholderIdentifier::Generic(i) = k
-            {
+            if let PlaceholderIdentifier::Generic(i) = k {
                 map.insert(
                     (*i + 1).to_string(),
                     *v,

@@ -3,12 +3,16 @@ use std::pin::Pin;
 
 use anyhow::Context;
 use async_std::channel;
+use rand::thread_rng;
+use rand::Rng;
 use tokio_stream::Stream;
 use tokio_stream::StreamExt;
 use tonic::Response;
 
 use super::protobuf::worker_to_gw_request;
 use super::protobuf::worker_to_gw_response;
+use super::protobuf::WorkerToGwRequest;
+use super::protobuf::WorkerToGwResponse;
 use super::protobuf::{
     self,
 };
@@ -16,9 +20,9 @@ use super::protobuf::{
 struct TestGateway
 {
     // channel to send out msg from workers to testing logic
-    msg_from_worker: async_std::channel::Sender<worker_to_gw_request::Request>,
+    msg_from_worker: async_std::channel::Sender<WorkerToGwRequest>,
     // channel to receive testing logic task to send to worker
-    to_worker: async_std::channel::Receiver<worker_to_gw_response::Response>,
+    to_worker: async_std::channel::Receiver<WorkerToGwResponse>,
 }
 
 impl TestGateway
@@ -27,8 +31,8 @@ impl TestGateway
     pub async fn run(
         listen: &str
     ) -> anyhow::Result<(
-        channel::Receiver<worker_to_gw_request::Request>,
-        channel::Sender<worker_to_gw_response::Response>,
+        channel::Receiver<WorkerToGwRequest>,
+        channel::Sender<WorkerToGwResponse>,
     )>
     {
         let (gw, from_worker, to_worker) = Self::new();
@@ -66,8 +70,8 @@ impl TestGateway
 
     fn new() -> (
         Self,
-        channel::Receiver<worker_to_gw_request::Request>,
-        channel::Sender<worker_to_gw_response::Response>,
+        channel::Receiver<WorkerToGwRequest>,
+        channel::Sender<WorkerToGwResponse>,
     )
     {
         let (from_worker_tx, from_worker_rx) = channel::bounded(10);
@@ -113,11 +117,7 @@ impl protobuf::workers_service_server::WorkersService for TestGateway
                     tonic::Status::invalid_argument("A worker connection ended prematurely"),
                 )?;
 
-            let request = first_message?
-                .request
-                .ok_or(
-                    tonic::Status::invalid_argument("the request field has to be populated"),
-                )?;
+            let request = first_message?;
             // signal to testing logic the worker has connected
             from_worker
                 .send(request)
@@ -138,21 +138,14 @@ impl protobuf::workers_service_server::WorkersService for TestGateway
                                 break;
                             },
                         };
-                        let request =  match message_from_worker.request.context("invalid WorkerToGwRequest msg") {
-                            Ok(r) => r,
-                            Err(e) => {
-                                yield Err(tonic::Status::invalid_argument(format!("{:?}",e)));
-                                break;
-                            }
-                        };
                         // signal message to worker to the testing logic
-                        if let Err(e) = from_worker.send(request).await.map_err(|_| tonic::Status::invalid_argument("the request field has to be populated")) {
+                        if let Err(e) = from_worker.send(message_from_worker).await.map_err(|_| tonic::Status::invalid_argument("the request field has to be populated")) {
                             yield Err(e);
                             break;
                         };
                     }
                     Ok(message_to_worker) = to_worker.recv() => {
-                        yield Ok(protobuf::WorkerToGwResponse { response: Some(message_to_worker) });
+                        yield Ok(message_to_worker);
                     }
                 }
             }
@@ -162,16 +155,29 @@ impl protobuf::workers_service_server::WorkersService for TestGateway
     }
 }
 
+const UUID_SIZE: usize = 16;
+
+pub fn new_uuid() -> protobuf::Uuid
+{
+    protobuf::Uuid {
+        id: thread_rng()
+            .gen::<[u8; UUID_SIZE]>()
+            .to_vec(),
+    }
+}
+
 #[cfg(test)]
 mod grpc_test
 {
     use anyhow::bail;
 
+    use super::new_uuid;
     use super::TestGateway;
     use crate::grpc::protobuf::worker_done::Reply;
     use crate::grpc::protobuf::worker_to_gw_request;
     use crate::grpc::protobuf::worker_to_gw_response;
     use crate::grpc::protobuf::WorkerDone;
+    use crate::grpc::protobuf::WorkerToGwRequest;
     use crate::grpc::protobuf::WorkerToGwResponse;
     use crate::grpc::GrpcConfig;
 
@@ -204,9 +210,10 @@ mod grpc_test
             from_worker.recv(),
         )
         .await?;
-        let Ok(worker_to_gw_request::Request::WorkerReady(ready)) = msg_from_worker
-        else
-        {
+        let Ok(WorkerToGwRequest {
+            request: Some(worker_to_gw_request::Request::WorkerReady(ready)),
+        }) = msg_from_worker
+        else {
             bail!(
                 "unregonized worker ready msg: {:?}",
                 msg_from_worker
@@ -223,8 +230,15 @@ mod grpc_test
 
         // send first task
         let todo_sent = "this is big task".to_string();
+        let uuid_sent = Some(new_uuid());
+
         to_worker
-            .send(worker_to_gw_response::Response::Todo(todo_sent.clone()))
+            .send(
+                WorkerToGwResponse {
+                    response: Some(worker_to_gw_response::Response::Todo(todo_sent.clone())),
+                    task_id: uuid_sent.clone(),
+                },
+            )
             .await?;
         // expect to see task
         let recv_todo = async_std::future::timeout(
@@ -234,14 +248,18 @@ mod grpc_test
         .await?;
         let Some(WorkerToGwResponse {
             response: Some(worker_to_gw_response::Response::Todo(todo_received)),
+            task_id,
         }) = recv_todo
-        else
-        {
+        else {
             bail!("not normal");
         };
         assert_eq!(
             todo_sent,
             todo_received
+        );
+        assert_eq!(
+            task_id,
+            uuid_sent
         );
         // send first reply
         let reply_sent = "this is big reply";
@@ -252,6 +270,7 @@ mod grpc_test
                         worker_to_gw_request::Request::WorkerDone(
                             crate::grpc::protobuf::WorkerDone {
                                 reply: Some(Reply::ReplyString(reply_sent.to_string())),
+                                task_id,
                             },
                         ),
                     ),
@@ -264,24 +283,29 @@ mod grpc_test
             from_worker.recv(),
         )
         .await?;
-        let Ok(worker_to_gw_request::Request::WorkerDone(WorkerDone {
-            reply,
-        })) = recv_output
-        else
-        {
+        let Ok(WorkerToGwRequest {
+            request:
+                Some(worker_to_gw_request::Request::WorkerDone(WorkerDone {
+                    reply,
+                    task_id,
+                })),
+        }) = recv_output
+        else {
             bail!(
                 "unregonized reply task: {:?}",
                 recv_output
             );
         };
-        let Reply::ReplyString(recv_output) = reply.expect("no reply message?")
-        else
-        {
+        let Reply::ReplyString(recv_output) = reply.expect("no reply message?") else {
             bail!("unregonized reply string");
         };
         assert_eq!(
             reply_sent,
             recv_output
+        );
+        assert_eq!(
+            uuid_sent,
+            task_id
         );
 
         Ok(())

@@ -33,13 +33,11 @@ impl From<&VerifyingKey> for PublicKey
         // Convert to uncompressed point.
         let public_key = verifying_key.to_encoded_point(false);
 
-        let [x, y] = match public_key.coordinates()
-        {
+        let [x, y] = match public_key.coordinates() {
             Coordinates::Uncompressed {
                 x,
                 y,
-            } =>
-            {
+            } => {
                 [
                     x,
                     y,

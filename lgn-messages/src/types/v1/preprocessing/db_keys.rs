@@ -51,31 +51,26 @@ impl Display for ProofKey
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result
     {
-        match self
-        {
-            ProofKey::Cell(table_id, block_nr, row_id, cell_id) =>
-            {
+        match self {
+            ProofKey::Cell(table_id, block_nr, row_id, cell_id) => {
                 // Example: V1_PREPROCESSING/CELL/1/2/3/4/5
                 write!(f, "{KEYS_PREPROCESSING_PREFIX}/{table_id}/{block_nr}/{CELL_PREFIX}/{row_id}/{cell_id}")
             },
-            ProofKey::Row(table_id, block_nr, row_id) =>
-            {
+            ProofKey::Row(table_id, block_nr, row_id) => {
                 // Example: V1_PREPROCESSING/ROW/1/2/3/4
                 write!(
                     f,
                     "{KEYS_PREPROCESSING_PREFIX}/{table_id}/{block_nr}/{ROW_PREFIX}/{row_id}"
                 )
             },
-            ProofKey::Block(table_id, block_nr) =>
-            {
+            ProofKey::Block(table_id, block_nr) => {
                 // Example: V1_PREPROCESSING/DB_BLOCK/1/2
                 write!(
                     f,
                     "{KEYS_PREPROCESSING_PREFIX}/{BLOCK_PREFIX}/{table_id}/{block_nr}"
                 )
             },
-            ProofKey::IVC(table_id, block_nr) =>
-            {
+            ProofKey::IVC(table_id, block_nr) => {
                 // Example: V1_PREPROCESSING/IVC/1/2
                 write!(
                     f,
