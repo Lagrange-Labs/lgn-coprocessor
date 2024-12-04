@@ -4,8 +4,8 @@ use alloy_primitives::U256;
 use derive_debug_plus::Dbg;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
-use verifiable_db::query::aggregation::ChildPosition;
-use verifiable_db::query::aggregation::NodeInfo;
+use verifiable_db::query::api::RowInput;
+use verifiable_db::query::api::TreePathInputs;
 use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::RowCells;
 use verifiable_db::revelation::api::MatchingRow;
@@ -39,66 +39,33 @@ pub enum QueryStep
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
-pub struct QueryInputPart
+pub enum QueryInputPart
 {
-    pub proof_key: ProofKey,
+    #[serde(rename = "1")]
+    Aggregation(
+        ProofKey,
+        Box<ProofInputKind>,
+    ),
 
-    pub embedded_proof_input: Option<EmbeddedProofInputType>,
-
-    pub aggregation_input_kind: Option<ProofInputKind>,
+    // We only need to handle rows tree proving for now.
+    #[serde(rename = "2")]
+    Embedded(
+        ProofKey,
+        EmbeddedProofInputType,
+    ),
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub enum ProofInputKind
 {
-    /// Match in the end of path or not matched branch
     #[serde(rename = "1")]
-    SinglePathLeaf(SinglePathLeafInput),
+    RowsChunk(RowsChunkInput),
 
-    /// Match in the middle of path
     #[serde(rename = "2")]
-    SinglePathBranch(SinglePathBranchInput),
+    ChunkAggregation(ChunkAggregationInput),
 
-    /// Node in tree with only one child
     #[serde(rename = "3")]
-    PartialNode(PartialNodeInput),
-
-    /// Node in tree with both children
-    #[serde(rename = "4")]
-    FullNode(FullNodeInput),
-
-    NonExistence(NonExistenceInput),
-}
-
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct FullNodeInput
-{
-    pub is_rows_tree_node: bool,
-
-    pub left_child_proof_location: ProofKey,
-
-    #[dbg(placeholder = "...")]
-    pub left_child_proof: Vec<u8>,
-
-    pub right_child_proof_location: ProofKey,
-
-    #[dbg(placeholder = "...")]
-    pub right_child_proof: Vec<u8>,
-}
-
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct PartialNodeInput
-{
-    pub proven_child_position: ChildPosition,
-
-    pub proven_child_proof_location: ProofKey,
-
-    #[dbg(placeholder = "...")]
-    pub proven_child_proof: Vec<u8>,
-
-    pub unproven_child_info: Option<NodeInfo>,
-
-    pub is_rows_tree_node: bool,
+    NonExistence(Box<NonExistenceInput>),
 }
 
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
@@ -106,9 +73,6 @@ pub enum EmbeddedProofInputType
 {
     #[serde(rename = "1")]
     RowsTree(RowsEmbeddedProofInput),
-
-    #[serde(rename = "2")]
-    IndexTree(IndexEmbeddedProofInput),
 }
 
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
@@ -119,51 +83,6 @@ pub struct RowsEmbeddedProofInput
     pub placeholders: PlaceHolderLgn,
 
     pub is_leaf: bool,
-}
-
-#[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
-pub struct IndexEmbeddedProofInput
-{
-    pub rows_proof_key: ProofKey,
-
-    #[dbg(placeholder = "...")]
-    pub rows_proof: Vec<u8>,
-}
-
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct SinglePathBranchInput
-{
-    pub node_info: NodeInfo,
-
-    pub left_child_info: Option<NodeInfo>,
-
-    pub right_child_info: Option<NodeInfo>,
-
-    pub child_position: ChildPosition,
-
-    pub proven_child_location: ProofKey,
-
-    #[dbg(placeholder = "...")]
-    pub proven_child_proof: Vec<u8>,
-
-    pub is_rows_tree_node: bool,
-}
-
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct SinglePathLeafInput
-{
-    pub node_info: NodeInfo,
-
-    pub left_child_info: Option<NodeInfo>,
-
-    pub right_child_info: Option<NodeInfo>,
-
-    pub is_rows_tree_node: bool,
-
-    pub embedded_proof_location: Option<ProofKey>,
-
-    #[dbg(placeholder = "...")]
-    pub embedded_proof: Vec<u8>,
 }
 
 #[derive(Clone, Dbg, Serialize, Deserialize)]
@@ -188,7 +107,7 @@ impl HydratableMatchingRow
 
 /// Either a `Dehydrated` variant containing a key to a stored proof, or a
 /// `Hydrated` containing the proof itself.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub enum Hydratable<K: Clone + std::fmt::Debug>
 {
     Dehydrated(K),
@@ -315,19 +234,11 @@ pub enum RevelationInput
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct NonExistenceInput
 {
+    pub index_path: TreePathInputs,
+
     pub column_ids: Vec<u64>,
 
     pub placeholders: PlaceHolderLgn,
-
-    pub is_rows_tree_node: bool,
-
-    pub node_info: NodeInfo,
-
-    pub left_child_info: Option<NodeInfo>,
-
-    pub right_child_info: Option<NodeInfo>,
-
-    pub primary_index_value: U256,
 }
 
 impl From<&WorkerTask> for ProofKey
@@ -343,4 +254,18 @@ impl From<&WorkerTask> for ProofKey
             },
         }
     }
+}
+
+#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
+pub struct RowsChunkInput
+{
+    pub rows: Vec<RowInput>,
+
+    pub placeholders: PlaceHolderLgn,
+}
+
+#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
+pub struct ChunkAggregationInput
+{
+    pub child_proofs: Vec<Hydratable<ProofKey>>,
 }

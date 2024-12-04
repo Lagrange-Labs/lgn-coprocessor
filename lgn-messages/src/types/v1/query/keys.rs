@@ -1,8 +1,11 @@
 use std::fmt::Display;
 
+use mp2_v1::query::batching_planner::UTKey;
 use object_store::path::Path;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
+
+use super::NUM_CHUNKS;
 
 pub(crate) const KEYS_QUERIES_PREFIX: &str = "V1_QUERIES";
 
@@ -31,6 +34,13 @@ pub enum ProofKey
         BlockNr,
     ),
 
+    RowsChunk(
+        QueryId,
+        UTKey<NUM_CHUNKS>,
+    ),
+
+    NonExistence(QueryId),
+
     Revelation(QueryId),
 }
 
@@ -57,6 +67,27 @@ impl Display for ProofKey
                     f,
                     "{}/{}/{INDEX_TREE}/{}",
                     KEYS_QUERIES_PREFIX, query_id, block_nr
+                )
+            },
+            ProofKey::RowsChunk(query_id, key) =>
+            {
+                write!(
+                    f,
+                    "{}/{}/rows_chunk/{}/{}",
+                    KEYS_QUERIES_PREFIX,
+                    query_id,
+                    key.0
+                         .0,
+                    key.0
+                         .1,
+                )
+            },
+            ProofKey::NonExistence(query_id) =>
+            {
+                write!(
+                    f,
+                    "{}/{}/non_existence",
+                    KEYS_QUERIES_PREFIX, query_id
                 )
             },
             ProofKey::Revelation(query_id) =>

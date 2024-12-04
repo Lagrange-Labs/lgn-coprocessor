@@ -3,11 +3,11 @@ resolver = "2"
 members = ["lgn-auth", "lgn-messages", "lgn-provers", "lgn-worker"]
 
 [workspace.dependencies]
-groth16_framework_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "v1.1.1", package = "groth16_framework" }
-mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "v1.1.1" }
-mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "v1.1.1" }
-parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "v1.1.1" }
-verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "v1.1.1" }
+groth16_framework_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix-send-issue-in-dq", package = "groth16_framework" }
+mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix-send-issue-in-dq" }
+mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix-send-issue-in-dq" }
+parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix-send-issue-in-dq" }
+verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix-send-issue-in-dq" }
 
 anyhow = { version = "1.0" }
 bincode = { version = "1.0" }
@@ -23,8 +23,8 @@ thiserror = { version = "1.0" }
 tokio = { version = "1.0" }
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-alloy = "0.2"
-alloy-primitives = "0.7.7"
+alloy = "0.6"
+alloy-primitives = "0.8.14"
 backtrace = "0.3"
 base64 = "0.22"
 bytes = "1.0"

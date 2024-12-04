@@ -1,8 +1,6 @@
 use lgn_messages::types::v1::query::tasks::NonExistenceInput;
-use lgn_messages::types::v1::query::tasks::PartialNodeInput;
+use lgn_messages::types::v1::query::tasks::RowsChunkInput;
 use lgn_messages::types::v1::query::tasks::RowsEmbeddedProofInput;
-use lgn_messages::types::v1::query::tasks::SinglePathBranchInput;
-use lgn_messages::types::v1::query::tasks::SinglePathLeafInput;
 use parsil::assembler::DynamicCircuitPis;
 use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
@@ -27,42 +25,26 @@ impl StorageQueryProver for DummyProver
         Ok(dummy_proof(PROOF_SIZE))
     }
 
-    fn prove_full_node(
+    fn prove_row_chunks(
         &self,
-        _embedded_tree_proof: Vec<u8>,
-        _left_child_proof: Vec<u8>,
-        _right_child_proof: Vec<u8>,
-        _pis: &DynamicCircuitPis,
-        _is_rows_tree_node: bool,
-    ) -> anyhow::Result<Vec<u8>>
-    {
-        Ok(dummy_proof(PROOF_SIZE))
-    }
-
-    fn prove_partial_node(
-        &self,
-        _input: PartialNodeInput,
-        _embedded_proof: Vec<u8>,
+        _input: RowsChunkInput,
         _pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>
     {
         Ok(dummy_proof(PROOF_SIZE))
     }
 
-    fn prove_single_path_leaf(
+    fn prove_chunk_aggregation(
         &self,
-        _input: SinglePathLeafInput,
-        _embedded_proof: Vec<u8>,
-        _pis: &DynamicCircuitPis,
+        _chunks_proofs: &[Vec<u8>],
     ) -> anyhow::Result<Vec<u8>>
     {
         Ok(dummy_proof(PROOF_SIZE))
     }
 
-    fn prove_single_path_branch(
+    fn prove_non_existence(
         &self,
-        _input: SinglePathBranchInput,
-        _child_proof: Vec<u8>,
+        _input: NonExistenceInput,
         _pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>
     {
@@ -89,15 +71,6 @@ impl StorageQueryProver for DummyProver
         _column_ids: &ColumnIDs,
         _limit: u32,
         _offset: u32,
-    ) -> anyhow::Result<Vec<u8>>
-    {
-        Ok(dummy_proof(PROOF_SIZE))
-    }
-
-    fn prove_non_existence(
-        &self,
-        _input: NonExistenceInput,
-        _pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>
     {
         Ok(dummy_proof(PROOF_SIZE))

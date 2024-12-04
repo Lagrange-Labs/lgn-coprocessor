@@ -14,6 +14,9 @@ pub mod tasks;
 
 pub const ROUTING_DOMAIN: &str = "sc";
 
+pub const NUM_CHUNKS: usize = 5;
+pub const NUM_ROWS: usize = 5;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct WorkerTask
 {

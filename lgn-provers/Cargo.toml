@@ -19,7 +19,21 @@ serde_json = { workspace = true }
 tracing = { workspace = true }
 verifiable-db = { workspace = true }
 
-alloy = { workspace = true, features = ["contract", "node-bindings", "providers", "network", "signer-local", "sol-types", "rpc", "rpc-types", "consensus", "rlp", "transports", "transport-http", "reqwest"] }
+alloy = { workspace = true, features = [
+  "contract",
+  "node-bindings",
+  "providers",
+  "network",
+  "signer-local",
+  "sol-types",
+  "rpc",
+  "rpc-types",
+  "consensus",
+  "rlp",
+  "transports",
+  "transport-http",
+  "reqwest",
+] }
 bytes = { workspace = true }
 metrics = { workspace = true }
 
