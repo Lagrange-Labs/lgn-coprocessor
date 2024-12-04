@@ -28,12 +28,16 @@ use super::MAX_NUM_OUTPUTS;
 use super::MAX_NUM_PLACEHOLDERS;
 use super::MAX_NUM_PREDICATE_OPS;
 use super::MAX_NUM_RESULT_OPS;
+use super::NUM_CHUNKS;
+use super::NUM_ROWS;
 use super::ROW_TREE_MAX_DEPTH;
 use crate::params::ParamsLoader;
 
 pub(crate) struct EuclidQueryProver
 {
     params: QueryParameters<
+        NUM_CHUNKS,
+        NUM_ROWS,
         ROW_TREE_MAX_DEPTH,
         INDEX_TREE_MAX_DEPTH,
         MAX_NUM_COLUMNS,
@@ -50,6 +54,8 @@ impl EuclidQueryProver
     #[allow(dead_code)]
     pub fn new(
         params: QueryParameters<
+            NUM_CHUNKS,
+            NUM_ROWS,
             ROW_TREE_MAX_DEPTH,
             INDEX_TREE_MAX_DEPTH,
             MAX_NUM_COLUMNS,
