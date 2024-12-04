@@ -36,6 +36,7 @@ pub enum TaskType
     V1Preprocessing(v1::preprocessing::WorkerTask),
     V1Query(v1::query::WorkerTask),
     V1Groth16(v1::groth16::WorkerTask),
+    Flat(Vec<u8>),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -46,6 +47,7 @@ pub enum ReplyType
     V1Preprocessing(WorkerReply),
     V1Query(WorkerReply),
     V1Groth16(WorkerReply),
+    Flat(Vec<u8>),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]

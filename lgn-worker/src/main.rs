@@ -28,6 +28,9 @@ use lgn_messages::types::UpstreamPayload;
 use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
 use mimalloc::MiMalloc;
+use rand::distributions::Uniform;
+use rand::prelude::Distribution;
+use serde_json::Number;
 use tokio::io::AsyncWriteExt;
 use tokio_stream::StreamExt;
 use tonic::metadata::MetadataValue;
@@ -416,6 +419,23 @@ fn process_downstream_payload(
     envelope: MessageEnvelope<TaskType>,
 ) -> Result<MessageReplyEnvelope<ReplyType>, String>
 {
+    if let TaskType::Flat(_) = envelope.inner
+    {
+        println!("Processing FLAT proof");
+        std::thread::sleep(std::time::Duration::from_secs(3));
+        return Ok(
+            MessageReplyEnvelope::new(
+                envelope
+                    .query_id
+                    .clone(),
+                envelope
+                    .task_id
+                    .clone(),
+                ReplyType::Flat(vec![32; 150]),
+            ),
+        );
+    }
+
     let span = span!(
         Level::INFO,
         "Received Task",
@@ -622,6 +642,10 @@ fn get_claims(config: &Config) -> Result<Claims>
     };
 
     let version = env!("CARGO_PKG_VERSION");
+    let price_range = Uniform::new(
+        3000,
+        5000,
+    );
     let private = [
         (
             "version".to_string(),
@@ -635,6 +659,10 @@ fn get_claims(config: &Config) -> Result<Claims>
                     .instance_type
                     .to_string(),
             ),
+        ),
+        (
+            "price".to_string(),
+            serde_json::Value::Number(Number::from(price_range.sample(&mut rand::thread_rng()))),
         ),
     ]
     .into_iter()
