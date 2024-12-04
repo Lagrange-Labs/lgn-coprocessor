@@ -57,7 +57,6 @@ tonic = { workspace = true }
 prost = { workspace = true }
 tokio-stream = { workspace = true }
 
-lgn-auth = { path = "../lgn-auth" }
 lgn-messages = { path = "../lgn-messages" }
 lgn-provers = { path = "../lgn-provers" }
 async-stream = "0.3.6"

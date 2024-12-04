@@ -11,6 +11,9 @@ use anyhow::*;
 use backtrace::Backtrace;
 use clap::Parser;
 use ethers::signers::Wallet;
+use grpc_worker::auth::jwt::get_claims as worker_claim;
+use grpc_worker::auth::jwt::JWTAuth;
+use grpc_worker::auth::wallet::WalletBackend;
 use grpc_worker::protobuf;
 use grpc_worker::protobuf::worker_done::Reply;
 use grpc_worker::protobuf::WorkerDone;
@@ -19,7 +22,6 @@ use grpc_worker::protobuf::WorkerToGwResponse;
 use jwt::Claims;
 use jwt::RegisteredClaims;
 use k256::ecdsa::SigningKey;
-use lgn_auth::jwt::JWTAuth;
 use lgn_messages::types::DownstreamPayload;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
@@ -48,11 +50,6 @@ use crate::checksum::verify_directory_checksums;
 use crate::config::Config;
 use crate::manager::v1::register_v1_provers;
 use crate::manager::ProversManager;
-
-pub mod lagrange
-{
-    tonic::include_proto!("lagrange");
-}
 
 mod checksum;
 mod config;
@@ -495,7 +492,7 @@ async fn process_message_from_gateway(
 
 fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>>
 {
-    let res = match (
+    let backend = match (
         &config
             .avs
             .lagr_keystore,
@@ -507,68 +504,32 @@ fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>>
             .lagr_private_key,
     ) {
         (Some(keystore_path), Some(password), None) => {
-            read_keystore(
-                keystore_path,
-                password.expose_secret(),
-            )?
+            WalletBackend::Keystore {
+                keystore_path: keystore_path.clone(),
+                pwd: password.clone(),
+            }
         },
-        (Some(_), None, Some(pkey)) => {
-            Wallet::from_str(pkey.expose_secret()).context("Failed to create wallet")?
-        },
+        (Some(_), None, Some(pkey)) => WalletBackend::PrivateKey(pkey.clone()),
         _ => bail!("Must specify either keystore path w/ password OR private key"),
     };
-
-    Ok(res)
+    backend.get_wallet()
 }
 
 fn get_claims(config: &Config) -> Result<Claims>
 {
-    let registered = RegisteredClaims {
-        issuer: Some(
-            config
-                .avs
-                .issuer
-                .clone(),
-        ),
-        subject: Some(
-            config
-                .avs
-                .worker_id
-                .clone(),
-        ),
-        issued_at: Some(
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .expect("Epoch can not be in the future")
-                .as_secs(),
-        ),
-        ..Default::default()
-    };
-
-    let version = env!("CARGO_PKG_VERSION");
-    let private = [
-        (
-            "version".to_string(),
-            serde_json::Value::String(version.to_string()),
-        ),
-        (
-            "worker_class".to_string(),
-            serde_json::Value::String(
-                config
-                    .worker
-                    .instance_type
-                    .to_string(),
-            ),
-        ),
-    ]
-    .into_iter()
-    .collect::<BTreeMap<String, serde_json::Value>>();
-
-    Ok(
-        Claims {
-            registered,
-            private,
-        },
+    worker_claim(
+        config
+            .avs
+            .issuer
+            .clone(),
+        config
+            .avs
+            .worker_id
+            .clone(),
+        config
+            .worker
+            .instance_type
+            .to_string(),
     )
 }
 

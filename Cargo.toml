@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["lgn-auth", "lgn-messages", "lgn-provers", "lgn-worker"]
+members = ["lgn-messages", "lgn-provers", "lgn-worker"]
 
 [workspace.dependencies]
 groth16_framework_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "cc50651", package = "groth16_framework" }

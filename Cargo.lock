@@ -3344,16 +3344,27 @@ dependencies = [
 [[package]]
 name = "grpc-worker"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/worker-grpc-rs?branch=main#bdd97dabb8be92c3e8e131bcbdc9def807c9206a"
+source = "git+https://github.com/Lagrange-Labs/worker-grpc-rs?branch=main#6ede168ca1da4b3e5ad286e4c4c0a8a4f51ebf27"
 dependencies = [
  "anyhow",
  "async-std",
  "async-stream",
+ "base64 0.22.1",
+ "elliptic-curve",
+ "ethers 2.0.13",
+ "ethers-core 2.0.14",
+ "generic-array",
+ "hex",
+ "jwt",
+ "k256",
  "miette",
  "prost",
  "prost-types",
  "protox",
  "rand",
+ "redact",
+ "serde",
+ "serde_json",
  "tokio",
  "tokio-stream",
  "tonic",
@@ -4069,23 +4080,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 
 [[package]]
-name = "lgn-auth"
-version = "1.1.0"
-dependencies = [
- "anyhow",
- "base64 0.22.1",
- "elliptic-curve",
- "ethers 2.0.13",
- "ethers-core 2.0.13",
- "generic-array",
- "hex",
- "jwt",
- "rand",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "lgn-messages"
 version = "1.1.0"
 dependencies = [
@@ -4142,7 +4136,6 @@ dependencies = [
  "jwt",
  "k256",
  "lazy-static-include",
- "lgn-auth",
  "lgn-messages",
  "lgn-provers",
  "metrics",
@@ -5484,7 +5477,7 @@ checksum = "0c1318b19085f08681016926435853bbf7858f9c082d0999b80550ff5d9abe15"
 dependencies = [
  "bytes",
  "heck",
- "itertools 0.10.5",
+ "itertools 0.11.0",
  "log",
  "multimap",
  "once_cell",
@@ -5504,7 +5497,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9552f850d5f0964a4e4d0bf306459ac29323ddfbae05e35a7c0d35cb0803cc5"
 dependencies = [
  "anyhow",
- "itertools 0.10.5",
+ "itertools 0.11.0",
  "proc-macro2",
  "quote",
  "syn 2.0.85",
@@ -6389,18 +6382,18 @@ checksum = "cd0b0ec5f1c1ca621c432a25813d8d60c88abe6d3e08a3eb9cf37d97a0fe3d73"
 
 [[package]]
 name = "serde"
-version = "1.0.214"
+version = "1.0.215"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f55c3193aca71c12ad7890f1785d2b73e1b9f63a0bbc353c08ef26fe03fc56b5"
+checksum = "6513c1ad0b11a9376da888e3e0baa0077f1aed55c17f50e7b2397136129fb88f"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.214"
+version = "1.0.215"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de523f781f095e28fa605cdce0f8307e451cc0fd14e2eb4cd2e98a355b147766"
+checksum = "ad1e866f866923f252f05c889987993144fb74e722403468a4ebd70c3cd756c0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6409,9 +6402,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.132"
+version = "1.0.133"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d726bfaff4b320266d395898905d0eba0345aae23b54aee3a737e260fd46db03"
+checksum = "c7fceb2473b9166b2294ef05efcb65a3db80803f0b03ef86a5fc88a2b85ee377"
 dependencies = [
  "itoa",
  "memchr",
