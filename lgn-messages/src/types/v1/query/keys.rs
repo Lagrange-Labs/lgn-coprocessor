@@ -12,6 +12,12 @@ type RowKeyId = String;
 
 type BlockNr = u64;
 
+/// The update tree key is a tuple of (level, position).
+pub(crate) type UTKey = (
+    usize,
+    usize,
+);
+
 const ROWS_TREE: &str = "rows_tree";
 
 const INDEX_TREE: &str = "index_tree";
@@ -29,6 +35,11 @@ pub enum ProofKey
     Index(
         QueryId,
         BlockNr,
+    ),
+
+    Chunk(
+        QueryId,
+        UTKey,
     ),
 
     Revelation(QueryId),
@@ -57,6 +68,14 @@ impl Display for ProofKey
                     f,
                     "{}/{}/{INDEX_TREE}/{}",
                     KEYS_QUERIES_PREFIX, query_id, block_nr
+                )
+            },
+            ProofKey::Chunk(query_id, (level, position)) =>
+            {
+                write!(
+                    f,
+                    "{}/{}/aggregation/{}/{}",
+                    KEYS_QUERIES_PREFIX, query_id, level, position
                 )
             },
             ProofKey::Revelation(query_id) =>

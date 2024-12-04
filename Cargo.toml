@@ -3,11 +3,17 @@ resolver = "2"
 members = ["lgn-auth", "lgn-messages", "lgn-provers", "lgn-worker"]
 
 [workspace.dependencies]
-groth16_framework_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "cc50651", package = "groth16_framework" }
-mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "cc50651" }
-mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "cc50651" }
-parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "cc50651" }
-verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "cc50651" }
+# groth16_framework_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "cc50651", package = "groth16_framework" }
+# mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "cc50651" }
+# mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "cc50651" }
+# parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "cc50651" }
+# verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "cc50651" }
+mp2_common = { path = "../mapreduce-plonky2/mp2-common/" }
+mp2_v1 = { path = "../mapreduce-plonky2/mp2-v1/" }
+parsil = { path = "../mapreduce-plonky2/parsil/" }
+verifiable-db = { path = "../mapreduce-plonky2/verifiable-db/" }
+ryhope = { path = "../mapreduce-plonky2/ryhope/" }
+groth16_framework_v1 = { package = "groth16_framework", path = "../mapreduce-plonky2/groth16-framework/" }
 
 anyhow = { version = "1.0" }
 bincode = { version = "1.0" }
@@ -23,8 +29,8 @@ thiserror = { version = "1.0" }
 tokio = { version = "1.0" }
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-alloy = "0.2"
-alloy-primitives = "0.7.7"
+alloy = "0.6"
+alloy-primitives = "0.8.14"
 backtrace = "0.3"
 base64 = "0.22"
 bytes = "1.0"
