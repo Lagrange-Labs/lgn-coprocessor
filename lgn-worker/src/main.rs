@@ -1,11 +1,7 @@
-use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::net::TcpStream;
 use std::panic;
 use std::result::Result::Ok;
-use std::str::FromStr;
-use std::time::SystemTime;
-use std::time::UNIX_EPOCH;
 
 use anyhow::*;
 use backtrace::Backtrace;
@@ -13,14 +9,12 @@ use clap::Parser;
 use ethers::signers::Wallet;
 use grpc_worker::auth::jwt::get_claims as worker_claim;
 use grpc_worker::auth::jwt::JWTAuth;
-use grpc_worker::auth::wallet::WalletBackend;
 use grpc_worker::protobuf;
 use grpc_worker::protobuf::worker_done::Reply;
 use grpc_worker::protobuf::WorkerDone;
 use grpc_worker::protobuf::WorkerToGwRequest;
 use grpc_worker::protobuf::WorkerToGwResponse;
 use jwt::Claims;
-use jwt::RegisteredClaims;
 use k256::ecdsa::SigningKey;
 use lgn_messages::types::DownstreamPayload;
 use lgn_messages::types::MessageEnvelope;
@@ -28,7 +22,6 @@ use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::UpstreamPayload;
-use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
 use mimalloc::MiMalloc;
 use tokio::io::AsyncWriteExt;
@@ -492,26 +485,20 @@ async fn process_message_from_gateway(
 
 fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>>
 {
-    let backend = match (
-        &config
+    let backend = grpc_worker::auth::wallet::WalletBackend::from_triplet(
+        config
             .avs
-            .lagr_keystore,
-        &config
+            .lagr_keystore
+            .clone(),
+        config
             .avs
-            .lagr_pwd,
-        &config
+            .lagr_pwd
+            .clone(),
+        config
             .avs
-            .lagr_private_key,
-    ) {
-        (Some(keystore_path), Some(password), None) => {
-            WalletBackend::Keystore {
-                keystore_path: keystore_path.clone(),
-                pwd: password.clone(),
-            }
-        },
-        (Some(_), None, Some(pkey)) => WalletBackend::PrivateKey(pkey.clone()),
-        _ => bail!("Must specify either keystore path w/ password OR private key"),
-    };
+            .lagr_private_key
+            .clone(),
+    )?;
     backend.get_wallet()
 }
 

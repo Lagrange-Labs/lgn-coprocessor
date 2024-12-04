@@ -3344,7 +3344,7 @@ dependencies = [
 [[package]]
 name = "grpc-worker"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/worker-grpc-rs?branch=main#6ede168ca1da4b3e5ad286e4c4c0a8a4f51ebf27"
+source = "git+https://github.com/Lagrange-Labs/worker-grpc-rs?branch=main#dfb4b9e1c2926f55e031b71716bcc9b146febcbf"
 dependencies = [
  "anyhow",
  "async-std",
@@ -5477,7 +5477,7 @@ checksum = "0c1318b19085f08681016926435853bbf7858f9c082d0999b80550ff5d9abe15"
 dependencies = [
  "bytes",
  "heck",
- "itertools 0.11.0",
+ "itertools 0.10.5",
  "log",
  "multimap",
  "once_cell",
@@ -5497,7 +5497,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9552f850d5f0964a4e4d0bf306459ac29323ddfbae05e35a7c0d35cb0803cc5"
 dependencies = [
  "anyhow",
- "itertools 0.11.0",
+ "itertools 0.10.5",
  "proc-macro2",
  "quote",
  "syn 2.0.85",
