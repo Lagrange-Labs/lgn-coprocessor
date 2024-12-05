@@ -12,13 +12,12 @@ use verifiable_db::api::QueryCircuitInput;
 use verifiable_db::api::QueryParameters;
 use verifiable_db::query::aggregation::QueryHashNonExistenceCircuits;
 use verifiable_db::query::aggregation::SubProof;
+use verifiable_db::query::api::BatchingQueryCircuitInput;
 use verifiable_db::query::api::CircuitInput;
 use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
 use verifiable_db::revelation::api::MatchingRow;
-use verifiable_db::revelation::{
-    self,
-};
+use verifiable_db::revelation::{self,};
 
 use super::prover::StorageQueryProver;
 use super::INDEX_TREE_MAX_DEPTH;
@@ -64,7 +63,7 @@ impl EuclidQueryProver
             MAX_NUM_OUTPUTS,
             MAX_NUM_ITEMS_PER_OUTPUT,
             MAX_NUM_PLACEHOLDERS,
-        >
+        >,
     ) -> Self
     {
         Self {
