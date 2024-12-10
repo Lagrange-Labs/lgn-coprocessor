@@ -1,4 +1,4 @@
-FROM rustlang/rust:nightly-slim as base
+FROM instrumentisto/rust:nightly-slim-2024-12-01 as base
 
 ARG GO_VERSION=1.22.2
 
