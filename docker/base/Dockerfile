@@ -1,4 +1,4 @@
-FROM instrumentisto/rust:nightly-slim-2024-12-01 as base
+FROM rustlang/rust@sha256:8805767e93e63cd2d1089e6421afcb7d81e0f2cd246b7ab390aad81e45e33674 as base
 
 ARG GO_VERSION=1.22.2
 
