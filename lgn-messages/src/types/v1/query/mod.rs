@@ -14,6 +14,9 @@ pub mod tasks;
 
 pub const ROUTING_DOMAIN: &str = "sc";
 
+// This constant must be same with lgn-provers.
+pub(crate) const NUM_CHUNKS: usize = 5;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct WorkerTask
 {
