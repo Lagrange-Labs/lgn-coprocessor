@@ -38,7 +38,7 @@ pub enum QueryStep
     Revelation(RevelationInput),
 }
 
-#[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Dbg, Clone, Deserialize, Serialize)]
 pub enum QueryInputPart
 {
     #[serde(rename = "1")]
@@ -55,7 +55,7 @@ pub enum QueryInputPart
     ),
 }
 
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
+#[derive(Clone, Dbg, Deserialize, Serialize)]
 pub enum ProofInputKind
 {
     #[serde(rename = "1")]
@@ -107,7 +107,7 @@ impl HydratableMatchingRow
 
 /// Either a `Dehydrated` variant containing a key to a stored proof, or a
 /// `Hydrated` containing the proof itself.
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum Hydratable<K: Clone + std::fmt::Debug>
 {
     Dehydrated(K),
@@ -264,7 +264,7 @@ pub struct RowsChunkInput
     pub placeholders: PlaceHolderLgn,
 }
 
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
+#[derive(Clone, Dbg, Deserialize, Serialize)]
 pub struct ChunkAggregationInput
 {
     pub child_proofs: Vec<Hydratable<ProofKey>>,
