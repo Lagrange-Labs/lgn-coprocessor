@@ -3159,7 +3159,7 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix-send-issue-in-dq#f13a52e89c9a10514dfa009b624d927512dfe16c"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fremove_old_query_circuits#98d9ed08bb0a3653f14892f0df4764ab117a89ae"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3179,7 +3179,7 @@ dependencies = [
 [[package]]
 name = "groth16_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix-send-issue-in-dq#f13a52e89c9a10514dfa009b624d927512dfe16c"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fremove_old_query_circuits#98d9ed08bb0a3653f14892f0df4764ab117a89ae"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4290,7 +4290,7 @@ checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
 [[package]]
 name = "mp2_common"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix-send-issue-in-dq#f13a52e89c9a10514dfa009b624d927512dfe16c"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fremove_old_query_circuits#98d9ed08bb0a3653f14892f0df4764ab117a89ae"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4317,7 +4317,7 @@ dependencies = [
 [[package]]
 name = "mp2_test"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix-send-issue-in-dq#f13a52e89c9a10514dfa009b624d927512dfe16c"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fremove_old_query_circuits#98d9ed08bb0a3653f14892f0df4764ab117a89ae"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4336,7 +4336,7 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix-send-issue-in-dq#f13a52e89c9a10514dfa009b624d927512dfe16c"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fremove_old_query_circuits#98d9ed08bb0a3653f14892f0df4764ab117a89ae"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4715,7 +4715,7 @@ dependencies = [
 [[package]]
 name = "parsil"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix-send-issue-in-dq#f13a52e89c9a10514dfa009b624d927512dfe16c"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fremove_old_query_circuits#98d9ed08bb0a3653f14892f0df4764ab117a89ae"
 dependencies = [
  "alloy",
  "anyhow",
@@ -5477,7 +5477,7 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix-send-issue-in-dq#f13a52e89c9a10514dfa009b624d927512dfe16c"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fremove_old_query_circuits#98d9ed08bb0a3653f14892f0df4764ab117a89ae"
 dependencies = [
  "anyhow",
  "log",
@@ -6015,7 +6015,7 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix-send-issue-in-dq#f13a52e89c9a10514dfa009b624d927512dfe16c"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fremove_old_query_circuits#98d9ed08bb0a3653f14892f0df4764ab117a89ae"
 dependencies = [
  "anyhow",
  "bb8",
@@ -7491,7 +7491,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "verifiable-db"
 version = "0.1.0"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix-send-issue-in-dq#f13a52e89c9a10514dfa009b624d927512dfe16c"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fremove_old_query_circuits#98d9ed08bb0a3653f14892f0df4764ab117a89ae"
 dependencies = [
  "alloy",
  "anyhow",

@@ -3,11 +3,11 @@ resolver = "2"
 members = ["lgn-auth", "lgn-messages", "lgn-provers", "lgn-worker"]
 
 [workspace.dependencies]
-groth16_framework_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix-send-issue-in-dq", package = "groth16_framework" }
-mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix-send-issue-in-dq" }
-mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix-send-issue-in-dq" }
-parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix-send-issue-in-dq" }
-verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix-send-issue-in-dq" }
+groth16_framework_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix/remove_old_query_circuits", package = "groth16_framework" }
+mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix/remove_old_query_circuits" }
+mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix/remove_old_query_circuits" }
+parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix/remove_old_query_circuits" }
+verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fix/remove_old_query_circuits" }
 
 anyhow = { version = "1.0" }
 bincode = { version = "1.0" }
