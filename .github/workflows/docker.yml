@@ -176,7 +176,7 @@ jobs:
           if [[ ${{ github.ref_name }} == 'main' ]]; then
             tag=latest
           else
-            tag=${{ github.ref_name }}
+            tag=$(echo ${{ github.ref_name }} | tr "[]/" -)
           fi
           docker tag worker:${{ github.sha }} lagrangelabs/worker:${tag}
           docker push lagrangelabs/worker:${tag}
