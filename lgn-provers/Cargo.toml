@@ -4,11 +4,14 @@ version = "1.1.2"
 edition = "2021"
 
 [dependencies]
+alloy = { workspace = true }
 anyhow = { workspace = true }
 bincode = { workspace = true }
+bytes = { workspace = true }
 checksums = { workspace = true }
 ethers = { workspace = true }
 groth16_framework_v1 = { workspace = true }
+metrics = { workspace = true }
 mp2_common = { workspace = true }
 mp2_v1 = { workspace = true }
 parsil = { workspace = true }
@@ -18,10 +21,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 tracing = { workspace = true }
 verifiable-db = { workspace = true }
-
-alloy = { workspace = true, features = ["contract", "node-bindings", "providers", "network", "signer-local", "sol-types", "rpc", "rpc-types", "consensus", "rlp", "transports", "transport-http", "reqwest"] }
-bytes = { workspace = true }
-metrics = { workspace = true }
 
 lgn-messages = { path = "../lgn-messages" }
 

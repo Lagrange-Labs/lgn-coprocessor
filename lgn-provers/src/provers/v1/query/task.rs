@@ -3,8 +3,10 @@ use std::collections::HashMap;
 use anyhow::bail;
 use lgn_messages::types::v1::query::keys::ProofKey;
 use lgn_messages::types::v1::query::tasks::EmbeddedProofInputType;
+use lgn_messages::types::v1::query::tasks::Hydratable;
 use lgn_messages::types::v1::query::tasks::HydratableMatchingRow;
 use lgn_messages::types::v1::query::tasks::ProofInputKind;
+use lgn_messages::types::v1::query::tasks::QueryInputPart;
 use lgn_messages::types::v1::query::tasks::QueryStep;
 use lgn_messages::types::v1::query::tasks::RevelationInput;
 use lgn_messages::types::v1::query::WorkerTask;
@@ -112,59 +114,46 @@ impl<P: StorageQueryProver> Querying<P>
             {
                 for part in parts
                 {
-                    match (
-                        &part.embedded_proof_input,
-                        &part.aggregation_input_kind,
-                    )
+                    match part
                     {
-                        (Some(embedded_input_type), None) =>
+                        QueryInputPart::Aggregation(proof_key, proof_input) =>
                         {
-                            match embedded_input_type
+                            match proof_input.as_ref()
                             {
-                                EmbeddedProofInputType::RowsTree(embedded_input) =>
+                                ProofInputKind::RowsChunk(rc) =>
                                 {
                                     let proof = self
                                         .prover
-                                        .prove_universal_circuit(
-                                            embedded_input.to_owned(),
+                                        .prove_row_chunks(
+                                            rc.clone(),
                                             &pis,
                                         )?;
-
                                     proofs.insert(
-                                        part.proof_key
-                                            .to_owned(),
+                                        proof_key.to_owned(),
                                         proof,
                                     );
                                 },
-                                EmbeddedProofInputType::IndexTree(_) =>
+                                ProofInputKind::ChunkAggregation(ca) =>
                                 {
-                                    bail!("IndexTree always must have aggregation input")
-                                },
-                            }
-                        },
-                        (None, Some(aggregation_input)) =>
-                        {
-                            match &aggregation_input
-                            {
-                                ProofInputKind::SinglePathBranch(sb) =>
-                                {
-                                    let child_proof = proofs
-                                        .remove(&sb.proven_child_location)
-                                        .unwrap_or(
-                                            sb.proven_child_proof
-                                                .to_owned(),
-                                        );
-
+                                    let chunks_proofs = ca
+                                        .child_proofs
+                                        .iter()
+                                        .map(
+                                            |proof| {
+                                                match proof {
+                                                    Hydratable::Hydrated(_) => proof.clone_proof(),
+                                                    Hydratable::Dehydrated(key) => proofs
+                                                    .remove(key)
+                                                    .expect("Cannot find rows-chunk proof: {proof_key:?}"),
+                                                }
+                                            },
+                                        )
+                                        .collect::<Vec<_>>();
                                     let proof = self
                                         .prover
-                                        .prove_single_path_branch(
-                                            sb.to_owned(),
-                                            child_proof,
-                                            &pis,
-                                        )?;
+                                        .prove_chunk_aggregation(&chunks_proofs)?;
                                     proofs.insert(
-                                        part.proof_key
-                                            .to_owned(),
+                                        proof_key.to_owned(),
                                         proof,
                                     );
                                 },
@@ -173,126 +162,34 @@ impl<P: StorageQueryProver> Querying<P>
                                     let proof = self
                                         .prover
                                         .prove_non_existence(
-                                            ne.to_owned(),
+                                            *ne.clone(),
                                             &pis,
                                         )?;
                                     proofs.insert(
-                                        part.proof_key
-                                            .to_owned(),
+                                        proof_key.to_owned(),
                                         proof,
                                     );
                                 },
-                                _ =>
-                                {},
                             }
                         },
-                        (Some(embedded_input_type), Some(ref aggregation_input)) =>
+                        QueryInputPart::Embedded(proof_key, proof_input) =>
                         {
-                            let embedded_proof = match embedded_input_type
+                            match proof_input
                             {
                                 EmbeddedProofInputType::RowsTree(embedded_input) =>
                                 {
-                                    self.prover
+                                    let proof = self
+                                        .prover
                                         .prove_universal_circuit(
                                             embedded_input.to_owned(),
                                             &pis,
-                                        )?
-                                },
-                                EmbeddedProofInputType::IndexTree(embedded_input) =>
-                                {
-                                    embedded_input
-                                        .rows_proof
-                                        .to_owned()
-                                },
-                            };
-
-                            match aggregation_input
-                            {
-                                ProofInputKind::SinglePathLeaf(sp) =>
-                                {
-                                    let proof = self
-                                        .prover
-                                        .prove_single_path_leaf(
-                                            sp.to_owned(),
-                                            embedded_proof,
-                                            &pis,
                                         )?;
                                     proofs.insert(
-                                        part.proof_key
-                                            .to_owned(),
+                                        proof_key.to_owned(),
                                         proof,
                                     );
-                                },
-                                ProofInputKind::PartialNode(sp) =>
-                                {
-                                    let mut sp = sp.clone();
-                                    if sp
-                                        .proven_child_proof
-                                        .is_empty()
-                                    {
-                                        sp.proven_child_proof = proofs
-                                            .remove(&sp.proven_child_proof_location)
-                                            .unwrap_or(
-                                                sp.proven_child_proof
-                                                    .to_owned(),
-                                            );
-                                    }
-                                    let proof = self
-                                        .prover
-                                        .prove_partial_node(
-                                            sp,
-                                            embedded_proof,
-                                            &pis,
-                                        )?;
-                                    proofs.insert(
-                                        part.proof_key
-                                            .to_owned(),
-                                        proof,
-                                    );
-                                },
-                                ProofInputKind::FullNode(f) =>
-                                {
-                                    let mut f = f.clone();
-                                    if f.left_child_proof
-                                        .is_empty()
-                                    {
-                                        f.left_child_proof = proofs
-                                            .remove(&f.left_child_proof_location)
-                                            .unwrap_or(f.left_child_proof);
-                                    }
-
-                                    if f.right_child_proof
-                                        .is_empty()
-                                    {
-                                        f.right_child_proof = proofs
-                                            .remove(&f.right_child_proof_location)
-                                            .unwrap_or(f.right_child_proof);
-                                    }
-
-                                    let proof = self
-                                        .prover
-                                        .prove_full_node(
-                                            embedded_proof,
-                                            f.left_child_proof,
-                                            f.right_child_proof,
-                                            &pis,
-                                            f.is_rows_tree_node,
-                                        )?;
-                                    proofs.insert(
-                                        part.proof_key
-                                            .clone(),
-                                        proof,
-                                    );
-                                },
-                                _ =>
-                                {
-                                    bail!("Invalid inputs")
                                 },
                             }
-                        },
-                        (None, None) =>
-                        {
-                            bail!("Invalid inputs")
                         },
                     }
                 }
