@@ -149,10 +149,8 @@ impl<P: StorageQueryProver> Querying<P>
                                         row.proof
                                             .hydrate(
                                                 proofs
-                                                    .remove(key)
-                                                    .expect(
-                                                        "Cannot find matching-row proof: {key:?}",
-                                                    ),
+                                                    .get(key)
+                                                    .unwrap_or_else(|| panic!("Cannot find matching-row proof: {key:?}")).clone(),
                                             );
                                     }
 
@@ -160,6 +158,7 @@ impl<P: StorageQueryProver> Querying<P>
                                 },
                             )
                             .collect();
+
                         return self
                             .prover
                             .prove_tabular_revelation(
