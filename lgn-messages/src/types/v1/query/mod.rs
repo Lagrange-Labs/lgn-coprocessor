@@ -14,6 +14,7 @@ pub mod tasks;
 
 pub const ROUTING_DOMAIN: &str = "sc";
 
+// TODO: need to update these two constants after benchmark.
 /// Maximum number of chunks that can be aggregated in a single proof of batching query
 /// We must use the same value of this constant for both DQ and Worker.
 pub const NUM_CHUNKS: usize = 5;

@@ -104,9 +104,7 @@ impl<P: StorageQueryProver> Querying<P>
 
         let pis: DynamicCircuitPis = serde_json::from_slice(&input.pis)?;
 
-        let mut proofs = HashMap::new();
-
-        match &input.query_step
+        let final_proof = match &input.query_step
         {
             QueryStep::Tabular(rows_inputs, revelation_input) =>
             {
@@ -147,8 +145,7 @@ impl<P: StorageQueryProver> Querying<P>
                     matching_rows_proofs.push(matching_row_proof);
                 }
 
-                return self
-                    .prover
+                self.prover
                     .prove_tabular_revelation(
                         &pis,
                         placeholders
@@ -159,10 +156,12 @@ impl<P: StorageQueryProver> Querying<P>
                         column_ids,
                         *limit,
                         *offset,
-                    );
+                    )?
             },
             QueryStep::Aggregation(inputs) =>
             {
+                let mut proofs = HashMap::new();
+
                 for input in inputs
                 {
                     let proof_key = input
@@ -225,6 +224,21 @@ impl<P: StorageQueryProver> Querying<P>
                         },
                     }
                 }
+
+                // Only the root proof should be left
+                if proofs.len() > 1
+                {
+                    bail!(
+                        "Invalid number of proofs left: {}",
+                        proofs.len(),
+                    );
+                }
+
+                proofs
+                    .values()
+                    .next()
+                    .unwrap()
+                    .clone()
             },
             QueryStep::Revelation(input) =>
             {
@@ -237,8 +251,7 @@ impl<P: StorageQueryProver> Querying<P>
                         ..
                     } =>
                     {
-                        return self
-                            .prover
+                        self.prover
                             .prove_aggregated_revelation(
                                 &pis,
                                 placeholders
@@ -246,7 +259,7 @@ impl<P: StorageQueryProver> Querying<P>
                                     .into(),
                                 query_proof.clone_proof(),
                                 indexing_proof.clone_proof(),
-                            );
+                            )
                     },
                     RevelationInput::Tabular {
                         placeholders,
@@ -258,8 +271,7 @@ impl<P: StorageQueryProver> Querying<P>
                         ..
                     } =>
                     {
-                        return self
-                            .prover
+                        self.prover
                             .prove_tabular_revelation(
                                 &pis,
                                 placeholders
@@ -274,26 +286,12 @@ impl<P: StorageQueryProver> Querying<P>
                                 column_ids,
                                 *limit,
                                 *offset,
-                            );
+                            )
                     },
-                }
+                }?
             },
-        }
+        };
 
-        // Only one proof should be left
-        if proofs.len() > 1
-        {
-            bail!(
-                "Invalid number of proofs left: {}",
-                proofs.len()
-            );
-        }
-
-        let final_proof = proofs
-            .values()
-            .next()
-            .unwrap()
-            .clone();
         Ok(final_proof)
     }
 }
