@@ -41,7 +41,7 @@ pub enum QueryStep
 
     /// Aggregation batching queries, next step is Revelation
     #[serde(rename = "2")]
-    Aggregation(Vec<AggregationInput>),
+    Aggregation(AggregationInput),
 
     /// Revelation step, we only handle aggregation revelation for now, next step is Groth16
     #[serde(rename = "3")]

@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use anyhow::bail;
 use lgn_messages::types::v1::query::keys::ProofKey;
 use lgn_messages::types::v1::query::tasks::Hydratable;
@@ -158,87 +156,37 @@ impl<P: StorageQueryProver> Querying<P>
                         *offset,
                     )?
             },
-            QueryStep::Aggregation(inputs) =>
+            QueryStep::Aggregation(input) =>
             {
-                let mut proofs = HashMap::new();
-
-                for input in inputs
+                match &input.input_kind
                 {
-                    let proof_key = input
-                        .proof_key
-                        .clone();
-                    match &input.input_kind
+                    ProofInputKind::RowsChunk(rc) =>
                     {
-                        ProofInputKind::RowsChunk(rc) =>
-                        {
-                            let proof = self
-                                .prover
-                                .prove_row_chunks(
-                                    rc.clone(),
-                                    &pis,
-                                )?;
-                            proofs.insert(
-                                proof_key.to_owned(),
-                                proof,
-                            );
-                        },
-                        ProofInputKind::ChunkAggregation(ca) =>
-                        {
-                            let chunks_proofs = ca
-                                .child_proofs
-                                .iter()
-                                .map(
-                                    |proof| {
-                                        match proof
-                                        {
-                                            Hydratable::Hydrated(_) => proof.clone_proof(),
-                                            Hydratable::Dehydrated(key) => proofs
-                                                .remove(key)
-                                                .expect(
-                                                    "Cannot find rows-chunk proof: {proof_key:?}",
-                                                ),
-                                        }
-                                    },
-                                )
-                                .collect::<Vec<_>>();
-                            let proof = self
-                                .prover
-                                .prove_chunk_aggregation(&chunks_proofs)?;
-                            proofs.insert(
-                                proof_key.to_owned(),
-                                proof,
-                            );
-                        },
-                        ProofInputKind::NonExistence(ne) =>
-                        {
-                            let proof = self
-                                .prover
-                                .prove_non_existence(
-                                    *ne.clone(),
-                                    &pis,
-                                )?;
-                            proofs.insert(
-                                proof_key.to_owned(),
-                                proof,
-                            );
-                        },
-                    }
-                }
-
-                // Only the root proof should be left
-                if proofs.len() > 1
-                {
-                    bail!(
-                        "Invalid number of proofs left: {}",
-                        proofs.len(),
-                    );
-                }
-
-                proofs
-                    .values()
-                    .next()
-                    .unwrap()
-                    .clone()
+                        self.prover
+                            .prove_row_chunks(
+                                rc.clone(),
+                                &pis,
+                            )
+                    },
+                    ProofInputKind::ChunkAggregation(ca) =>
+                    {
+                        let chunks_proofs = ca
+                            .child_proofs
+                            .iter()
+                            .map(|proof| proof.clone_proof())
+                            .collect::<Vec<_>>();
+                        self.prover
+                            .prove_chunk_aggregation(&chunks_proofs)
+                    },
+                    ProofInputKind::NonExistence(ne) =>
+                    {
+                        self.prover
+                            .prove_non_existence(
+                                *ne.clone(),
+                                &pis,
+                            )
+                    },
+                }?
             },
             QueryStep::Revelation(input) =>
             {
