@@ -110,71 +110,56 @@ impl<P: StorageQueryProver> Querying<P>
         {
             QueryStep::Tabular(rows_inputs, revelation_input) =>
             {
-                for input in rows_inputs
+                let RevelationInput::Tabular {
+                    placeholders,
+                    indexing_proof,
+                    matching_rows,
+                    column_ids,
+                    limit,
+                    offset,
+                    ..
+                } = revelation_input
+                else
                 {
-                    let proof_key = input
-                        .proof_key
-                        .clone();
+                    panic!("Wrong RevelationInput for QueryStep::Tabular");
+                };
+
+                let mut matching_rows_proofs = vec![];
+                for (row_input, mut matching_row) in rows_inputs
+                    .iter()
+                    .zip(matching_rows.clone())
+                {
                     let proof = self
                         .prover
                         .prove_universal_circuit(
-                            input.clone(),
+                            row_input.clone(),
                             &pis,
                         )?;
-                    proofs.insert(
-                        proof_key,
-                        proof,
-                    );
-                }
 
-                match revelation_input
-                {
-                    RevelationInput::Tabular {
-                        placeholders,
-                        indexing_proof,
-                        matching_rows,
-                        column_ids,
-                        limit,
-                        offset,
-                        ..
-                    } =>
+                    if let Hydratable::Dehydrated(_) = &matching_row.proof
                     {
-                        let matching_rows = matching_rows
-                            .iter()
-                            .cloned()
-                            .map(
-                                |mut row| {
-                                    if let Hydratable::Dehydrated(key) = &row.proof
-                                    {
-                                        row.proof
-                                            .hydrate(
-                                                proofs
-                                                    .get(key)
-                                                    .unwrap_or_else(|| panic!("Cannot find matching-row proof: {key:?}")).clone(),
-                                            );
-                                    }
+                        matching_row
+                            .proof
+                            .hydrate(proof);
+                    }
 
-                                    HydratableMatchingRow::into_matching_row(row)
-                                },
-                            )
-                            .collect();
-
-                        return self
-                            .prover
-                            .prove_tabular_revelation(
-                                &pis,
-                                placeholders
-                                    .clone()
-                                    .into(),
-                                indexing_proof.clone_proof(),
-                                matching_rows,
-                                column_ids,
-                                *limit,
-                                *offset,
-                            );
-                    },
-                    _ => panic!("Wrong RevelationInput for QueryStep::Tabular"),
+                    let matching_row_proof = HydratableMatchingRow::into_matching_row(matching_row);
+                    matching_rows_proofs.push(matching_row_proof);
                 }
+
+                return self
+                    .prover
+                    .prove_tabular_revelation(
+                        &pis,
+                        placeholders
+                            .clone()
+                            .into(),
+                        indexing_proof.clone_proof(),
+                        matching_rows_proofs,
+                        column_ids,
+                        *limit,
+                        *offset,
+                    );
             },
             QueryStep::Aggregation(inputs) =>
             {
