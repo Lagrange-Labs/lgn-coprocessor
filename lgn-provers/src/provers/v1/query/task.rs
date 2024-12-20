@@ -2,11 +2,9 @@ use std::collections::HashMap;
 
 use anyhow::bail;
 use lgn_messages::types::v1::query::keys::ProofKey;
-use lgn_messages::types::v1::query::tasks::EmbeddedProofInputType;
 use lgn_messages::types::v1::query::tasks::Hydratable;
 use lgn_messages::types::v1::query::tasks::HydratableMatchingRow;
 use lgn_messages::types::v1::query::tasks::ProofInputKind;
-use lgn_messages::types::v1::query::tasks::QueryInputPart;
 use lgn_messages::types::v1::query::tasks::QueryStep;
 use lgn_messages::types::v1::query::tasks::RevelationInput;
 use lgn_messages::types::v1::query::WorkerTask;
@@ -110,93 +108,143 @@ impl<P: StorageQueryProver> Querying<P>
 
         match &input.query_step
         {
-            QueryStep::Prepare(ref parts) =>
+            QueryStep::Tabular(rows_inputs, revelation_input) =>
             {
-                for part in parts
+                for input in rows_inputs
                 {
-                    match part
+                    let proof_key = input
+                        .proof_key
+                        .clone();
+                    let proof = self
+                        .prover
+                        .prove_universal_circuit(
+                            input.clone(),
+                            &pis,
+                        )?;
+                    proofs.insert(
+                        proof_key,
+                        proof,
+                    );
+                }
+
+                match revelation_input
+                {
+                    RevelationInput::Tabular {
+                        placeholders,
+                        indexing_proof,
+                        matching_rows,
+                        column_ids,
+                        limit,
+                        offset,
+                        ..
+                    } =>
                     {
-                        QueryInputPart::Aggregation(proof_key, proof_input) =>
-                        {
-                            match proof_input.as_ref()
-                            {
-                                ProofInputKind::RowsChunk(rc) =>
-                                {
-                                    let proof = self
-                                        .prover
-                                        .prove_row_chunks(
-                                            rc.clone(),
-                                            &pis,
-                                        )?;
-                                    proofs.insert(
-                                        proof_key.to_owned(),
-                                        proof,
-                                    );
-                                },
-                                ProofInputKind::ChunkAggregation(ca) =>
-                                {
-                                    let chunks_proofs = ca
-                                        .child_proofs
-                                        .iter()
-                                        .map(
-                                            |proof| {
-                                                match proof {
-                                                    Hydratable::Hydrated(_) => proof.clone_proof(),
-                                                    Hydratable::Dehydrated(key) => proofs
+                        let matching_rows = matching_rows
+                            .iter()
+                            .cloned()
+                            .map(
+                                |mut row| {
+                                    if let Hydratable::Dehydrated(key) = &row.proof
+                                    {
+                                        row.proof
+                                            .hydrate(
+                                                proofs
                                                     .remove(key)
-                                                    .expect("Cannot find rows-chunk proof: {proof_key:?}"),
-                                                }
-                                            },
-                                        )
-                                        .collect::<Vec<_>>();
-                                    let proof = self
-                                        .prover
-                                        .prove_chunk_aggregation(&chunks_proofs)?;
-                                    proofs.insert(
-                                        proof_key.to_owned(),
-                                        proof,
-                                    );
+                                                    .expect(
+                                                        "Cannot find matching-row proof: {key:?}",
+                                                    ),
+                                            );
+                                    }
+
+                                    HydratableMatchingRow::into_matching_row(row)
                                 },
-                                ProofInputKind::NonExistence(ne) =>
-                                {
-                                    let proof = self
-                                        .prover
-                                        .prove_non_existence(
-                                            *ne.clone(),
-                                            &pis,
-                                        )?;
-                                    proofs.insert(
-                                        proof_key.to_owned(),
-                                        proof,
-                                    );
-                                },
-                            }
-                        },
-                        QueryInputPart::Embedded(proof_key, proof_input) =>
+                            )
+                            .collect();
+                        return self
+                            .prover
+                            .prove_tabular_revelation(
+                                &pis,
+                                placeholders
+                                    .clone()
+                                    .into(),
+                                indexing_proof.clone_proof(),
+                                matching_rows,
+                                column_ids,
+                                *limit,
+                                *offset,
+                            );
+                    },
+                    _ => panic!("Wrong RevelationInput for QueryStep::Tabular"),
+                }
+            },
+            QueryStep::Aggregation(inputs) =>
+            {
+                for input in inputs
+                {
+                    let proof_key = input
+                        .proof_key
+                        .clone();
+                    match &input.input_kind
+                    {
+                        ProofInputKind::RowsChunk(rc) =>
                         {
-                            match proof_input
-                            {
-                                EmbeddedProofInputType::RowsTree(embedded_input) =>
-                                {
-                                    let proof = self
-                                        .prover
-                                        .prove_universal_circuit(
-                                            embedded_input.to_owned(),
-                                            &pis,
-                                        )?;
-                                    proofs.insert(
-                                        proof_key.to_owned(),
-                                        proof,
-                                    );
-                                },
-                            }
+                            let proof = self
+                                .prover
+                                .prove_row_chunks(
+                                    rc.clone(),
+                                    &pis,
+                                )?;
+                            proofs.insert(
+                                proof_key.to_owned(),
+                                proof,
+                            );
+                        },
+                        ProofInputKind::ChunkAggregation(ca) =>
+                        {
+                            let chunks_proofs = ca
+                                .child_proofs
+                                .iter()
+                                .map(
+                                    |proof| {
+                                        match proof
+                                        {
+                                            Hydratable::Hydrated(_) => proof.clone_proof(),
+                                            Hydratable::Dehydrated(key) => proofs
+                                                .remove(key)
+                                                .expect(
+                                                    "Cannot find rows-chunk proof: {proof_key:?}",
+                                                ),
+                                        }
+                                    },
+                                )
+                                .collect::<Vec<_>>();
+                            let proof = self
+                                .prover
+                                .prove_chunk_aggregation(&chunks_proofs)?;
+                            proofs.insert(
+                                proof_key.to_owned(),
+                                proof,
+                            );
+                        },
+                        ProofInputKind::NonExistence(ne) =>
+                        {
+                            let proof = self
+                                .prover
+                                .prove_non_existence(
+                                    *ne.clone(),
+                                    &pis,
+                                )?;
+                            proofs.insert(
+                                proof_key.to_owned(),
+                                proof,
+                            );
                         },
                     }
                 }
             },
-            QueryStep::Revelation(rev) =>
+            QueryStep::Revelation(input) =>
             {
-                match rev
+                match input
                 {
                     RevelationInput::Aggregated {
                         placeholders,
@@ -218,7 +266,7 @@ impl<P: StorageQueryProver> Querying<P>
                     },
                     RevelationInput::Tabular {
                         placeholders,
-                        indexing_proof: preprocessing_proof,
+                        indexing_proof,
                         matching_rows,
                         column_ids,
                         limit,
@@ -233,7 +281,7 @@ impl<P: StorageQueryProver> Querying<P>
                                 placeholders
                                     .clone()
                                     .into(),
-                                preprocessing_proof.clone_proof(),
+                                indexing_proof.clone_proof(),
                                 matching_rows
                                     .iter()
                                     .cloned()
@@ -242,7 +290,7 @@ impl<P: StorageQueryProver> Querying<P>
                                 column_ids,
                                 *limit,
                                 *offset,
-                            )
+                            );
                     },
                 }
             },

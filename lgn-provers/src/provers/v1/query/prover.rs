@@ -1,6 +1,6 @@
+use lgn_messages::types::v1::query::tasks::MatchingRowInput;
 use lgn_messages::types::v1::query::tasks::NonExistenceInput;
 use lgn_messages::types::v1::query::tasks::RowsChunkInput;
-use lgn_messages::types::v1::query::tasks::RowsEmbeddedProofInput;
 use parsil::assembler::DynamicCircuitPis;
 use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
@@ -10,7 +10,7 @@ pub trait StorageQueryProver
 {
     fn prove_universal_circuit(
         &self,
-        input: RowsEmbeddedProofInput,
+        input: MatchingRowInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>;
 

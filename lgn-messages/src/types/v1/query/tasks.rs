@@ -31,28 +31,37 @@ pub struct QueryInput
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum QueryStep
 {
+    /// Combine the rows and revelation proving for tabular queries in one task,
+    /// next step is Groth16
     #[serde(rename = "1")]
-    Prepare(Vec<QueryInputPart>),
+    Tabular(
+        Vec<MatchingRowInput>,
+        RevelationInput,
+    ),
 
+    /// Aggregation batching queries, next step is Revelation
     #[serde(rename = "2")]
+    Aggregation(Vec<AggregationInput>),
+
+    /// Revelation step, we only handle aggregation revelation for now, next step is Groth16
+    #[serde(rename = "3")]
     Revelation(RevelationInput),
 }
 
-#[derive(Dbg, Clone, Deserialize, Serialize)]
-pub enum QueryInputPart
+#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+pub struct MatchingRowInput
 {
-    #[serde(rename = "1")]
-    Aggregation(
-        ProofKey,
-        Box<ProofInputKind>,
-    ),
+    pub proof_key: ProofKey,
+    pub column_cells: RowCells,
+    pub placeholders: PlaceHolderLgn,
+    pub is_leaf: bool,
+}
 
-    // We only need to handle rows tree proving for now.
-    #[serde(rename = "2")]
-    Embedded(
-        ProofKey,
-        EmbeddedProofInputType,
-    ),
+#[derive(Dbg, Clone, Deserialize, Serialize)]
+pub struct AggregationInput
+{
+    pub proof_key: ProofKey,
+    pub input_kind: ProofInputKind,
 }
 
 #[derive(Clone, Dbg, Deserialize, Serialize)]
@@ -68,30 +77,14 @@ pub enum ProofInputKind
     NonExistence(Box<NonExistenceInput>),
 }
 
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub enum EmbeddedProofInputType
-{
-    #[serde(rename = "1")]
-    RowsTree(RowsEmbeddedProofInput),
-}
-
-#[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
-pub struct RowsEmbeddedProofInput
-{
-    pub column_cells: RowCells,
-
-    pub placeholders: PlaceHolderLgn,
-
-    pub is_leaf: bool,
-}
-
 #[derive(Clone, Dbg, Serialize, Deserialize)]
 pub struct HydratableMatchingRow
 {
-    pub proof: Hydratable<db_keys::ProofKey>,
+    pub proof: Hydratable<ProofKey>,
     pub path: RowPath,
     pub result: Vec<U256>,
 }
+
 impl HydratableMatchingRow
 {
     pub fn into_matching_row(self) -> MatchingRow

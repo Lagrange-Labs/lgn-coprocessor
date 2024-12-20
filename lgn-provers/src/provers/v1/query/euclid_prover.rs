@@ -1,7 +1,7 @@
 use anyhow::Context;
+use lgn_messages::types::v1::query::tasks::MatchingRowInput;
 use lgn_messages::types::v1::query::tasks::NonExistenceInput;
 use lgn_messages::types::v1::query::tasks::RowsChunkInput;
-use lgn_messages::types::v1::query::tasks::RowsEmbeddedProofInput;
 use lgn_messages::types::v1::query::NUM_CHUNKS;
 use lgn_messages::types::v1::query::NUM_ROWS;
 use metrics::histogram;
@@ -98,7 +98,7 @@ impl StorageQueryProver for EuclidQueryProver
 {
     fn prove_universal_circuit(
         &self,
-        input: RowsEmbeddedProofInput,
+        input: MatchingRowInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>
     {
