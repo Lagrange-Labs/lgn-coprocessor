@@ -19,7 +19,7 @@ pub const ROUTING_DOMAIN: &str = "sc";
 pub const NUM_CHUNKS: usize = 66;
 /// Maximum number of rows that can be proven in a single proof of batching query
 /// We must use the same value of this constant for both DQ and Worker.
-pub const NUM_ROWS: usize = 25;
+pub const NUM_ROWS: usize = 100;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct WorkerTask
