@@ -18,7 +18,7 @@ pub const MAX_NUM_RESULT_OPS: usize = 20;
 pub const MAX_NUM_RESULTS: usize = 10;
 pub const MAX_NUM_OUTPUTS: usize = 5;
 pub const MAX_NUM_ITEMS_PER_OUTPUT: usize = 5;
-pub const MAX_NUM_PLACEHOLDERS: usize = 10;
+pub const MAX_NUM_PLACEHOLDERS: usize = 5;
 pub const MAX_NUM_COLUMNS: usize = 20;
 pub const MAX_NUM_PREDICATE_OPS: usize = 20;
 
