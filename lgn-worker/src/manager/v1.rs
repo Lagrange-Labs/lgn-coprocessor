@@ -3,7 +3,6 @@ use lgn_messages::types::ProverType;
 use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskDifficulty;
 use lgn_messages::types::TaskType;
-use tracing::debug;
 
 use crate::config::Config;
 use crate::manager::ProversManager;
@@ -18,13 +17,11 @@ pub(crate) fn register_v1_provers(
         .instance_type
         >= TaskDifficulty::Small
     {
-        debug!("Creating v1 query prover");
         register_v1_query(
             config,
             manager,
         )
         .context("failed to register the query prover")?;
-        debug!("Query prover created");
     }
 
     if config
@@ -32,13 +29,11 @@ pub(crate) fn register_v1_provers(
         .instance_type
         >= TaskDifficulty::Medium
     {
-        debug!("Creating v1 preprocessing prover");
         register_v1_preprocessor(
             config,
             manager,
         )
         .context("failed to register the pre-processing prover")?;
-        debug!("Preprocessing prover created");
     }
 
     if config
@@ -46,13 +41,11 @@ pub(crate) fn register_v1_provers(
         .instance_type
         >= TaskDifficulty::Large
     {
-        debug!("Creating groth16 prover");
         register_v1_groth16(
             config,
             manager,
         )
         .context("failed to register the groth16 prover")?;
-        debug!("Groth16 prover created");
     }
 
     Ok(())

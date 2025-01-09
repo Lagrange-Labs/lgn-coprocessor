@@ -54,8 +54,7 @@ impl EuclidProver
         skip_store: bool,
     ) -> anyhow::Result<Self>
     {
-        debug!("Creating preprocessing prover");
-        let params = ParamsLoader::prepare_bincode(
+        let params = ParamsLoader::prepare_raw(
             url,
             dir,
             file,
@@ -63,7 +62,8 @@ impl EuclidProver
             skip_checksum,
             skip_store,
         )?;
-        debug!("Preprocessing prover created");
+        let reader = std::io::BufReader::new(params.as_ref());
+        let params = bincode::deserialize_from(reader)?;
         Ok(
             Self {
                 params,

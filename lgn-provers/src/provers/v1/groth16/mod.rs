@@ -1,5 +1,6 @@
 //! This module contains logic of generating the Groth16 proofs which could be verified on-chain.
 use prover::Prover;
+use tracing::debug;
 use tracing::info;
 
 use crate::provers::v1::groth16::task::Groth16;
@@ -28,13 +29,13 @@ pub fn create_prover(
 {
     let prover = {
         #[cfg(feature = "dummy-prover")]
-        {
-            info!("Creating dummy Groth16Prover");
+        let prover = {
+            info!("Creating dummy groth16 prover");
             dummy_prover::DummyProver
-        }
+        };
         #[cfg(not(feature = "dummy-prover"))]
-        {
-            info!("Creating Groth16Prover");
+        let prover = {
+            info!("Creating groth16 prover");
             euclid_prover::Groth16Prover::init(
                 url,
                 dir,
@@ -45,7 +46,10 @@ pub fn create_prover(
                 vk_file,
                 skip_store,
             )?
-        }
+        };
+
+        debug!("Groth16 prover created");
+        prover
     };
 
     Ok(Groth16::new(prover))
