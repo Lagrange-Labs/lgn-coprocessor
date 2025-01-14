@@ -17,17 +17,22 @@ use crate::types::v1::query::PlaceHolderLgn;
 use crate::types::v1::query::WorkerTask;
 use crate::types::v1::query::WorkerTaskType;
 
+/// Query input for a proving task
 #[derive(Dbg, Clone, Deserialize, Serialize)]
 pub struct QueryInput
 {
+    /// Proof storage key
     pub proof_key: ProofKey,
 
+    /// Query step info
     pub query_step: QueryStep,
 
+    /// Public inputs data
     #[dbg(placeholder = "...")]
     pub pis: Vec<u8>,
 }
 
+/// Query step info
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum QueryStep
 {
@@ -35,7 +40,9 @@ pub enum QueryStep
     /// next step is Groth16
     #[serde(rename = "1")]
     Tabular(
+        // Matching row inputs for a tabular query
         Vec<MatchingRowInput>,
+        // The corresponding revelation input
         RevelationInput,
     ),
 
@@ -48,35 +55,48 @@ pub enum QueryStep
     Revelation(RevelationInput),
 }
 
+/// Matching row input for a tabular query
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct MatchingRowInput
 {
+    /// Proof key of this row proof
     pub proof_key: ProofKey,
+    /// Collumn cells info
     pub column_cells: RowCells,
+    /// The placeholders
     pub placeholders: PlaceHolderLgn,
+    /// Flag to identify if it's a leaf
     pub is_leaf: bool,
 }
 
+/// Input of an aggregation (batching) query
 #[derive(Dbg, Clone, Deserialize, Serialize)]
 pub struct AggregationInput
 {
+    /// Proof key of this aggregation proof
     pub proof_key: ProofKey,
+    /// Different proof inputs of an aggregation query
     pub input_kind: ProofInputKind,
 }
 
+/// Different proof inputs of an aggregation (batching) query
 #[derive(Clone, Dbg, Deserialize, Serialize)]
 pub enum ProofInputKind
 {
+    /// Rows chunk input
     #[serde(rename = "1")]
     RowsChunk(RowsChunkInput),
 
+    /// Chunk aggregation input
     #[serde(rename = "2")]
     ChunkAggregation(ChunkAggregationInput),
 
+    /// Non existence input
     #[serde(rename = "3")]
     NonExistence(Box<NonExistenceInput>),
 }
 
+/// Handling a matching row proof, it could contain a proof key or the proof data.
 #[derive(Clone, Dbg, Serialize, Deserialize)]
 pub struct HydratableMatchingRow
 {
@@ -196,9 +216,11 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K>
     }
 }
 
+/// Revelation input
 #[derive(Clone, Dbg, Deserialize, Serialize)]
 pub enum RevelationInput
 {
+    /// Input for an aggregation query
     Aggregated
     {
         placeholders: PlaceHolderLgn,
@@ -213,6 +235,7 @@ pub enum RevelationInput
         #[allow(unused_variables)]
         query_proof: Hydratable<ProofKey>,
     },
+    /// Input for a tabular query
     Tabular
     {
         placeholders: PlaceHolderLgn,
@@ -224,6 +247,7 @@ pub enum RevelationInput
     },
 }
 
+/// Non existence input of an aggregation query
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct NonExistenceInput
 {
@@ -249,6 +273,7 @@ impl From<&WorkerTask> for ProofKey
     }
 }
 
+/// Rows chunk input of an aggregation query
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
 pub struct RowsChunkInput
 {
@@ -257,6 +282,7 @@ pub struct RowsChunkInput
     pub placeholders: PlaceHolderLgn,
 }
 
+/// Chunk aggregation input of an aggregation query
 #[derive(Clone, Dbg, Deserialize, Serialize)]
 pub struct ChunkAggregationInput
 {
