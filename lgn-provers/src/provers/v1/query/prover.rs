@@ -1,8 +1,6 @@
+use lgn_messages::types::v1::query::tasks::MatchingRowInput;
 use lgn_messages::types::v1::query::tasks::NonExistenceInput;
-use lgn_messages::types::v1::query::tasks::PartialNodeInput;
-use lgn_messages::types::v1::query::tasks::RowsEmbeddedProofInput;
-use lgn_messages::types::v1::query::tasks::SinglePathBranchInput;
-use lgn_messages::types::v1::query::tasks::SinglePathLeafInput;
+use lgn_messages::types::v1::query::tasks::RowsChunkInput;
 use parsil::assembler::DynamicCircuitPis;
 use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
@@ -10,42 +8,34 @@ use verifiable_db::revelation::api::MatchingRow;
 
 pub trait StorageQueryProver
 {
+    /// Generate an universal circuit proof of a tabular query.
     fn prove_universal_circuit(
         &self,
-        input: RowsEmbeddedProofInput,
+        input: MatchingRowInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>;
 
-    fn prove_full_node(
+    /// Generate a rows chunks proof of an aggregation (batching) query.
+    fn prove_row_chunks(
         &self,
-        embedded_tree_proof: Vec<u8>,
-        left_child_proof: Vec<u8>,
-        right_child_proof: Vec<u8>,
+        input: RowsChunkInput,
         pis: &DynamicCircuitPis,
-        is_rows_tree_node: bool,
     ) -> anyhow::Result<Vec<u8>>;
 
-    fn prove_partial_node(
+    /// Generate a chunk aggregation proof of an aggregation query.
+    fn prove_chunk_aggregation(
         &self,
-        input: PartialNodeInput,
-        embedded_proof: Vec<u8>,
-        pis: &DynamicCircuitPis,
+        chunks_proofs: &[Vec<u8>],
     ) -> anyhow::Result<Vec<u8>>;
 
-    fn prove_single_path_leaf(
+    /// Generate the proof for no rows satisfying the primary index query range.
+    fn prove_non_existence(
         &self,
-        input: SinglePathLeafInput,
-        embedded_proof: Vec<u8>,
+        input: NonExistenceInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>;
 
-    fn prove_single_path_branch(
-        &self,
-        input: SinglePathBranchInput,
-        child_proof: Vec<u8>,
-        pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Vec<u8>>;
-
+    /// Generate a revelation proof for an aggregation query.
     fn prove_aggregated_revelation(
         &self,
         pis: &DynamicCircuitPis,
@@ -54,6 +44,7 @@ pub trait StorageQueryProver
         indexing_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
 
+    /// Generate a revelation proof for a tabular query.
     #[allow(clippy::too_many_arguments)]
     fn prove_tabular_revelation(
         &self,
@@ -64,11 +55,5 @@ pub trait StorageQueryProver
         column_ids: &ColumnIDs,
         limit: u32,
         offset: u32,
-    ) -> anyhow::Result<Vec<u8>>;
-
-    fn prove_non_existence(
-        &self,
-        input: NonExistenceInput,
-        pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>;
 }

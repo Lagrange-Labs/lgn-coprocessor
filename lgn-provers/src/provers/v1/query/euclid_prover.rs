@@ -1,24 +1,20 @@
 use anyhow::Context;
+use lgn_messages::types::v1::query::tasks::MatchingRowInput;
 use lgn_messages::types::v1::query::tasks::NonExistenceInput;
-use lgn_messages::types::v1::query::tasks::PartialNodeInput;
-use lgn_messages::types::v1::query::tasks::RowsEmbeddedProofInput;
-use lgn_messages::types::v1::query::tasks::SinglePathBranchInput;
-use lgn_messages::types::v1::query::tasks::SinglePathLeafInput;
+use lgn_messages::types::v1::query::tasks::RowsChunkInput;
+use lgn_messages::types::v1::query::NUM_CHUNKS;
+use lgn_messages::types::v1::query::NUM_ROWS;
 use metrics::histogram;
 use parsil::assembler::DynamicCircuitPis;
 use tracing::debug;
 use tracing::info;
 use verifiable_db::api::QueryCircuitInput;
 use verifiable_db::api::QueryParameters;
-use verifiable_db::query::aggregation::QueryHashNonExistenceCircuits;
-use verifiable_db::query::aggregation::SubProof;
 use verifiable_db::query::api::CircuitInput;
 use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
+use verifiable_db::revelation;
 use verifiable_db::revelation::api::MatchingRow;
-use verifiable_db::revelation::{
-    self,
-};
 
 use super::prover::StorageQueryProver;
 use super::INDEX_TREE_MAX_DEPTH;
@@ -34,6 +30,8 @@ use crate::params::ParamsLoader;
 pub(crate) struct EuclidQueryProver
 {
     params: QueryParameters<
+        NUM_CHUNKS,
+        NUM_ROWS,
         ROW_TREE_MAX_DEPTH,
         INDEX_TREE_MAX_DEPTH,
         MAX_NUM_COLUMNS,
@@ -50,6 +48,8 @@ impl EuclidQueryProver
     #[allow(dead_code)]
     pub fn new(
         params: QueryParameters<
+            NUM_CHUNKS,
+            NUM_ROWS,
             ROW_TREE_MAX_DEPTH,
             INDEX_TREE_MAX_DEPTH,
             MAX_NUM_COLUMNS,
@@ -98,7 +98,7 @@ impl StorageQueryProver for EuclidQueryProver
 {
     fn prove_universal_circuit(
         &self,
-        input: RowsEmbeddedProofInput,
+        input: MatchingRowInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>
     {
@@ -144,34 +144,37 @@ impl StorageQueryProver for EuclidQueryProver
         Ok(proof)
     }
 
-    fn prove_full_node(
+    fn prove_row_chunks(
         &self,
-        embedded_tree_proof: Vec<u8>,
-        left_child_proof: Vec<u8>,
-        right_child_proof: Vec<u8>,
+        input: RowsChunkInput,
         pis: &DynamicCircuitPis,
-        is_rows_tree_node: bool,
     ) -> anyhow::Result<Vec<u8>>
     {
-        debug!("Proving full node");
+        debug!("Proving row-chunks");
 
         let now = std::time::Instant::now();
 
-        let circuit_input = CircuitInput::new_full_node(
-            left_child_proof,
-            right_child_proof,
-            embedded_tree_proof,
-            is_rows_tree_node,
-            &pis.bounds,
-        )
-        .context("while initializating the full node circuit")?;
+        let placeholders = input
+            .placeholders
+            .into();
 
-        let input = QueryCircuitInput::Query(circuit_input);
+        let input = CircuitInput::new_row_chunks_input(
+            &input.rows,
+            &pis.predication_operations,
+            &placeholders,
+            &pis.bounds,
+            &pis.result,
+        )
+        .context("while initializing the rows-chunk circuit")?;
+
+        let input = QueryCircuitInput::Query(input);
+
         let proof = self
             .params
-            .generate_proof(input)?;
+            .generate_proof(input)
+            .context("while generating proof for the rows-chunk circuit")?;
 
-        let proof_type = "full_node";
+        let proof_type = "rows_chunk";
         let time = now
             .elapsed()
             .as_secs_f32();
@@ -184,41 +187,33 @@ impl StorageQueryProver for EuclidQueryProver
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         debug!(
-            "full node size in kB: {}",
+            "rows-chunk size in kB: {}",
             proof.len() / 1024
         );
 
         Ok(proof)
     }
 
-    fn prove_partial_node(
+    fn prove_chunk_aggregation(
         &self,
-        input: PartialNodeInput,
-        embedded_proof: Vec<u8>,
-        pis: &DynamicCircuitPis,
+        chunks_proofs: &[Vec<u8>],
     ) -> anyhow::Result<Vec<u8>>
     {
-        debug!("Proving partial node");
+        debug!("Proving row-chunks");
 
         let now = std::time::Instant::now();
 
-        let circuit_input = CircuitInput::new_partial_node(
-            input.proven_child_proof,
-            embedded_proof,
-            input.unproven_child_info,
-            input.proven_child_position,
-            input.is_rows_tree_node,
-            &pis.bounds,
-        )
-        .context("while initializing the partial node circuit")?;
+        let input = CircuitInput::new_chunk_aggregation_input(chunks_proofs)
+            .context("while initializing the chunk-aggregation circuit")?;
 
-        let input = QueryCircuitInput::Query(circuit_input);
+        let input = QueryCircuitInput::Query(input);
+
         let proof = self
             .params
             .generate_proof(input)
-            .context("while generating proof from the partial node circuit")?;
+            .context("while generating proof for the chunk-aggregation circuit")?;
 
-        let proof_type = "partial_node";
+        let proof_type = "chunk_aggregation";
         let time = now
             .elapsed()
             .as_secs_f32();
@@ -231,42 +226,45 @@ impl StorageQueryProver for EuclidQueryProver
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         debug!(
-            "partial node size in kB: {}",
+            "chunk-aggregation size in kB: {}",
             proof.len() / 1024
         );
 
         Ok(proof)
     }
 
-    fn prove_single_path_leaf(
+    fn prove_non_existence(
         &self,
-        input: SinglePathLeafInput,
-        embedded_proof: Vec<u8>,
+        input: NonExistenceInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>>
     {
-        debug!("Proving single path leaf");
+        debug!("Proving non-existence");
 
         let now = std::time::Instant::now();
 
-        let circuit_input = CircuitInput::new_single_path(
-            SubProof::new_embedded_tree_proof(embedded_proof)?,
-            input.left_child_info,
-            input.right_child_info,
-            input.node_info,
-            input.is_rows_tree_node,
+        let placeholders = input
+            .placeholders
+            .into();
+
+        let input = CircuitInput::new_non_existence_input(
+            input.index_path,
+            &input.column_ids,
+            &pis.predication_operations,
+            &pis.result,
+            &placeholders,
             &pis.bounds,
         )
-        .context("while initializing the single path circuit")?;
+        .context("while initializing the non-existence circuit")?;
 
-        let input = QueryCircuitInput::Query(circuit_input);
+        let input = QueryCircuitInput::Query(input);
 
         let proof = self
             .params
             .generate_proof(input)
-            .context("while generating proof from the single path circuit")?;
+            .context("while generating proof for the non-existence circuit")?;
 
-        let proof_type = "single_path_leaf";
+        let proof_type = "non_existence";
         let time = now
             .elapsed()
             .as_secs_f32();
@@ -279,57 +277,7 @@ impl StorageQueryProver for EuclidQueryProver
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         debug!(
-            "single path leaf size in kB: {}",
-            proof.len() / 1024
-        );
-
-        Ok(proof)
-    }
-
-    fn prove_single_path_branch(
-        &self,
-        input: SinglePathBranchInput,
-        child_proof: Vec<u8>,
-        pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Vec<u8>>
-    {
-        debug!("Proving single path branch");
-
-        let now = std::time::Instant::now();
-
-        let circuit_input = CircuitInput::new_single_path(
-            SubProof::new_child_proof(
-                child_proof,
-                input.child_position,
-            )?,
-            input.left_child_info,
-            input.right_child_info,
-            input.node_info,
-            input.is_rows_tree_node,
-            &pis.bounds,
-        )
-        .context("while initializing the single path circuit")?;
-        let input = QueryCircuitInput::Query(circuit_input);
-
-        let proof = self
-            .params
-            .generate_proof(input)
-            .context("while generating proof for the single path circuit")?;
-
-        let proof_type = "single_path_branch";
-        let time = now
-            .elapsed()
-            .as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!(
-            "single path branch size in kB: {}",
+            "non-existence size in kB: {}",
             proof.len() / 1024
         );
 
@@ -432,86 +380,6 @@ impl StorageQueryProver for EuclidQueryProver
 
         debug!(
             "revelation size in kB: {}",
-            proof.len() / 1024
-        );
-
-        Ok(proof)
-    }
-
-    fn prove_non_existence(
-        &self,
-        input: NonExistenceInput,
-        pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Vec<u8>>
-    {
-        debug!("Proving non-existence");
-
-        let now = std::time::Instant::now();
-
-        let primary_column_id = input.column_ids[0];
-        let secondary_column_id = input.column_ids[1];
-        let rest_column_ids = input.column_ids[2..].to_vec();
-        let v_column_ids = ColumnIDs::new(
-            primary_column_id,
-            secondary_column_id,
-            rest_column_ids,
-        );
-
-        let placeholders = input
-            .placeholders
-            .into();
-        let query_hashes = QueryHashNonExistenceCircuits::new::<
-            MAX_NUM_COLUMNS,
-            MAX_NUM_PREDICATE_OPS,
-            MAX_NUM_RESULT_OPS,
-            MAX_NUM_ITEMS_PER_OUTPUT,
-        >(
-            &v_column_ids,
-            &pis.predication_operations,
-            &pis.result,
-            &placeholders,
-            &pis.bounds,
-            input.is_rows_tree_node,
-        )?;
-
-        let input = CircuitInput::new_non_existence_input(
-            input.node_info,
-            input.left_child_info,
-            input.right_child_info,
-            input.primary_index_value,
-            &[
-                primary_column_id,
-                secondary_column_id,
-            ],
-            &pis.query_aggregations,
-            query_hashes,
-            input.is_rows_tree_node,
-            &pis.bounds,
-            &placeholders,
-        )
-        .context("while initializing the non-existence circuit")?;
-
-        let input = QueryCircuitInput::Query(input);
-
-        let proof = self
-            .params
-            .generate_proof(input)
-            .context("while generating proof for the non-existence circuit")?;
-
-        let proof_type = "non_existence";
-        let time = now
-            .elapsed()
-            .as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!(
-            "non-existence size in kB: {}",
             proof.len() / 1024
         );
 

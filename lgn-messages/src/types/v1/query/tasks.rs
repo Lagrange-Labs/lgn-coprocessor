@@ -4,8 +4,8 @@ use alloy_primitives::U256;
 use derive_debug_plus::Dbg;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
-use verifiable_db::query::aggregation::ChildPosition;
-use verifiable_db::query::aggregation::NodeInfo;
+use verifiable_db::query::api::RowInput;
+use verifiable_db::query::api::TreePathInputs;
 use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::RowCells;
 use verifiable_db::revelation::api::MatchingRow;
@@ -17,162 +17,94 @@ use crate::types::v1::query::PlaceHolderLgn;
 use crate::types::v1::query::WorkerTask;
 use crate::types::v1::query::WorkerTaskType;
 
+/// Query input for a proving task
 #[derive(Dbg, Clone, Deserialize, Serialize)]
 pub struct QueryInput
 {
+    /// Proof storage key
     pub proof_key: ProofKey,
 
+    /// Query step info
     pub query_step: QueryStep,
 
+    /// Public inputs data
     #[dbg(placeholder = "...")]
     pub pis: Vec<u8>,
 }
 
+/// Query step info
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum QueryStep
 {
+    /// Combine the rows and revelation proving for tabular queries in one task,
+    /// next step is Groth16
     #[serde(rename = "1")]
-    Prepare(Vec<QueryInputPart>),
+    Tabular(
+        // Matching row inputs for a tabular query
+        Vec<MatchingRowInput>,
+        // The corresponding revelation input
+        RevelationInput,
+    ),
 
+    /// Aggregation batching queries, next step is Revelation
     #[serde(rename = "2")]
+    Aggregation(AggregationInput),
+
+    /// Revelation step, we only handle aggregation revelation for now, next step is Groth16
+    #[serde(rename = "3")]
     Revelation(RevelationInput),
 }
 
-#[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
-pub struct QueryInputPart
+/// Matching row input for a tabular query
+#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+pub struct MatchingRowInput
 {
+    /// Proof key of this row proof
     pub proof_key: ProofKey,
-
-    pub embedded_proof_input: Option<EmbeddedProofInputType>,
-
-    pub aggregation_input_kind: Option<ProofInputKind>,
-}
-
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub enum ProofInputKind
-{
-    /// Match in the end of path or not matched branch
-    #[serde(rename = "1")]
-    SinglePathLeaf(SinglePathLeafInput),
-
-    /// Match in the middle of path
-    #[serde(rename = "2")]
-    SinglePathBranch(SinglePathBranchInput),
-
-    /// Node in tree with only one child
-    #[serde(rename = "3")]
-    PartialNode(PartialNodeInput),
-
-    /// Node in tree with both children
-    #[serde(rename = "4")]
-    FullNode(FullNodeInput),
-
-    NonExistence(NonExistenceInput),
-}
-
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct FullNodeInput
-{
-    pub is_rows_tree_node: bool,
-
-    pub left_child_proof_location: ProofKey,
-
-    #[dbg(placeholder = "...")]
-    pub left_child_proof: Vec<u8>,
-
-    pub right_child_proof_location: ProofKey,
-
-    #[dbg(placeholder = "...")]
-    pub right_child_proof: Vec<u8>,
-}
-
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct PartialNodeInput
-{
-    pub proven_child_position: ChildPosition,
-
-    pub proven_child_proof_location: ProofKey,
-
-    #[dbg(placeholder = "...")]
-    pub proven_child_proof: Vec<u8>,
-
-    pub unproven_child_info: Option<NodeInfo>,
-
-    pub is_rows_tree_node: bool,
-}
-
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub enum EmbeddedProofInputType
-{
-    #[serde(rename = "1")]
-    RowsTree(RowsEmbeddedProofInput),
-
-    #[serde(rename = "2")]
-    IndexTree(IndexEmbeddedProofInput),
-}
-
-#[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
-pub struct RowsEmbeddedProofInput
-{
+    /// Collumn cells info
     pub column_cells: RowCells,
-
+    /// The placeholders
     pub placeholders: PlaceHolderLgn,
-
+    /// Flag to identify if it's a leaf
     pub is_leaf: bool,
 }
 
-#[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
-pub struct IndexEmbeddedProofInput
+/// Input of an aggregation (batching) query
+#[derive(Dbg, Clone, Deserialize, Serialize)]
+pub struct AggregationInput
 {
-    pub rows_proof_key: ProofKey,
-
-    #[dbg(placeholder = "...")]
-    pub rows_proof: Vec<u8>,
+    /// Proof key of this aggregation proof
+    pub proof_key: ProofKey,
+    /// Different proof inputs of an aggregation query
+    pub input_kind: ProofInputKind,
 }
 
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct SinglePathBranchInput
+/// Different proof inputs of an aggregation (batching) query
+#[derive(Clone, Dbg, Deserialize, Serialize)]
+pub enum ProofInputKind
 {
-    pub node_info: NodeInfo,
+    /// Rows chunk input
+    #[serde(rename = "1")]
+    RowsChunk(RowsChunkInput),
 
-    pub left_child_info: Option<NodeInfo>,
+    /// Chunk aggregation input
+    #[serde(rename = "2")]
+    ChunkAggregation(ChunkAggregationInput),
 
-    pub right_child_info: Option<NodeInfo>,
-
-    pub child_position: ChildPosition,
-
-    pub proven_child_location: ProofKey,
-
-    #[dbg(placeholder = "...")]
-    pub proven_child_proof: Vec<u8>,
-
-    pub is_rows_tree_node: bool,
+    /// Non existence input
+    #[serde(rename = "3")]
+    NonExistence(Box<NonExistenceInput>),
 }
 
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct SinglePathLeafInput
-{
-    pub node_info: NodeInfo,
-
-    pub left_child_info: Option<NodeInfo>,
-
-    pub right_child_info: Option<NodeInfo>,
-
-    pub is_rows_tree_node: bool,
-
-    pub embedded_proof_location: Option<ProofKey>,
-
-    #[dbg(placeholder = "...")]
-    pub embedded_proof: Vec<u8>,
-}
-
+/// Handling a matching row proof, it could contain a proof key or the proof data.
 #[derive(Clone, Dbg, Serialize, Deserialize)]
 pub struct HydratableMatchingRow
 {
-    pub proof: Hydratable<db_keys::ProofKey>,
+    pub proof: Hydratable<ProofKey>,
     pub path: RowPath,
     pub result: Vec<U256>,
 }
+
 impl HydratableMatchingRow
 {
     pub fn into_matching_row(self) -> MatchingRow
@@ -284,9 +216,11 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K>
     }
 }
 
+/// Revelation input
 #[derive(Clone, Dbg, Deserialize, Serialize)]
 pub enum RevelationInput
 {
+    /// Input for an aggregation query
     Aggregated
     {
         placeholders: PlaceHolderLgn,
@@ -301,6 +235,7 @@ pub enum RevelationInput
         #[allow(unused_variables)]
         query_proof: Hydratable<ProofKey>,
     },
+    /// Input for a tabular query
     Tabular
     {
         placeholders: PlaceHolderLgn,
@@ -312,22 +247,15 @@ pub enum RevelationInput
     },
 }
 
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
+/// Non existence input of an aggregation query
+#[derive(Clone, Dbg, Deserialize, Serialize)]
 pub struct NonExistenceInput
 {
-    pub column_ids: Vec<u64>,
+    pub index_path: TreePathInputs,
+
+    pub column_ids: ColumnIDs,
 
     pub placeholders: PlaceHolderLgn,
-
-    pub is_rows_tree_node: bool,
-
-    pub node_info: NodeInfo,
-
-    pub left_child_info: Option<NodeInfo>,
-
-    pub right_child_info: Option<NodeInfo>,
-
-    pub primary_index_value: U256,
 }
 
 impl From<&WorkerTask> for ProofKey
@@ -343,4 +271,20 @@ impl From<&WorkerTask> for ProofKey
             },
         }
     }
+}
+
+/// Rows chunk input of an aggregation query
+#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
+pub struct RowsChunkInput
+{
+    pub rows: Vec<RowInput>,
+
+    pub placeholders: PlaceHolderLgn,
+}
+
+/// Chunk aggregation input of an aggregation query
+#[derive(Clone, Dbg, Deserialize, Serialize)]
+pub struct ChunkAggregationInput
+{
+    pub child_proofs: Vec<Hydratable<ProofKey>>,
 }
