@@ -243,22 +243,13 @@ impl StorageQueryProver for EuclidQueryProver
 
         let now = std::time::Instant::now();
 
-        let primary_column_id = input.column_ids[0];
-        let secondary_column_id = input.column_ids[1];
-        let rest_column_ids = input.column_ids[2..].to_vec();
-        let v_column_ids = ColumnIDs::new(
-            primary_column_id,
-            secondary_column_id,
-            rest_column_ids,
-        );
-
         let placeholders = input
             .placeholders
             .into();
 
         let input = CircuitInput::new_non_existence_input(
             input.index_path,
-            &v_column_ids,
+            &input.column_ids,
             &pis.predication_operations,
             &pis.result,
             &placeholders,

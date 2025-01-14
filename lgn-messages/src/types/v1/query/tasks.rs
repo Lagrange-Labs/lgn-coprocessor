@@ -248,12 +248,12 @@ pub enum RevelationInput
 }
 
 /// Non existence input of an aggregation query
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
+#[derive(Clone, Dbg, Deserialize, Serialize)]
 pub struct NonExistenceInput
 {
     pub index_path: TreePathInputs,
 
-    pub column_ids: Vec<u64>,
+    pub column_ids: ColumnIDs,
 
     pub placeholders: PlaceHolderLgn,
 }
