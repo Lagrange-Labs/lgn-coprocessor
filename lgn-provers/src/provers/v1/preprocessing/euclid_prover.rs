@@ -458,8 +458,8 @@ impl StorageDatabaseProver for EuclidProver
         }
         else
         {
-            // TODO: provide empty
-            unimplemented!("No cells proof provided")
+            self.params
+                .empty_cell_tree_proof()?
         };
 
         let input = RowsTree(
@@ -486,6 +486,15 @@ impl StorageDatabaseProver for EuclidProver
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>
     {
+        let cells_proof = if !cells_proof.is_empty()
+        {
+            cells_proof
+        }
+        else
+        {
+            self.params
+                .empty_cell_tree_proof()?
+        };
         let input = RowsTree(
             verifiable_db::row_tree::CircuitInput::partial(
                 identifier,
@@ -511,6 +520,15 @@ impl StorageDatabaseProver for EuclidProver
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>
     {
+        let cells_proof = if !cells_proof.is_empty()
+        {
+            cells_proof
+        }
+        else
+        {
+            self.params
+                .empty_cell_tree_proof()?
+        };
         let input = RowsTree(
             verifiable_db::row_tree::CircuitInput::full(
                 identifier,
