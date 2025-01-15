@@ -1,3 +1,4 @@
+use tracing::debug;
 use tracing::info;
 
 use crate::provers::v1::query::prover::StorageQueryProver;
@@ -34,15 +35,15 @@ pub fn create_prover(
 {
     let prover = {
         #[cfg(feature = "dummy-prover")]
-        {
+        let prover = {
             use dummy_prover::DummyProver;
-            info!("Creating dummy storage prover");
+            info!("Creating dummy query prover");
             DummyProver
-        }
+        };
 
         #[cfg(not(feature = "dummy-prover"))]
-        {
-            info!("Creating storage prover");
+        let prover = {
+            info!("Creating query prover");
 
             euclid_prover::EuclidQueryProver::init(
                 url,
@@ -52,7 +53,11 @@ pub fn create_prover(
                 skip_checksum,
                 skip_store,
             )?
-        }
+        };
+
+        debug!("Query prover created");
+
+        prover
     };
 
     Ok(Querying::new(prover))

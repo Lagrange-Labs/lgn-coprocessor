@@ -1,3 +1,4 @@
+use tracing::debug;
 use tracing::info;
 
 use crate::provers::v1::preprocessing::prover::StorageDatabaseProver;
@@ -24,15 +25,15 @@ pub fn create_prover(
 {
     let prover = {
         #[cfg(feature = "dummy-prover")]
-        {
+        let prover = {
             use dummy_prover::DummyProver;
-            info!("Creating dummy storage prover");
+            info!("Creating dummy preprocessing prover");
             DummyProver
-        }
+        };
 
         #[cfg(not(feature = "dummy-prover"))]
-        {
-            info!("Creating storage prover");
+        let prover = {
+            info!("Creating preprocessing prover");
             euclid_prover::EuclidProver::init(
                 url,
                 dir,
@@ -41,7 +42,9 @@ pub fn create_prover(
                 skip_checksum,
                 skip_store,
             )?
-        }
+        };
+        debug!("Preprocessing prover created");
+        prover
     };
 
     Ok(Preprocessing::new(prover))

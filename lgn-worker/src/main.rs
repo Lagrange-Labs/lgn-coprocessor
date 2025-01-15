@@ -32,6 +32,7 @@ use tokio::io::AsyncWriteExt;
 use tokio_stream::StreamExt;
 use tonic::metadata::MetadataValue;
 use tonic::Request;
+use tracing::debug;
 use tracing::error;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
@@ -204,7 +205,7 @@ async fn run(cli: Cli) -> Result<()>
 
     let config = Config::load(cli.config);
     config.validate();
-    info!(
+    debug!(
         "Loaded configuration: {:?}",
         config
     );
@@ -269,13 +270,6 @@ async fn maybe_verify_checksums(config: &Config) -> Result<()>
         return Ok(());
     }
 
-    info!("Verifying the checksums");
-
-    // Fetch checksum file
-    // The checksum file can be generated in two ways.
-    // 1- Run the worker, and it will download and spit out the checksum on disk
-    // 2- Manually download the params then install with the checksums bin crate and run checksums
-    // -c -r zkmr_params -a BLAKE3
     let checksum_url = &config
         .public_params
         .checksum_url;
@@ -330,7 +324,10 @@ async fn run_with_grpc(
 
     maybe_verify_checksums(config).await?;
 
-    info!("Connecting to Gateway at uri `{uri}`");
+    info!(
+        "Connecting to the gateway using gRPC. grpc_url: {}",
+        grpc_url
+    );
     let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
 
     let wallet = get_wallet(config)?;
@@ -653,7 +650,7 @@ fn run_with_websocket(config: &Config) -> Result<()>
     let lagrange_wallet = get_wallet(config)?;
 
     info!(
-        "Connecting to the gateway. gateway_url: {}",
+        "Connecting to the Gateway using websocket. gateway_url: {}",
         &config
             .avs
             .gateway_url
@@ -727,22 +724,6 @@ fn run_with_websocket(config: &Config) -> Result<()>
             },
         )?;
 
-    // Fetch checksum file
-    // The checksum file can be generated in two ways.
-    // 1- Run the worker, and it will download and spit out the checksum on disk
-    // 2- Manually download the params then install with the checksums bin crate and run checksums
-    // -c -r zkmr_params -a BLAKE3
-    let checksum_url = &config
-        .public_params
-        .checksum_url;
-    let expected_checksums_file = &config
-        .public_params
-        .checksum_expected_local_path;
-    fetch_checksum_file(
-        checksum_url,
-        expected_checksums_file,
-    )?;
-
     let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
     register_v1_provers(
         config,
@@ -754,6 +735,16 @@ fn run_with_websocket(config: &Config) -> Result<()>
         .public_params
         .skip_checksum
     {
+        let checksum_url = &config
+            .public_params
+            .checksum_url;
+        let expected_checksums_file = &config
+            .public_params
+            .checksum_expected_local_path;
+        fetch_checksum_file(
+            checksum_url,
+            expected_checksums_file,
+        )?;
         verify_directory_checksums(
             &config
                 .public_params
