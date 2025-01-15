@@ -725,6 +725,19 @@ fn run_with_websocket(config: &Config) -> Result<()>
         )?;
 
     let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
+
+    // Always download the checksum files, this is needed by the prover constructor
+    let checksum_url = &config
+        .public_params
+        .checksum_url;
+    let expected_checksums_file = &config
+        .public_params
+        .checksum_expected_local_path;
+    fetch_checksum_file(
+        checksum_url,
+        expected_checksums_file,
+    )?;
+
     register_v1_provers(
         config,
         &mut provers_manager,
@@ -735,16 +748,6 @@ fn run_with_websocket(config: &Config) -> Result<()>
         .public_params
         .skip_checksum
     {
-        let checksum_url = &config
-            .public_params
-            .checksum_url;
-        let expected_checksums_file = &config
-            .public_params
-            .checksum_expected_local_path;
-        fetch_checksum_file(
-            checksum_url,
-            expected_checksums_file,
-        )?;
         verify_directory_checksums(
             &config
                 .public_params
