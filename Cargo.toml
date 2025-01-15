@@ -55,6 +55,22 @@ tungstenite = "0.24"
 plonky2 = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }
 plonky2_field = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }
 
+[profile.dev]
+# Reference: https://doc.rust-lang.org/cargo/reference/profiles.html#dev
+# Proving is too slow without optimizations
+opt-level = 3
+
+[profile.release]
+# Reference: https://doc.rust-lang.org/cargo/reference/profiles.html#release
+# Proving is a bottleneck, enable agressive optimizations.
+# Reference: https://nnethercote.github.io/perf-book/build-configuration.html#codegen-units
+codegen-units = 1
+lto = "fat"
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true
+
 [workspace.metadata.cargo-machete]
 ignored = ["serde", "prost"]
 # [patch."https://github.com/Lagrange-Labs/mapreduce-plonky2.git"]
