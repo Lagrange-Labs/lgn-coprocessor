@@ -95,7 +95,8 @@ cat lgn-worker/src/config/default.toml
 3. Update the system maximum stack size to unlimited
 
 ```sh
-ulimit -s unlimited
+ulimit -s 100000000 # Only run the worker on one machine
+ulimit -s unlimited # Run the worker with other services on one machine (not recommended)
 ```
 
 4. Build and run the worker
