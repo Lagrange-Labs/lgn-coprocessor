@@ -2,6 +2,7 @@ use config::FileFormat;
 use lazy_static_include::*;
 use lgn_messages::types::TaskDifficulty;
 use redact::Secret;
+use reqwest::Url;
 use serde_derive::Deserialize;
 use tracing::debug;
 
@@ -21,8 +22,9 @@ pub(crate) struct Config
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct PublicParamsConfig
 {
-    pub(crate) url: String,
-    pub(crate) checksum_url: String,
+    // We will build the URLs with the mp2 version in functions
+    url: String,
+    checksum_url: String,
     pub(crate) checksum_expected_local_path: String,
     pub(crate) skip_checksum: bool,
     pub(crate) dir: String,
@@ -67,6 +69,24 @@ impl PublicParamsConfig
             .validate();
         self.groth16_assets
             .validate();
+    }
+
+    /// Get the build URL with the path of mp2 version.
+    pub fn url(&self) -> anyhow::Result<String>
+    {
+        let url = Url::parse(&self.url)?;
+        let url = add_mp2_version_path_to_url(url)?;
+
+        Ok(url.to_string())
+    }
+
+    /// Get the build checksum URL with the path of mp2 version.
+    pub fn checksum_url(&self) -> anyhow::Result<String>
+    {
+        let url = Url::parse(&self.checksum_url)?;
+        let url = add_mp2_version_path_to_url(url)?;
+
+        Ok(url.to_string())
     }
 }
 
@@ -263,4 +283,14 @@ impl Config
         self.avs
             .validate();
     }
+}
+
+/// Add mp2 version as a path to the base URL.
+/// e.g. https://base.com/MP2_VERSION
+fn add_mp2_version_path_to_url(url: Url) -> anyhow::Result<Url>
+{
+    let mp2_ver = mp2_common::git::short_git_version();
+    let url = url.join(&mp2_ver)?;
+
+    Ok(url)
 }
