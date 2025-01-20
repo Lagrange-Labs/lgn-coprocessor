@@ -272,7 +272,8 @@ async fn maybe_verify_checksums(config: &Config) -> Result<()>
 
     let checksum_url = &config
         .public_params
-        .checksum_url()?;
+        .checksum_file_url()?
+        .to_string();
     let expected_checksums_file = &config
         .public_params
         .checksum_expected_local_path;
@@ -729,7 +730,8 @@ fn run_with_websocket(config: &Config) -> Result<()>
     // Always download the checksum files, this is needed by the prover constructor
     let checksum_url = &config
         .public_params
-        .checksum_url()?;
+        .checksum_file_url()?
+        .to_string();
     let expected_checksums_file = &config
         .public_params
         .checksum_expected_local_path;

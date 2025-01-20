@@ -109,7 +109,8 @@ fn main() -> Result<()>
 
     let checksum_url = &config
         .public_params
-        .checksum_url()?;
+        .checksum_file_url()?
+        .to_string();
     let expected_checksums_file = &config
         .public_params
         .checksum_expected_local_path;

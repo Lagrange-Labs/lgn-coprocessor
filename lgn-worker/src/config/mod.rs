@@ -1,6 +1,7 @@
 use config::FileFormat;
 use lazy_static_include::*;
 use lgn_messages::types::TaskDifficulty;
+use lgn_provers::params::PARAMS_CHECKSUM_FILENAME;
 use redact::Secret;
 use reqwest::Url;
 use serde_derive::Deserialize;
@@ -22,9 +23,7 @@ pub(crate) struct Config
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct PublicParamsConfig
 {
-    // We will build the URLs with the mp2 version in functions
-    url: String,
-    checksum_url: String,
+    params_root_url: String,
     pub(crate) checksum_expected_local_path: String,
     pub(crate) skip_checksum: bool,
     pub(crate) dir: String,
@@ -41,15 +40,9 @@ impl PublicParamsConfig
     {
         assert!(
             !self
-                .url
+                .params_root_url
                 .is_empty(),
             "URL is required"
-        );
-        assert!(
-            !self
-                .checksum_url
-                .is_empty(),
-            "Checksum URL is required"
         );
         assert!(
             !self
@@ -71,22 +64,22 @@ impl PublicParamsConfig
             .validate();
     }
 
-    /// Get the build URL with the path of mp2 version.
-    pub fn url(&self) -> anyhow::Result<String>
+    /// Build the base URL with path of mp2 version for downloading param files.
+    pub fn params_base_url(&self) -> anyhow::Result<Url>
     {
-        let url = Url::parse(&self.url)?;
+        let url = Url::parse(&self.params_root_url)?;
         let url = add_mp2_version_path_to_url(url)?;
 
-        Ok(url.to_string())
+        Ok(url)
     }
 
-    /// Get the build checksum URL with the path of mp2 version.
-    pub fn checksum_url(&self) -> anyhow::Result<String>
+    /// Build the URL for downloading the checksum file.
+    pub fn checksum_file_url(&self) -> anyhow::Result<Url>
     {
-        let url = Url::parse(&self.checksum_url)?;
-        let url = add_mp2_version_path_to_url(url)?;
+        let url = self.params_base_url()?;
+        let url = url.join(PARAMS_CHECKSUM_FILENAME)?;
 
-        Ok(url.to_string())
+        Ok(url)
     }
 }
 
