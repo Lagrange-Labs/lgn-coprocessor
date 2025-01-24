@@ -57,9 +57,7 @@ fn register_v1_preprocessor(
 ) -> Result<()>
 {
     let params_config = &config.public_params;
-    let params_base_url = &params_config
-        .params_base_url()?
-        .to_string();
+    let params_base_url = &params_config.params_base_url();
     let preprocessing_prover = lgn_provers::provers::v1::preprocessing::create_prover(
         params_base_url,
         &params_config.dir,
@@ -84,9 +82,7 @@ fn register_v1_query(
 ) -> Result<()>
 {
     let params_config = &config.public_params;
-    let params_base_url = &params_config
-        .params_base_url()?
-        .to_string();
+    let params_base_url = &params_config.params_base_url();
     let query_prover = lgn_provers::provers::v1::query::create_prover(
         params_base_url,
         &params_config.dir,
@@ -111,9 +107,7 @@ fn register_v1_groth16(
 ) -> Result<()>
 {
     let params_config = &config.public_params;
-    let params_base_url = &params_config
-        .params_base_url()?
-        .to_string();
+    let params_base_url = &params_config.params_base_url();
     let assets = &params_config.groth16_assets;
     let groth16_prover = lgn_provers::provers::v1::groth16::create_prover(
         params_base_url,

@@ -3,7 +3,6 @@ use lazy_static_include::*;
 use lgn_messages::types::TaskDifficulty;
 use lgn_provers::params::PARAMS_CHECKSUM_FILENAME;
 use redact::Secret;
-use reqwest::Url;
 use serde_derive::Deserialize;
 use tracing::debug;
 
@@ -67,21 +66,16 @@ impl PublicParamsConfig
     }
 
     /// Build the base URL with path of mp2 version for downloading param files.
-    pub fn params_base_url(&self) -> anyhow::Result<Url>
+    pub fn params_base_url(&self) -> String
     {
-        let url = Url::parse(&self.params_root_url)?;
-        let url = add_mp2_version_path_to_url(url)?;
-
-        Ok(url)
+        add_mp2_version_path_to_url(&self.params_root_url)
     }
 
     /// Build the URL for downloading the checksum file.
-    pub fn checksum_file_url(&self) -> anyhow::Result<Url>
+    pub fn checksum_file_url(&self) -> String
     {
-        let url = self.params_base_url()?;
-        let url = url.join(PARAMS_CHECKSUM_FILENAME)?;
-
-        Ok(url)
+        let url = self.params_base_url();
+        format!("{url}/{PARAMS_CHECKSUM_FILENAME}")
     }
 }
 
@@ -282,10 +276,8 @@ impl Config
 
 /// Add mp2 version as a path to the base URL.
 /// e.g. https://base.com/MP2_VERSION
-fn add_mp2_version_path_to_url(url: Url) -> anyhow::Result<Url>
+fn add_mp2_version_path_to_url(url: &str) -> String
 {
     let mp2_ver = mp2_common::git::short_git_version();
-    let url = url.join(&mp2_ver)?;
-
-    Ok(url)
+    format!("{url}/{mp2_ver}")
 }
