@@ -159,7 +159,7 @@ jobs:
               fi
   public-push:
     name: Push Docker Images to Docker hub
-    if: contains('main holesky mainnet hack-merge-table v1_base 129/merge', github.ref_name) || startsWith(github.ref, 'refs/tags/')
+    if: contains('main holesky mainnet hack-merge-table v1_base 140/merge', github.ref_name) || startsWith(github.ref, 'refs/tags/')
     runs-on: ${{needs.base.outputs.RUNNER}}
     needs:
       - build
