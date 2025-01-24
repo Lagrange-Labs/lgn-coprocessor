@@ -5,7 +5,7 @@ let
     version = "develop";
     keystore-file = "./runtime/lagr-keystore.json";
     keystore-password = "canihazsecurityplz";
-    gateway-url = "ws://localhost:4983";
+    gateway-url = "http://localhost:10000";
     params-url = "https://pub-2124403768df4a0285b77bcb8d224083.r2.dev";
   };
 
@@ -16,7 +16,7 @@ let
     };
 
     avs = {
-      gateway_url = meta.gateway-url;
+      gateway_grpc_url = meta.gateway-url;
       issuer = "Some AVS partner";
       worker_id = "worker_id";
       lagr_keystore = meta.keystore-file;
@@ -46,7 +46,7 @@ let
 
   lagrangeWorkerConfig = avsWorkerConfig //
                          { avs = {
-                             gateway_url = meta.gateway-url;
+                             gateway_grpc_url = meta.gateway-url;
                              issuer = "Lagrange";
                              worker_id = "lagrange-medium";
                              lagr_private_key = config.env.LAGRANGE_PRIVATE_KEY;
@@ -62,7 +62,7 @@ in
     pull = [];
   };
 
-  packages = [ pkgs.git pkgs.openssl pkgs.pkg-config ]
+  packages = [ pkgs.git pkgs.openssl pkgs.pkg-config pkgs.protobuf ]
              ++ lib.optionals pkgs.stdenv.targetPlatform.isDarwin [
                pkgs.libiconv
                pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
@@ -79,13 +79,16 @@ in
     toml-worker-lgn.exec = "echo ${lagrangeWorkerConfigFile}";
     generate-key-store.exec = "AVS__LAGR_PWD=${meta.keystore-password} cargo run --bin lgn-avs -- new-key -l ${meta.keystore-file}";
 
-    worker-lgn.exec = "RUST_LOG=warn,worker=debug cargo run --release --bin lgn-worker -- --config ${workerConfigFile}";
-    worker-lgn-dummy.exec = "RUST_LOG=warn,worker=debug cargo run --release -F dummy-prover --bin lgn-worker -- --config ${workerConfigFile}";
+    worker.exec = "RUST_LOG=warn,worker=debug cargo run --release --bin lgn-worker -- --config ${workerConfigFile}";
+    worker-dummy.exec = "RUST_LOG=warn,worker=debug cargo run -F dummy-prover --bin lgn-worker -- --config ${workerConfigFile}";
+
+    worker-lgn.exec = "RUST_LOG=warn,worker=debug cargo run --release --bin lgn-worker -- --config ${lagrangeWorkerConfigFile}";
+    worker-lgn-dummy.exec = "RUST_LOG=warn,worker=debug cargo run -F dummy-prover --bin lgn-worker -- --config ${lagrangeWorkerConfigFile}";
   };
 
   enterShell = ''
     echo "** ==========  Devenv enabled  ========== **"
-    echo "**  Welcome to lagrange/lgn-coprocessir!  **"
+    echo "**  Welcome to lagrange/lgn-coprocessor!  **"
   '';
 
   enterTest = ''
