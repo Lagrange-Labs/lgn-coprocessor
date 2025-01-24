@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     git \
     pkg-config \
-    libssl3
+    libssl3 \
+    protobuf-compiler
 
 RUN rustup component add clippy rustfmt
 
