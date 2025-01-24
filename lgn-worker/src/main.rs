@@ -183,10 +183,7 @@ async fn main() -> anyhow::Result<()>
 
     if let Err(err) = run(cli).await
     {
-        error!(
-            "Service exiting with an error. err: {:?}",
-            err
-        );
+        error!("{err:?}");
         bail!("Worker exited due to an error")
     }
     else
@@ -202,7 +199,6 @@ async fn run(cli: Cli) -> Result<()>
         "Starting worker. version: {}",
         version
     );
-
     let config = Config::load(cli.config);
     config.validate();
     debug!(
@@ -243,8 +239,13 @@ async fn run(cli: Cli) -> Result<()>
                     .port,
             ),
         )
-        .install()?;
+        .install()
+        .context("setting up Prometheus")?;
 
+    println!(
+        "starting grpc: {:?}",
+        config.avs
+    );
     if let Some(grpc_url) = &config
         .avs
         .gateway_grpc_url
@@ -307,7 +308,14 @@ async fn run_with_grpc(
     grpc_url: &str,
 ) -> Result<()>
 {
-    let uri = grpc_url.parse::<tonic::transport::Uri>()?;
+    info!(
+        "Connecting to the gateway using gRPC. grpc_url: {}",
+        grpc_url
+    );
+
+    let uri = grpc_url
+        .parse::<tonic::transport::Uri>()
+        .context("parsing gateway URL")?;
     let (mut outbound, outbound_rx) = tokio::sync::mpsc::channel(1024);
 
     let mut provers_manager = tokio::task::block_in_place(
@@ -324,10 +332,6 @@ async fn run_with_grpc(
 
     maybe_verify_checksums(config).await?;
 
-    info!(
-        "Connecting to the gateway using gRPC. grpc_url: {}",
-        grpc_url
-    );
     let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
 
     let wallet = get_wallet(config)?;
@@ -496,70 +500,57 @@ async fn process_message_from_gateway(
     outbound: &mut tokio::sync::mpsc::Sender<WorkerToGwRequest>,
 ) -> Result<()>
 {
-    match &message.response
+    let message_envelope = serde_json::from_slice::<MessageEnvelope<TaskType>>(&message.task)?;
+
+    let reply = tokio::task::block_in_place(
+        move || -> Result<MessageReplyEnvelope<ReplyType>, String> {
+            process_downstream_payload(
+                provers_manager,
+                message_envelope,
+            )
+        },
+    );
+
+    let outbound_msg = match reply
     {
-        Some(response) =>
+        Ok(reply) =>
         {
-            match response
-            {
-                lagrange::worker_to_gw_response::Response::Todo(json_document) =>
-                {
-                    let message_envelope =
-                        serde_json::from_str::<MessageEnvelope<TaskType>>(json_document)?;
-
-                    let reply = tokio::task::block_in_place(
-                        move || -> Result<MessageReplyEnvelope<ReplyType>, String> {
-                            process_downstream_payload(
-                                provers_manager,
-                                message_envelope,
-                            )
+            WorkerToGwRequest {
+                request: Some(
+                    lagrange::worker_to_gw_request::Request::WorkerDone(
+                        WorkerDone {
+                            task_id: message
+                                .task_id
+                                .clone(),
+                            reply: Some(Reply::TaskOutput(serde_json::to_vec(&reply)?)),
                         },
-                    );
-
-                    let outbound_msg = match reply
-                    {
-                        Ok(reply) =>
-                        {
-                            WorkerToGwRequest {
-                                request: Some(
-                                    lagrange::worker_to_gw_request::Request::WorkerDone(
-                                        WorkerDone {
-                                            reply: Some(
-                                                Reply::ReplyString(serde_json::to_string(&reply)?),
-                                            ),
-                                        },
-                                    ),
-                                ),
-                            }
-                        },
-                        Err(error_str) =>
-                        {
-                            WorkerToGwRequest {
-                                request: Some(
-                                    lagrange::worker_to_gw_request::Request::WorkerDone(
-                                        WorkerDone {
-                                            reply: Some(Reply::WorkerError(error_str)),
-                                        },
-                                    ),
-                                ),
-                            }
-                        },
-                    };
-                    outbound
-                        .send(outbound_msg)
-                        .await?;
-
-                    counter!("zkmr_worker_grpc_messages_sent_total",
-                                    "message_type" => "text")
-                    .increment(1);
-                },
+                    ),
+                ),
             }
         },
-        None =>
+        Err(error_str) =>
         {
-            tracing::warn!("Received WorkerToGwReponse with empty reponse field");
+            WorkerToGwRequest {
+                request: Some(
+                    lagrange::worker_to_gw_request::Request::WorkerDone(
+                        WorkerDone {
+                            task_id: message
+                                .task_id
+                                .clone(),
+                            reply: Some(Reply::WorkerError(error_str)),
+                        },
+                    ),
+                ),
+            }
         },
-    }
+    };
+    outbound
+        .send(outbound_msg)
+        .await?;
+
+    counter!("zkmr_worker_grpc_messages_sent_total",
+                                    "message_type" => "text")
+    .increment(1);
     Ok(())
 }
 

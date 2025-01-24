@@ -47,6 +47,8 @@ tokio-stream = { workspace = true }
 lgn-auth = { path = "../lgn-auth" }
 lgn-messages = { path = "../lgn-messages" }
 lgn-provers = { path = "../lgn-provers" }
+prost-types = "0.13.4"
+prost-wkt-types = "0.6.0"
 
 [build-dependencies]
 miette = { workspace = true }

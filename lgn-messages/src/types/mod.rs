@@ -48,7 +48,7 @@ pub enum ReplyType
     V1Groth16(WorkerReply),
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Deserialize, Serialize)]
 pub struct MessageEnvelope<T>
 {
     /// Query id is unique for each query and shared between all its tasks
@@ -75,6 +75,23 @@ pub struct MessageEnvelope<T>
 
     /// Details of the task to be executed.
     pub inner: T,
+}
+impl<T> std::fmt::Debug for MessageEnvelope<T>
+{
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result
+    {
+        write!(
+            f,
+            "MSG#{:?}<{}, {}>",
+            self.db_task_id
+                .unwrap_or_default(),
+            self.task_id,
+            self.query_id
+        )
+    }
 }
 
 impl<T> MessageEnvelope<T>
@@ -126,7 +143,7 @@ impl<T> MessageEnvelope<T>
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Deserialize, Serialize)]
 pub struct MessageReplyEnvelope<T>
 {
     /// Query id is unique for each query and shared between all its tasks
@@ -138,6 +155,20 @@ pub struct MessageReplyEnvelope<T>
     inner: T,
 
     error: Option<WorkerError>,
+}
+impl<T> std::fmt::Debug for MessageReplyEnvelope<T>
+{
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result
+    {
+        write!(
+            f,
+            "REPLY<{}, {}>",
+            self.task_id, self.query_id
+        )
+    }
 }
 
 impl<T> MessageReplyEnvelope<T>
