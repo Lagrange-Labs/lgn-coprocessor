@@ -23,7 +23,9 @@ pub(crate) struct Config
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct PublicParamsConfig
 {
-    params_root_url: String,
+    /// the root URL over which we should fetch params.
+    /// The FULL url is constructed from this one and the mp2 version
+    pub(crate) params_root_url: String,
     pub(crate) checksum_expected_local_path: String,
     pub(crate) skip_checksum: bool,
     pub(crate) dir: String,
