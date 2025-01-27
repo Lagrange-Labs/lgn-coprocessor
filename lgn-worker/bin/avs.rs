@@ -89,7 +89,7 @@ impl NewKey {
             .verifying_key()
             .into();
         println!(
-            "\tpublic_key = {:?}",
+            "public key: {}",
             public_key.to_hex()
         );
         Ok(())
