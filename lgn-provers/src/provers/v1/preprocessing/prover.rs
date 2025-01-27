@@ -3,8 +3,7 @@ use alloy::primitives::U256;
 use mp2_common::digest::TableDimension;
 use mp2_common::types::HashOutput;
 
-pub trait StorageExtractionProver
-{
+pub trait StorageExtractionProver {
     /// Prove a leaf MPT node of single variable.
     fn prove_single_variable_leaf(
         &self,
@@ -101,8 +100,7 @@ pub trait StorageExtractionProver
     ) -> anyhow::Result<Vec<u8>>;
 }
 
-pub trait StorageDatabaseProver
-{
+pub trait StorageDatabaseProver {
     /// Prove a cell tree leaf node.
     fn prove_cell_leaf(
         &self,

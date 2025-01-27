@@ -18,18 +18,15 @@ use parsil::assembler::DynamicCircuitPis;
 use crate::provers::v1::query::prover::StorageQueryProver;
 use crate::provers::LgnProver;
 
-pub struct Querying<P>
-{
+pub struct Querying<P> {
     prover: P,
 }
 
-impl<P: StorageQueryProver> LgnProver<TaskType, ReplyType> for Querying<P>
-{
+impl<P: StorageQueryProver> LgnProver<TaskType, ReplyType> for Querying<P> {
     fn run(
         &self,
         envelope: &MessageEnvelope<TaskType>,
-    ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>>
-    {
+    ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope
             .query_id
             .clone();
@@ -65,9 +62,7 @@ impl<P: StorageQueryProver> LgnProver<TaskType, ReplyType> for Querying<P>
                     reply_type,
                 ),
             )
-        }
-        else
-        {
+        } else {
             bail!(
                 "Received unexpected task: {:?}",
                 envelope
@@ -76,10 +71,8 @@ impl<P: StorageQueryProver> LgnProver<TaskType, ReplyType> for Querying<P>
     }
 }
 
-impl<P: StorageQueryProver> Querying<P>
-{
-    pub fn new(prover: P) -> Self
-    {
+impl<P: StorageQueryProver> Querying<P> {
+    pub fn new(prover: P) -> Self {
         Self {
             prover,
         }
@@ -88,12 +81,10 @@ impl<P: StorageQueryProver> Querying<P>
     pub fn run_inner(
         &self,
         task: &WorkerTask,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         #[allow(irrefutable_let_patterns)]
         let WorkerTaskType::Query(ref input) = task.task_type
-        else
-        {
+        else {
             bail!(
                 "Unexpected task type: {:?}",
                 task.task_type
@@ -102,10 +93,8 @@ impl<P: StorageQueryProver> Querying<P>
 
         let pis: DynamicCircuitPis = serde_json::from_slice(&input.pis)?;
 
-        let final_proof = match &input.query_step
-        {
-            QueryStep::Tabular(rows_inputs, revelation_input) =>
-            {
+        let final_proof = match &input.query_step {
+            QueryStep::Tabular(rows_inputs, revelation_input) => {
                 let RevelationInput::Tabular {
                     placeholders,
                     indexing_proof,
@@ -115,8 +104,7 @@ impl<P: StorageQueryProver> Querying<P>
                     offset,
                     ..
                 } = revelation_input
-                else
-                {
+                else {
                     panic!("Wrong RevelationInput for QueryStep::Tabular");
                 };
 
@@ -132,8 +120,7 @@ impl<P: StorageQueryProver> Querying<P>
                             &pis,
                         )?;
 
-                    if let Hydratable::Dehydrated(_) = &matching_row.proof
-                    {
+                    if let Hydratable::Dehydrated(_) = &matching_row.proof {
                         matching_row
                             .proof
                             .hydrate(proof);
@@ -156,20 +143,16 @@ impl<P: StorageQueryProver> Querying<P>
                         *offset,
                     )?
             },
-            QueryStep::Aggregation(input) =>
-            {
-                match &input.input_kind
-                {
-                    ProofInputKind::RowsChunk(rc) =>
-                    {
+            QueryStep::Aggregation(input) => {
+                match &input.input_kind {
+                    ProofInputKind::RowsChunk(rc) => {
                         self.prover
                             .prove_row_chunks(
                                 rc.clone(),
                                 &pis,
                             )
                     },
-                    ProofInputKind::ChunkAggregation(ca) =>
-                    {
+                    ProofInputKind::ChunkAggregation(ca) => {
                         let chunks_proofs = ca
                             .child_proofs
                             .iter()
@@ -178,8 +161,7 @@ impl<P: StorageQueryProver> Querying<P>
                         self.prover
                             .prove_chunk_aggregation(&chunks_proofs)
                     },
-                    ProofInputKind::NonExistence(ne) =>
-                    {
+                    ProofInputKind::NonExistence(ne) => {
                         self.prover
                             .prove_non_existence(
                                 *ne.clone(),
@@ -188,17 +170,14 @@ impl<P: StorageQueryProver> Querying<P>
                     },
                 }?
             },
-            QueryStep::Revelation(input) =>
-            {
-                match input
-                {
+            QueryStep::Revelation(input) => {
+                match input {
                     RevelationInput::Aggregated {
                         placeholders,
                         indexing_proof,
                         query_proof,
                         ..
-                    } =>
-                    {
+                    } => {
                         self.prover
                             .prove_aggregated_revelation(
                                 &pis,
@@ -217,8 +196,7 @@ impl<P: StorageQueryProver> Querying<P>
                         limit,
                         offset,
                         ..
-                    } =>
-                    {
+                    } => {
                         self.prover
                             .prove_tabular_revelation(
                                 &pis,

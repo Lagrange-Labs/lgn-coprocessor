@@ -52,8 +52,7 @@ use crate::config::Config;
 use crate::manager::v1::register_v1_provers;
 use crate::manager::ProversManager;
 
-pub mod lagrange
-{
+pub mod lagrange {
     tonic::include_proto!("lagrange");
 }
 
@@ -67,8 +66,7 @@ static GLOBAL: MiMalloc = MiMalloc;
 const MAX_GRPC_MESSAGE_SIZE_MB: usize = 16;
 
 #[derive(Parser, Clone, Debug)]
-struct Cli
-{
+struct Cli {
     /// Path to the configuration file.
     #[clap(
         short,
@@ -85,10 +83,8 @@ struct Cli
     json: bool,
 }
 
-fn setup_logging(json: bool)
-{
-    if json
-    {
+fn setup_logging(json: bool) {
+    if json {
         let subscriber = tracing_subscriber::fmt()
             .json()
             .with_level(true)
@@ -103,9 +99,7 @@ fn setup_logging(json: bool)
             .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("Setting up logging failed");
-    }
-    else
-    {
+    } else {
         let subscriber = tracing_subscriber::fmt()
             .pretty()
             .compact()
@@ -125,8 +119,7 @@ fn setup_logging(json: bool)
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()>
-{
+async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     setup_logging(cli.json);
 
@@ -138,8 +131,7 @@ async fn main() -> anyhow::Result<()>
                     .downcast_ref::<&'static str>()
                 {
                     Some(s) => *s,
-                    None =>
-                    {
+                    None => {
                         match panic_info
                             .payload()
                             .downcast_ref::<String>()
@@ -149,18 +141,15 @@ async fn main() -> anyhow::Result<()>
                         }
                     },
                 };
-                let (file, lineno, col) = match panic_info.location()
-                {
-                    Some(l) =>
-                    {
+                let (file, lineno, col) = match panic_info.location() {
+                    Some(l) => {
                         (
                             l.file(),
                             l.line(),
                             l.column(),
                         )
                     },
-                    None =>
-                    {
+                    None => {
                         (
                             "<unknown>",
                             0,
@@ -181,19 +170,15 @@ async fn main() -> anyhow::Result<()>
         ),
     );
 
-    if let Err(err) = run(cli).await
-    {
+    if let Err(err) = run(cli).await {
         error!("{err:?}");
         bail!("Worker exited due to an error")
-    }
-    else
-    {
+    } else {
         Ok(())
     }
 }
 
-async fn run(cli: Cli) -> Result<()>
-{
+async fn run(cli: Cli) -> Result<()> {
     let version = env!("CARGO_PKG_VERSION");
     info!(
         "Starting worker. version: {}",
@@ -262,8 +247,7 @@ async fn run(cli: Cli) -> Result<()>
     }
 }
 
-async fn maybe_verify_checksums(config: &Config) -> Result<()>
-{
+async fn maybe_verify_checksums(config: &Config) -> Result<()> {
     if config
         .public_params
         .skip_checksum
@@ -306,8 +290,7 @@ async fn maybe_verify_checksums(config: &Config) -> Result<()>
 async fn run_with_grpc(
     config: &Config,
     grpc_url: &str,
-) -> Result<()>
-{
+) -> Result<()> {
     info!(
         "Connecting to the gateway using gRPC. grpc_url: {}",
         grpc_url
@@ -392,8 +375,7 @@ async fn run_with_grpc(
         )
         .await?;
 
-    loop
-    {
+    loop {
         tokio::select! {
             Some(inbound_message) = inbound.next() => {
                 let msg = match inbound_message {
@@ -415,8 +397,7 @@ async fn run_with_grpc(
 fn process_downstream_payload(
     provers_manager: &ProversManager<TaskType, ReplyType>,
     envelope: MessageEnvelope<TaskType>,
-) -> Result<MessageReplyEnvelope<ReplyType>, String>
-{
+) -> Result<MessageReplyEnvelope<ReplyType>, String> {
     let span = span!(
         Level::INFO,
         "Received Task",
@@ -431,14 +412,10 @@ fn process_downstream_payload(
         envelope
     );
     counter!("zkmr_worker_tasks_received_total").increment(1);
-    match std::panic::catch_unwind(|| provers_manager.delegate_proving(&envelope))
-    {
-        Ok(result) =>
-        {
-            match result
-            {
-                Ok(reply) =>
-                {
+    match std::panic::catch_unwind(|| provers_manager.delegate_proving(&envelope)) {
+        Ok(result) => {
+            match result {
+                Ok(reply) => {
                     trace!(
                         "Sending reply: {:?}",
                         reply
@@ -446,8 +423,7 @@ fn process_downstream_payload(
                     counter!("zkmr_worker_tasks_processed_total").increment(1);
                     Ok(reply)
                 },
-                Err(e) =>
-                {
+                Err(e) => {
                     error!(
                         "Error processing task: {:?}",
                         e
@@ -459,21 +435,17 @@ fn process_downstream_payload(
                 },
             }
         },
-        Err(panic) =>
-        {
+        Err(panic) => {
             counter!(
                 "zkmr_worker_error_count",
                 "error_type" => "proof_processing"
             )
             .increment(1);
 
-            let msg = match panic.downcast_ref::<&'static str>()
-            {
+            let msg = match panic.downcast_ref::<&'static str>() {
                 Some(s) => *s,
-                None =>
-                {
-                    match panic.downcast_ref::<String>()
-                    {
+                None => {
+                    match panic.downcast_ref::<String>() {
                         Some(s) => &s[..],
                         None => "Box<dyn Any>",
                     }
@@ -498,8 +470,7 @@ async fn process_message_from_gateway(
     provers_manager: &mut ProversManager<TaskType, ReplyType>,
     message: &WorkerToGwResponse,
     outbound: &mut tokio::sync::mpsc::Sender<WorkerToGwRequest>,
-) -> Result<()>
-{
+) -> Result<()> {
     let message_envelope = serde_json::from_slice::<MessageEnvelope<TaskType>>(&message.task)?;
 
     let reply = tokio::task::block_in_place(
@@ -511,10 +482,8 @@ async fn process_message_from_gateway(
         },
     );
 
-    let outbound_msg = match reply
-    {
-        Ok(reply) =>
-        {
+    let outbound_msg = match reply {
+        Ok(reply) => {
             WorkerToGwRequest {
                 request: Some(
                     lagrange::worker_to_gw_request::Request::WorkerDone(
@@ -528,8 +497,7 @@ async fn process_message_from_gateway(
                 ),
             }
         },
-        Err(error_str) =>
-        {
+        Err(error_str) => {
             WorkerToGwRequest {
                 request: Some(
                     lagrange::worker_to_gw_request::Request::WorkerDone(
@@ -554,8 +522,7 @@ async fn process_message_from_gateway(
     Ok(())
 }
 
-fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>>
-{
+fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>> {
     let res = match (
         &config
             .avs
@@ -566,17 +533,14 @@ fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>>
         &config
             .avs
             .lagr_private_key,
-    )
-    {
-        (Some(keystore_path), Some(password), None) =>
-        {
+    ) {
+        (Some(keystore_path), Some(password), None) => {
             read_keystore(
                 keystore_path,
                 password.expose_secret(),
             )?
         },
-        (Some(_), None, Some(pkey)) =>
-        {
+        (Some(_), None, Some(pkey)) => {
             Wallet::from_str(pkey.expose_secret()).context("Failed to create wallet")?
         },
         _ => bail!("Must specify either keystore path w/ password OR private key"),
@@ -585,8 +549,7 @@ fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>>
     Ok(res)
 }
 
-fn get_claims(config: &Config) -> Result<Claims>
-{
+fn get_claims(config: &Config) -> Result<Claims> {
     let registered = RegisteredClaims {
         issuer: Some(
             config
@@ -636,8 +599,7 @@ fn get_claims(config: &Config) -> Result<Claims>
     )
 }
 
-fn run_with_websocket(config: &Config) -> Result<()>
-{
+fn run_with_websocket(config: &Config) -> Result<()> {
     let lagrange_wallet = get_wallet(config)?;
 
     info!(
@@ -759,8 +721,7 @@ fn run_with_websocket(config: &Config) -> Result<()>
 fn start_work(
     ws_socket: &mut WebSocket<MaybeTlsStream<TcpStream>>,
     provers_manager: &mut ProversManager<TaskType, ReplyType>,
-) -> Result<()>
-{
+) -> Result<()> {
     let ready = UpstreamPayload::<ReplyType>::Ready;
     let ready_json = serde_json::to_string(&ready).context("Failed to encode Ready message")?;
     ws_socket

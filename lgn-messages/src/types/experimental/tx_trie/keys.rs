@@ -19,8 +19,7 @@ type QueryId = String;
 
 /// Indicates where proof is stored
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]
-pub enum ProofKey
-{
+pub enum ProofKey {
     /// Transaction proof key with the transaction hash in hex
     Transaction(
         ComputationId,
@@ -51,8 +50,7 @@ pub enum ProofKey
     Result(QueryId),
 }
 
-impl ProofKey
-{
+impl ProofKey {
     /// Initializes a new proof key for a transaction proof.
     ///
     /// # Arguments
@@ -61,8 +59,7 @@ impl ProofKey
     pub fn transaction(
         computation: &Computation,
         tx: &Transaction,
-    ) -> Self
-    {
+    ) -> Self {
         Self::Transaction(
             computation.id(),
             tx.block_number
@@ -85,8 +82,7 @@ impl ProofKey
         computation: &Computation,
         block_nr: u64,
         intermediate_node_bytes: impl AsRef<[u8]>,
-    ) -> Self
-    {
+    ) -> Self {
         Self::Intermediate(
             computation.id(),
             block_nr,
@@ -103,8 +99,7 @@ impl ProofKey
     pub fn block(
         computation: &Computation,
         block_nr: u64,
-    ) -> Self
-    {
+    ) -> Self {
         Self::Block(
             computation.id(),
             block_nr,
@@ -120,8 +115,7 @@ impl ProofKey
     pub fn aggregation(
         computation: &Computation,
         child_keys: Vec<ProofKey>,
-    ) -> Self
-    {
+    ) -> Self {
         let mut child_keys = child_keys;
         child_keys.sort();
         let data = child_keys
@@ -142,13 +136,11 @@ impl ProofKey
     }
 
     #[must_use]
-    pub fn result(query_id: &str) -> Self
-    {
+    pub fn result(query_id: &str) -> Self {
         Self::Result(query_id.to_string())
     }
 
-    fn calculate_hash<T: Hash>(t: &T) -> Vec<u8>
-    {
+    fn calculate_hash<T: Hash>(t: &T) -> Vec<u8> {
         let mut s = DefaultHasher::new();
         t.hash(&mut s);
         s.finish()
@@ -157,53 +149,43 @@ impl ProofKey
     }
 }
 
-impl From<ProofKey> for String
-{
-    fn from(key: ProofKey) -> Self
-    {
+impl From<ProofKey> for String {
+    fn from(key: ProofKey) -> Self {
         key.to_string()
     }
 }
 
-impl Display for ProofKey
-{
+impl Display for ProofKey {
     fn fmt(
         &self,
         f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result
-    {
-        match self
-        {
-            ProofKey::Transaction(computation_id, block_nr, tx_hash) =>
-            {
+    ) -> std::fmt::Result {
+        match self {
+            ProofKey::Transaction(computation_id, block_nr, tx_hash) => {
                 write!(
                     f,
                     "tx_{computation_id}_{block_nr}_{tx_hash}"
                 )
             },
-            ProofKey::Intermediate(computation_id, block_nr, intermediate_node_hash) =>
-            {
+            ProofKey::Intermediate(computation_id, block_nr, intermediate_node_hash) => {
                 write!(
                     f,
                     "intermediate_{computation_id}_{block_nr}_{intermediate_node_hash}"
                 )
             },
-            ProofKey::Block(computation_id, block_nr) =>
-            {
+            ProofKey::Block(computation_id, block_nr) => {
                 write!(
                     f,
                     "block_{computation_id}_{block_nr}"
                 )
             },
-            ProofKey::Aggregation(computation_id, aggregation_node_hash) =>
-            {
+            ProofKey::Aggregation(computation_id, aggregation_node_hash) => {
                 write!(
                     f,
                     "aggregation_{computation_id}_{aggregation_node_hash}"
                 )
             },
-            ProofKey::Result(query_id) =>
-            {
+            ProofKey::Result(query_id) => {
                 write!(
                     f,
                     "result_{query_id}"

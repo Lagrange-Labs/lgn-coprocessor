@@ -23,8 +23,7 @@ use tracing::info;
 pub(crate) fn verify_directory_checksums(
     dir: impl AsRef<OsStr> + Debug,
     expected_checksums_file: impl AsRef<Path>,
-) -> anyhow::Result<()>
-{
+) -> anyhow::Result<()> {
     debug!(
         "Computing hashes from: {:?}",
         dir
@@ -83,17 +82,13 @@ pub(crate) fn verify_directory_checksums(
         result
     );
 
-    match result
-    {
-        Error::NoError =>
-        {
+    match result {
+        Error::NoError => {
             // Test result no error
             info!("Checksum is successful");
         },
-        Error::NFilesDiffer(count) =>
-        {
-            if let Ok((_, file_results)) = &compare_hashes
-            {
+        Error::NFilesDiffer(count) => {
+            if let Ok((_, file_results)) = &compare_hashes {
                 let file_differs: Vec<&CompareFileResult> = file_results
                     .iter()
                     .filter(
@@ -106,8 +101,7 @@ pub(crate) fn verify_directory_checksums(
                     )
                     .collect();
 
-                for file_differ in file_differs
-                {
+                for file_differ in file_differs {
                     if let CompareFileResult::FileDiffers {
                         file,
                         ..
@@ -118,8 +112,7 @@ pub(crate) fn verify_directory_checksums(
                             file
                         );
                         // This will only delete the file where the checksum has failed
-                        if let Err(err) = fs::remove_file(Path::new(dir.as_ref()).join(file))
-                        {
+                        if let Err(err) = fs::remove_file(Path::new(dir.as_ref()).join(file)) {
                             error!(
                                 "Error deleting file {}: {}",
                                 file, err
@@ -127,9 +120,7 @@ pub(crate) fn verify_directory_checksums(
                         }
                     }
                 }
-            }
-            else
-            {
+            } else {
                 error!("Failed to get file comparison results");
             }
             bail!(
@@ -137,8 +128,7 @@ pub(crate) fn verify_directory_checksums(
                 count
             );
         },
-        _ =>
-        {
+        _ => {
             error!(
                 "Checksum failure: {:?}",
                 result
@@ -152,8 +142,7 @@ pub(crate) fn verify_directory_checksums(
 pub(crate) fn fetch_checksum_file(
     url: impl IntoUrl,
     local_path: impl AsRef<Path>,
-) -> anyhow::Result<()>
-{
+) -> anyhow::Result<()> {
     let response = reqwest::blocking::get(url)
         .context("Failed to fetch checksum file")?
         .text()

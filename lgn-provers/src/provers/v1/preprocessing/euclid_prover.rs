@@ -31,15 +31,12 @@ use crate::params::ParamsLoader;
 use crate::provers::v1::preprocessing::prover::StorageDatabaseProver;
 use crate::provers::v1::preprocessing::prover::StorageExtractionProver;
 
-pub struct EuclidProver
-{
+pub struct EuclidProver {
     params: PublicParameters,
 }
 
-impl EuclidProver
-{
-    pub fn new(params: PublicParameters) -> Self
-    {
+impl EuclidProver {
+    pub fn new(params: PublicParameters) -> Self {
         Self {
             params,
         }
@@ -52,8 +49,7 @@ impl EuclidProver
         checksum_expected_local_path: &str,
         skip_checksum: bool,
         skip_store: bool,
-    ) -> anyhow::Result<Self>
-    {
+    ) -> anyhow::Result<Self> {
         let params = ParamsLoader::prepare_raw(
             url,
             dir,
@@ -75,8 +71,7 @@ impl EuclidProver
         &self,
         input: CircuitInput,
         name: &str,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         debug!(
             "Proving {}",
             name
@@ -87,10 +82,8 @@ impl EuclidProver
         match generate_proof(
             &self.params,
             input,
-        )
-        {
-            Ok(proof) =>
-            {
+        ) {
+            Ok(proof) => {
                 debug!(
                     time = now
                         .elapsed()
@@ -105,8 +98,7 @@ impl EuclidProver
                 );
                 Ok(proof)
             },
-            Err(err) =>
-            {
+            Err(err) => {
                 debug!(
                     "Proof generation failed in {:?}",
                     now.elapsed()
@@ -117,15 +109,13 @@ impl EuclidProver
     }
 }
 
-impl StorageExtractionProver for EuclidProver
-{
+impl StorageExtractionProver for EuclidProver {
     fn prove_single_variable_leaf(
         &self,
         node: Vec<u8>,
         slot: u8,
         column_id: u64,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = ValuesExtraction(
             values_extraction::CircuitInput::new_single_variable_leaf(
                 node,
@@ -143,8 +133,7 @@ impl StorageExtractionProver for EuclidProver
         &self,
         node: Vec<u8>,
         child_proofs: Vec<Vec<u8>>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         self.prove(
             ValuesExtraction(
                 values_extraction::CircuitInput::new_single_variable_branch(
@@ -163,8 +152,7 @@ impl StorageExtractionProver for EuclidProver
         slot: u8,
         key_id: u64,
         value_id: u64,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = ValuesExtraction(
             values_extraction::CircuitInput::new_mapping_variable_leaf(
                 node,
@@ -184,13 +172,10 @@ impl StorageExtractionProver for EuclidProver
         &self,
         node: Vec<u8>,
         child_proofs: Vec<Vec<u8>>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let rlp = Rlp::new(&node);
-        match rlp.prototype()?
-        {
-            Prototype::List(2) =>
-            {
+        match rlp.prototype()? {
+            Prototype::List(2) => {
                 let input = ValuesExtraction(
                     values_extraction::CircuitInput::new_extension(
                         node,
@@ -202,8 +187,7 @@ impl StorageExtractionProver for EuclidProver
                     "mapping variable extension",
                 )
             },
-            Prototype::List(17) =>
-            {
+            Prototype::List(17) => {
                 let input = ValuesExtraction(
                     values_extraction::CircuitInput::new_mapping_variable_branch(
                         node,
@@ -224,8 +208,7 @@ impl StorageExtractionProver for EuclidProver
         node: Vec<u8>,
         length_slot: usize,
         variable_slot: usize,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = LengthExtraction(
             LengthCircuitInput::new_leaf(
                 length_slot as u8,
@@ -243,8 +226,7 @@ impl StorageExtractionProver for EuclidProver
         &self,
         node: Vec<u8>,
         child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = LengthExtraction(
             LengthCircuitInput::new_branch(
                 node,
@@ -262,8 +244,7 @@ impl StorageExtractionProver for EuclidProver
         node: Vec<u8>,
         storage_root: Vec<u8>,
         contract_address: Address,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = ContractExtraction(
             contract_extraction::CircuitInput::new_leaf(
                 node,
@@ -281,8 +262,7 @@ impl StorageExtractionProver for EuclidProver
         &self,
         node: Vec<u8>,
         child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = ContractExtraction(
             contract_extraction::CircuitInput::new_branch(
                 node,
@@ -298,8 +278,7 @@ impl StorageExtractionProver for EuclidProver
     fn prove_block(
         &self,
         rlp_header: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = BlockExtraction(block_extraction::CircuitInput::from_block_header(rlp_header));
         self.prove(
             input,
@@ -313,8 +292,7 @@ impl StorageExtractionProver for EuclidProver
         contract_proof: Vec<u8>,
         value_proof: Vec<u8>,
         dimension: TableDimension,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = FinalExtraction(
             final_extraction::CircuitInput::new_simple_input(
                 block_proof,
@@ -335,8 +313,7 @@ impl StorageExtractionProver for EuclidProver
         contract_proof: Vec<u8>,
         value_proof: Vec<u8>,
         length_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = FinalExtraction(
             final_extraction::CircuitInput::new_lengthed_input(
                 block_proof,
@@ -357,8 +334,7 @@ impl StorageExtractionProver for EuclidProver
         contract_proof: Vec<u8>,
         simple_table_proof: Vec<u8>,
         mapping_table_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = FinalExtraction(
             final_extraction::CircuitInput::new_merge_single_and_mapping(
                 block_proof,
@@ -374,15 +350,13 @@ impl StorageExtractionProver for EuclidProver
     }
 }
 
-impl StorageDatabaseProver for EuclidProver
-{
+impl StorageDatabaseProver for EuclidProver {
     fn prove_cell_leaf(
         &self,
         identifier: u64,
         value: U256,
         is_multiplier: bool,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = CellsTree(
             verifiable_db::cells_tree::CircuitInput::leaf(
                 identifier,
@@ -402,8 +376,7 @@ impl StorageDatabaseProver for EuclidProver
         value: U256,
         is_multiplier: bool,
         child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = CellsTree(
             verifiable_db::cells_tree::CircuitInput::partial(
                 identifier,
@@ -424,8 +397,7 @@ impl StorageDatabaseProver for EuclidProver
         value: U256,
         is_multiplier: bool,
         child_proofs: Vec<Vec<u8>>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let child_proofs = [
             child_proofs[0].to_owned(),
             child_proofs[1].to_vec(),
@@ -450,14 +422,10 @@ impl StorageDatabaseProver for EuclidProver
         value: U256,
         is_multiplier: bool,
         cells_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
-        let cells_proof = if !cells_proof.is_empty()
-        {
+    ) -> anyhow::Result<Vec<u8>> {
+        let cells_proof = if !cells_proof.is_empty() {
             cells_proof
-        }
-        else
-        {
+        } else {
             self.params
                 .empty_cell_tree_proof()?
         };
@@ -484,14 +452,10 @@ impl StorageDatabaseProver for EuclidProver
         is_child_left: bool,
         child_proof: Vec<u8>,
         cells_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
-        let cells_proof = if !cells_proof.is_empty()
-        {
+    ) -> anyhow::Result<Vec<u8>> {
+        let cells_proof = if !cells_proof.is_empty() {
             cells_proof
-        }
-        else
-        {
+        } else {
             self.params
                 .empty_cell_tree_proof()?
         };
@@ -518,14 +482,10 @@ impl StorageDatabaseProver for EuclidProver
         is_multiplier: bool,
         child_proofs: Vec<Vec<u8>>,
         cells_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
-        let cells_proof = if !cells_proof.is_empty()
-        {
+    ) -> anyhow::Result<Vec<u8>> {
+        let cells_proof = if !cells_proof.is_empty() {
             cells_proof
-        }
-        else
-        {
+        } else {
             self.params
                 .empty_cell_tree_proof()?
         };
@@ -550,8 +510,7 @@ impl StorageDatabaseProver for EuclidProver
         block_id: u64,
         extraction_proof: Vec<u8>,
         rows_tree_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let block_id: u64 = u64::from_be_bytes(block_id.to_be_bytes());
         let input = BlockTree(
             verifiable_db::block_tree::CircuitInput::new_leaf(
@@ -577,8 +536,7 @@ impl StorageDatabaseProver for EuclidProver
         old_rows_tree_hash: HashOutput,
         extraction_proof: Vec<u8>,
         rows_tree_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let left_hash = left_child.unwrap_or_else(
             || {
                 empty_poseidon_hash_as_vec()
@@ -621,8 +579,7 @@ impl StorageDatabaseProver for EuclidProver
         left_child: HashOutput,
         rows_tree_hash: HashOutput,
         right_child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         let input = BlockTree(
             verifiable_db::block_tree::CircuitInput::new_membership(
                 block_id,
@@ -644,12 +601,9 @@ impl StorageDatabaseProver for EuclidProver
         &self,
         index_proof: Vec<u8>,
         previous_proof: Option<Vec<u8>>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
-        let input = match previous_proof
-        {
-            Some(previous_proof) =>
-            {
+    ) -> anyhow::Result<Vec<u8>> {
+        let input = match previous_proof {
+            Some(previous_proof) => {
                 IVC(
                     verifiable_db::ivc::CircuitInput::new_subsequent_input(
                         index_proof,

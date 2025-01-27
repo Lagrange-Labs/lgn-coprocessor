@@ -37,8 +37,7 @@ const KEYS_PREPROCESSING_PREFIX: &str = "V1_PREPROCESSING";
 pub const ROUTING_DOMAIN: &str = "sp";
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct WorkerTask
-{
+pub struct WorkerTask {
     /// Which block we are proving.
     pub block_nr: BlockNr,
 
@@ -49,15 +48,13 @@ pub struct WorkerTask
     pub task_type: WorkerTaskType,
 }
 
-impl WorkerTask
-{
+impl WorkerTask {
     #[must_use]
     pub fn new(
         chain_id: u64,
         block_nr: BlockNr,
         task_type: WorkerTaskType,
-    ) -> Self
-    {
+    ) -> Self {
         Self {
             chain_id,
             block_nr,
@@ -68,8 +65,7 @@ impl WorkerTask
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "type")]
-pub enum WorkerTaskType
-{
+pub enum WorkerTaskType {
     #[serde(rename = "1")]
     Extraction(ExtractionType),
 
@@ -77,8 +73,7 @@ pub enum WorkerTaskType
     Database(DatabaseType),
 }
 
-impl WorkerTaskType
-{
+impl WorkerTaskType {
     pub fn ext_variable_leaf(
         table_hash: TableHash,
         block_nr: BlockNr,
@@ -86,8 +81,7 @@ impl WorkerTaskType
         node: Vec<u8>,
         slot: u8,
         column_id: u64,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Extraction(
             ExtractionType::MptExtraction(
                 Mpt {
@@ -112,8 +106,7 @@ impl WorkerTaskType
         node_hash: H256,
         node: Vec<u8>,
         children: Vec<MptNodeVersion>,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Extraction(
             ExtractionType::MptExtraction(
                 Mpt {
@@ -142,8 +135,7 @@ impl WorkerTaskType
         slot: u8,
         key_id: u64,
         value_id: u64,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Extraction(
             ExtractionType::MptExtraction(
                 Mpt {
@@ -170,8 +162,7 @@ impl WorkerTaskType
         node_hash: H256,
         node: Vec<u8>,
         children: Vec<MptNodeVersion>,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Extraction(
             ExtractionType::MptExtraction(
                 Mpt {
@@ -195,8 +186,7 @@ impl WorkerTaskType
         nodes: Vec<Vec<u8>>,
         length_slot: usize,
         variable_slot: usize,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Extraction(
             ExtractionType::LengthExtraction(
                 Length {
@@ -215,8 +205,7 @@ impl WorkerTaskType
         contract_address: Address,
         nodes: Vec<Vec<u8>>,
         storage_root: Vec<u8>,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Extraction(
             ExtractionType::ContractExtraction(
                 Contract {
@@ -229,8 +218,7 @@ impl WorkerTaskType
         )
     }
 
-    pub fn ext_block(rlp_header: Vec<u8>) -> WorkerTaskType
-    {
+    pub fn ext_block(rlp_header: Vec<u8>) -> WorkerTaskType {
         WorkerTaskType::Extraction(
             ExtractionType::BlockExtraction(BlockExtractionInput::new(rlp_header)),
         )
@@ -243,8 +231,7 @@ impl WorkerTaskType
         contract: Address,
         compound: TableDimension,
         value_proof_version: MptNodeVersion,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Extraction(
             ExtractionType::FinalExtraction(
                 Box::new(
@@ -267,8 +254,7 @@ impl WorkerTaskType
         block_nr: BlockNr,
         contract: Address,
         value_proof_version: MptNodeVersion,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Extraction(
             ExtractionType::FinalExtraction(
                 Box::new(
@@ -292,8 +278,7 @@ impl WorkerTaskType
         block_nr: BlockNr,
         contract: Address,
         value_proof_version: MptNodeVersion,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Extraction(
             ExtractionType::FinalExtraction(
                 Box::new(
@@ -317,8 +302,7 @@ impl WorkerTaskType
         identifier: Identifier,
         value: U256,
         is_multiplier: bool,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Database(
             DatabaseType::Cell(
                 db_tasks::DbCellType::Leaf(
@@ -343,8 +327,7 @@ impl WorkerTaskType
         value: U256,
         is_multiplier: bool,
         child_location: db_keys::ProofKey,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Database(
             DatabaseType::Cell(
                 db_tasks::DbCellType::Partial(
@@ -371,8 +354,7 @@ impl WorkerTaskType
         value: U256,
         is_multiplier: bool,
         child_locations: Vec<db_keys::ProofKey>,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Database(
             DatabaseType::Cell(
                 db_tasks::DbCellType::Full(
@@ -398,8 +380,7 @@ impl WorkerTaskType
         value: U256,
         is_multiplier: bool,
         cells_proof_location: Option<db_keys::ProofKey>,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Database(
             DatabaseType::Row(
                 db_tasks::DbRowType::Leaf(
@@ -427,8 +408,7 @@ impl WorkerTaskType
         is_child_left: bool,
         cells_proof_location: Option<db_keys::ProofKey>,
         child_proof_location: db_keys::ProofKey,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Database(
             DatabaseType::Row(
                 db_tasks::DbRowType::Partial(
@@ -457,8 +437,7 @@ impl WorkerTaskType
         is_multiplier: bool,
         cells_proof_location: Option<db_keys::ProofKey>,
         child_proofs_locations: Vec<db_keys::ProofKey>,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Database(
             DatabaseType::Row(
                 db_tasks::DbRowType::Full(
@@ -482,8 +461,7 @@ impl WorkerTaskType
         table_id: TableId,
         block_nr: BlockNr,
         is_first_block: bool,
-    ) -> WorkerTaskType
-    {
+    ) -> WorkerTaskType {
         WorkerTaskType::Database(
             DatabaseType::IVC(
                 IvcInput::new(

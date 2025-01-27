@@ -20,20 +20,17 @@ use serde::Deserialize;
 use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct JWTAuth
-{
+pub struct JWTAuth {
     claims: Claims,
     signature: Signature,
 }
 
-impl JWTAuth
-{
+impl JWTAuth {
     /// Create a new instance and sign with the wallet.
     pub fn new(
         claims: Claims,
         wallet: &LocalWallet,
-    ) -> Result<Self>
-    {
+    ) -> Result<Self> {
         let msg = claims.to_base64()?;
 
         // `sign_message` is an async function:
@@ -51,14 +48,12 @@ impl JWTAuth
     }
 
     /// Get the JWT claims.
-    pub fn claims(&self) -> &Claims
-    {
+    pub fn claims(&self) -> &Claims {
         &self.claims
     }
 
     /// Encode to a Base64 string.
-    pub fn encode(&self) -> Result<String>
-    {
+    pub fn encode(&self) -> Result<String> {
         // <https://github.com/mikkyang/rust-jwt/blob/master/src/lib.rs#L164>
 
         let json_bytes = serde_json::to_vec(&self)?;
@@ -66,8 +61,7 @@ impl JWTAuth
     }
 
     /// Decode from a Base64 string.
-    pub fn decode(s: &str) -> Result<Self>
-    {
+    pub fn decode(s: &str) -> Result<Self> {
         // <https://github.com/mikkyang/rust-jwt/blob/master/src/lib.rs#L182>
 
         let json_bytes = BASE64_URL_SAFE_NO_PAD.decode(s)?;
@@ -75,8 +69,7 @@ impl JWTAuth
     }
 
     /// Recovers the Lagrange public key which was used to sign the claims.
-    pub fn recover_public_key(&self) -> Result<String>
-    {
+    pub fn recover_public_key(&self) -> Result<String> {
         let msg = self
             .claims
             .to_base64()?;
@@ -118,8 +111,7 @@ impl JWTAuth
     ) -> Result<(
         RecoverableSignature,
         RecoveryId,
-    )>
-    {
+    )> {
         let mut recovery_id = self
             .signature
             .recovery_id()?;
@@ -143,8 +135,7 @@ impl JWTAuth
         // Normalize into "low S" form. See:
         // - https://github.com/RustCrypto/elliptic-curves/issues/988
         // - https://github.com/bluealloy/revm/pull/870
-        if let Some(normalized) = signature.normalize_s()
-        {
+        if let Some(normalized) = signature.normalize_s() {
             signature = normalized;
             recovery_id = RecoveryId::from_byte(recovery_id.to_byte() ^ 1).unwrap();
         }
@@ -159,8 +150,7 @@ impl JWTAuth
 }
 
 #[cfg(test)]
-mod tests
-{
+mod tests {
     use std::collections::BTreeMap;
     use std::time::SystemTime;
     use std::time::UNIX_EPOCH;
@@ -173,8 +163,7 @@ mod tests
 
     /// Test the JWT authorization process.
     #[test]
-    fn test_middleware_jwt_auth_process() -> Result<()>
-    {
+    fn test_middleware_jwt_auth_process() -> Result<()> {
         // Create a random wallet.
         let wallet = LocalWallet::new(&mut thread_rng());
         let expected_public_key = get_public_key_by_wallet(&wallet);
@@ -199,8 +188,7 @@ mod tests
     }
 
     /// Get the public key from wallet.
-    fn get_public_key_by_wallet(wallet: &LocalWallet) -> String
-    {
+    fn get_public_key_by_wallet(wallet: &LocalWallet) -> String {
         let public_key = wallet
             .signer()
             .verifying_key()
@@ -208,13 +196,11 @@ mod tests
 
         // We use another method (different with `recover_public_key`) to get
         // the coordinates of public key, then combine the big-endian bytes.
-        let [x, y] = match public_key.coordinates()
-        {
+        let [x, y] = match public_key.coordinates() {
             Coordinates::Uncompressed {
                 x,
                 y,
-            } =>
-            {
+            } => {
                 [
                     x,
                     y,
@@ -233,8 +219,7 @@ mod tests
     }
 
     /// Create test Claims.
-    fn test_claims() -> Claims
-    {
+    fn test_claims() -> Claims {
         let registered = RegisteredClaims {
             issuer: Some("test-issuer".to_string()),
             subject: Some("test-subject".to_string()),

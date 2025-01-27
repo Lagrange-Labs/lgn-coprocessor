@@ -6,8 +6,7 @@ use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
 use verifiable_db::revelation::api::MatchingRow;
 
-pub trait StorageQueryProver
-{
+pub trait StorageQueryProver {
     /// Generate an universal circuit proof of a tabular query.
     fn prove_universal_circuit(
         &self,

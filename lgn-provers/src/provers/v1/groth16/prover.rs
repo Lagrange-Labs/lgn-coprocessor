@@ -1,7 +1,6 @@
 //! Groth16 prover implementation
 
-pub trait Prover
-{
+pub trait Prover {
     fn prove(
         &self,
         aggregated_proof: &[u8],

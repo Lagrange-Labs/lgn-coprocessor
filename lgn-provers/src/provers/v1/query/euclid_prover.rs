@@ -27,8 +27,7 @@ use super::MAX_NUM_RESULT_OPS;
 use super::ROW_TREE_MAX_DEPTH;
 use crate::params::ParamsLoader;
 
-pub(crate) struct EuclidQueryProver
-{
+pub(crate) struct EuclidQueryProver {
     params: QueryParameters<
         NUM_CHUNKS,
         NUM_ROWS,
@@ -43,8 +42,7 @@ pub(crate) struct EuclidQueryProver
     >,
 }
 
-impl EuclidQueryProver
-{
+impl EuclidQueryProver {
     #[allow(dead_code)]
     pub fn new(
         params: QueryParameters<
@@ -59,8 +57,7 @@ impl EuclidQueryProver
             MAX_NUM_ITEMS_PER_OUTPUT,
             MAX_NUM_PLACEHOLDERS,
         >
-    ) -> Self
-    {
+    ) -> Self {
         Self {
             params,
         }
@@ -73,8 +70,7 @@ impl EuclidQueryProver
         checksum_expected_local_path: &str,
         skip_checksum: bool,
         skip_store: bool,
-    ) -> anyhow::Result<Self>
-    {
+    ) -> anyhow::Result<Self> {
         let params = ParamsLoader::prepare_raw(
             url,
             dir,
@@ -94,14 +90,12 @@ impl EuclidQueryProver
     }
 }
 
-impl StorageQueryProver for EuclidQueryProver
-{
+impl StorageQueryProver for EuclidQueryProver {
     fn prove_universal_circuit(
         &self,
         input: MatchingRowInput,
         pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving universal circuit");
 
         let now = std::time::Instant::now();
@@ -148,8 +142,7 @@ impl StorageQueryProver for EuclidQueryProver
         &self,
         input: RowsChunkInput,
         pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving row-chunks");
 
         let now = std::time::Instant::now();
@@ -197,8 +190,7 @@ impl StorageQueryProver for EuclidQueryProver
     fn prove_chunk_aggregation(
         &self,
         chunks_proofs: &[Vec<u8>],
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving row-chunks");
 
         let now = std::time::Instant::now();
@@ -237,8 +229,7 @@ impl StorageQueryProver for EuclidQueryProver
         &self,
         input: NonExistenceInput,
         pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving non-existence");
 
         let now = std::time::Instant::now();
@@ -290,8 +281,7 @@ impl StorageQueryProver for EuclidQueryProver
         placeholders: Placeholders,
         query_proof: Vec<u8>,
         indexing_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         debug!("proving aggregated revelation");
         let now = std::time::Instant::now();
 
@@ -341,8 +331,7 @@ impl StorageQueryProver for EuclidQueryProver
         column_ids: &ColumnIDs,
         limit: u32,
         offset: u32,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         debug!("proving tabular revelation");
         let now = std::time::Instant::now();
 

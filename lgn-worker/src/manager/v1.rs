@@ -10,8 +10,7 @@ use crate::manager::ProversManager;
 pub(crate) fn register_v1_provers(
     config: &Config,
     manager: &mut ProversManager<TaskType, ReplyType>,
-) -> Result<()>
-{
+) -> Result<()> {
     if config
         .worker
         .instance_type
@@ -54,8 +53,7 @@ pub(crate) fn register_v1_provers(
 fn register_v1_preprocessor(
     config: &Config,
     manager: &mut ProversManager<TaskType, ReplyType>,
-) -> Result<()>
-{
+) -> Result<()> {
     let params_config = &config.public_params;
     let preprocessing_prover = lgn_provers::provers::v1::preprocessing::create_prover(
         &params_config.url,
@@ -78,8 +76,7 @@ fn register_v1_preprocessor(
 fn register_v1_query(
     config: &Config,
     manager: &mut ProversManager<TaskType, ReplyType>,
-) -> Result<()>
-{
+) -> Result<()> {
     let params_config = &config.public_params;
     let query_prover = lgn_provers::provers::v1::query::create_prover(
         &params_config.url,
@@ -102,8 +99,7 @@ fn register_v1_query(
 fn register_v1_groth16(
     config: &Config,
     router: &mut ProversManager<TaskType, ReplyType>,
-) -> Result<()>
-{
+) -> Result<()> {
     let params_config = &config.public_params;
     let assets = &params_config.groth16_assets;
     let groth16_prover = lgn_provers::provers::v1::groth16::create_prover(
