@@ -14,7 +14,7 @@ on:
 
 jobs:
   call-reusable-workflow:
-    uses: Lagrange-Labs/shared-github-actions/.github/workflows/release-pr.yml@main
+    uses: Lagrange-Labs/shared-github-actions/.github/workflows/rust-prepare-release.yaml@main
     with:
       bump: ${{ inputs.bump }}
     secrets:
