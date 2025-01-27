@@ -22,19 +22,16 @@ where
     provers: HashMap<ProverType, Box<dyn LgnProver<T, R>>>,
 }
 
-impl<T: ToProverType + UnwindSafe, R> UnwindSafe for ProversManager<T, R>
-{
+impl<T: ToProverType + UnwindSafe, R> UnwindSafe for ProversManager<T, R> {
 }
-impl<T: ToProverType + UnwindSafe, R> RefUnwindSafe for ProversManager<T, R>
-{
+impl<T: ToProverType + UnwindSafe, R> RefUnwindSafe for ProversManager<T, R> {
 }
 
 impl<T, R> ProversManager<T, R>
 where
     T: ToProverType + UnwindSafe,
 {
-    pub(crate) fn new() -> Self
-    {
+    pub(crate) fn new() -> Self {
         Self {
             provers: HashMap::default(),
         }
@@ -49,8 +46,7 @@ where
         &mut self,
         task_type: ProverType,
         prover: Box<dyn LgnProver<T, R>>,
-    )
-    {
+    ) {
         self.provers
             .insert(
                 task_type,
@@ -68,8 +64,7 @@ where
     pub(crate) fn delegate_proving(
         &self,
         envelope: &MessageEnvelope<T>,
-    ) -> anyhow::Result<MessageReplyEnvelope<R>>
-    {
+    ) -> anyhow::Result<MessageReplyEnvelope<R>> {
         let prover_type: ProverType = envelope
             .inner
             .to_prover_type();
@@ -81,8 +76,7 @@ where
             .provers
             .get(&prover_type)
         {
-            Some(prover) =>
-            {
+            Some(prover) => {
                 info!("Running prover for task type: {prover_type:?}");
 
                 let start_time = std::time::Instant::now();
@@ -96,8 +90,7 @@ where
 
                 Ok(result)
             },
-            None =>
-            {
+            None => {
                 counter!("zkmr_worker_tasks_failed_total", "task_type" => prover_type.to_string())
                     .increment(1);
 

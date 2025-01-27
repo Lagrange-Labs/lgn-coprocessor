@@ -31,8 +31,7 @@ pub fn create_prover(
     checksum_expected_local_path: &str,
     skip_checksum: bool,
     skip_store: bool,
-) -> anyhow::Result<Querying<impl StorageQueryProver>>
-{
+) -> anyhow::Result<Querying<impl StorageQueryProver>> {
     let prover = {
         #[cfg(feature = "dummy-prover")]
         let prover = {

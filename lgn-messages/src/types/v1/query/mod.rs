@@ -22,8 +22,7 @@ pub const NUM_CHUNKS: usize = 66;
 pub const NUM_ROWS: usize = 100;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct WorkerTask
-{
+pub struct WorkerTask {
     /// Chain ID
     pub chain_id: u64,
 
@@ -31,14 +30,12 @@ pub struct WorkerTask
     pub task_type: WorkerTaskType,
 }
 
-impl WorkerTask
-{
+impl WorkerTask {
     #[must_use]
     pub fn new(
         chain_id: u64,
         task_type: WorkerTaskType,
-    ) -> Self
-    {
+    ) -> Self {
         Self {
             chain_id,
             task_type,
@@ -48,8 +45,7 @@ impl WorkerTask
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
-pub enum WorkerTaskType
-{
+pub enum WorkerTaskType {
     #[serde(rename = "1")]
     Query(QueryInput),
 }
@@ -57,10 +53,8 @@ pub enum WorkerTaskType
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
 pub struct PlaceHolderLgn(HashMap<String, U256>);
 
-impl From<PlaceHolderLgn> for Placeholders
-{
-    fn from(ph: PlaceHolderLgn) -> Self
-    {
+impl From<PlaceHolderLgn> for Placeholders {
+    fn from(ph: PlaceHolderLgn) -> Self {
         let min_block =
             ph.0.get("0")
                 .cloned()
@@ -77,8 +71,7 @@ impl From<PlaceHolderLgn> for Placeholders
         for (k, v) in
             ph.0.into_iter()
         {
-            if k != "0" && k != "1"
-            {
+            if k != "0" && k != "1" {
                 let index = k
                     .parse::<usize>()
                     .unwrap();
@@ -93,10 +86,8 @@ impl From<PlaceHolderLgn> for Placeholders
     }
 }
 
-impl From<Placeholders> for PlaceHolderLgn
-{
-    fn from(ph: Placeholders) -> Self
-    {
+impl From<Placeholders> for PlaceHolderLgn {
+    fn from(ph: Placeholders) -> Self {
         let min_block = ph
             .get(&PlaceholderIdentifier::MinQueryOnIdx1)
             .unwrap();
@@ -116,8 +107,7 @@ impl From<Placeholders> for PlaceHolderLgn
         for (k, v) in
             ph.0.iter()
         {
-            if let PlaceholderIdentifier::Generic(i) = k
-            {
+            if let PlaceholderIdentifier::Generic(i) = k {
                 map.insert(
                     (*i + 1).to_string(),
                     *v,

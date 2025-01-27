@@ -6,13 +6,11 @@ use crate::params::ParamsLoader;
 use crate::provers::v1::groth16::prover::Prover;
 
 #[derive(Debug)]
-pub struct Groth16Prover
-{
+pub struct Groth16Prover {
     inner: InnerProver,
 }
 
-impl Groth16Prover
-{
+impl Groth16Prover {
     #[allow(clippy::too_many_arguments)]
     pub fn init(
         url: &str,
@@ -23,8 +21,7 @@ impl Groth16Prover
         r1cs_file: &str,
         pk_file: &str,
         skip_store: bool,
-    ) -> Result<Self>
-    {
+    ) -> Result<Self> {
         let circuit_bytes = ParamsLoader::prepare_raw(
             url,
             dir,
@@ -66,13 +63,11 @@ impl Groth16Prover
     }
 }
 
-impl Prover for Groth16Prover
-{
+impl Prover for Groth16Prover {
     fn prove(
         &self,
         revelation: &[u8],
-    ) -> Result<Vec<u8>>
-    {
+    ) -> Result<Vec<u8>> {
         self.inner
             .prove(revelation)
     }

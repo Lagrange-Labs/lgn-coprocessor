@@ -1,7 +1,6 @@
 use miette::IntoDiagnostic;
 
-fn main() -> miette::Result<()>
-{
+fn main() -> miette::Result<()> {
     let file_descriptors = protox::compile(
         ["proto/lagrange.proto"],
         ["../lagrange-protobuf/"],

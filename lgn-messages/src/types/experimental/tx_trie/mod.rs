@@ -14,8 +14,7 @@ pub mod keys;
 pub const ROUTING_DOMAIN: &str = "tx_trie";
 
 #[derive(Clone, Debug, PartialEq, Hash, Deserialize, Serialize)]
-pub struct WorkerTask
-{
+pub struct WorkerTask {
     /// What stage of proof generation process is this task for: single block, blocks tree or evm.
     pub task_type: WorkerTaskType,
 
@@ -23,8 +22,7 @@ pub struct WorkerTask
     pub computation: Computation,
 }
 
-impl WorkerTask
-{
+impl WorkerTask {
     /// Initializes a new worker task.
     ///
     /// # Arguments
@@ -34,8 +32,7 @@ impl WorkerTask
     pub fn new(
         task_type: WorkerTaskType,
         computation: Computation,
-    ) -> Self
-    {
+    ) -> Self {
         Self {
             task_type,
             computation,
@@ -52,8 +49,7 @@ impl WorkerTask
         range: RangeInclusive<usize>,
         block_nr: u64,
         computation: Computation,
-    ) -> Self
-    {
+    ) -> Self {
         let transactions = block::Transactions::new(
             block_nr,
             *range.start() as u64,
@@ -78,8 +74,7 @@ impl WorkerTask
         node_id: String,
         computation: Computation,
         data_uris: Vec<ProofKey>,
-    ) -> Self
-    {
+    ) -> Self {
         let proof_kind = WorkerTaskType::BlockProof(
             block::ProofKind::Intermediate(
                 block::Intermediate::new(
@@ -104,8 +99,7 @@ impl WorkerTask
     pub fn block_range_task(
         computation: Computation,
         data_uris: Vec<ProofKey>,
-    ) -> Self
-    {
+    ) -> Self {
         let proof_kind = WorkerTaskType::BlocksRangeProof(
             block_range::ProofKind::Blocks(block_range::Blocks::new(data_uris)),
         );
@@ -117,8 +111,7 @@ impl WorkerTask
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub struct WorkerReply
-{
+pub struct WorkerReply {
     /// Query id this reply is for.
     pub query_id: String,
 
@@ -129,8 +122,7 @@ pub struct WorkerReply
     pub data_uri: ProofKey,
 }
 
-impl WorkerReply
-{
+impl WorkerReply {
     /// Initializes a new worker reply.
     ///
     /// # Arguments
@@ -142,8 +134,7 @@ impl WorkerReply
         query_id: String,
         task_id: String,
         data_uri: ProofKey,
-    ) -> Self
-    {
+    ) -> Self {
         Self {
             query_id,
             task_id,
@@ -155,8 +146,7 @@ impl WorkerReply
 // See: https://github.com/serde-rs/serde/issues/745
 #[derive(Clone, Debug, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(tag = "type")]
-pub enum WorkerTaskType
-{
+pub enum WorkerTaskType {
     /// Task for a single block proof.
     #[serde(rename = "1")]
     BlockProof(block::ProofKind),
@@ -167,27 +157,21 @@ pub enum WorkerTaskType
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Computation
-{
+pub enum Computation {
     SumOfGasFees(SumOfGasFees),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct SumOfGasFees
-{
+pub struct SumOfGasFees {
     pub dest_address: String,
 }
 
-impl Computation
-{
+impl Computation {
     /// Uniquely identifies computation.
     #[must_use]
-    pub fn id(&self) -> String
-    {
-        match self
-        {
-            Computation::SumOfGasFees(computation) =>
-            {
+    pub fn id(&self) -> String {
+        match self {
+            Computation::SumOfGasFees(computation) => {
                 format!(
                     "sum_of_gas_fees_{}",
                     computation.dest_address

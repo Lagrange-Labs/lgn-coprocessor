@@ -26,8 +26,7 @@ const NON_EXISTENCE: &str = "non_existence";
 const REVELATION: &str = "revelation";
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]
-pub enum ProofKey
-{
+pub enum ProofKey {
     /// Initially just storing rows tree root proof
     Row(
         QueryId,
@@ -50,31 +49,25 @@ pub enum ProofKey
     Revelation(QueryId),
 }
 
-impl Display for ProofKey
-{
+impl Display for ProofKey {
     fn fmt(
         &self,
         f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result
-    {
-        match self
-        {
-            ProofKey::Row(query_id, block_nr, row_key_id) =>
-            {
+    ) -> std::fmt::Result {
+        match self {
+            ProofKey::Row(query_id, block_nr, row_key_id) => {
                 write!(
                     f,
                     "{KEYS_QUERIES_PREFIX}/{query_id}/{ROWS_TREE}/{block_nr}/{row_key_id}",
                 )
             },
-            ProofKey::Index(query_id, block_nr) =>
-            {
+            ProofKey::Index(query_id, block_nr) => {
                 write!(
                     f,
                     "{KEYS_QUERIES_PREFIX}/{query_id}/{INDEX_TREE}/{block_nr}",
                 )
             },
-            ProofKey::RowsChunk(query_id, key) =>
-            {
+            ProofKey::RowsChunk(query_id, key) => {
                 // The `level` of the node in the `UpdateTree`.
                 let level = key
                     .0
@@ -88,15 +81,13 @@ impl Display for ProofKey
                     "{KEYS_QUERIES_PREFIX}/{query_id}/{ROWS_CHUNK}/{level}/{position}",
                 )
             },
-            ProofKey::NonExistence(query_id) =>
-            {
+            ProofKey::NonExistence(query_id) => {
                 write!(
                     f,
                     "{KEYS_QUERIES_PREFIX}/{query_id}/{NON_EXISTENCE}",
                 )
             },
-            ProofKey::Revelation(query_id) =>
-            {
+            ProofKey::Revelation(query_id) => {
                 write!(
                     f,
                     "{KEYS_QUERIES_PREFIX}/{query_id}/{REVELATION}",
@@ -106,18 +97,14 @@ impl Display for ProofKey
     }
 }
 
-impl From<ProofKey> for Path
-{
-    fn from(key: ProofKey) -> Self
-    {
+impl From<ProofKey> for Path {
+    fn from(key: ProofKey) -> Self {
         Path::from(key.to_string())
     }
 }
 
-impl From<ProofKey> for String
-{
-    fn from(key: ProofKey) -> Self
-    {
+impl From<ProofKey> for String {
+    fn from(key: ProofKey) -> Self {
         key.to_string()
     }
 }

@@ -19,8 +19,7 @@ mod manager;
 #[derive(Parser, Clone, Debug)]
 /// Run the prover against a JSON file containing a task envelope as sent by the
 /// QE.
-struct Cli
-{
+struct Cli {
     #[clap(
         short,
         long
@@ -33,8 +32,7 @@ struct Cli
     input: String,
 }
 
-fn main() -> Result<()>
-{
+fn main() -> Result<()> {
     std::panic::set_hook(
         Box::new(
             |panic_info| {
@@ -43,8 +41,7 @@ fn main() -> Result<()>
                     .downcast_ref::<&'static str>()
                 {
                     Some(s) => *s,
-                    None =>
-                    {
+                    None => {
                         match panic_info
                             .payload()
                             .downcast_ref::<String>()
@@ -54,18 +51,15 @@ fn main() -> Result<()>
                         }
                     },
                 };
-                let (file, lineno, col) = match panic_info.location()
-                {
-                    Some(l) =>
-                    {
+                let (file, lineno, col) = match panic_info.location() {
+                    Some(l) => {
                         (
                             l.file(),
                             l.line(),
                             l.column(),
                         )
                     },
-                    None =>
-                    {
+                    None => {
                         (
                             "<unknown>",
                             0,

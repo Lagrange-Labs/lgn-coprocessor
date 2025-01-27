@@ -31,8 +31,7 @@ use tracing::info;
 use tracing_subscriber::EnvFilter;
 
 #[derive(Parser, Debug)]
-enum Cli
-{
+enum Cli {
     /// Generate a new Lagrange key
     NewKey(NewKey),
     /// Register to the AVS service
@@ -51,19 +50,16 @@ const LAGR_KEYSTORE_ENV_VAR: &str = "AVS__LAGR_KEYSTORE";
 const LAGR_PWD_ENV_VAR: &str = "AVS__LAGR_PWD";
 
 #[derive(Args, Debug)]
-struct NewKey
-{
+struct NewKey {
     /// File path to load the Lagrange keystore for registering to the AVS service,
     /// could set ENV AVS__LAGR_PWD for password or input following the prompt.
     #[clap(short, long, env = LAGR_KEYSTORE_ENV_VAR, default_value_t = { DEFAULT_LAGR_KEYSTORE.to_string() })]
     lagr_keystore: String,
 }
 
-impl NewKey
-{
+impl NewKey {
     /// generates a random wallet, encrypt it and saves it on disk
-    pub fn run(&self) -> Result<()>
-    {
+    pub fn run(&self) -> Result<()> {
         let password = read_password(
             LAGR_PWD_ENV_VAR,
             "Input password for Lagrange key: ",
@@ -101,8 +97,7 @@ impl NewKey
 }
 
 #[derive(Args, Debug)]
-struct Register
-{
+struct Register {
     /// URL for RPC requests
     #[clap(
         short,
@@ -131,11 +126,9 @@ struct Register
     network: Network,
 }
 
-impl Register
-{
+impl Register {
     /// <https://github.com/Lagrange-Labs/client-cli/blob/develop/utils/chainops.go#L80-L84>
-    async fn run(&self) -> Result<()>
-    {
+    async fn run(&self) -> Result<()> {
         println!(
             "Running operation on network : {}",
             self.network
@@ -231,8 +224,7 @@ impl Register
             operator,
         )
         .await?;
-        if !is_operator
-        {
+        if !is_operator {
             bail!("
 Please register the main key as an operator of EigenLayer first:
 https://docs.eigenlayer.xyz/eigenlayer/operator-guides/operator-installation#operator-configuration-and-registration
@@ -257,16 +249,12 @@ https://docs.eigenlayer.xyz/eigenlayer/operator-guides/operator-installation#ope
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()>
-{
-    if std::io::stdout().is_terminal()
-    {
+async fn main() -> anyhow::Result<()> {
+    if std::io::stdout().is_terminal() {
         tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::from_default_env())
             .init();
-    }
-    else
-    {
+    } else {
         tracing_subscriber::fmt()
             .json()
             .with_env_filter(EnvFilter::from_default_env())
@@ -276,11 +264,9 @@ async fn main() -> anyhow::Result<()>
     let cli = Cli::parse();
     info!("Run the cli: {cli:?}");
 
-    match cli
-    {
+    match cli {
         Cli::NewKey(new_key) => new_key.run(),
-        Cli::Register(register) =>
-        {
+        Cli::Register(register) => {
             register
                 .run()
                 .await
@@ -289,15 +275,13 @@ async fn main() -> anyhow::Result<()>
 }
 
 #[cfg(test)]
-mod tests
-{
+mod tests {
     use super::*;
 
     #[test]
     #[ignore]
     // It seems that this needs to be manually tested, as it requires user input
-    fn test_new_key_generation()
-    {
+    fn test_new_key_generation() {
         let new_key = NewKey {
             lagr_keystore: "zkmr_store.json".to_string(),
         };

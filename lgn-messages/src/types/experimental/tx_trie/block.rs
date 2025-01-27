@@ -5,8 +5,7 @@ use crate::types::experimental::tx_trie::keys::ProofKey;
 
 #[derive(Clone, Debug, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(tag = "type")]
-pub enum ProofKind
-{
+pub enum ProofKind {
     /// Proof of transactions(leaves) in a block transaction trie
     #[serde(rename = "1")]
     Transactions(Transactions),
@@ -17,8 +16,7 @@ pub enum ProofKind
 }
 
 #[derive(Clone, Debug, PartialEq, Hash, Deserialize, Serialize)]
-pub struct Transactions
-{
+pub struct Transactions {
     /// Which block we are proving
     pub block_nr: u64,
 
@@ -29,15 +27,13 @@ pub struct Transactions
     pub tx_end: u64,
 }
 
-impl Transactions
-{
+impl Transactions {
     #[must_use]
     pub fn new(
         block_nr: u64,
         tx_start: u64,
         tx_end: u64,
-    ) -> Self
-    {
+    ) -> Self {
         Self {
             block_nr,
             tx_start,
@@ -47,8 +43,7 @@ impl Transactions
 }
 
 #[derive(Clone, Debug, PartialEq, Hash, Deserialize, Serialize)]
-pub struct Intermediate
-{
+pub struct Intermediate {
     /// Which block we are proving
     pub block_nr: u64,
 
@@ -59,15 +54,13 @@ pub struct Intermediate
     pub data_uris: Vec<ProofKey>,
 }
 
-impl Intermediate
-{
+impl Intermediate {
     #[must_use]
     pub fn new(
         block_nr: u64,
         node_id: String,
         data_uris: Vec<ProofKey>,
-    ) -> Self
-    {
+    ) -> Self {
         Self {
             block_nr,
             node_id,
@@ -77,15 +70,13 @@ impl Intermediate
 }
 
 #[derive(Clone, Debug, PartialEq, Hash, Deserialize, Serialize)]
-pub struct Reply
-{
+pub struct Reply {
     /// Indicates where proof was stored
     pub data_uri: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Hash, Deserialize, Serialize)]
-pub struct IntermediaryResultReply
-{
+pub struct IntermediaryResultReply {
     /// Indicates where proof was stored
     pub data_uri: String,
 }
