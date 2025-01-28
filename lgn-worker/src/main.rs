@@ -482,6 +482,10 @@ async fn process_message_from_gateway(
     mp2_requirement: &semver::VersionReq,
 ) -> Result<()> {
     let message_envelope = serde_json::from_slice::<MessageEnvelope<TaskType>>(&message.task)?;
+    info!(
+        "processing task {}",
+        message_envelope.id()
+    );
 
     let reply = tokio::task::block_in_place(
         move || -> Result<MessageReplyEnvelope<ReplyType>, String> {
