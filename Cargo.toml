@@ -80,3 +80,7 @@ ignored = ["serde", "prost"]
 # verifiable-db = { path = "../mapreduce-plonky2/main/verifiable-db/" }
 # ryhope = { path = "../mapreduce-plonky2/main/ryhope/" }
 # groth16_framework_v1 = { package = "groth16_framework", path = "../mapreduce-plonky2/main/groth16-framework/" }
+
+[workspace.metadata.release]
+publish = false
+pre-release-hook = ["sh", "../.github/changelog.sh"]
