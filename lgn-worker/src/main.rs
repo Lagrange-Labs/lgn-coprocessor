@@ -115,6 +115,11 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     setup_logging(cli.json);
 
+    let mp2_version = semver::Version::parse(verifiable_db::version())?;
+    let mp2_requirement = semver::VersionReq::parse(&format!("^{mp2_version}"))?;
+
+    info!("Running MR2 version {mp2_version} - requiring {mp2_requirement}");
+
     panic::set_hook(
         Box::new(
             |panic_info| {
@@ -162,7 +167,12 @@ async fn main() -> anyhow::Result<()> {
         ),
     );
 
-    if let Err(err) = run(cli).await {
+    if let Err(err) = run(
+        cli,
+        mp2_requirement,
+    )
+    .await
+    {
         error!("{err:?}");
         bail!("Worker exited due to an error")
     } else {
@@ -170,7 +180,10 @@ async fn main() -> anyhow::Result<()> {
     }
 }
 
-async fn run(cli: Cli) -> Result<()> {
+async fn run(
+    cli: Cli,
+    mp2_requirement: semver::VersionReq,
+) -> Result<()> {
     let version = env!("CARGO_PKG_VERSION");
     info!(
         "Starting worker. version: {}",
@@ -219,7 +232,11 @@ async fn run(cli: Cli) -> Result<()> {
         .install()
         .context("setting up Prometheus")?;
 
-    run_worker(&config).await
+    run_worker(
+        &config,
+        mp2_requirement,
+    )
+    .await
 }
 
 async fn maybe_verify_checksums(config: &Config) -> Result<()> {
@@ -262,7 +279,10 @@ async fn maybe_verify_checksums(config: &Config) -> Result<()> {
     .context("Failed to verify checksums")
 }
 
-async fn run_worker(config: &Config) -> Result<()> {
+async fn run_worker(
+    config: &Config,
+    mp2_requirement: semver::VersionReq,
+) -> Result<()> {
     let grpc_url = &config
         .avs
         .gateway_url;
@@ -360,7 +380,7 @@ async fn run_worker(config: &Config) -> Result<()> {
                         break;
                     }
                 };
-                process_message_from_gateway(&mut provers_manager, msg, &mut outbound).await?;
+                process_message_from_gateway(&mut provers_manager, msg, &mut outbound, &mp2_requirement).await?;
             }
             else => break,
         }
@@ -372,6 +392,7 @@ async fn run_worker(config: &Config) -> Result<()> {
 fn process_downstream_payload(
     provers_manager: &ProversManager<TaskType, ReplyType>,
     envelope: MessageEnvelope<TaskType>,
+    mp2_requirement: &semver::VersionReq,
 ) -> Result<MessageReplyEnvelope<ReplyType>, String> {
     let span = span!(
         Level::INFO,
@@ -387,6 +408,19 @@ fn process_downstream_payload(
         envelope
     );
     counter!("zkmr_worker_tasks_received_total").increment(1);
+
+    let envelope_version = semver::Version::parse(&envelope.version)
+        .context("parsing message version")
+        .map_err(|e| e.to_string())?;
+
+    if !mp2_requirement.matches(&envelope_version) {
+        return Err(
+            format!(
+                "version mismatch: worker requires {mp2_requirement}, task = {envelope_version}"
+            ),
+        );
+    }
+
     match std::panic::catch_unwind(|| provers_manager.delegate_proving(&envelope)) {
         Ok(result) => {
             match result {
@@ -445,6 +479,7 @@ async fn process_message_from_gateway(
     provers_manager: &mut ProversManager<TaskType, ReplyType>,
     message: &WorkerToGwResponse,
     outbound: &mut tokio::sync::mpsc::Sender<WorkerToGwRequest>,
+    mp2_requirement: &semver::VersionReq,
 ) -> Result<()> {
     let message_envelope = serde_json::from_slice::<MessageEnvelope<TaskType>>(&message.task)?;
 
@@ -453,6 +488,7 @@ async fn process_message_from_gateway(
             process_downstream_payload(
                 provers_manager,
                 message_envelope,
+                mp2_requirement,
             )
         },
     );

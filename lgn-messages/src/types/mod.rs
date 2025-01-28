@@ -97,6 +97,7 @@ impl<T> MessageEnvelope<T> {
         task_id: String,
         inner: T,
         routing_key: RoutingKey,
+        version: String,
     ) -> Self {
         Self {
             query_id,
@@ -106,6 +107,7 @@ impl<T> MessageEnvelope<T> {
             routing_key,
             task_id,
             db_task_id: None,
+            version,
         }
     }
 
