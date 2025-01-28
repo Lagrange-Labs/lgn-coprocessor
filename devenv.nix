@@ -16,7 +16,7 @@ let
     };
 
     avs = {
-      gateway_grpc_url = meta.gateway-url;
+      gateway_url = meta.gateway-url;
       issuer = "Some AVS partner";
       worker_id = "worker_id";
       lagr_keystore = meta.keystore-file;
@@ -46,7 +46,7 @@ let
 
   lagrangeWorkerConfig = avsWorkerConfig //
                          { avs = {
-                             gateway_grpc_url = meta.gateway-url;
+                             gateway_url = meta.gateway-url;
                              issuer = "Lagrange";
                              worker_id = "lagrange-medium";
                              lagr_private_key = config.env.LAGRANGE_PRIVATE_KEY;
