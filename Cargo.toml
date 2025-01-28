@@ -3,11 +3,11 @@ resolver = "2"
 members = ["lgn-auth", "lgn-messages", "lgn-provers", "lgn-worker"]
 
 [workspace.dependencies]
-groth16_framework_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "lag-375-add-mp2-git-version", package = "groth16_framework" }
-mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "lag-375-add-mp2-git-version" }
-mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "lag-375-add-mp2-git-version" }
-parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "lag-375-add-mp2-git-version" }
-verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "lag-375-add-mp2-git-version" }
+groth16_framework_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "1.2.0", package = "groth16_framework" }
+mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "1.2.0" }
+mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "1.2.0" }
+parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "1.2.0" }
+verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "1.2.0" }
 
 anyhow = { version = "1.0" }
 bincode = { version = "1.0" }
