@@ -587,12 +587,7 @@ fn get_claims(config: &Config) -> Result<Claims> {
         ..Default::default()
     };
 
-    let version = env!("CARGO_PKG_VERSION");
     let private = [
-        (
-            "version".to_string(),
-            serde_json::Value::String(version.to_string()),
-        ),
         (
             "worker_class".to_string(),
             serde_json::Value::String(
