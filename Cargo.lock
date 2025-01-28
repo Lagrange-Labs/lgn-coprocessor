@@ -1348,7 +1348,7 @@ checksum = "2d886547e41f740c616ae73108f6eb70afe6d940c7bc697cb30f13daec073037"
 dependencies = [
  "camino",
  "cargo-platform",
- "semver 1.0.23",
+ "semver 1.0.25",
  "serde",
  "serde_json",
  "thiserror 1.0.65",
@@ -2554,7 +2554,7 @@ dependencies = [
  "chrono",
  "ethers-core 2.0.13",
  "reqwest 0.11.27",
- "semver 1.0.23",
+ "semver 1.0.25",
  "serde",
  "serde_json",
  "thiserror 1.0.65",
@@ -2570,7 +2570,7 @@ dependencies = [
  "chrono",
  "ethers-core 2.0.14",
  "reqwest 0.11.27",
- "semver 1.0.23",
+ "semver 1.0.25",
  "serde",
  "serde_json",
  "thiserror 1.0.65",
@@ -2757,7 +2757,7 @@ dependencies = [
  "path-slash",
  "rayon",
  "regex",
- "semver 1.0.23",
+ "semver 1.0.25",
  "serde",
  "serde_json",
  "solang-parser",
@@ -2789,7 +2789,7 @@ dependencies = [
  "path-slash",
  "rayon",
  "regex",
- "semver 1.0.23",
+ "semver 1.0.25",
  "serde",
  "serde_json",
  "solang-parser",
@@ -4037,7 +4037,6 @@ dependencies = [
  "tonic-build",
  "tracing",
  "tracing-subscriber",
- "tungstenite 0.24.0",
 ]
 
 [[package]]
@@ -5979,7 +5978,7 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92"
 dependencies = [
- "semver 1.0.23",
+ "semver 1.0.25",
 ]
 
 [[package]]
@@ -6264,9 +6263,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.23"
+version = "1.0.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61697e0a1c7e512e84a621326239844a24d8207b4669b41bc18b32ea5cbf988b"
+checksum = "f79dfe2d285b0488816f30e700a7438c5a73d816b5b7d3ac72fbc48b0d185e03"
 dependencies = [
  "serde",
 ]
@@ -6774,7 +6773,7 @@ dependencies = [
  "hex",
  "once_cell",
  "reqwest 0.11.27",
- "semver 1.0.23",
+ "semver 1.0.25",
  "serde",
  "serde_json",
  "sha2",
@@ -7154,7 +7153,7 @@ dependencies = [
  "rustls 0.21.12",
  "tokio",
  "tokio-rustls 0.24.1",
- "tungstenite 0.20.1",
+ "tungstenite",
  "webpki-roots",
 ]
 
@@ -7402,25 +7401,6 @@ dependencies = [
  "sha1",
  "thiserror 1.0.65",
  "url",
- "utf-8",
-]
-
-[[package]]
-name = "tungstenite"
-version = "0.24.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18e5b8366ee7a95b16d32197d0b2604b43a0be89dc5fac9f8e96ccafbaedda8a"
-dependencies = [
- "byteorder",
- "bytes",
- "data-encoding",
- "http 1.1.0",
- "httparse",
- "log",
- "rand",
- "rustls 0.23.16",
- "sha1",
- "thiserror 1.0.65",
  "utf-8",
 ]
 

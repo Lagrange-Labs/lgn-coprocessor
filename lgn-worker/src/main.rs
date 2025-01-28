@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
 use std::fmt::Debug;
-use std::net::TcpStream;
 use std::panic;
 use std::result::Result::Ok;
 use std::str::FromStr;
@@ -19,12 +18,10 @@ use lagrange::WorkerDone;
 use lagrange::WorkerToGwRequest;
 use lagrange::WorkerToGwResponse;
 use lgn_auth::jwt::JWTAuth;
-use lgn_messages::types::DownstreamPayload;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
-use lgn_messages::types::UpstreamPayload;
 use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
 use mimalloc::MiMalloc;
@@ -41,12 +38,7 @@ use tracing::trace;
 use tracing::Level;
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::EnvFilter;
-use tungstenite::connect;
-use tungstenite::stream::MaybeTlsStream;
-use tungstenite::Message;
-use tungstenite::WebSocket;
 
-use crate::checksum::fetch_checksum_file;
 use crate::checksum::verify_directory_checksums;
 use crate::config::Config;
 use crate::manager::v1::register_v1_provers;
@@ -227,24 +219,7 @@ async fn run(cli: Cli) -> Result<()> {
         .install()
         .context("setting up Prometheus")?;
 
-    println!(
-        "starting grpc: {:?}",
-        config.avs
-    );
-    if let Some(grpc_url) = &config
-        .avs
-        .gateway_grpc_url
-    {
-        run_with_grpc(
-            &config,
-            grpc_url,
-        )
-        .await
-    }
-    else
-    {
-        tokio::task::block_in_place(move || run_with_websocket(&config))
-    }
+    run_worker(&config).await
 }
 
 async fn maybe_verify_checksums(config: &Config) -> Result<()> {
@@ -287,12 +262,12 @@ async fn maybe_verify_checksums(config: &Config) -> Result<()> {
     .context("Failed to verify checksums")
 }
 
-async fn run_with_grpc(
-    config: &Config,
-    grpc_url: &str,
-) -> Result<()> {
+async fn run_worker(config: &Config) -> Result<()> {
+    let grpc_url = &config
+        .avs
+        .gateway_url;
     info!(
-        "Connecting to the gateway using gRPC. grpc_url: {}",
+        "Connecting to the gateway: {}",
         grpc_url
     );
 
@@ -597,226 +572,4 @@ fn get_claims(config: &Config) -> Result<Claims> {
             private,
         },
     )
-}
-
-fn run_with_websocket(config: &Config) -> Result<()> {
-    let lagrange_wallet = get_wallet(config)?;
-
-    info!(
-        "Connecting to the Gateway using websocket. gateway_url: {}",
-        &config
-            .avs
-            .gateway_url
-    );
-
-    let claims = get_claims(config)?;
-
-    let (mut ws_socket, _) = connect(
-        &config
-            .avs
-            .gateway_url,
-    )?;
-    counter!("zkmr_worker_gateway_connection_count").increment(1);
-
-    info!("Authenticating");
-    let token = JWTAuth::new(
-        claims,
-        &lagrange_wallet,
-    )?
-    .encode()?;
-    // Send the authentication frame..
-    let auth_msg = UpstreamPayload::<ReplyType>::Authentication {
-        token,
-    };
-    let auth_msg_json =
-        serde_json::to_string(&auth_msg).context("Failed to serialize Authentication message")?;
-    ws_socket
-        .send(Message::Text(auth_msg_json))
-        .context("Failed to send authorization message")?;
-    // ...then wait for the ack.
-    ws_socket
-        .read()
-        .context("Failed to read authentication confirmation")
-        .and_then(
-            |reply| {
-                match reply
-                {
-                    Message::Text(payload) => Ok(payload),
-                    _ =>
-                    {
-                        bail!(
-                "Unexpected websocket message during authentication, expected Text. reply: {}",
-                reply
-            )
-                    },
-                }
-            },
-        )
-        .and_then(
-            |payload| {
-                match serde_json::from_str::<DownstreamPayload<ReplyType>>(&payload)
-                {
-                    Ok(DownstreamPayload::Ack) => Ok(()),
-                    Ok(DownstreamPayload::Todo {
-                        envelope,
-                    }) =>
-                    {
-                        bail!(
-                            "Unexpected Todo message during authentication. msg: {:?}",
-                            envelope
-                        )
-                    },
-                    Err(err) =>
-                    {
-                        bail!(
-                            "Websocket error while authenticating. err: {}",
-                            err
-                        )
-                    },
-                }
-            },
-        )?;
-
-    let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-
-    // Always download the checksum files, this is needed by the prover constructor
-    let checksum_url = &config
-        .public_params
-        .checksum_url;
-    let expected_checksums_file = &config
-        .public_params
-        .checksum_expected_local_path;
-    fetch_checksum_file(
-        checksum_url,
-        expected_checksums_file,
-    )?;
-
-    register_v1_provers(
-        config,
-        &mut provers_manager,
-    )
-    .context("Failed to register V1 provers")?;
-
-    if !config
-        .public_params
-        .skip_checksum
-    {
-        verify_directory_checksums(
-            &config
-                .public_params
-                .dir,
-            expected_checksums_file,
-        )
-        .context("Public parameters verification failed")?;
-    }
-
-    start_work(
-        &mut ws_socket,
-        &mut provers_manager,
-    )?;
-
-    Ok(())
-}
-
-fn start_work(
-    ws_socket: &mut WebSocket<MaybeTlsStream<TcpStream>>,
-    provers_manager: &mut ProversManager<TaskType, ReplyType>,
-) -> Result<()> {
-    let ready = UpstreamPayload::<ReplyType>::Ready;
-    let ready_json = serde_json::to_string(&ready).context("Failed to encode Ready message")?;
-    ws_socket
-        .send(Message::Text(ready_json))
-        .context("unable to send ready frame")?;
-
-    loop
-    {
-        let msg = ws_socket
-            .read()
-            .context("Failed to read from gateway socket")?;
-        match msg
-        {
-            Message::Text(content) =>
-            {
-                trace!(
-                    "Received message: {:?}",
-                    content
-                );
-
-                counter!(
-                    "zkmr_worker_websocket_messages_received_total",
-                    "message_type" => "text",
-                )
-                .increment(1);
-
-                match serde_json::from_str::<DownstreamPayload<TaskType>>(&content).with_context(
-                    || {
-                        format!(
-                            "Failed to decode msg. content: {}",
-                            content
-                        )
-                    },
-                )?
-                {
-                    DownstreamPayload::Todo {
-                        envelope,
-                    } =>
-                    {
-                        let envelope_id = envelope.id();
-                        let reply = match process_downstream_payload(
-                            provers_manager,
-                            envelope,
-                        )
-                        {
-                            Ok(reply) => UpstreamPayload::Done(reply),
-                            Err(msg) =>
-                            {
-                                let var_name = format!(
-                                    "{}: {msg}",
-                                    envelope_id
-                                );
-                                UpstreamPayload::ProvingError(var_name)
-                            },
-                        };
-                        counter!("zkmr_worker_websocket_messages_sent_total",
-                                    "message_type" => "text")
-                        .increment(1);
-                        ws_socket.send(Message::Text(serde_json::to_string(&reply)?))?;
-                    },
-                    DownstreamPayload::Ack =>
-                    {
-                        counter!(
-                            "zkmr_worker_error_count",
-                            "error_type" => "unexpected_ack",
-                        )
-                        .increment(1);
-                        bail!("Unexpected ACK frame")
-                    },
-                }
-            },
-            Message::Ping(_) =>
-            {
-                trace!("Received ping or close message");
-
-                counter!(
-                    "zkmr_worker_websocket_messages_received_total",
-                    "message_type" => "ping",
-                )
-                .increment(1);
-            },
-            Message::Close(_) =>
-            {
-                info!("Received close message");
-                return Ok(());
-            },
-            _ =>
-            {
-                error!("Unexpected frame: {msg}");
-                counter!(
-                    "zkmr_worker_error_count",
-                    "error_type" => "unexpected_frame",
-                )
-                .increment(1);
-            },
-        }
-    }
 }

@@ -3,7 +3,7 @@ version = "develop"
 instance_type = "medium"
 
 [avs]
-gateway_url = "ws://gateway.test-distributed-query.test.distributed-query.io:80"
+gateway_url = "http://localhost:10000"
 issuer = "issuer"
 worker_id = "worker_id"
 lagr_keystore = "lagr_keystore.json"

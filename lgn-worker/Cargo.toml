@@ -39,7 +39,6 @@ mimalloc = { workspace = true }
 redact = { workspace = true, features = ["serde"] }
 rpassword = { workspace = true }
 serde_derive = { workspace = true }
-tungstenite = { workspace = true, features = ["rustls"] }
 tonic = { workspace = true }
 prost = { workspace = true }
 tokio-stream = { workspace = true }
