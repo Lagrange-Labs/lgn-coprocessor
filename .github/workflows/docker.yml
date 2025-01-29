@@ -137,7 +137,7 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-      
+
       - name: Push to ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -159,7 +159,7 @@ jobs:
               fi
   public-push:
     name: Push Docker Images to Docker hub
-    if: contains('main holesky mainnet hack-merge-table v1_base 140/merge', github.ref_name) || startsWith(github.ref, 'refs/tags/')
+    # if: contains('main holesky mainnet v1_base', github.ref_name) || startsWith(github.ref, 'refs/tags/') || endsWith(github.ref, 'lag-457-convert-the-worker-to-the-new-gw')
     runs-on: ${{needs.base.outputs.RUNNER}}
     needs:
       - build
