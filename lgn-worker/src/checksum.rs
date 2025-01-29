@@ -29,5 +29,7 @@ pub(crate) fn fetch_checksums(url: impl IntoUrl) -> anyhow::Result<HashMap<Strin
         }
     }
 
+    tracing::debug!("checksums: {r:?}");
+
     Ok(r)
 }

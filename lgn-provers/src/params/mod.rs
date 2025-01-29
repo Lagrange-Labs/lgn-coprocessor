@@ -23,7 +23,9 @@ const DOWNLOAD_MAX_RETRIES: u8 = 3;
 /// Read the given file `f`, and returns its content as well as its Blake3 checksum.
 fn read_file_and_checksum(f: &Path) -> anyhow::Result<(Bytes, blake3::Hash)> {
     let bytes = std::fs::read(f).with_context(|| anyhow!("reading `{}`", f.display()))?;
-    let hash = blake3::hash(&bytes);
+    let mut hasher = blake3::Hasher::new();
+    hasher.update_rayon(&bytes);
+    let hash = hasher.finalize();
     Ok((bytes.into(), hash))
 }
 
@@ -141,7 +143,9 @@ impl ParamsLoader {
         }
 
         let bytes = response.bytes().context("fetching params bytes")?;
-        let found_checksum = blake3::hash(&bytes);
+        let mut hasher = blake3::Hasher::new();
+        hasher.update_rayon(&bytes);
+        let found_checksum = hasher.finalize();
         ensure!(
             found_checksum != *expected_checksum,
             "param checksum mismatch: {} ≠ {}",

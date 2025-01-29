@@ -11,7 +11,7 @@ verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git"
 
 anyhow = { version = "1.0" }
 bincode = { version = "1.0" }
-blake3 = "1"
+blake3 = { version = "1", features = ["rayon"] }
 ethers = { version = "2.0" }
 hex = { version = "0.4" }
 object_store = { version = "0.11" }
