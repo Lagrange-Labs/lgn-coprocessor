@@ -14,7 +14,7 @@ path = "src/one-shot.rs"
 [dependencies]
 anyhow = { workspace = true }
 backtrace = { workspace = true }
-checksums = { workspace = true }
+blake3.workspace = true
 clap = { workspace = true, features = ["derive", "env", "help", "std", "suggestions"] }
 config = { workspace = true, features = ["toml"] }
 elliptic-curve = { workspace = true }
@@ -48,6 +48,7 @@ tonic = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "json"] }
 tracing = { workspace = true }
 verifiable-db.workspace = true
+exponential-backoff = "2.0.0"
 
 
 [build-dependencies]

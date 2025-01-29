@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use tracing::debug;
 use tracing::info;
 
@@ -28,9 +30,7 @@ pub fn create_prover(
     url: &str,
     dir: &str,
     file: &str,
-    checksum_expected_local_path: &str,
-    skip_checksum: bool,
-    skip_store: bool,
+    checksums: &HashMap<String, blake3::Hash>,
 ) -> anyhow::Result<Querying<impl StorageQueryProver>> {
     let prover = {
         #[cfg(feature = "dummy-prover")]
@@ -44,14 +44,7 @@ pub fn create_prover(
         let prover = {
             info!("Creating query prover");
 
-            euclid_prover::EuclidQueryProver::init(
-                url,
-                dir,
-                file,
-                checksum_expected_local_path,
-                skip_checksum,
-                skip_store,
-            )?
+            euclid_prover::EuclidQueryProver::init(url, dir, file, checksums)?
         };
 
         debug!("Query prover created");

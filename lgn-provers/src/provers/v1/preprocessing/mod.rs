@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use tracing::debug;
 use tracing::info;
 
@@ -18,9 +20,7 @@ pub fn create_prover(
     url: &str,
     dir: &str,
     file: &str,
-    checksum_expected_local_path: &str,
-    skip_checksum: bool,
-    skip_store: bool,
+    checksums: &HashMap<String, blake3::Hash>,
 ) -> anyhow::Result<Preprocessing<impl StorageExtractionProver + StorageDatabaseProver>> {
     let prover = {
         #[cfg(feature = "dummy-prover")]
@@ -33,14 +33,7 @@ pub fn create_prover(
         #[cfg(not(feature = "dummy-prover"))]
         let prover = {
             info!("Creating preprocessing prover");
-            euclid_prover::EuclidProver::init(
-                url,
-                dir,
-                file,
-                checksum_expected_local_path,
-                skip_checksum,
-                skip_store,
-            )?
+            euclid_prover::EuclidProver::init(url, dir, file, checksums)?
         };
         debug!("Preprocessing prover created");
         prover

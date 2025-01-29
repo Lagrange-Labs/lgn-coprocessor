@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::Context;
 use lgn_messages::types::v1::query::tasks::MatchingRowInput;
 use lgn_messages::types::v1::query::tasks::NonExistenceInput;
@@ -58,35 +60,20 @@ impl EuclidQueryProver {
             MAX_NUM_PLACEHOLDERS,
         >
     ) -> Self {
-        Self {
-            params,
-        }
+        Self { params }
     }
 
     pub(crate) fn init(
         url: &str,
         dir: &str,
         file: &str,
-        checksum_expected_local_path: &str,
-        skip_checksum: bool,
-        skip_store: bool,
+        checksums: &HashMap<String, blake3::Hash>,
     ) -> anyhow::Result<Self> {
-        let params = ParamsLoader::prepare_raw(
-            url,
-            dir,
-            file,
-            checksum_expected_local_path,
-            skip_checksum,
-            skip_store,
-        )
-        .context("while loading bincode-serialized parameters")?;
+        let params = ParamsLoader::prepare_raw(url, dir, file, checksums)
+            .context("while loading bincode-serialized parameters")?;
         let reader = std::io::BufReader::new(params.as_ref());
         let params = bincode::deserialize_from(reader)?;
-        Ok(
-            Self {
-                params,
-            },
-        )
+        Ok(Self { params })
     }
 }
 
@@ -104,9 +91,7 @@ impl StorageQueryProver for EuclidQueryProver {
             &input.column_cells,
             &pis.predication_operations,
             &pis.result,
-            &input
-                .placeholders
-                .into(),
+            &input.placeholders.into(),
             input.is_leaf,
             &pis.bounds,
         )
@@ -119,21 +104,11 @@ impl StorageQueryProver for EuclidQueryProver {
             .context("while generating proof for the universal circuit")?;
 
         let proof_type = "universal_circuit";
-        let time = now
-            .elapsed()
-            .as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
+        let time = now.elapsed().as_secs_f32();
+        info!(time, proof_type, "proof generation time: {:?}", now.elapsed());
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        debug!(
-            "universal circuit size in kB: {}",
-            proof.len() / 1024
-        );
+        debug!("universal circuit size in kB: {}", proof.len() / 1024);
 
         Ok(proof)
     }
@@ -147,9 +122,7 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let now = std::time::Instant::now();
 
-        let placeholders = input
-            .placeholders
-            .into();
+        let placeholders = input.placeholders.into();
 
         let input = CircuitInput::new_row_chunks_input(
             &input.rows,
@@ -168,21 +141,11 @@ impl StorageQueryProver for EuclidQueryProver {
             .context("while generating proof for the rows-chunk circuit")?;
 
         let proof_type = "rows_chunk";
-        let time = now
-            .elapsed()
-            .as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
+        let time = now.elapsed().as_secs_f32();
+        info!(time, proof_type, "proof generation time: {:?}", now.elapsed());
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        debug!(
-            "rows-chunk size in kB: {}",
-            proof.len() / 1024
-        );
+        debug!("rows-chunk size in kB: {}", proof.len() / 1024);
 
         Ok(proof)
     }
@@ -206,21 +169,11 @@ impl StorageQueryProver for EuclidQueryProver {
             .context("while generating proof for the chunk-aggregation circuit")?;
 
         let proof_type = "chunk_aggregation";
-        let time = now
-            .elapsed()
-            .as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
+        let time = now.elapsed().as_secs_f32();
+        info!(time, proof_type, "proof generation time: {:?}", now.elapsed());
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        debug!(
-            "chunk-aggregation size in kB: {}",
-            proof.len() / 1024
-        );
+        debug!("chunk-aggregation size in kB: {}", proof.len() / 1024);
 
         Ok(proof)
     }
@@ -234,9 +187,7 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let now = std::time::Instant::now();
 
-        let placeholders = input
-            .placeholders
-            .into();
+        let placeholders = input.placeholders.into();
 
         let input = CircuitInput::new_non_existence_input(
             input.index_path,
@@ -256,21 +207,11 @@ impl StorageQueryProver for EuclidQueryProver {
             .context("while generating proof for the non-existence circuit")?;
 
         let proof_type = "non_existence";
-        let time = now
-            .elapsed()
-            .as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
+        let time = now.elapsed().as_secs_f32();
+        info!(time, proof_type, "proof generation time: {:?}", now.elapsed());
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        debug!(
-            "non-existence size in kB: {}",
-            proof.len() / 1024
-        );
+        debug!("non-existence size in kB: {}", proof.len() / 1024);
 
         Ok(proof)
     }
@@ -303,21 +244,11 @@ impl StorageQueryProver for EuclidQueryProver {
             .context("while generating proof for the (empty) revelation circuit")?;
 
         let proof_type = "revelation";
-        let time = now
-            .elapsed()
-            .as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
+        let time = now.elapsed().as_secs_f32();
+        info!(time, proof_type, "proof generation time: {:?}", now.elapsed());
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        debug!(
-            "revelation size in kB: {}",
-            proof.len() / 1024
-        );
+        debug!("revelation size in kB: {}", proof.len() / 1024);
 
         Ok(proof)
     }
@@ -356,21 +287,11 @@ impl StorageQueryProver for EuclidQueryProver {
             .context("while generating proof for the (empty) revelation circuit")?;
 
         let proof_type = "revelation";
-        let time = now
-            .elapsed()
-            .as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
+        let time = now.elapsed().as_secs_f32();
+        info!(time, proof_type, "proof generation time: {:?}", now.elapsed());
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
-        debug!(
-            "revelation size in kB: {}",
-            proof.len() / 1024
-        );
+        debug!("revelation size in kB: {}", proof.len() / 1024);
 
         Ok(proof)
     }

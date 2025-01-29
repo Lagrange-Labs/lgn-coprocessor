@@ -28,7 +28,7 @@ let
     public_params = {
       dir = "./runtime/zkmr_params";
       url = meta.params-url;
-      checksum_url = "${meta.params-url}/public_params.hash";
+      params_root_url = meta.params-url;
 
       preprocessing_params = {
         file = "preprocessing_params.bin";

@@ -1,4 +1,6 @@
 //! This module contains logic of generating the Groth16 proofs which could be verified on-chain.
+use std::collections::HashMap;
+
 use prover::Prover;
 use tracing::debug;
 use tracing::info;
@@ -20,11 +22,9 @@ pub fn create_prover(
     url: &str,
     dir: &str,
     circuit_file: &str,
-    checksum_expected_local_path: &str,
-    skip_checksum: bool,
+    checksums: &HashMap<String, blake3::Hash>,
     pk_file: &str,
     vk_file: &str,
-    skip_store: bool,
 ) -> anyhow::Result<Groth16<impl Prover>> {
     let prover = {
         #[cfg(feature = "dummy-prover")]
@@ -35,16 +35,7 @@ pub fn create_prover(
         #[cfg(not(feature = "dummy-prover"))]
         let prover = {
             info!("Creating groth16 prover");
-            euclid_prover::Groth16Prover::init(
-                url,
-                dir,
-                circuit_file,
-                checksum_expected_local_path,
-                skip_checksum,
-                pk_file,
-                vk_file,
-                skip_store,
-            )?
+            euclid_prover::Groth16Prover::init(url, dir, circuit_file, pk_file, vk_file, checksums)?
         };
 
         debug!("Groth16 prover created");
