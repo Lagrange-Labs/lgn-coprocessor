@@ -16,10 +16,7 @@ const REQUIRED_STAKE_MEDIUM_USD: Stake = 98777;
 const REQUIRED_STAKE_LARGE_USD: Stake = 169111;
 
 /// A keyed payload contains a bunch of bytes accompanied by a storage index
-pub type KeyedPayload = (
-    String,
-    Vec<u8>,
-);
+pub type KeyedPayload = (String, Vec<u8>);
 
 pub trait ToKeyedPayload {
     fn to_keyed_payload(&self) -> KeyedPayload;
@@ -83,8 +80,7 @@ impl<T> std::fmt::Debug for MessageEnvelope<T> {
         write!(
             f,
             "MSG#{:?}<{}, {}>",
-            self.db_task_id
-                .unwrap_or_default(),
+            self.db_task_id.unwrap_or_default(),
             self.task_id,
             self.query_id
         )
@@ -120,10 +116,7 @@ impl<T> MessageEnvelope<T> {
     }
 
     pub fn id(&self) -> String {
-        format!(
-            "{}-{}",
-            self.query_id, self.task_id
-        )
+        format!("{}-{}", self.query_id, self.task_id)
     }
 
     pub fn inner(&self) -> &T {
@@ -152,11 +145,7 @@ impl<T> std::fmt::Debug for MessageReplyEnvelope<T> {
         &self,
         f: &mut Formatter<'_>,
     ) -> std::fmt::Result {
-        write!(
-            f,
-            "REPLY<{}, {}>",
-            self.task_id, self.query_id
-        )
+        write!(f, "REPLY<{}, {}>", self.task_id, self.query_id)
     }
 }
 
@@ -175,19 +164,13 @@ impl<T> MessageReplyEnvelope<T> {
     }
 
     pub fn id(&self) -> String {
-        format!(
-            "{}-{}",
-            self.query_id, self.task_id
-        )
+        format!("{}-{}", self.query_id, self.task_id)
     }
 
     /// Flatten `inner`, returning either Ok(successful_proof) or
     /// Err(WorkerError)
     pub fn inner(&self) -> Result<&T, &WorkerError> {
-        match self
-            .error
-            .as_ref()
-        {
+        match self.error.as_ref() {
             None => Ok(&self.inner),
             Some(t) => Err(t),
         }
@@ -259,22 +242,11 @@ impl Position {
         level: usize,
         index: usize,
     ) -> Self {
-        Self {
-            level,
-            index,
-        }
+        Self { level, index }
     }
 
-    pub fn as_tuple(
-        &self
-    ) -> (
-        usize,
-        usize,
-    ) {
-        (
-            self.level,
-            self.index,
-        )
+    pub fn as_tuple(&self) -> (usize, usize) {
+        (self.level, self.index)
     }
 }
 
@@ -283,44 +255,19 @@ impl Display for Position {
         &self,
         f: &mut Formatter<'_>,
     ) -> std::fmt::Result {
-        write!(
-            f,
-            "{}/{}",
-            self.level, self.index
-        )
+        write!(f, "{}/{}", self.level, self.index)
     }
 }
 
-impl
-    From<(
-        usize,
-        usize,
-    )> for Position
-{
-    fn from(
-        (level, index): (
-            usize,
-            usize,
-        )
-    ) -> Self {
-        Self {
-            level,
-            index,
-        }
+impl From<(usize, usize)> for Position {
+    fn from((level, index): (usize, usize)) -> Self {
+        Self { level, index }
     }
 }
 
-impl From<Position>
-    for (
-        usize,
-        usize,
-    )
-{
+impl From<Position> for (usize, usize) {
     fn from(position: Position) -> Self {
-        (
-            position.level,
-            position.index,
-        )
+        (position.level, position.index)
     }
 }
 
@@ -328,9 +275,7 @@ impl From<Position>
 #[derive(Debug, Serialize, Deserialize)]
 pub enum UpstreamPayload<T> {
     /// The worker is authenticating
-    Authentication {
-        token: String,
-    },
+    Authentication { token: String },
 
     /// The worker is ready to start working(after params loading)
     Ready,
@@ -349,30 +294,16 @@ impl<T> Display for UpstreamPayload<T> {
     ) -> std::fmt::Result {
         match self {
             UpstreamPayload::Done(_) => {
-                write!(
-                    f,
-                    "Task done"
-                )
+                write!(f, "Task done")
             },
-            UpstreamPayload::Authentication {
-                ..
-            } => {
-                write!(
-                    f,
-                    "Authentication"
-                )
+            UpstreamPayload::Authentication { .. } => {
+                write!(f, "Authentication")
             },
             UpstreamPayload::Ready => {
-                write!(
-                    f,
-                    "Ready"
-                )
+                write!(f, "Ready")
             },
             UpstreamPayload::ProvingError(_) => {
-                write!(
-                    f,
-                    "Proving error"
-                )
+                write!(f, "Proving error")
             },
         }
     }
@@ -384,9 +315,7 @@ pub enum DownstreamPayload<T> {
     /// indicate a successful authentication to the worker
     Ack,
     /// order the worker to process the given task
-    Todo {
-        envelope: MessageEnvelope<T>,
-    },
+    Todo { envelope: MessageEnvelope<T> },
 }
 
 pub type Stake = u128;
@@ -422,10 +351,7 @@ impl TaskDifficulty {
 
     /// Returns the minimal worker class required to process a task of the given queue
     pub fn from_queue(domain: &str) -> Self {
-        let domain = domain
-            .split('_')
-            .next()
-            .expect("invalid routing key");
+        let domain = domain.split('_').next().expect("invalid routing key");
         match domain {
             v1::preprocessing::ROUTING_DOMAIN => TaskDifficulty::Medium,
             v1::query::ROUTING_DOMAIN => TaskDifficulty::Small,
@@ -439,10 +365,7 @@ impl TryFrom<&str> for TaskDifficulty {
     type Error = String;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value
-            .to_ascii_lowercase()
-            .as_str()
-        {
+        match value.to_ascii_lowercase().as_str() {
             "disabled" => Ok(TaskDifficulty::Disabled),
             "small" => Ok(TaskDifficulty::Small),
             "medium" => Ok(TaskDifficulty::Medium),
@@ -472,11 +395,7 @@ impl Display for TaskDifficulty {
 
 pub fn kp_pretty(kp: &Option<KeyedPayload>) -> String {
     kp.as_ref()
-        .map(
-            |kp| {
-                kp.0.to_owned()
-            },
-        )
+        .map(|kp| kp.0.to_owned())
         .unwrap_or("empty".to_string())
 }
 
@@ -532,10 +451,7 @@ impl ToProverType for TaskType {
             TaskType::V1Query(_) => ProverType::V1Query,
             TaskType::V1Groth16(_) => ProverType::V1Groth16,
             _ => {
-                panic!(
-                    "Unsupported task type: {:?}",
-                    self
-                )
+                panic!("Unsupported task type: {:?}", self)
             },
         }
     }

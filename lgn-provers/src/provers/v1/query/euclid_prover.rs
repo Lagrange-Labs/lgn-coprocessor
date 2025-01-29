@@ -105,7 +105,12 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let proof_type = "universal_circuit";
         let time = now.elapsed().as_secs_f32();
-        info!(time, proof_type, "proof generation time: {:?}", now.elapsed());
+        info!(
+            time,
+            proof_type,
+            "proof generation time: {:?}",
+            now.elapsed()
+        );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         debug!("universal circuit size in kB: {}", proof.len() / 1024);
@@ -142,7 +147,12 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let proof_type = "rows_chunk";
         let time = now.elapsed().as_secs_f32();
-        info!(time, proof_type, "proof generation time: {:?}", now.elapsed());
+        info!(
+            time,
+            proof_type,
+            "proof generation time: {:?}",
+            now.elapsed()
+        );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         debug!("rows-chunk size in kB: {}", proof.len() / 1024);
@@ -170,7 +180,12 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let proof_type = "chunk_aggregation";
         let time = now.elapsed().as_secs_f32();
-        info!(time, proof_type, "proof generation time: {:?}", now.elapsed());
+        info!(
+            time,
+            proof_type,
+            "proof generation time: {:?}",
+            now.elapsed()
+        );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         debug!("chunk-aggregation size in kB: {}", proof.len() / 1024);
@@ -208,7 +223,12 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let proof_type = "non_existence";
         let time = now.elapsed().as_secs_f32();
-        info!(time, proof_type, "proof generation time: {:?}", now.elapsed());
+        info!(
+            time,
+            proof_type,
+            "proof generation time: {:?}",
+            now.elapsed()
+        );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         debug!("non-existence size in kB: {}", proof.len() / 1024);
@@ -245,7 +265,12 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let proof_type = "revelation";
         let time = now.elapsed().as_secs_f32();
-        info!(time, proof_type, "proof generation time: {:?}", now.elapsed());
+        info!(
+            time,
+            proof_type,
+            "proof generation time: {:?}",
+            now.elapsed()
+        );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         debug!("revelation size in kB: {}", proof.len() / 1024);
@@ -288,7 +313,12 @@ impl StorageQueryProver for EuclidQueryProver {
 
         let proof_type = "revelation";
         let time = now.elapsed().as_secs_f32();
-        info!(time, proof_type, "proof generation time: {:?}", now.elapsed());
+        info!(
+            time,
+            proof_type,
+            "proof generation time: {:?}",
+            now.elapsed()
+        );
         histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
 
         debug!("revelation size in kB: {}", proof.len() / 1024);

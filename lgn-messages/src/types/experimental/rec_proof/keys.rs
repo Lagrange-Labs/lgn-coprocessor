@@ -16,24 +16,13 @@ type QueryId = String;
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ProofKey {
     /// Public params and inputs
-    PublicParams(
-        Experiment,
-        LogMaxCapacity,
-    ),
+    PublicParams(Experiment, LogMaxCapacity),
 
     /// Inputs(data)
-    Inputs(
-        Experiment,
-        LogMaxCapacity,
-        LogSubsetSize,
-    ),
+    Inputs(Experiment, LogMaxCapacity, LogSubsetSize),
 
     /// Compute proof key
-    Compute(
-        QueryId,
-        Level,
-        Index,
-    ),
+    Compute(QueryId, Level, Index),
 }
 
 impl From<ProofKey> for Path {
@@ -59,11 +48,7 @@ impl Display for ProofKey {
         &self,
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            Path::from(self.clone())
-        )
+        write!(f, "{}", Path::from(self.clone()))
     }
 }
 

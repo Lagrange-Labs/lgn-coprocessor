@@ -127,17 +127,9 @@ pub async fn is_operator(
     operator: Address,
 ) -> Result<bool> {
     let contract_address: Address = network.eigen_delegation_manager_address();
-    let contract = DelegationManager::new(
-        contract_address,
-        provider,
-    );
+    let contract = DelegationManager::new(contract_address, provider);
 
-    Ok(
-        contract
-            .is_operator(operator)
-            .call()
-            .await?,
-    )
+    Ok(contract.is_operator(operator).call().await?)
 }
 
 /// Call AVSDirectory contract function `calculateOperatorAVSRegistrationDigestHash`
@@ -151,18 +143,10 @@ pub async fn calculate_registration_digest_hash(
     let avs: Address = network.lagrange_service_manager_address();
 
     let contract_address: Address = network.eigen_avs_directory();
-    let contract = AVSDirectory::new(
-        contract_address,
-        provider,
-    );
+    let contract = AVSDirectory::new(contract_address, provider);
 
     let digest_hash = contract
-        .calculate_operator_avs_registration_digest_hash(
-            operator,
-            avs,
-            salt,
-            expiry,
-        )
+        .calculate_operator_avs_registration_digest_hash(operator, avs, salt, expiry)
         .call()
         .await?;
 
@@ -180,10 +164,7 @@ pub async fn register_operator(
 ) -> Result<()> {
     let operator_address = client.address();
     let contract_address: Address = network.lagrange_registry_address();
-    let contract = ZKMRStakeRegistry::new(
-        contract_address,
-        client,
-    );
+    let contract = ZKMRStakeRegistry::new(contract_address, client);
 
     let public_key = zkmr_stake_registry::PublicKey {
         x: public_key.x,
@@ -195,17 +176,11 @@ pub async fn register_operator(
         signature: signature.into(),
     };
     // we first check if we are whitelist
-    let is_whitelisted = contract
-        .whitelist(operator_address)
-        .call()
-        .await?;
+    let is_whitelisted = contract.whitelist(operator_address).call().await?;
     if !is_whitelisted {
         bail!("operator address {operator_address} is not whitelisted on the Lagrange contract. Contact Lagrange admin.");
     }
-    let is_registered = contract
-        .is_registered(operator_address)
-        .call()
-        .await?;
+    let is_registered = contract.is_registered(operator_address).call().await?;
     if is_registered {
         bail!(
             "operator address {operator_address} is already registered on our contract! Exiting."
@@ -217,10 +192,7 @@ pub async fn register_operator(
     );
 
     let receipt = contract
-        .register_operator(
-            public_key,
-            signature,
-        )
+        .register_operator(public_key, signature)
         .send()
         .await?
         .await?;
@@ -242,31 +214,19 @@ mod test {
     fn test_network() {
         assert_eq!(
             Network::Holesky.eigen_avs_directory(),
-            HOLESKY_AVS_DIRECTORY_ADDR
-                .to_string()
-                .parse()
-                .unwrap()
+            HOLESKY_AVS_DIRECTORY_ADDR.to_string().parse().unwrap()
         );
         assert_eq!(
             Network::Mainnet.eigen_avs_directory(),
-            MAINNET_AVS_DIRECTORY_ADDR
-                .to_string()
-                .parse()
-                .unwrap()
+            MAINNET_AVS_DIRECTORY_ADDR.to_string().parse().unwrap()
         );
         assert_eq!(
             Network::Holesky.eigen_delegation_manager_address(),
-            HOLESKY_DELEGATION_MANAGER_ADDR
-                .to_string()
-                .parse()
-                .unwrap()
+            HOLESKY_DELEGATION_MANAGER_ADDR.to_string().parse().unwrap()
         );
         assert_eq!(
             Network::Mainnet.eigen_delegation_manager_address(),
-            MAINNET_DELEGATION_MANAGER_ADDR
-                .to_string()
-                .parse()
-                .unwrap()
+            MAINNET_DELEGATION_MANAGER_ADDR.to_string().parse().unwrap()
         );
     }
 }

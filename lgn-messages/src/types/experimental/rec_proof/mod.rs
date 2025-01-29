@@ -24,27 +24,9 @@ pub struct WorkerTask {
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum WorkerTaskType {
-    Prepare(
-        LogMaxCapacity,
-        LogSubsetSize,
-        LeavesIndices,
-    ),
-    Compute(
-        (
-            Level,
-            Index,
-        ),
-        LogMaxCapacity,
-        LogSubsetSize,
-    ),
-    BatchCompute(
-        Vec<(
-            Level,
-            Index,
-        )>,
-        LogMaxCapacity,
-        LogSubsetSize,
-    ),
+    Prepare(LogMaxCapacity, LogSubsetSize, LeavesIndices),
+    Compute((Level, Index), LogMaxCapacity, LogSubsetSize),
+    BatchCompute(Vec<(Level, Index)>, LogMaxCapacity, LogSubsetSize),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
@@ -84,9 +66,6 @@ impl WorkerReply {
         query_id: String,
         task_id: String,
     ) -> Self {
-        Self {
-            query_id,
-            task_id,
-        }
+        Self { query_id, task_id }
     }
 }

@@ -50,16 +50,10 @@ impl WorkerTask {
         block_nr: u64,
         computation: Computation,
     ) -> Self {
-        let transactions = block::Transactions::new(
-            block_nr,
-            *range.start() as u64,
-            *range.end() as u64,
-        );
+        let transactions =
+            block::Transactions::new(block_nr, *range.start() as u64, *range.end() as u64);
         let proof_kind = WorkerTaskType::BlockProof(block::ProofKind::Transactions(transactions));
-        WorkerTask::new(
-            proof_kind,
-            computation,
-        )
+        WorkerTask::new(proof_kind, computation)
     }
 
     /// Initializes a new worker task for transaction trie node proof.
@@ -75,19 +69,10 @@ impl WorkerTask {
         computation: Computation,
         data_uris: Vec<ProofKey>,
     ) -> Self {
-        let proof_kind = WorkerTaskType::BlockProof(
-            block::ProofKind::Intermediate(
-                block::Intermediate::new(
-                    block_nr,
-                    node_id,
-                    data_uris,
-                ),
-            ),
-        );
-        WorkerTask::new(
-            proof_kind,
-            computation,
-        )
+        let proof_kind = WorkerTaskType::BlockProof(block::ProofKind::Intermediate(
+            block::Intermediate::new(block_nr, node_id, data_uris),
+        ));
+        WorkerTask::new(proof_kind, computation)
     }
 
     /// Initializes a new worker task for a range of blocks proof.
@@ -100,13 +85,10 @@ impl WorkerTask {
         computation: Computation,
         data_uris: Vec<ProofKey>,
     ) -> Self {
-        let proof_kind = WorkerTaskType::BlocksRangeProof(
-            block_range::ProofKind::Blocks(block_range::Blocks::new(data_uris)),
-        );
-        WorkerTask::new(
-            proof_kind,
-            computation,
-        )
+        let proof_kind = WorkerTaskType::BlocksRangeProof(block_range::ProofKind::Blocks(
+            block_range::Blocks::new(data_uris),
+        ));
+        WorkerTask::new(proof_kind, computation)
     }
 }
 
@@ -172,10 +154,7 @@ impl Computation {
     pub fn id(&self) -> String {
         match self {
             Computation::SumOfGasFees(computation) => {
-                format!(
-                    "sum_of_gas_fees_{}",
-                    computation.dest_address
-                )
+                format!("sum_of_gas_fees_{}", computation.dest_address)
             },
         }
     }

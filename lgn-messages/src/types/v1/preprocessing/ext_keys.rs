@@ -36,15 +36,10 @@ pub enum ProofKey {
     },
 
     /// Indicates the location of Contract proof.
-    Contract {
-        address: Address,
-        block_nr: BlockNr,
-    },
+    Contract { address: Address, block_nr: BlockNr },
 
     /// Indicates the location of Block proof.
-    Block {
-        block_nr: BlockNr,
-    },
+    Block { block_nr: BlockNr },
 
     /// Indicates the location of FinalExtraction proof.
     FinalExtraction {
@@ -60,10 +55,7 @@ impl Display for ProofKey {
     ) -> std::fmt::Result {
         match self {
             ProofKey::PublicParams => {
-                write!(
-                    f,
-                    "PublicParams_v1"
-                )
+                write!(f, "PublicParams_v1")
             },
             ProofKey::MptVariable {
                 table_hash,
@@ -94,10 +86,7 @@ impl Display for ProofKey {
                     KEYS_PREPROCESSING_PREFIX, table_hash, MPT_LENGTH_PREFIX, block_nr
                 )
             },
-            ProofKey::Contract {
-                address,
-                block_nr,
-            } => {
+            ProofKey::Contract { address, block_nr } => {
                 // Example: V1_PREPROCESSING/CONTRACT/0x1234/1
                 write!(
                     f,
@@ -105,9 +94,7 @@ impl Display for ProofKey {
                     KEYS_PREPROCESSING_PREFIX, CONTRACT_PREFIX, address, block_nr
                 )
             },
-            ProofKey::Block {
-                block_nr,
-            } => {
+            ProofKey::Block { block_nr } => {
                 // Example: V1_PREPROCESSING/EXT_BLOCK/1
                 write!(
                     f,
@@ -115,10 +102,7 @@ impl Display for ProofKey {
                     KEYS_PREPROCESSING_PREFIX, BLOCK_PREFIX, block_nr
                 )
             },
-            ProofKey::FinalExtraction {
-                table_id,
-                block_nr,
-            } => {
+            ProofKey::FinalExtraction { table_id, block_nr } => {
                 // Example: V1_PREPROCESSING/1/FINAL_EXTRACTION/1
                 write!(
                     f,

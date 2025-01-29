@@ -27,7 +27,11 @@ impl Groth16Prover {
         let pk_bytes = ParamsLoader::prepare_raw(url, dir, pk_file, checksums)?;
 
         debug!("Creating Groth16 prover");
-        let inner = InnerProver::from_bytes(r1cs_bytes.to_vec(), pk_bytes.to_vec(), circuit_bytes.to_vec())?;
+        let inner = InnerProver::from_bytes(
+            r1cs_bytes.to_vec(),
+            pk_bytes.to_vec(),
+            circuit_bytes.to_vec(),
+        )?;
 
         debug!("Groth16 prover created");
         Ok(Self { inner })

@@ -138,10 +138,12 @@ impl StorageExtractionProver for EuclidProver {
                 self.prove(input, "mapping variable extension")
             },
             Prototype::List(17) => {
-                let input = ValuesExtraction(values_extraction::CircuitInput::new_mapping_variable_branch(
-                    node,
-                    child_proofs,
-                ));
+                let input = ValuesExtraction(
+                    values_extraction::CircuitInput::new_mapping_variable_branch(
+                        node,
+                        child_proofs,
+                    ),
+                );
                 self.prove(input, "mapping variable branch")
             },
             _ => bail!("Invalid RLP item count"),
@@ -190,7 +192,10 @@ impl StorageExtractionProver for EuclidProver {
         node: Vec<u8>,
         child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = ContractExtraction(contract_extraction::CircuitInput::new_branch(node, child_proof));
+        let input = ContractExtraction(contract_extraction::CircuitInput::new_branch(
+            node,
+            child_proof,
+        ));
         self.prove(input, "contract branch")
     }
 
@@ -198,7 +203,9 @@ impl StorageExtractionProver for EuclidProver {
         &self,
         rlp_header: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = BlockExtraction(block_extraction::CircuitInput::from_block_header(rlp_header));
+        let input = BlockExtraction(block_extraction::CircuitInput::from_block_header(
+            rlp_header,
+        ));
         self.prove(input, "block")
     }
 
@@ -241,12 +248,14 @@ impl StorageExtractionProver for EuclidProver {
         simple_table_proof: Vec<u8>,
         mapping_table_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = FinalExtraction(final_extraction::CircuitInput::new_merge_single_and_mapping(
-            block_proof,
-            contract_proof,
-            simple_table_proof,
-            mapping_table_proof,
-        )?);
+        let input = FinalExtraction(
+            final_extraction::CircuitInput::new_merge_single_and_mapping(
+                block_proof,
+                contract_proof,
+                simple_table_proof,
+                mapping_table_proof,
+            )?,
+        );
         self.prove(input, "final extraction merge")
     }
 }
@@ -397,8 +406,10 @@ impl StorageDatabaseProver for EuclidProver {
         extraction_proof: Vec<u8>,
         rows_tree_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        let left_hash = left_child.unwrap_or_else(|| empty_poseidon_hash_as_vec().try_into().unwrap());
-        let right_hash = right_child.unwrap_or_else(|| empty_poseidon_hash_as_vec().try_into().unwrap());
+        let left_hash =
+            left_child.unwrap_or_else(|| empty_poseidon_hash_as_vec().try_into().unwrap());
+        let right_hash =
+            right_child.unwrap_or_else(|| empty_poseidon_hash_as_vec().try_into().unwrap());
         let input = BlockTree(verifiable_db::block_tree::CircuitInput::new_parent(
             block_id,
             old_block_number,
@@ -447,7 +458,11 @@ impl StorageDatabaseProver for EuclidProver {
                     previous_proof,
                 )?)
             },
-            None => IVC(verifiable_db::ivc::CircuitInput::new_first_input(index_proof)?),
+            None => {
+                IVC(verifiable_db::ivc::CircuitInput::new_first_input(
+                    index_proof,
+                )?)
+            },
         };
 
         self.prove(input, "ivc")

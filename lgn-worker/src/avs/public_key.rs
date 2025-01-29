@@ -11,11 +11,9 @@ pub struct PublicKey {
 impl PublicKey {
     pub fn to_hex(&self) -> String {
         let mut xb = [0u8; 32];
-        self.x
-            .to_big_endian(&mut xb[..]);
+        self.x.to_big_endian(&mut xb[..]);
         let mut yb = [0u8; 32];
-        self.y
-            .to_big_endian(&mut yb[..]);
+        self.y.to_big_endian(&mut yb[..]);
         let mut s1 = hex::encode(xb);
         let s2 = hex::encode(yb);
         s1.push_str(&s2);
@@ -29,27 +27,12 @@ impl From<&VerifyingKey> for PublicKey {
         let public_key = verifying_key.to_encoded_point(false);
 
         let [x, y] = match public_key.coordinates() {
-            Coordinates::Uncompressed {
-                x,
-                y,
-            } => {
-                [
-                    x,
-                    y,
-                ]
-            },
+            Coordinates::Uncompressed { x, y } => [x, y],
             _ => unreachable!(),
         };
 
-        let [x, y] = [
-            x,
-            y,
-        ]
-        .map(|s| U256::from_big_endian(s));
+        let [x, y] = [x, y].map(|s| U256::from_big_endian(s));
 
-        Self {
-            x,
-            y,
-        }
+        Self { x, y }
     }
 }

@@ -101,12 +101,7 @@ pub struct HydratableMatchingRow {
 
 impl HydratableMatchingRow {
     pub fn into_matching_row(self) -> MatchingRow {
-        MatchingRow::new(
-            self.proof
-                .clone_proof(),
-            self.path,
-            self.result,
-        )
+        MatchingRow::new(self.proof.clone_proof(), self.path, self.result)
     }
 }
 
@@ -125,16 +120,10 @@ impl<T: Clone + std::fmt::Debug> std::fmt::Debug for Hydratable<T> {
     ) -> std::fmt::Result {
         match self {
             Hydratable::Dehydrated(k) => {
-                write!(
-                    f,
-                    "dehydrated: {k:?}"
-                )
+                write!(f, "dehydrated: {k:?}")
             },
             Hydratable::Hydrated(_) => {
-                write!(
-                    f,
-                    "hydrated"
-                )
+                write!(f, "hydrated")
             },
         }
     }
@@ -160,11 +149,7 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K> {
     pub fn clone_proof(&self) -> Vec<u8> {
         match self {
             Hydratable::Dehydrated(_) => unreachable!(),
-            Hydratable::Hydrated(proof) => {
-                proof
-                    .clone()
-                    .to_vec()
-            },
+            Hydratable::Hydrated(proof) => proof.clone().to_vec(),
         }
     }
 
@@ -182,12 +167,7 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K> {
         &mut self,
         proof: Vec<u8>,
     ) {
-        assert!(
-            matches!(
-                self,
-                Hydratable::Dehydrated(_)
-            )
-        );
+        assert!(matches!(self, Hydratable::Dehydrated(_)));
         *self = Hydratable::Hydrated(Arc::new(proof))
     }
 }
@@ -233,10 +213,7 @@ pub struct NonExistenceInput {
 impl From<&WorkerTask> for ProofKey {
     fn from(task: &WorkerTask) -> Self {
         match &task.task_type {
-            WorkerTaskType::Query(qr) => {
-                qr.proof_key
-                    .clone()
-            },
+            WorkerTaskType::Query(qr) => qr.proof_key.clone(),
         }
     }
 }

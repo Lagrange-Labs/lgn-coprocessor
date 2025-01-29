@@ -18,10 +18,7 @@ impl Display for ProofKey {
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
         let query_id = &self.0;
-        write!(
-            f,
-            "{KEYS_QUERIES_PREFIX}/{query_id}/groth16"
-        )
+        write!(f, "{KEYS_QUERIES_PREFIX}/{query_id}/groth16")
     }
 }
 
