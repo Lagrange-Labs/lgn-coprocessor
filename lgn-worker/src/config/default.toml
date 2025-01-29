@@ -17,8 +17,7 @@ dir = "./zkmr_params"
 checksum_expected_local_path = "/tmp/expected_checksums.txt"
 # Parameters common directory
 # v1.1.x PPs
-url = "https://pub-fbb5db8dc9ee4e8da9daf13e07d27c24.r2.dev"
-checksum_url = "https://pub-fbb5db8dc9ee4e8da9daf13e07d27c24.r2.dev/public_params.hash"
+params_root_url = "https://pub-a894572689a54c008859f232868fc67d.r2.dev"
 skip_checksum = false
 skip_store = false
 

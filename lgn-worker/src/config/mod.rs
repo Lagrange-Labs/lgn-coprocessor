@@ -1,6 +1,7 @@
 use config::FileFormat;
 use lazy_static_include::*;
 use lgn_messages::types::TaskDifficulty;
+use lgn_provers::params::PARAMS_CHECKSUM_FILENAME;
 use redact::Secret;
 use serde_derive::Deserialize;
 use tracing::debug;
@@ -21,8 +22,9 @@ pub(crate) struct Config
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct PublicParamsConfig
 {
-    pub(crate) url: String,
-    pub(crate) checksum_url: String,
+    /// the root URL over which we should fetch params.
+    /// The FULL url is constructed from this one and the mp2 version
+    pub(crate) params_root_url: String,
     pub(crate) checksum_expected_local_path: String,
     pub(crate) skip_checksum: bool,
     pub(crate) dir: String,
@@ -39,15 +41,9 @@ impl PublicParamsConfig
     {
         assert!(
             !self
-                .url
+                .params_root_url
                 .is_empty(),
             "URL is required"
-        );
-        assert!(
-            !self
-                .checksum_url
-                .is_empty(),
-            "Checksum URL is required"
         );
         assert!(
             !self
@@ -67,6 +63,19 @@ impl PublicParamsConfig
             .validate();
         self.groth16_assets
             .validate();
+    }
+
+    /// Build the base URL with path of mp2 version for downloading param files.
+    pub fn params_base_url(&self) -> String
+    {
+        add_mp2_version_path_to_url(&self.params_root_url)
+    }
+
+    /// Build the URL for downloading the checksum file.
+    pub fn checksum_file_url(&self) -> String
+    {
+        let url = self.params_base_url();
+        format!("{url}/{PARAMS_CHECKSUM_FILENAME}")
     }
 }
 
@@ -263,4 +272,12 @@ impl Config
         self.avs
             .validate();
     }
+}
+
+/// Add mp2 version as a path to the base URL.
+/// e.g. https://base.com/MP2_VERSION
+fn add_mp2_version_path_to_url(url: &str) -> String
+{
+    let mp2_ver = mp2_common::git::short_git_version();
+    format!("{url}/{mp2_ver}")
 }

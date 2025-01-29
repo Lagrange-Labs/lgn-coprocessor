@@ -18,6 +18,9 @@ use tracing::error;
 use tracing::info;
 use tracing::warn;
 
+/// The filename of params checksum hashes
+pub const PARAMS_CHECKSUM_FILENAME: &str = "public_params.hash";
+
 pub struct ParamsLoader;
 
 // Could make configurable but 3600 should be enough
