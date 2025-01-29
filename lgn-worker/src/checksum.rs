@@ -6,16 +6,24 @@ use reqwest::IntoUrl;
 
 /// Fetch the checksums stored at `url`, then parse them into a mapping from file name to Blake3
 /// hash.
-pub(crate) fn fetch_checksums(url: impl IntoUrl) -> anyhow::Result<HashMap<String, blake3::Hash>> {
+pub(crate) async fn fetch_checksums(
+    url: impl IntoUrl
+) -> anyhow::Result<HashMap<String, blake3::Hash>> {
     let url = url.into_url().context("parsing checksums URL")?;
+    tracing::info!("fetching reference checksums at {url}");
     let mut r = HashMap::new();
 
-    let response = reqwest::blocking::get(url.clone())
-        .with_context(|| anyhow!("fetching checksum file at `{url}`"))?
-        .text()
-        .context("reading response text")?;
+    let response = reqwest::get(url.clone())
+        .await
+        .with_context(|| anyhow!("fetching checksum file at `{url}`"))?;
 
-    for line in response.lines() {
+    anyhow::ensure!(
+        response.status().is_success(),
+        "request failed at {url}: {}",
+        response.status()
+    );
+
+    for line in response.text().await?.lines() {
         let mut line = line.split_whitespace();
         let source = line.next().context("no filename found")?;
         let hash_str = line.next().context("no hash found")?;

@@ -185,7 +185,7 @@ async fn run_worker(
         .context("parsing gateway URL")?;
     let (mut outbound, outbound_rx) = tokio::sync::mpsc::channel(1024);
 
-    let checksums = fetch_checksums(config.public_params.checksum_file_url())?;
+    let checksums = fetch_checksums(config.public_params.checksum_file_url()).await?;
     let mut provers_manager =
         tokio::task::block_in_place(move || -> Result<ProversManager<TaskType, ReplyType>> {
             let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();

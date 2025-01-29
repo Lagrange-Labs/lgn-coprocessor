@@ -28,7 +28,8 @@ struct Cli {
     input: String,
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     std::panic::set_hook(Box::new(|panic_info| {
         let msg = match panic_info.payload().downcast_ref::<&'static str>() {
             Some(s) => *s,
@@ -74,7 +75,7 @@ fn main() -> Result<()> {
 
     let config = config::Config::load(Some(cli.config));
     config.validate();
-    let checksums = fetch_checksums(config.public_params.checksum_file_url())?;
+    let checksums = fetch_checksums(config.public_params.checksum_file_url()).await?;
 
     info!("Initializing the provers... ");
     let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
