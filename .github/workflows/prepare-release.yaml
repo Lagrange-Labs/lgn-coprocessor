@@ -1,0 +1,21 @@
+name: Open a Release PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Release Level
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  call-reusable-workflow:
+    uses: Lagrange-Labs/shared-github-actions/.github/workflows/rust-prepare-release.yaml@main
+    with:
+      bump: ${{ inputs.bump }}
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
