@@ -24,13 +24,13 @@ hex = { workspace = true }
 jwt = { workspace = true }
 k256 = { workspace = true, features = ["ecdsa", "std"] }
 lazy-static-include = { workspace = true }
->>>>>>> ff7836d (feat: adapt the versioning mechanism (#144))
 lgn-auth = { path = "../lgn-auth" }
 lgn-messages = { path = "../lgn-messages" }
 lgn-provers = { path = "../lgn-provers" }
 metrics-exporter-prometheus = { workspace = true }
 metrics = { workspace = true }
 mimalloc = { workspace = true }
+mp2_common.workspace = true
 prost-types = "0.13.4"
 prost-wkt-types = "0.6.0"
 prost = { workspace = true }

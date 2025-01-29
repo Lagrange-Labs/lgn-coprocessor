@@ -8,6 +8,7 @@ use std::path::PathBuf;
 
 use anyhow::ensure;
 use anyhow::Context;
+use anyhow::*;
 use bytes::Bytes;
 use checksums::ops::compare_hashes;
 use checksums::ops::create_hashes;
@@ -223,11 +224,17 @@ impl ParamsLoader {
                 "output".to_string(),
                 expected_hashes_file.to_path_buf(),
             ),
+        )
+        .unwrap_or_else(
+            |_| {
+                panic!(
+                    "while comparing hashes to `{}`",
+                    expected_hashes_file.display()
+                )
+            },
         );
 
         let expected_hash: BTreeMap<String, String> = expected_hashes
-            .as_ref()
-            .unwrap()
             .iter()
             .filter(|hash| hash.0 == file_name)
             .map(
