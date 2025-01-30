@@ -37,7 +37,13 @@ pub(crate) async fn fetch_checksums(
         }
     }
 
-    tracing::debug!("checksums: {r:?}");
+    tracing::debug!(
+        "checksums: {}",
+        r.iter()
+            .map(|(f, h)| format!("{f} = {}", h.to_hex()))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 
     Ok(r)
 }

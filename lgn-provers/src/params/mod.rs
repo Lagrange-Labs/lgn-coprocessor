@@ -82,7 +82,6 @@ impl ParamsLoader {
             let max = std::time::Duration::from_secs(10);
             for duration in exponential_backoff::Backoff::new(DOWNLOAD_MAX_RETRIES.into(), min, max)
             {
-                info!("downloading ");
                 match Self::download_file(base_url, file_name, expected_checksum) {
                     Result::Ok(content) => {
                         bytes = content;

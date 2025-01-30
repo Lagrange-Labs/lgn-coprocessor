@@ -172,6 +172,7 @@ impl Config {
 /// Add mp2 version as a path to the base URL.
 /// e.g. https://base.com/MP2_VERSION
 fn add_mp2_version_path_to_url(url: &str) -> String {
-    let mp2_ver = mp2_common::git::short_git_version();
-    format!("{url}/{mp2_ver}")
+    let mp2_version_str = verifiable_db::version();
+    let mp2_version = semver::Version::parse(mp2_version_str).unwrap();
+    format!("{url}/{}", mp2_version.major)
 }
