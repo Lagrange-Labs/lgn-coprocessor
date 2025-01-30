@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -84,6 +85,11 @@ impl ParamsLoader {
             {
                 match Self::download_file(base_url, file_name, expected_checksum) {
                     Result::Ok(content) => {
+                        info!("writing content to `{}`", local_param_filename.display());
+                        std::fs::File::create(&local_param_filename)
+                            .context("creating param file")?
+                            .write_all(&content)
+                            .context("writing file content")?;
                         bytes = content;
                         break;
                     },
