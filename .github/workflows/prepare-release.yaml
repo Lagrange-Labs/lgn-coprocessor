@@ -14,8 +14,13 @@ on:
 
 jobs:
   call-reusable-workflow:
-    uses: lagrange-labs/shared-github-actions/.github/workflows/rust-prepare-release.yaml@main
+    uses: Lagrange-Labs/shared-github-actions/.github/workflows/rust-prepare-release.yaml@main
+    permissions:
+      actions: read
+      id-token: write
+      pull-requests: write
+      contents: write
     with:
       bump: ${{ inputs.bump }}
     secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
