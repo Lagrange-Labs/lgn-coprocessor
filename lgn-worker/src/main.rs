@@ -177,30 +177,35 @@ async fn run_worker(
     config: &Config,
     mp2_requirement: semver::VersionReq,
 ) -> Result<()> {
-    let grpc_url = &config.avs.gateway_url;
-    info!("Connecting to the gateway: {}", grpc_url);
-
-    let uri = grpc_url
-        .parse::<tonic::transport::Uri>()
-        .context("parsing gateway URL")?;
-    let (mut outbound, outbound_rx) = tokio::sync::mpsc::channel(1024);
-
-    let checksums = fetch_checksums(config.public_params.checksum_file_url()).await?;
+    let checksums = fetch_checksums(config.public_params.checksum_file_url())
+        .await
+        .context("downloading checksum file")?;
     let mut provers_manager =
         tokio::task::block_in_place(move || -> Result<ProversManager<TaskType, ReplyType>> {
             let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
             register_v1_provers(config, &mut provers_manager, &checksums)
                 .context("while registering provers")?;
             Ok(provers_manager)
-        })?;
+        })
+        .context("creating prover managers")?;
 
-    let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
+    let grpc_url = &config.avs.gateway_url;
+    info!("Connecting to the gateway: {}", grpc_url);
 
-    let wallet = get_wallet(config)?;
-    let claims = get_claims(config)?;
+    let wallet = get_wallet(config).context("fetching wallet")?;
+    let claims = get_claims(config).context("building claims")?;
     let token = JWTAuth::new(claims, &wallet)?.encode()?;
 
-    let channel = tonic::transport::Channel::builder(uri).connect().await?;
+    let uri = grpc_url
+        .parse::<tonic::transport::Uri>()
+        .context("parsing gateway URL")?;
+    let (mut outbound, outbound_rx) = tokio::sync::mpsc::channel(1024);
+    let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
+
+    let channel = tonic::transport::Channel::builder(uri)
+        .connect()
+        .await
+        .context("creating transport channel builder")?;
     let token: MetadataValue<_> = format!("Bearer {token}").parse()?;
 
     let max_message_size = config
@@ -222,7 +227,8 @@ async fn run_worker(
 
     let response = client
         .worker_to_gw(tonic::Request::new(outbound_rx))
-        .await?;
+        .await
+        .context("connecting `worker_to_gw`")?;
 
     let mut inbound = response.into_inner();
 
