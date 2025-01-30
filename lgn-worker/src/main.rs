@@ -202,10 +202,10 @@ async fn run_worker(
     let (mut outbound, outbound_rx) = tokio::sync::mpsc::channel(1024);
     let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
 
-    let channel = tonic::transport::Channel::builder(uri)
+    let channel = tonic::transport::Channel::builder(uri.clone())
         .connect()
         .await
-        .context("creating transport channel builder")?;
+        .with_context(|| format!("creating transport channel builder for {uri}"))?;
     let token: MetadataValue<_> = format!("Bearer {token}").parse()?;
 
     let max_message_size = config

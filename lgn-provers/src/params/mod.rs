@@ -30,14 +30,6 @@ fn read_file_and_checksum(f: &Path) -> anyhow::Result<(Bytes, blake3::Hash)> {
     Ok((bytes.into(), hash))
 }
 
-/// Utility to create a directory and format the error if it happens.
-///
-/// Returns an error if a normal file already exists and its name clash with the requested path.
-fn create_dir_all(directories: &str) -> anyhow::Result<()> {
-    std::fs::create_dir_all(directories)
-        .with_context(|| format!("failed to create directories `{:?}`", directories))
-}
-
 impl ParamsLoader {
     pub fn prepare_raw(
         base_url: &str,
@@ -45,7 +37,8 @@ impl ParamsLoader {
         file_name: &str,
         checksums: &HashMap<String, blake3::Hash>,
     ) -> anyhow::Result<Bytes> {
-        create_dir_all(param_dir)?;
+        std::fs::create_dir_all(param_dir)
+            .with_context(|| format!("failed to create directories `{:?}`", param_dir))?;
         let mut local_param_filename = PathBuf::from(param_dir);
         local_param_filename.push(file_name);
 
