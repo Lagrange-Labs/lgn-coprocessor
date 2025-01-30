@@ -26,9 +26,8 @@ let
     prometheus.port = 9090;
 
     public_params = {
-      dir = "./runtime/zkmr_params";
-      url = meta.params-url;
       params_root_url = meta.params-url;
+      dir = "./runtime/zkmr_params";
 
       preprocessing_params = {
         file = "preprocessing_params.bin";

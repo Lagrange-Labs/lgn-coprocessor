@@ -146,7 +146,7 @@ impl ParamsLoader {
         hasher.update_rayon(&bytes);
         let found_checksum = hasher.finalize();
         ensure!(
-            found_checksum != *expected_checksum,
+            found_checksum == *expected_checksum,
             "param checksum mismatch: {} ≠ {}",
             found_checksum.to_hex(),
             expected_checksum.to_hex()
