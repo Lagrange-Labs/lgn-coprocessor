@@ -28,6 +28,7 @@ use metrics::counter;
 use mimalloc::MiMalloc;
 use tokio_stream::StreamExt;
 use tonic::metadata::MetadataValue;
+use tonic::transport::ClientTlsConfig;
 use tonic::Request;
 use tracing::debug;
 use tracing::error;
@@ -53,8 +54,6 @@ mod manager;
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
-
-const MAX_GRPC_MESSAGE_SIZE_MB: usize = 16;
 
 #[derive(Parser, Clone, Debug)]
 struct Cli {
@@ -177,6 +176,7 @@ async fn run_worker(
     config: &Config,
     mp2_requirement: semver::VersionReq,
 ) -> Result<()> {
+    // Preparing the prover
     let checksums = fetch_checksums(config.public_params.checksum_file_url())
         .await
         .context("downloading checksum file")?;
@@ -189,49 +189,38 @@ async fn run_worker(
         })
         .context("creating prover managers")?;
 
-    let grpc_url = &config.avs.gateway_url;
-    info!("Connecting to the gateway: {}", grpc_url);
-
+    // Connecting to the GW
     let wallet = get_wallet(config).context("fetching wallet")?;
     let claims = get_claims(config).context("building claims")?;
     let token = JWTAuth::new(claims, &wallet)?.encode()?;
 
+    let grpc_url = &config.avs.gateway_url;
+    info!("Connecting to the gateway: {}", grpc_url);
+
     let uri = grpc_url
         .parse::<tonic::transport::Uri>()
         .context("parsing gateway URL")?;
-    let (mut outbound, outbound_rx) = tokio::sync::mpsc::channel(1024);
-    let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
+
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("Failed to install rustls crypto provider");
 
     let channel = tonic::transport::Channel::builder(uri.clone())
+        .tls_config(ClientTlsConfig::new().with_enabled_roots())?
         .connect()
         .await
         .with_context(|| format!("creating transport channel builder for {uri}"))?;
     let token: MetadataValue<_> = format!("Bearer {token}").parse()?;
-
-    let max_message_size = config
-        .avs
-        .max_grpc_message_size_mb
-        .unwrap_or(MAX_GRPC_MESSAGE_SIZE_MB)
-        * 1024
-        * 1024;
-
     let mut client = lagrange::workers_service_client::WorkersServiceClient::with_interceptor(
         channel,
         move |mut req: Request<()>| {
             req.metadata_mut().insert("authorization", token.clone());
             Ok(req)
         },
-    )
-    .max_decoding_message_size(max_message_size)
-    .max_encoding_message_size(max_message_size);
+    );
 
-    let response = client
-        .worker_to_gw(tonic::Request::new(outbound_rx))
-        .await
-        .context("connecting `worker_to_gw`")?;
-
-    let mut inbound = response.into_inner();
-
+    let (mut outbound, outbound_rx) = tokio::sync::mpsc::channel(50);
+    let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
     outbound
         .send(WorkerToGwRequest {
             request: Some(lagrange::worker_to_gw_request::Request::WorkerReady(
@@ -242,6 +231,14 @@ async fn run_worker(
             )),
         })
         .await?;
+
+    let response = client
+        .worker_to_gw(tonic::Request::new(outbound_rx))
+        .await
+        .context("connecting `worker_to_gw`")?;
+
+    info!("Bidirectional stream with GW opened");
+    let mut inbound = response.into_inner();
 
     loop {
         tokio::select! {

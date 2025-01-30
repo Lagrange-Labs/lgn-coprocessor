@@ -49,6 +49,8 @@ tracing-subscriber = { workspace = true, features = ["env-filter", "json"] }
 tracing = { workspace = true }
 verifiable-db.workspace = true
 exponential-backoff = "2.0.0"
+rustl = "0.0.1"
+rustls = { version = "0.23.21", features = [ "ring" ] }
 
 
 [build-dependencies]

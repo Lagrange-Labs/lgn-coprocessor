@@ -47,7 +47,7 @@ redact = "0.1"
 rpassword = "7.0"
 serde_derive = "1.0"
 tokio-stream = "0.1"
-tonic = "0.12"
+tonic = { version = "0.12", features = [ "transport", "tls", "tls-roots", "tls-webpki-roots" ] }
 tonic-build = "0.12.3"
 
 [patch.crates-io]
