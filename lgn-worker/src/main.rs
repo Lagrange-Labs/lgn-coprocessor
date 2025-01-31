@@ -55,6 +55,8 @@ mod manager;
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
 
+const MAX_GRPC_MESSAGE_SIZE_MB: usize = 16;
+
 #[derive(Parser, Clone, Debug)]
 struct Cli {
     /// Path to the configuration file.
@@ -176,6 +178,13 @@ async fn run_worker(
     config: &Config,
     mp2_requirement: semver::VersionReq,
 ) -> Result<()> {
+    let max_message_size = config
+        .avs
+        .max_grpc_message_size_mb
+        .unwrap_or(MAX_GRPC_MESSAGE_SIZE_MB)
+        * 1024
+        * 1024;
+
     // Preparing the prover
     let checksums = fetch_checksums(config.public_params.checksum_file_url())
         .await
@@ -217,7 +226,9 @@ async fn run_worker(
             req.metadata_mut().insert("authorization", token.clone());
             Ok(req)
         },
-    );
+    )
+    .max_encoding_message_size(max_message_size)
+    .max_decoding_message_size(max_message_size);
 
     let (mut outbound, outbound_rx) = tokio::sync::mpsc::channel(50);
     let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
