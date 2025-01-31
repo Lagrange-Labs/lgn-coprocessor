@@ -204,7 +204,11 @@ async fn run_worker(
     let token = JWTAuth::new(claims, &wallet)?.encode()?;
 
     let grpc_url = &config.avs.gateway_url;
-    info!("Connecting to the gateway: {}", grpc_url);
+    info!(
+        "connecting to the gateway: {}, max. mess. size = {}MB",
+        grpc_url,
+        max_message_size / (1024 * 1024)
+    );
 
     let uri = grpc_url
         .parse::<tonic::transport::Uri>()
@@ -252,6 +256,7 @@ async fn run_worker(
     let mut inbound = response.into_inner();
 
     loop {
+        debug!("Waiting for message...");
         tokio::select! {
             Some(inbound_message) = inbound.next() => {
                 let msg = match inbound_message {
