@@ -82,22 +82,12 @@ impl WorkerTaskType {
         slot: u8,
         column_id: u64,
     ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(
-            ExtractionType::MptExtraction(
-                Mpt {
-                    table_hash,
-                    block_nr,
-                    node_hash,
-                    mpt_type: MptType::VariableLeaf(
-                        VariableLeafInput::new(
-                            node,
-                            slot,
-                            column_id,
-                        ),
-                    ),
-                },
-            ),
-        )
+        WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
+            table_hash,
+            block_nr,
+            node_hash,
+            mpt_type: MptType::VariableLeaf(VariableLeafInput::new(node, slot, column_id)),
+        }))
     }
 
     pub fn ext_variable_branch(
@@ -107,22 +97,12 @@ impl WorkerTaskType {
         node: Vec<u8>,
         children: Vec<MptNodeVersion>,
     ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(
-            ExtractionType::MptExtraction(
-                Mpt {
-                    table_hash,
-                    block_nr,
-                    node_hash,
-                    mpt_type: MptType::VariableBranch(
-                        VariableBranchInput::new(
-                            table_hash,
-                            node,
-                            children,
-                        ),
-                    ),
-                },
-            ),
-        )
+        WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
+            table_hash,
+            block_nr,
+            node_hash,
+            mpt_type: MptType::VariableBranch(VariableBranchInput::new(table_hash, node, children)),
+        }))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -136,24 +116,14 @@ impl WorkerTaskType {
         key_id: u64,
         value_id: u64,
     ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(
-            ExtractionType::MptExtraction(
-                Mpt {
-                    table_hash,
-                    block_nr,
-                    node_hash,
-                    mpt_type: MptType::MappingLeaf(
-                        MappingLeafInput::new(
-                            key,
-                            node,
-                            slot,
-                            key_id,
-                            value_id,
-                        ),
-                    ),
-                },
-            ),
-        )
+        WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
+            table_hash,
+            block_nr,
+            node_hash,
+            mpt_type: MptType::MappingLeaf(MappingLeafInput::new(
+                key, node, slot, key_id, value_id,
+            )),
+        }))
     }
 
     pub fn ext_mapping_branch(
@@ -163,21 +133,12 @@ impl WorkerTaskType {
         node: Vec<u8>,
         children: Vec<MptNodeVersion>,
     ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(
-            ExtractionType::MptExtraction(
-                Mpt {
-                    table_hash,
-                    block_nr,
-                    node_hash,
-                    mpt_type: MptType::MappingBranch(
-                        MappingBranchInput::new(
-                            node,
-                            children,
-                        ),
-                    ),
-                },
-            ),
-        )
+        WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
+            table_hash,
+            block_nr,
+            node_hash,
+            mpt_type: MptType::MappingBranch(MappingBranchInput::new(node, children)),
+        }))
     }
 
     pub fn ext_length(
@@ -187,17 +148,13 @@ impl WorkerTaskType {
         length_slot: usize,
         variable_slot: usize,
     ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(
-            ExtractionType::LengthExtraction(
-                Length {
-                    table_hash,
-                    block_nr,
-                    length_slot,
-                    variable_slot,
-                    nodes,
-                },
-            ),
-        )
+        WorkerTaskType::Extraction(ExtractionType::LengthExtraction(Length {
+            table_hash,
+            block_nr,
+            length_slot,
+            variable_slot,
+            nodes,
+        }))
     }
 
     pub fn ext_contract(
@@ -206,22 +163,18 @@ impl WorkerTaskType {
         nodes: Vec<Vec<u8>>,
         storage_root: Vec<u8>,
     ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(
-            ExtractionType::ContractExtraction(
-                Contract {
-                    block_nr,
-                    storage_root,
-                    contract: contract_address,
-                    nodes,
-                },
-            ),
-        )
+        WorkerTaskType::Extraction(ExtractionType::ContractExtraction(Contract {
+            block_nr,
+            storage_root,
+            contract: contract_address,
+            nodes,
+        }))
     }
 
     pub fn ext_block(rlp_header: Vec<u8>) -> WorkerTaskType {
-        WorkerTaskType::Extraction(
-            ExtractionType::BlockExtraction(BlockExtractionInput::new(rlp_header)),
-        )
+        WorkerTaskType::Extraction(ExtractionType::BlockExtraction(BlockExtractionInput::new(
+            rlp_header,
+        )))
     }
 
     pub fn ext_final_extraction_simple(
@@ -232,20 +185,16 @@ impl WorkerTaskType {
         compound: TableDimension,
         value_proof_version: MptNodeVersion,
     ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(
-            ExtractionType::FinalExtraction(
-                Box::new(
-                    FinalExtraction::new_single_table(
-                        table_id,
-                        table_hash,
-                        block_nr,
-                        contract,
-                        Some(compound),
-                        value_proof_version,
-                    ),
-                ),
+        WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
+            FinalExtraction::new_single_table(
+                table_id,
+                table_hash,
+                block_nr,
+                contract,
+                Some(compound),
+                value_proof_version,
             ),
-        )
+        )))
     }
 
     pub fn ext_final_extraction_lengthed(
@@ -255,20 +204,16 @@ impl WorkerTaskType {
         contract: Address,
         value_proof_version: MptNodeVersion,
     ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(
-            ExtractionType::FinalExtraction(
-                Box::new(
-                    FinalExtraction::new_single_table(
-                        table_id,
-                        table_hash,
-                        block_nr,
-                        contract,
-                        None,
-                        value_proof_version,
-                    ),
-                ),
+        WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
+            FinalExtraction::new_single_table(
+                table_id,
+                table_hash,
+                block_nr,
+                contract,
+                None,
+                value_proof_version,
             ),
-        )
+        )))
     }
 
     pub fn ext_final_extraction_merge(
@@ -279,20 +224,16 @@ impl WorkerTaskType {
         contract: Address,
         value_proof_version: MptNodeVersion,
     ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(
-            ExtractionType::FinalExtraction(
-                Box::new(
-                    FinalExtraction::new_merge_table(
-                        table_id,
-                        simple_table_hash,
-                        mapping_table_hash,
-                        block_nr,
-                        contract,
-                        value_proof_version,
-                    ),
-                ),
+        WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
+            FinalExtraction::new_merge_table(
+                table_id,
+                simple_table_hash,
+                mapping_table_hash,
+                block_nr,
+                contract,
+                value_proof_version,
             ),
-        )
+        )))
     }
 
     pub fn db_cell_leaf(
@@ -303,20 +244,16 @@ impl WorkerTaskType {
         value: U256,
         is_multiplier: bool,
     ) -> WorkerTaskType {
-        WorkerTaskType::Database(
-            DatabaseType::Cell(
-                db_tasks::DbCellType::Leaf(
-                    CellLeafInput {
-                        table_id,
-                        row_id,
-                        cell_id,
-                        identifier,
-                        value,
-                        is_multiplier,
-                    },
-                ),
-            ),
-        )
+        WorkerTaskType::Database(DatabaseType::Cell(db_tasks::DbCellType::Leaf(
+            CellLeafInput {
+                table_id,
+                row_id,
+                cell_id,
+                identifier,
+                value,
+                is_multiplier,
+            },
+        )))
     }
 
     pub fn db_cell_partial(
@@ -328,22 +265,18 @@ impl WorkerTaskType {
         is_multiplier: bool,
         child_location: db_keys::ProofKey,
     ) -> WorkerTaskType {
-        WorkerTaskType::Database(
-            DatabaseType::Cell(
-                db_tasks::DbCellType::Partial(
-                    CellPartialInput {
-                        table_id,
-                        row_id,
-                        cell_id,
-                        identifier,
-                        value,
-                        is_multiplier,
-                        child_location,
-                        child_proof: vec![],
-                    },
-                ),
-            ),
-        )
+        WorkerTaskType::Database(DatabaseType::Cell(db_tasks::DbCellType::Partial(
+            CellPartialInput {
+                table_id,
+                row_id,
+                cell_id,
+                identifier,
+                value,
+                is_multiplier,
+                child_location,
+                child_proof: vec![],
+            },
+        )))
     }
 
     pub fn db_cell_full(
@@ -355,22 +288,18 @@ impl WorkerTaskType {
         is_multiplier: bool,
         child_locations: Vec<db_keys::ProofKey>,
     ) -> WorkerTaskType {
-        WorkerTaskType::Database(
-            DatabaseType::Cell(
-                db_tasks::DbCellType::Full(
-                    CellFullInput {
-                        table_id,
-                        row_id,
-                        cell_id,
-                        identifier,
-                        value,
-                        is_multiplier,
-                        child_locations,
-                        child_proofs: vec![],
-                    },
-                ),
-            ),
-        )
+        WorkerTaskType::Database(DatabaseType::Cell(db_tasks::DbCellType::Full(
+            CellFullInput {
+                table_id,
+                row_id,
+                cell_id,
+                identifier,
+                value,
+                is_multiplier,
+                child_locations,
+                child_proofs: vec![],
+            },
+        )))
     }
 
     pub fn db_row_leaf(
@@ -381,21 +310,15 @@ impl WorkerTaskType {
         is_multiplier: bool,
         cells_proof_location: Option<db_keys::ProofKey>,
     ) -> WorkerTaskType {
-        WorkerTaskType::Database(
-            DatabaseType::Row(
-                db_tasks::DbRowType::Leaf(
-                    RowLeafInput {
-                        table_id,
-                        row_id,
-                        identifier,
-                        value,
-                        is_multiplier,
-                        cells_proof_location,
-                        cells_proof: vec![],
-                    },
-                ),
-            ),
-        )
+        WorkerTaskType::Database(DatabaseType::Row(db_tasks::DbRowType::Leaf(RowLeafInput {
+            table_id,
+            row_id,
+            identifier,
+            value,
+            is_multiplier,
+            cells_proof_location,
+            cells_proof: vec![],
+        })))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -409,24 +332,20 @@ impl WorkerTaskType {
         cells_proof_location: Option<db_keys::ProofKey>,
         child_proof_location: db_keys::ProofKey,
     ) -> WorkerTaskType {
-        WorkerTaskType::Database(
-            DatabaseType::Row(
-                db_tasks::DbRowType::Partial(
-                    db_tasks::RowPartialInput {
-                        table_id,
-                        row_id,
-                        identifier,
-                        value,
-                        is_multiplier,
-                        is_child_left,
-                        child_proof_location,
-                        cells_proof_location,
-                        child_proof: vec![],
-                        cells_proof: vec![],
-                    },
-                ),
-            ),
-        )
+        WorkerTaskType::Database(DatabaseType::Row(db_tasks::DbRowType::Partial(
+            db_tasks::RowPartialInput {
+                table_id,
+                row_id,
+                identifier,
+                value,
+                is_multiplier,
+                is_child_left,
+                child_proof_location,
+                cells_proof_location,
+                child_proof: vec![],
+                cells_proof: vec![],
+            },
+        )))
     }
 
     pub fn db_row_full(
@@ -438,23 +357,19 @@ impl WorkerTaskType {
         cells_proof_location: Option<db_keys::ProofKey>,
         child_proofs_locations: Vec<db_keys::ProofKey>,
     ) -> WorkerTaskType {
-        WorkerTaskType::Database(
-            DatabaseType::Row(
-                db_tasks::DbRowType::Full(
-                    db_tasks::RowFullInput {
-                        table_id,
-                        row_id,
-                        identifier,
-                        value,
-                        is_multiplier,
-                        child_proofs_locations,
-                        cells_proof_location,
-                        child_proofs: vec![],
-                        cells_proof: vec![],
-                    },
-                ),
-            ),
-        )
+        WorkerTaskType::Database(DatabaseType::Row(db_tasks::DbRowType::Full(
+            db_tasks::RowFullInput {
+                table_id,
+                row_id,
+                identifier,
+                value,
+                is_multiplier,
+                child_proofs_locations,
+                cells_proof_location,
+                child_proofs: vec![],
+                cells_proof: vec![],
+            },
+        )))
     }
 
     pub fn ivc(
@@ -462,14 +377,10 @@ impl WorkerTaskType {
         block_nr: BlockNr,
         is_first_block: bool,
     ) -> WorkerTaskType {
-        WorkerTaskType::Database(
-            DatabaseType::IVC(
-                IvcInput::new(
-                    table_id,
-                    block_nr,
-                    is_first_block,
-                ),
-            ),
-        )
+        WorkerTaskType::Database(DatabaseType::IVC(IvcInput::new(
+            table_id,
+            block_nr,
+            is_first_block,
+        )))
     }
 }

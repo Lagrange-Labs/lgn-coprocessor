@@ -13,10 +13,7 @@ impl RoutingKey {
         domain: String,
         priority: u64,
     ) -> Self {
-        RoutingKey {
-            domain,
-            priority,
-        }
+        RoutingKey { domain, priority }
     }
 
     pub fn priority(&self) -> u64 {
@@ -25,7 +22,6 @@ impl RoutingKey {
 
     /// Get the route string for this routing key.
     pub fn get_route(&self) -> String {
-        self.domain
-            .clone()
+        self.domain.clone()
     }
 }

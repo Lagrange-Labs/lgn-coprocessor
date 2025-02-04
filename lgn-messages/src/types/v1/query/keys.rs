@@ -28,21 +28,11 @@ const REVELATION: &str = "revelation";
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]
 pub enum ProofKey {
     /// Initially just storing rows tree root proof
-    Row(
-        QueryId,
-        BlockNr,
-        RowKeyId,
-    ),
+    Row(QueryId, BlockNr, RowKeyId),
 
-    Index(
-        QueryId,
-        BlockNr,
-    ),
+    Index(QueryId, BlockNr),
 
-    RowsChunk(
-        QueryId,
-        UTKey<NUM_CHUNKS>,
-    ),
+    RowsChunk(QueryId, UTKey<NUM_CHUNKS>),
 
     NonExistence(QueryId),
 
@@ -69,29 +59,19 @@ impl Display for ProofKey {
             },
             ProofKey::RowsChunk(query_id, key) => {
                 // The `level` of the node in the `UpdateTree`.
-                let level = key
-                    .0
-                     .0;
+                let level = key.0 .0;
                 // - The `position` of the node in the tree among the nodes with the same level.
-                let position = key
-                    .0
-                     .1;
+                let position = key.0 .1;
                 write!(
                     f,
                     "{KEYS_QUERIES_PREFIX}/{query_id}/{ROWS_CHUNK}/{level}/{position}",
                 )
             },
             ProofKey::NonExistence(query_id) => {
-                write!(
-                    f,
-                    "{KEYS_QUERIES_PREFIX}/{query_id}/{NON_EXISTENCE}",
-                )
+                write!(f, "{KEYS_QUERIES_PREFIX}/{query_id}/{NON_EXISTENCE}",)
             },
             ProofKey::Revelation(query_id) => {
-                write!(
-                    f,
-                    "{KEYS_QUERIES_PREFIX}/{query_id}/{REVELATION}",
-                )
+                write!(f, "{KEYS_QUERIES_PREFIX}/{query_id}/{REVELATION}",)
             },
         }
     }

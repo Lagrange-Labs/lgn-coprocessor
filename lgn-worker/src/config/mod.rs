@@ -12,53 +12,38 @@ lazy_static_include_str! {
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct Config {
+    /// Worker-specific settings.
     pub(crate) worker: WorkerConfig,
+    /// Settings relative to the operator.
     pub(crate) avs: AvsConfig,
+    /// Settings related to the reconstruction of the public parameters.
     pub(crate) public_params: PublicParamsConfig,
+    /// Prometheus-specific settings.
     pub(crate) prometheus: PrometheusConfig,
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct PublicParamsConfig {
     /// the root URL over which we should fetch params.
-    /// The FULL url is constructed from this one and the mp2 version
+    /// The FULL url is constructed from this one and the mp2 version.
     pub(crate) params_root_url: String,
-    pub(crate) checksum_expected_local_path: String,
-    pub(crate) skip_checksum: bool,
+    /// Where to store the public parameters on disk.
     pub(crate) dir: String,
-    /// If set to true, the parameters will not be written to disk, ever.
-    pub(crate) skip_store: bool,
+    /// The files required to build the pre-processing public parameters.
     pub(crate) preprocessing_params: PreprocessingParams,
+    /// The files required to build the querying public parameters.
     pub(crate) query_params: QueryParams,
+    /// The files required to build the Groth16 public parameters.
     pub(crate) groth16_assets: Groth16Assets,
 }
 
 impl PublicParamsConfig {
     pub fn validate(&self) {
-        assert!(
-            !self
-                .params_root_url
-                .is_empty(),
-            "URL is required"
-        );
-        assert!(
-            !self
-                .checksum_expected_local_path
-                .is_empty(),
-            "Checksum local path for expected checksum file is required"
-        );
-        assert!(
-            !self
-                .dir
-                .is_empty(),
-            "Directory is required"
-        );
-        self.preprocessing_params
-            .validate();
-        self.query_params
-            .validate();
-        self.groth16_assets
-            .validate();
+        assert!(!self.params_root_url.is_empty(), "URL is required");
+        assert!(!self.dir.is_empty(), "Directory is required");
+        self.preprocessing_params.validate();
+        self.query_params.validate();
+        self.groth16_assets.validate();
     }
 
     /// Build the base URL with path of mp2 version for downloading param files.
@@ -80,12 +65,7 @@ pub(crate) struct PreprocessingParams {
 
 impl PreprocessingParams {
     pub fn validate(&self) {
-        assert!(
-            !self
-                .file
-                .is_empty(),
-            "Preprocessing file is required"
-        );
+        assert!(!self.file.is_empty(), "Preprocessing file is required");
     }
 }
 
@@ -96,12 +76,7 @@ pub(crate) struct QueryParams {
 
 impl QueryParams {
     pub fn validate(&self) {
-        assert!(
-            !self
-                .file
-                .is_empty(),
-            "Query2 file is required"
-        );
+        assert!(!self.file.is_empty(), "Query2 file is required");
     }
 }
 
@@ -114,24 +89,9 @@ pub(crate) struct Groth16Assets {
 
 impl Groth16Assets {
     pub fn validate(&self) {
-        assert!(
-            !self
-                .circuit_file
-                .is_empty(),
-            "Circuit URL is required"
-        );
-        assert!(
-            !self
-                .r1cs_file
-                .is_empty(),
-            "R1CS URL is required"
-        );
-        assert!(
-            !self
-                .pk_file
-                .is_empty(),
-            "PK URL is required"
-        );
+        assert!(!self.circuit_file.is_empty(), "Circuit URL is required");
+        assert!(!self.r1cs_file.is_empty(), "R1CS URL is required");
+        assert!(!self.pk_file.is_empty(), "PK URL is required");
     }
 }
 
@@ -158,46 +118,18 @@ pub(crate) struct PrometheusConfig {
 
 impl AvsConfig {
     pub fn validate(&self) {
-        assert!(
-            !self
-                .gateway_url
-                .is_empty(),
-            "Gateway URL is required"
-        );
-        assert!(
-            !self
-                .issuer
-                .is_empty(),
-            "Issuer is required"
-        );
-        assert!(
-            !self
-                .worker_id
-                .is_empty(),
-            "Worker ID is required"
-        );
+        assert!(!self.gateway_url.is_empty(), "Gateway URL is required");
+        assert!(!self.issuer.is_empty(), "Issuer is required");
+        assert!(!self.worker_id.is_empty(), "Worker ID is required");
 
-        match (
-            &self.lagr_keystore,
-            &self.lagr_pwd,
-            &self.lagr_private_key,
-        ) {
+        match (&self.lagr_keystore, &self.lagr_pwd, &self.lagr_private_key) {
             (Some(kpath), Some(pwd), _) => {
-                assert!(
-                    !kpath.is_empty(),
-                    "Keystore path is empty"
-                );
-                assert!(
-                    !pwd.expose_secret()
-                        .is_empty(),
-                    "Password is empty"
-                );
+                assert!(!kpath.is_empty(), "Keystore path is empty");
+                assert!(!pwd.expose_secret().is_empty(), "Password is empty");
             },
             (None, None, Some(pkey)) => {
                 assert!(
-                    !pkey
-                        .expose_secret()
-                        .is_empty(),
+                    !pkey.expose_secret().is_empty(),
                     "Private key value is empty"
                 )
             },
@@ -209,18 +141,11 @@ impl AvsConfig {
 impl Config {
     pub fn load(local_file: Option<String>) -> Config {
         let mut config_builder = config::Config::builder();
-        config_builder = config_builder.add_source(
-            config::File::from_str(
-                &DEFAULT_CONFIG,
-                FileFormat::Toml,
-            ),
-        );
+        config_builder =
+            config_builder.add_source(config::File::from_str(&DEFAULT_CONFIG, FileFormat::Toml));
 
         if let Some(local_file) = local_file {
-            debug!(
-                "Loading local configuration from {}",
-                local_file
-            );
+            debug!("Loading local configuration from {}", local_file);
             config_builder = config_builder.add_source(config::File::with_name(&local_file));
         }
 
@@ -239,16 +164,15 @@ impl Config {
     }
 
     pub fn validate(&self) {
-        self.public_params
-            .validate();
-        self.avs
-            .validate();
+        self.public_params.validate();
+        self.avs.validate();
     }
 }
 
 /// Add mp2 version as a path to the base URL.
 /// e.g. https://base.com/MP2_VERSION
 fn add_mp2_version_path_to_url(url: &str) -> String {
-    let mp2_ver = mp2_common::git::short_git_version();
-    format!("{url}/{mp2_ver}")
+    let mp2_version_str = verifiable_db::version();
+    let mp2_version = semver::Version::parse(mp2_version_str).unwrap();
+    format!("{url}/{}", mp2_version.major)
 }

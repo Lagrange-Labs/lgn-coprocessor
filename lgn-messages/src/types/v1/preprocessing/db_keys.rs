@@ -18,29 +18,14 @@ const BLOCK_PREFIX: &str = "DB_BLOCK";
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]
 pub enum ProofKey {
     /// Indicates the location of Cell proof.
-    Cell(
-        TableId,
-        BlockNr,
-        RowId,
-        CellId,
-    ),
+    Cell(TableId, BlockNr, RowId, CellId),
 
     /// Indicates the location of Row proof.
-    Row(
-        TableId,
-        BlockNr,
-        RowId,
-    ),
+    Row(TableId, BlockNr, RowId),
 
-    Block(
-        TableId,
-        BlockNr,
-    ),
+    Block(TableId, BlockNr),
 
-    IVC(
-        TableId,
-        BlockNr,
-    ),
+    IVC(TableId, BlockNr),
 }
 
 impl Display for ProofKey {
@@ -65,10 +50,7 @@ impl Display for ProofKey {
                 )
             },
             ProofKey::IVC(table_id, block_nr) => {
-                write!(
-                    f,
-                    "{KEYS_PREPROCESSING_PREFIX}/IVC/{table_id}/{block_nr}"
-                )
+                write!(f, "{KEYS_PREPROCESSING_PREFIX}/IVC/{table_id}/{block_nr}")
             },
         }
     }

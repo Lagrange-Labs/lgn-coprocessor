@@ -7,8 +7,8 @@ edition = "2021"
 alloy = { workspace = true }
 anyhow = { workspace = true }
 bincode = { workspace = true }
+blake3.workspace = true
 bytes = { workspace = true }
-checksums = { workspace = true }
 ethers = { workspace = true }
 groth16_framework_v1 = { workspace = true }
 metrics = { workspace = true }
@@ -23,6 +23,7 @@ tracing = { workspace = true }
 verifiable-db = { workspace = true }
 
 lgn-messages = { path = "../lgn-messages" }
+exponential-backoff = "2.0.0"
 
 [features]
 dummy-prover = []

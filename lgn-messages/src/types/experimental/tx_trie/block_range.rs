@@ -19,9 +19,7 @@ pub struct Blocks {
 impl Blocks {
     #[must_use]
     pub fn new(data_uris: Vec<ProofKey>) -> Self {
-        Self {
-            data_uris,
-        }
+        Self { data_uris }
     }
 }
 

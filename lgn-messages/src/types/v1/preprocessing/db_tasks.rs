@@ -333,8 +333,7 @@ impl From<&WorkerTask> for db_keys::ProofKey {
                                 db_keys::ProofKey::Cell(
                                     cl.table_id,
                                     tt.block_nr,
-                                    cl.row_id
-                                        .to_owned(),
+                                    cl.row_id.to_owned(),
                                     cl.cell_id,
                                 )
                             },
@@ -342,8 +341,7 @@ impl From<&WorkerTask> for db_keys::ProofKey {
                                 db_keys::ProofKey::Cell(
                                     cp.table_id,
                                     tt.block_nr,
-                                    cp.row_id
-                                        .to_owned(),
+                                    cp.row_id.to_owned(),
                                     cp.cell_id,
                                 )
                             },
@@ -351,8 +349,7 @@ impl From<&WorkerTask> for db_keys::ProofKey {
                                 db_keys::ProofKey::Cell(
                                     cf.table_id,
                                     tt.block_nr,
-                                    cf.row_id
-                                        .to_owned(),
+                                    cf.row_id.to_owned(),
                                     cf.cell_id,
                                 )
                             },
@@ -364,47 +361,31 @@ impl From<&WorkerTask> for db_keys::ProofKey {
                                 db_keys::ProofKey::Row(
                                     rl.table_id,
                                     tt.block_nr,
-                                    rl.row_id
-                                        .to_string(),
+                                    rl.row_id.to_string(),
                                 )
                             },
                             DbRowType::Partial(rp) => {
                                 db_keys::ProofKey::Row(
                                     rp.table_id,
                                     tt.block_nr,
-                                    rp.row_id
-                                        .to_string(),
+                                    rp.row_id.to_string(),
                                 )
                             },
                             DbRowType::Full(rf) => {
                                 db_keys::ProofKey::Row(
                                     rf.table_id,
                                     tt.block_nr,
-                                    rf.row_id
-                                        .to_string(),
+                                    rf.row_id.to_string(),
                                 )
                             },
                         }
                     },
-                    DatabaseType::Index(bt) => {
-                        db_keys::ProofKey::Block(
-                            bt.table_id,
-                            tt.block_nr,
-                        )
-                    },
-                    DatabaseType::IVC(ivc) => {
-                        db_keys::ProofKey::IVC(
-                            ivc.table_id,
-                            tt.block_nr,
-                        )
-                    },
+                    DatabaseType::Index(bt) => db_keys::ProofKey::Block(bt.table_id, tt.block_nr),
+                    DatabaseType::IVC(ivc) => db_keys::ProofKey::IVC(ivc.table_id, tt.block_nr),
                 }
             },
             _ => {
-                unimplemented!(
-                    "Task type not supported: {:?}",
-                    tt.task_type
-                )
+                unimplemented!("Task type not supported: {:?}", tt.task_type)
             },
         }
     }

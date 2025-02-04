@@ -6,7 +6,7 @@ let
     keystore-file = "./runtime/lagr-keystore.json";
     keystore-password = "canihazsecurityplz";
     gateway-url = "http://localhost:10000";
-    params-url = "https://pub-2124403768df4a0285b77bcb8d224083.r2.dev";
+    params-url = "https://pub-d7c7f0d6979a41f2b25137eaecf12d7b.r2.dev";
   };
 
   avsWorkerConfig = {
@@ -26,9 +26,8 @@ let
     prometheus.port = 9090;
 
     public_params = {
+      params_root_url = meta.params-url;
       dir = "./runtime/zkmr_params";
-      url = meta.params-url;
-      checksum_url = "${meta.params-url}/public_params.hash";
 
       preprocessing_params = {
         file = "preprocessing_params.bin";
@@ -74,16 +73,19 @@ in
     OPENSSL_DEV = pkgs.openssl.dev;
   };
 
-  scripts = {
+  scripts = let
+    log-levels = "RUST_LOG=info,lgn_worker=debug,lgn_provers=debug";
+    cargo-worker = "cargo run --bin lgn-worker";
+  in {
     toml-worker-avs.exec = "echo ${workerConfigFile}";
     toml-worker-lgn.exec = "echo ${lagrangeWorkerConfigFile}";
     generate-key-store.exec = "AVS__LAGR_PWD=${meta.keystore-password} cargo run --bin lgn-avs -- new-key -l ${meta.keystore-file}";
 
-    worker.exec = "RUST_LOG=warn,worker=debug cargo run --release --bin lgn-worker -- --config ${workerConfigFile}";
-    worker-dummy.exec = "RUST_LOG=warn,worker=debug cargo run -F dummy-prover --bin lgn-worker -- --config ${workerConfigFile}";
+    worker.exec = "${log-levels} ${cargo-worker}       --release       -- --config ${workerConfigFile}";
+    worker-dummy.exec = "${log-levels} ${cargo-worker} -F dummy-prover -- --config ${workerConfigFile}";
 
-    worker-lgn.exec = "RUST_LOG=warn,worker=debug cargo run --release --bin lgn-worker -- --config ${lagrangeWorkerConfigFile}";
-    worker-lgn-dummy.exec = "RUST_LOG=warn,worker=debug cargo run -F dummy-prover --bin lgn-worker -- --config ${lagrangeWorkerConfigFile}";
+    worker-lgn.exec = "${log-levels} ${cargo-worker}       --release       -- --config ${lagrangeWorkerConfigFile}";
+    worker-lgn-dummy.exec = "${log-levels} ${cargo-worker} -F dummy-prover -- --config ${lagrangeWorkerConfigFile}";
   };
 
   enterShell = ''

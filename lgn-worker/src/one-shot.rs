@@ -1,6 +1,5 @@
 use anyhow::*;
-use checksum::fetch_checksum_file;
-use checksum::verify_directory_checksums;
+use checksum::fetch_checksums;
 use clap::Parser;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::ReplyType;
@@ -20,10 +19,7 @@ mod manager;
 /// Run the prover against a JSON file containing a task envelope as sent by the
 /// QE.
 struct Cli {
-    #[clap(
-        short,
-        long
-    )]
+    #[clap(short, long)]
     /// The config file; `$(toml-worker-lgn)` can be used if devenv is enabled.
     config: String,
 
@@ -32,53 +28,32 @@ struct Cli {
     input: String,
 }
 
-fn main() -> Result<()> {
-    std::panic::set_hook(
-        Box::new(
-            |panic_info| {
-                let msg = match panic_info
-                    .payload()
-                    .downcast_ref::<&'static str>()
-                {
-                    Some(s) => *s,
-                    None => {
-                        match panic_info
-                            .payload()
-                            .downcast_ref::<String>()
-                        {
-                            Some(s) => &s[..],
-                            None => "Box<dyn Any>",
-                        }
-                    },
-                };
-                let (file, lineno, col) = match panic_info.location() {
-                    Some(l) => {
-                        (
-                            l.file(),
-                            l.line(),
-                            l.column(),
-                        )
-                    },
-                    None => {
-                        (
-                            "<unknown>",
-                            0,
-                            0,
-                        )
-                    },
-                };
-
-                error!(
-                    msg,
-                    file,
-                    lineno,
-                    col,
-                    "Panic occurred: {:?}",
-                    backtrace::Backtrace::new(),
-                );
+#[tokio::main]
+async fn main() -> Result<()> {
+    std::panic::set_hook(Box::new(|panic_info| {
+        let msg = match panic_info.payload().downcast_ref::<&'static str>() {
+            Some(s) => *s,
+            None => {
+                match panic_info.payload().downcast_ref::<String>() {
+                    Some(s) => &s[..],
+                    None => "Box<dyn Any>",
+                }
             },
-        ),
-    );
+        };
+        let (file, lineno, col) = match panic_info.location() {
+            Some(l) => (l.file(), l.line(), l.column()),
+            None => ("<unknown>", 0, 0),
+        };
+
+        error!(
+            msg,
+            file,
+            lineno,
+            col,
+            "Panic occurred: {:?}",
+            backtrace::Backtrace::new(),
+        );
+    }));
 
     let subscriber = tracing_subscriber::fmt()
         .pretty()
@@ -100,55 +75,23 @@ fn main() -> Result<()> {
 
     let config = config::Config::load(Some(cli.config));
     config.validate();
-
-    let checksum_url = &config
-        .public_params
-        .checksum_file_url();
-    let expected_checksums_file = &config
-        .public_params
-        .checksum_expected_local_path;
-    info!("Fetching the checksum file... ");
-    fetch_checksum_file(
-        checksum_url,
-        expected_checksums_file,
-    )?;
-    info!("done.");
+    let checksums = fetch_checksums(config.public_params.checksum_file_url()).await?;
 
     info!("Initializing the provers... ");
     let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
     info!("done.");
 
     info!("Registering the provers... ");
-    register_v1_provers(
-        &config,
-        &mut provers_manager,
-    )
-    .context("while registering provers")?;
+    register_v1_provers(&config, &mut provers_manager, &checksums)
+        .context("while registering provers")?;
     info!("done.");
 
-    verify_directory_checksums(
-        &config
-            .public_params
-            .dir,
-        expected_checksums_file,
-    )
-    .context("Failed to verify checksums")?;
-
     let envelope = std::fs::read_to_string(&cli.input)
-        .with_context(
-            || {
-                format!(
-                    "failed to open `{}`",
-                    cli.input
-                )
-            },
-        )
-        .and_then(
-            |content| {
-                serde_json::from_str::<MessageEnvelope<TaskType>>(&content)
-                    .context("failed to parse input JSON")
-            },
-        )?;
+        .with_context(|| format!("failed to open `{}`", cli.input))
+        .and_then(|content| {
+            serde_json::from_str::<MessageEnvelope<TaskType>>(&content)
+                .context("failed to parse input JSON")
+        })?;
 
     provers_manager
         .delegate_proving(&envelope)

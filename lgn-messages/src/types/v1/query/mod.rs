@@ -55,30 +55,14 @@ pub struct PlaceHolderLgn(HashMap<String, U256>);
 
 impl From<PlaceHolderLgn> for Placeholders {
     fn from(ph: PlaceHolderLgn) -> Self {
-        let min_block =
-            ph.0.get("0")
-                .cloned()
-                .unwrap();
-        let max_block =
-            ph.0.get("1")
-                .cloned()
-                .unwrap();
-        let mut placeholders = Placeholders::new_empty(
-            min_block,
-            max_block,
-        );
+        let min_block = ph.0.get("0").cloned().unwrap();
+        let max_block = ph.0.get("1").cloned().unwrap();
+        let mut placeholders = Placeholders::new_empty(min_block, max_block);
 
-        for (k, v) in
-            ph.0.into_iter()
-        {
+        for (k, v) in ph.0.into_iter() {
             if k != "0" && k != "1" {
-                let index = k
-                    .parse::<usize>()
-                    .unwrap();
-                placeholders.insert(
-                    PlaceholderIdentifier::Generic(index - 1),
-                    v,
-                );
+                let index = k.parse::<usize>().unwrap();
+                placeholders.insert(PlaceholderIdentifier::Generic(index - 1), v);
             }
         }
 
@@ -88,30 +72,15 @@ impl From<PlaceHolderLgn> for Placeholders {
 
 impl From<Placeholders> for PlaceHolderLgn {
     fn from(ph: Placeholders) -> Self {
-        let min_block = ph
-            .get(&PlaceholderIdentifier::MinQueryOnIdx1)
-            .unwrap();
-        let max_block = ph
-            .get(&PlaceholderIdentifier::MaxQueryOnIdx1)
-            .unwrap();
+        let min_block = ph.get(&PlaceholderIdentifier::MinQueryOnIdx1).unwrap();
+        let max_block = ph.get(&PlaceholderIdentifier::MaxQueryOnIdx1).unwrap();
         let mut map = HashMap::new();
-        map.insert(
-            0.to_string(),
-            min_block,
-        );
-        map.insert(
-            1.to_string(),
-            max_block,
-        );
+        map.insert(0.to_string(), min_block);
+        map.insert(1.to_string(), max_block);
 
-        for (k, v) in
-            ph.0.iter()
-        {
+        for (k, v) in ph.0.iter() {
             if let PlaceholderIdentifier::Generic(i) = k {
-                map.insert(
-                    (*i + 1).to_string(),
-                    *v,
-                );
+                map.insert((*i + 1).to_string(), *v);
             }
         }
 

@@ -23,14 +23,12 @@ const DEFAULT_EXPIRY_SECONDS: u64 = 300;
 /// Get the expiry seconds.
 /// <https://github.com/Lagrange-Labs/client-cli/blob/develop/utils/chainops.go#L85-L89>
 pub async fn expiry_timestamp(provider: &Provider<Http>) -> Result<U256> {
-    Ok(
-        provider
-            .get_block(BlockNumber::Latest)
-            .await?
-            .ok_or(anyhow!("Failed to get latest block"))?
-            .timestamp
-            + DEFAULT_EXPIRY_SECONDS,
-    )
+    Ok(provider
+        .get_block(BlockNumber::Latest)
+        .await?
+        .ok_or(anyhow!("Failed to get latest block"))?
+        .timestamp
+        + DEFAULT_EXPIRY_SECONDS)
 }
 
 /// Read the password from input.
@@ -55,20 +53,8 @@ pub fn read_keystore<P: AsRef<Path>, S: AsRef<[u8]>>(
     key_path: P,
     password: S,
 ) -> Result<Wallet<SigningKey>> {
-    let wallet = Wallet::<SigningKey>::decrypt_keystore(
-        &key_path,
-        password,
-    )
-    .with_context(
-        || {
-            anyhow!(
-                "trying to open `{}`",
-                key_path
-                    .as_ref()
-                    .display()
-            )
-        },
-    )?;
+    let wallet = Wallet::<SigningKey>::decrypt_keystore(&key_path, password)
+        .with_context(|| anyhow!("trying to open `{}`", key_path.as_ref().display()))?;
 
     Ok(wallet)
 }
@@ -87,11 +73,7 @@ pub fn sign_hash(
 ) -> Result<Vec<u8>> {
     // Sign the hash, and it has already added `v` with 27.
     // <https://github.com/gakonst/ethers-rs/blob/51fe937f6515689b17a3a83b74a05984ad3a7f11/ethers-signers/src/wallet/mod.rs#L152>
-    Ok(
-        wallet
-            .sign_hash(data.into())?
-            .to_vec(),
-    )
+    Ok(wallet.sign_hash(data.into())?.to_vec())
 }
 
 /// Prompt to input password
@@ -103,18 +85,11 @@ fn prompt_password(prompt_msg: &str) -> Result<String> {
 fn test_prompt_password(prompt_msg: &str) -> Result<String> {
     use std::io::Cursor;
 
-    let mut mock_input = Cursor::new(
-        "test-password\n"
-            .as_bytes()
-            .to_owned(),
-    );
+    let mut mock_input = Cursor::new("test-password\n".as_bytes().to_owned());
     let mut mock_output = Cursor::new(Vec::new());
 
-    let password = rpassword::prompt_password_from_bufread(
-        &mut mock_input,
-        &mut mock_output,
-        prompt_msg,
-    )?;
+    let password =
+        rpassword::prompt_password_from_bufread(&mut mock_input, &mut mock_output, prompt_msg)?;
 
     Ok(password)
 }

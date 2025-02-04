@@ -15,10 +15,7 @@ use crate::TableId;
 
 pub const ROUTING_DOMAIN: &str = "sp";
 pub type Identifier = u64;
-pub type MptNodeVersion = (
-    BlockNr,
-    H256,
-);
+pub type MptNodeVersion = (BlockNr, H256);
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum ExtractionType {
@@ -215,14 +212,7 @@ impl Length {
         self.nodes
             .iter()
             .enumerate()
-            .map(
-                |(i, n)| {
-                    MPTExtractionType::from_rlp_node(
-                        n,
-                        i,
-                    )
-                },
-            )
+            .map(|(i, n)| MPTExtractionType::from_rlp_node(n, i))
             .collect()
     }
 }
@@ -242,14 +232,7 @@ impl Contract {
         self.nodes
             .iter()
             .enumerate()
-            .map(
-                |(i, n)| {
-                    MPTExtractionType::from_rlp_node(
-                        n,
-                        i,
-                    )
-                },
-            )
+            .map(|(i, n)| MPTExtractionType::from_rlp_node(n, i))
             .collect()
     }
 }
@@ -262,9 +245,7 @@ pub struct BlockExtractionInput {
 
 impl BlockExtractionInput {
     pub fn new(rlp_header: Vec<u8>) -> Self {
-        Self {
-            rlp_header,
-        }
+        Self { rlp_header }
     }
 }
 
@@ -298,16 +279,14 @@ impl FinalExtraction {
         compound: Option<TableDimension>,
         value_proof_version: MptNodeVersion,
     ) -> Self {
-        Self::Single(
-            SingleTableExtraction::new(
-                table_id,
-                table_hash,
-                block_nr,
-                contract,
-                compound,
-                value_proof_version,
-            ),
-        )
+        Self::Single(SingleTableExtraction::new(
+            table_id,
+            table_hash,
+            block_nr,
+            contract,
+            compound,
+            value_proof_version,
+        ))
     }
 
     pub fn new_merge_table(
@@ -318,16 +297,14 @@ impl FinalExtraction {
         contract: Address,
         value_proof_version: MptNodeVersion,
     ) -> Self {
-        Self::Merge(
-            MergeTableExtraction::new(
-                table_id,
-                simple_table_hash,
-                mapping_table_hash,
-                block_nr,
-                contract,
-                value_proof_version,
-            ),
-        )
+        Self::Merge(MergeTableExtraction::new(
+            table_id,
+            simple_table_hash,
+            mapping_table_hash,
+            block_nr,
+            contract,
+            value_proof_version,
+        ))
     }
 }
 
@@ -458,10 +435,7 @@ impl From<&WorkerTask> for ProofKey {
             WorkerTaskType::Extraction(extraction) => {
                 match extraction {
                     ExtractionType::MptExtraction(mpt_extraction) => {
-                        let node_version = (
-                            mpt_extraction.block_nr,
-                            mpt_extraction.node_hash,
-                        );
+                        let node_version = (mpt_extraction.block_nr, mpt_extraction.node_hash);
                         match &mpt_extraction.mpt_type {
                             MptType::MappingLeaf(_) => {
                                 ProofKey::MptVariable {

@@ -159,7 +159,7 @@ jobs:
               fi
   public-push:
     name: Push Docker Images to Docker hub
-    if: contains('main holesky mainnet v1_base', github.ref_name) || startsWith(github.ref, 'refs/tags/')
+    # if: contains('main holesky mainnet v1_base', github.ref_name) || startsWith(github.ref, 'refs/tags/')
     runs-on: ${{needs.base.outputs.RUNNER}}
     needs:
       - build
