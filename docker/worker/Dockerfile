@@ -4,7 +4,7 @@
 ARG BASE_IMAGE_TAG
 FROM base:${BASE_IMAGE_TAG} as builder
 
-ARG BUILD_FLAGS="--release"
+ARG BUILD_FLAGS="-F dummy-prover"
 
 # Build with caching
 RUN --mount=type=cache,id=lgn-worker,target=/usr/local/cargo/registry \
