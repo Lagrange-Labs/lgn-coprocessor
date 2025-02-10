@@ -34,7 +34,6 @@ use tokio_stream::StreamExt;
 use tonic::metadata::MetadataValue;
 use tonic::Request;
 use tonic::transport::{Channel, Error};
-use tonic::transport::Error as TonicError;
 use tracing::debug;
 use tracing::error;
 use tracing::info;
@@ -356,9 +355,7 @@ async fn run_with_grpc(
             Ok(channel) => break channel,
             Err(e) => {
                 attempt += 1;
-                if is_connection_issue(&e) {
-                    warn!("Server closed the connection. Retrying...");
-                }
+
                 if attempt >= max_retries {
                     error!("Failed to connect after {} attempts: {}", max_retries, e);
                     return Err(e.into());
@@ -429,15 +426,6 @@ async fn run_with_grpc(
     }
 
     Ok(())
-}
-
-fn is_connection_issue(e: &Error) -> bool {
-    match e {
-        Error::Channel(_) => true,
-        Error::Http(_) => true,
-        Error::Server(status) if status.code() == tonic::Code::Unavailable => true,
-        _ => false,
-    }
 }
 
 fn process_downstream_payload(
