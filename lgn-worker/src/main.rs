@@ -431,12 +431,12 @@ async fn run_with_grpc(
     Ok(())
 }
 
-fn is_connection_issue(e: &TonicError) -> bool {
+fn is_connection_issue(e: &Error) -> bool {
     match e {
-        TonicError::Connect(_) => true,
-        TonicError::Grpc(status) if status.code() == tonic::Code::Unavailable => true,
+        Error::Channel(_) => true,
+        Error::Http(_) => true,
+        Error::Server(status) if status.code() == tonic::Code::Unavailable => true,
         _ => false,
-    }
 }
 
 fn process_downstream_payload(
