@@ -29,9 +29,11 @@ use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
 use mimalloc::MiMalloc;
 use tokio::io::AsyncWriteExt;
+use tokio::time::{sleep, Duration};
 use tokio_stream::StreamExt;
 use tonic::metadata::MetadataValue;
 use tonic::Request;
+use tonic::transport::{Channel, Error};
 use tracing::debug;
 use tracing::error;
 use tracing::info;
@@ -324,10 +326,7 @@ async fn run_with_grpc(
 
     maybe_verify_checksums(config).await?;
 
-    info!(
-        "Connecting to the gateway using gRPC. grpc_url: {}",
-        grpc_url
-    );
+    info!("Connecting to the gateway using gRPC. grpc_url: {}", grpc_url);
     let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
 
     let wallet = get_wallet(config)?;
@@ -337,10 +336,6 @@ async fn run_with_grpc(
         &wallet,
     )?
     .encode()?;
-
-    let channel = tonic::transport::Channel::builder(uri)
-        .connect()
-        .await?;
     let token: MetadataValue<_> = format!("Bearer {token}").parse()?;
 
     let max_message_size = config
@@ -349,6 +344,32 @@ async fn run_with_grpc(
         .unwrap_or(MAX_GRPC_MESSAGE_SIZE_MB)
         * 1024
         * 1024;
+
+    let max_retries = 5;
+    let mut attempt = 0;
+    let mut delay = Duration::from_secs(1);
+
+    let channel = loop {
+        match Channel::builder(uri.clone()).connect().await {
+            Ok(channel) => break channel,
+            Err(e) => {
+                attempt += 1;
+                if is_server_closed_error(&e) {
+                    warn!("Server closed the connection. Retrying...");
+                }
+                if attempt >= max_retries {
+                    error!("Failed to connect after {} attempts: {}", max_retries, e);
+                    return Err(e.into());
+                }
+                warn!(
+                    "Failed to connect (attempt {}/{}): {}. Retrying in {:?}...",
+                    attempt, max_retries, e, delay
+                );
+                sleep(delay).await;
+                delay *= 2; // Exponential backoff
+            }
+        }
+    };
 
     let mut client = lagrange::workers_service_client::WorkersServiceClient::with_interceptor(
         channel,
@@ -406,6 +427,10 @@ async fn run_with_grpc(
     }
 
     Ok(())
+}
+
+fn is_server_closed_error(e: &tonic::transport::Error) -> bool {
+    matches!(e, Error::ConnectionClosed(_) | Error::ServerClosed)
 }
 
 fn process_downstream_payload(
