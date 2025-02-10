@@ -34,12 +34,14 @@ use tokio_stream::StreamExt;
 use tonic::metadata::MetadataValue;
 use tonic::Request;
 use tonic::transport::{Channel, Error};
+use tonic::transport::Error as TonicError;
 use tracing::debug;
 use tracing::error;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing::span;
 use tracing::trace;
+use tracing::warn;
 use tracing::Level;
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::EnvFilter;
@@ -354,7 +356,7 @@ async fn run_with_grpc(
             Ok(channel) => break channel,
             Err(e) => {
                 attempt += 1;
-                if is_server_closed_error(&e) {
+                if is_connection_issue(&e) {
                     warn!("Server closed the connection. Retrying...");
                 }
                 if attempt >= max_retries {
@@ -429,8 +431,12 @@ async fn run_with_grpc(
     Ok(())
 }
 
-fn is_server_closed_error(e: &tonic::transport::Error) -> bool {
-    matches!(e, Error::ConnectionClosed(_) | Error::ServerClosed)
+fn is_connection_issue(e: &TonicError) -> bool {
+    match e {
+        TonicError::Connect(_) => true,
+        TonicError::Grpc(status) if status.code() == tonic::Code::Unavailable => true,
+        _ => false,
+    }
 }
 
 fn process_downstream_payload(
