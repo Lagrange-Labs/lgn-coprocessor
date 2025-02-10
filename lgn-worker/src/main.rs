@@ -437,6 +437,7 @@ fn is_connection_issue(e: &Error) -> bool {
         Error::Http(_) => true,
         Error::Server(status) if status.code() == tonic::Code::Unavailable => true,
         _ => false,
+    }
 }
 
 fn process_downstream_payload(
