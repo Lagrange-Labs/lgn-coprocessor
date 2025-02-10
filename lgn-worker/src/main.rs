@@ -260,7 +260,14 @@ async fn run_worker(
         tokio::select! {
             Some(inbound_message) = inbound.next() => {
                 let msg = match inbound_message {
-                    Ok(ref msg) => msg,
+                    Ok(ref msg) => {
+                        tracing::warn!(
+                            "inbound message: {}KB",
+                            std::mem::size_of_val(&msg) / 1024
+                        );
+
+                        msg
+                    },
                     Err(e) => {
                         error!("connection to the gateway ended with status: {e}");
                         break;
@@ -378,6 +385,11 @@ async fn process_message_from_gateway(
             }
         },
     };
+
+    tracing::warn!(
+        "outbound message: {}KB",
+        std::mem::size_of_val(&outbound_msg) / 1024
+    );
     outbound.send(outbound_msg).await?;
 
     counter!("zkmr_worker_grpc_messages_sent_total",
