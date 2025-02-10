@@ -261,10 +261,7 @@ async fn run_worker(
             Some(inbound_message) = inbound.next() => {
                 let msg = match inbound_message {
                     Ok(ref msg) => {
-                        tracing::warn!(
-                            "inbound message: {}KB",
-                            std::mem::size_of_val(&msg) / 1024
-                        );
+                        tracing::warn!("inbound message: {:.2}KB", msg.task.len() as f32/1024.0);
 
                         msg
                     },
@@ -365,6 +362,8 @@ async fn process_message_from_gateway(
 
     let outbound_msg = match reply {
         Ok(reply) => {
+            let reply = serde_json::to_vec(&reply)?;
+            tracing::warn!("outbound message: {:.2}KB", reply.len() as f32 / 1024.0);
             WorkerToGwRequest {
                 request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
                     WorkerDone {
@@ -375,6 +374,10 @@ async fn process_message_from_gateway(
             }
         },
         Err(error_str) => {
+            tracing::warn!(
+                "outbound message: {:.2}KB",
+                error_str.as_bytes().len() as f32 / 1024.0
+            );
             WorkerToGwRequest {
                 request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
                     WorkerDone {
@@ -386,10 +389,6 @@ async fn process_message_from_gateway(
         },
     };
 
-    tracing::warn!(
-        "outbound message: {}KB",
-        std::mem::size_of_val(&outbound_msg) / 1024
-    );
     outbound.send(outbound_msg).await?;
 
     counter!("zkmr_worker_grpc_messages_sent_total",
