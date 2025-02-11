@@ -241,7 +241,13 @@ async fn run_worker(
             request: Some(lagrange::worker_to_gw_request::Request::WorkerReady(
                 lagrange::WorkerReady {
                     version: env!("CARGO_PKG_VERSION").to_string(),
-                    worker_class: config.worker.instance_type.to_string(),
+                    worker_class: format!(
+                        "{}-{}",
+                        config.worker.instance_type,
+                        semver::Version::parse(verifiable_db::version())
+                            .unwrap()
+                            .major
+                    ),
                 },
             )),
         })
