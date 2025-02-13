@@ -22,8 +22,7 @@ pub const NUM_CHUNKS: usize = 66;
 pub const NUM_ROWS: usize = 100;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct WorkerTask
-{
+pub struct WorkerTask {
     /// Chain ID
     pub chain_id: u64,
 
@@ -31,14 +30,12 @@ pub struct WorkerTask
     pub task_type: WorkerTaskType,
 }
 
-impl WorkerTask
-{
+impl WorkerTask {
     #[must_use]
     pub fn new(
         chain_id: u64,
         task_type: WorkerTaskType,
-    ) -> Self
-    {
+    ) -> Self {
         Self {
             chain_id,
             task_type,
@@ -48,8 +45,7 @@ impl WorkerTask
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
-pub enum WorkerTaskType
-{
+pub enum WorkerTaskType {
     #[serde(rename = "1")]
     Query(QueryInput),
 }
@@ -57,35 +53,16 @@ pub enum WorkerTaskType
 #[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
 pub struct PlaceHolderLgn(HashMap<String, U256>);
 
-impl From<PlaceHolderLgn> for Placeholders
-{
-    fn from(ph: PlaceHolderLgn) -> Self
-    {
-        let min_block =
-            ph.0.get("0")
-                .cloned()
-                .unwrap();
-        let max_block =
-            ph.0.get("1")
-                .cloned()
-                .unwrap();
-        let mut placeholders = Placeholders::new_empty(
-            min_block,
-            max_block,
-        );
+impl From<PlaceHolderLgn> for Placeholders {
+    fn from(ph: PlaceHolderLgn) -> Self {
+        let min_block = ph.0.get("0").cloned().unwrap();
+        let max_block = ph.0.get("1").cloned().unwrap();
+        let mut placeholders = Placeholders::new_empty(min_block, max_block);
 
-        for (k, v) in
-            ph.0.into_iter()
-        {
-            if k != "0" && k != "1"
-            {
-                let index = k
-                    .parse::<usize>()
-                    .unwrap();
-                placeholders.insert(
-                    PlaceholderIdentifier::Generic(index - 1),
-                    v,
-                );
+        for (k, v) in ph.0.into_iter() {
+            if k != "0" && k != "1" {
+                let index = k.parse::<usize>().unwrap();
+                placeholders.insert(PlaceholderIdentifier::Generic(index - 1), v);
             }
         }
 
@@ -93,35 +70,17 @@ impl From<PlaceHolderLgn> for Placeholders
     }
 }
 
-impl From<Placeholders> for PlaceHolderLgn
-{
-    fn from(ph: Placeholders) -> Self
-    {
-        let min_block = ph
-            .get(&PlaceholderIdentifier::MinQueryOnIdx1)
-            .unwrap();
-        let max_block = ph
-            .get(&PlaceholderIdentifier::MaxQueryOnIdx1)
-            .unwrap();
+impl From<Placeholders> for PlaceHolderLgn {
+    fn from(ph: Placeholders) -> Self {
+        let min_block = ph.get(&PlaceholderIdentifier::MinQueryOnIdx1).unwrap();
+        let max_block = ph.get(&PlaceholderIdentifier::MaxQueryOnIdx1).unwrap();
         let mut map = HashMap::new();
-        map.insert(
-            0.to_string(),
-            min_block,
-        );
-        map.insert(
-            1.to_string(),
-            max_block,
-        );
+        map.insert(0.to_string(), min_block);
+        map.insert(1.to_string(), max_block);
 
-        for (k, v) in
-            ph.0.iter()
-        {
-            if let PlaceholderIdentifier::Generic(i) = k
-            {
-                map.insert(
-                    (*i + 1).to_string(),
-                    *v,
-                );
+        for (k, v) in ph.0.iter() {
+            if let PlaceholderIdentifier::Generic(i) = k {
+                map.insert((*i + 1).to_string(), *v);
             }
         }
 

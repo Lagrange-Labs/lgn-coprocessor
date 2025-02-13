@@ -14,45 +14,27 @@ type QueryId = String;
 
 /// Identifies proofs in the storage system
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum ProofKey
-{
+pub enum ProofKey {
     /// Public params and inputs
-    PublicParams(
-        Experiment,
-        LogMaxCapacity,
-    ),
+    PublicParams(Experiment, LogMaxCapacity),
 
     /// Inputs(data)
-    Inputs(
-        Experiment,
-        LogMaxCapacity,
-        LogSubsetSize,
-    ),
+    Inputs(Experiment, LogMaxCapacity, LogSubsetSize),
 
     /// Compute proof key
-    Compute(
-        QueryId,
-        Level,
-        Index,
-    ),
+    Compute(QueryId, Level, Index),
 }
 
-impl From<ProofKey> for Path
-{
-    fn from(key: ProofKey) -> Self
-    {
-        let path_str = match &key
-        {
-            ProofKey::PublicParams(experiment, log_max_capacity) =>
-            {
+impl From<ProofKey> for Path {
+    fn from(key: ProofKey) -> Self {
+        let path_str = match &key {
+            ProofKey::PublicParams(experiment, log_max_capacity) => {
                 format!("recproof/{experiment:?}/public_params/{log_max_capacity}")
             },
-            ProofKey::Inputs(experiment, log_max_capacity, log_subset_size) =>
-            {
+            ProofKey::Inputs(experiment, log_max_capacity, log_subset_size) => {
                 format!("recproof/{experiment:?}/inputs/{log_max_capacity}/{log_subset_size}")
             },
-            ProofKey::Compute(query_id, level, index) =>
-            {
+            ProofKey::Compute(query_id, level, index) => {
                 format!("recproof/node/{query_id}/{level}-{index}")
             },
         };
@@ -61,25 +43,17 @@ impl From<ProofKey> for Path
     }
 }
 
-impl Display for ProofKey
-{
+impl Display for ProofKey {
     fn fmt(
         &self,
         f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result
-    {
-        write!(
-            f,
-            "{}",
-            Path::from(self.clone())
-        )
+    ) -> std::fmt::Result {
+        write!(f, "{}", Path::from(self.clone()))
     }
 }
 
-impl From<ProofKey> for String
-{
-    fn from(key: ProofKey) -> Self
-    {
+impl From<ProofKey> for String {
+    fn from(key: ProofKey) -> Self {
         Path::from(key).to_string()
     }
 }

@@ -14,14 +14,12 @@ const PROOF_SIZE: usize = 120;
 /// Prover implementation which performs no proving and returns random data as a proof.
 pub struct DummyProver;
 
-impl StorageQueryProver for DummyProver
-{
+impl StorageQueryProver for DummyProver {
     fn prove_universal_circuit(
         &self,
         _input: MatchingRowInput,
         _pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         Ok(dummy_proof(PROOF_SIZE))
     }
 
@@ -29,16 +27,14 @@ impl StorageQueryProver for DummyProver
         &self,
         _input: RowsChunkInput,
         _pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         Ok(dummy_proof(PROOF_SIZE))
     }
 
     fn prove_chunk_aggregation(
         &self,
         _chunks_proofs: &[Vec<u8>],
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         Ok(dummy_proof(PROOF_SIZE))
     }
 
@@ -46,8 +42,7 @@ impl StorageQueryProver for DummyProver
         &self,
         _input: NonExistenceInput,
         _pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         Ok(dummy_proof(PROOF_SIZE))
     }
 
@@ -57,8 +52,7 @@ impl StorageQueryProver for DummyProver
         _placeholders: Placeholders,
         _query_proof: Vec<u8>,
         _indexing_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         Ok(dummy_proof(PROOF_SIZE))
     }
 
@@ -71,8 +65,7 @@ impl StorageQueryProver for DummyProver
         _column_ids: &ColumnIDs,
         _limit: u32,
         _offset: u32,
-    ) -> anyhow::Result<Vec<u8>>
-    {
+    ) -> anyhow::Result<Vec<u8>> {
         Ok(dummy_proof(PROOF_SIZE))
     }
 }
