@@ -322,6 +322,7 @@ pub type Stake = u128;
 
 /// The segregation of job types according to their computational complexity
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum TaskDifficulty {
     // Due to the implicit ordering on which PartialOrd is built, this **MUST**
     // remain the smaller value at the top of the enum.
@@ -357,20 +358,6 @@ impl TaskDifficulty {
             v1::query::ROUTING_DOMAIN => TaskDifficulty::Small,
             v1::groth16::ROUTING_DOMAIN => TaskDifficulty::Large,
             _ => panic!("unknown routing domain"),
-        }
-    }
-}
-
-impl TryFrom<&str> for TaskDifficulty {
-    type Error = String;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value.to_ascii_lowercase().as_str() {
-            "disabled" => Ok(TaskDifficulty::Disabled),
-            "small" => Ok(TaskDifficulty::Small),
-            "medium" => Ok(TaskDifficulty::Medium),
-            "large" => Ok(TaskDifficulty::Large),
-            _ => Err(format!("unknown worker class: `{value}`")),
         }
     }
 }
