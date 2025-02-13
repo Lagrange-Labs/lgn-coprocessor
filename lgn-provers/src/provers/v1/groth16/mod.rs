@@ -25,8 +25,7 @@ pub fn create_prover(
     pk_file: &str,
     vk_file: &str,
     skip_store: bool,
-) -> anyhow::Result<Groth16<impl Prover>>
-{
+) -> anyhow::Result<Groth16<impl Prover>> {
     let prover = {
         #[cfg(feature = "dummy-prover")]
         let prover = {

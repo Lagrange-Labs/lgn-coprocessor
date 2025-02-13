@@ -11,8 +11,7 @@ lazy_static_include_str! {
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
-pub(crate) struct Config
-{
+pub(crate) struct Config {
     pub(crate) worker: WorkerConfig,
     pub(crate) avs: AvsConfig,
     pub(crate) public_params: PublicParamsConfig,
@@ -20,8 +19,7 @@ pub(crate) struct Config
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
-pub(crate) struct PublicParamsConfig
-{
+pub(crate) struct PublicParamsConfig {
     /// the root URL over which we should fetch params.
     /// The FULL url is constructed from this one and the mp2 version
     pub(crate) params_root_url: String,
@@ -35,130 +33,75 @@ pub(crate) struct PublicParamsConfig
     pub(crate) groth16_assets: Groth16Assets,
 }
 
-impl PublicParamsConfig
-{
-    pub fn validate(&self)
-    {
+impl PublicParamsConfig {
+    pub fn validate(&self) {
+        assert!(!self.params_root_url.is_empty(), "URL is required");
         assert!(
-            !self
-                .params_root_url
-                .is_empty(),
-            "URL is required"
-        );
-        assert!(
-            !self
-                .checksum_expected_local_path
-                .is_empty(),
+            !self.checksum_expected_local_path.is_empty(),
             "Checksum local path for expected checksum file is required"
         );
-        assert!(
-            !self
-                .dir
-                .is_empty(),
-            "Directory is required"
-        );
-        self.preprocessing_params
-            .validate();
-        self.query_params
-            .validate();
-        self.groth16_assets
-            .validate();
+        assert!(!self.dir.is_empty(), "Directory is required");
+        self.preprocessing_params.validate();
+        self.query_params.validate();
+        self.groth16_assets.validate();
     }
 
     /// Build the base URL with path of mp2 version for downloading param files.
-    pub fn params_base_url(&self) -> String
-    {
+    pub fn params_base_url(&self) -> String {
         add_mp2_version_path_to_url(&self.params_root_url)
     }
 
     /// Build the URL for downloading the checksum file.
-    pub fn checksum_file_url(&self) -> String
-    {
+    pub fn checksum_file_url(&self) -> String {
         let url = self.params_base_url();
         format!("{url}/{PARAMS_CHECKSUM_FILENAME}")
     }
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
-pub(crate) struct PreprocessingParams
-{
+pub(crate) struct PreprocessingParams {
     pub(crate) file: String,
 }
 
-impl PreprocessingParams
-{
-    pub fn validate(&self)
-    {
-        assert!(
-            !self
-                .file
-                .is_empty(),
-            "Preprocessing file is required"
-        );
+impl PreprocessingParams {
+    pub fn validate(&self) {
+        assert!(!self.file.is_empty(), "Preprocessing file is required");
     }
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
-pub(crate) struct QueryParams
-{
+pub(crate) struct QueryParams {
     pub(crate) file: String,
 }
 
-impl QueryParams
-{
-    pub fn validate(&self)
-    {
-        assert!(
-            !self
-                .file
-                .is_empty(),
-            "Query2 file is required"
-        );
+impl QueryParams {
+    pub fn validate(&self) {
+        assert!(!self.file.is_empty(), "Query2 file is required");
     }
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
-pub(crate) struct Groth16Assets
-{
+pub(crate) struct Groth16Assets {
     pub(crate) circuit_file: String,
     pub(crate) r1cs_file: String,
     pub(crate) pk_file: String,
 }
 
-impl Groth16Assets
-{
-    pub fn validate(&self)
-    {
-        assert!(
-            !self
-                .circuit_file
-                .is_empty(),
-            "Circuit URL is required"
-        );
-        assert!(
-            !self
-                .r1cs_file
-                .is_empty(),
-            "R1CS URL is required"
-        );
-        assert!(
-            !self
-                .pk_file
-                .is_empty(),
-            "PK URL is required"
-        );
+impl Groth16Assets {
+    pub fn validate(&self) {
+        assert!(!self.circuit_file.is_empty(), "Circuit URL is required");
+        assert!(!self.r1cs_file.is_empty(), "R1CS URL is required");
+        assert!(!self.pk_file.is_empty(), "PK URL is required");
     }
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
-pub(crate) struct WorkerConfig
-{
+pub(crate) struct WorkerConfig {
     pub(crate) instance_type: TaskDifficulty,
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
-pub(crate) struct AvsConfig
-{
+pub(crate) struct AvsConfig {
     pub(crate) gateway_url: String,
     pub(crate) gateway_grpc_url: Option<String>,
     pub(crate) max_grpc_message_size_mb: Option<usize>,
@@ -170,58 +113,24 @@ pub(crate) struct AvsConfig
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
-pub(crate) struct PrometheusConfig
-{
+pub(crate) struct PrometheusConfig {
     pub(crate) port: u16,
 }
 
-impl AvsConfig
-{
-    pub fn validate(&self)
-    {
-        assert!(
-            !self
-                .gateway_url
-                .is_empty(),
-            "Gateway URL is required"
-        );
-        assert!(
-            !self
-                .issuer
-                .is_empty(),
-            "Issuer is required"
-        );
-        assert!(
-            !self
-                .worker_id
-                .is_empty(),
-            "Worker ID is required"
-        );
+impl AvsConfig {
+    pub fn validate(&self) {
+        assert!(!self.gateway_url.is_empty(), "Gateway URL is required");
+        assert!(!self.issuer.is_empty(), "Issuer is required");
+        assert!(!self.worker_id.is_empty(), "Worker ID is required");
 
-        match (
-            &self.lagr_keystore,
-            &self.lagr_pwd,
-            &self.lagr_private_key,
-        )
-        {
-            (Some(kpath), Some(pwd), _) =>
-            {
-                assert!(
-                    !kpath.is_empty(),
-                    "Keystore path is empty"
-                );
-                assert!(
-                    !pwd.expose_secret()
-                        .is_empty(),
-                    "Password is empty"
-                );
+        match (&self.lagr_keystore, &self.lagr_pwd, &self.lagr_private_key) {
+            (Some(kpath), Some(pwd), _) => {
+                assert!(!kpath.is_empty(), "Keystore path is empty");
+                assert!(!pwd.expose_secret().is_empty(), "Password is empty");
             },
-            (None, None, Some(pkey)) =>
-            {
+            (None, None, Some(pkey)) => {
                 assert!(
-                    !pkey
-                        .expose_secret()
-                        .is_empty(),
+                    !pkey.expose_secret().is_empty(),
                     "Private key value is empty"
                 )
             },
@@ -230,24 +139,14 @@ impl AvsConfig
     }
 }
 
-impl Config
-{
-    pub fn load(local_file: Option<String>) -> Config
-    {
+impl Config {
+    pub fn load(local_file: Option<String>) -> Config {
         let mut config_builder = config::Config::builder();
-        config_builder = config_builder.add_source(
-            config::File::from_str(
-                &DEFAULT_CONFIG,
-                FileFormat::Toml,
-            ),
-        );
+        config_builder =
+            config_builder.add_source(config::File::from_str(&DEFAULT_CONFIG, FileFormat::Toml));
 
-        if let Some(local_file) = local_file
-        {
-            debug!(
-                "Loading local configuration from {}",
-                local_file
-            );
+        if let Some(local_file) = local_file {
+            debug!("Loading local configuration from {}", local_file);
             config_builder = config_builder.add_source(config::File::with_name(&local_file));
         }
 
@@ -265,19 +164,15 @@ impl Config
             .expect("Could not deserialize configuration")
     }
 
-    pub fn validate(&self)
-    {
-        self.public_params
-            .validate();
-        self.avs
-            .validate();
+    pub fn validate(&self) {
+        self.public_params.validate();
+        self.avs.validate();
     }
 }
 
 /// Add mp2 version as a path to the base URL.
 /// e.g. https://base.com/MP2_VERSION
-fn add_mp2_version_path_to_url(url: &str) -> String
-{
+fn add_mp2_version_path_to_url(url: &str) -> String {
     let mp2_ver = mp2_common::git::short_git_version();
     format!("{url}/{mp2_ver}")
 }

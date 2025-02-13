@@ -19,8 +19,7 @@ use crate::types::v1::query::WorkerTaskType;
 
 /// Query input for a proving task
 #[derive(Dbg, Clone, Deserialize, Serialize)]
-pub struct QueryInput
-{
+pub struct QueryInput {
     /// Proof storage key
     pub proof_key: ProofKey,
 
@@ -34,8 +33,7 @@ pub struct QueryInput
 
 /// Query step info
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum QueryStep
-{
+pub enum QueryStep {
     /// Combine the rows and revelation proving for tabular queries in one task,
     /// next step is Groth16
     #[serde(rename = "1")]
@@ -57,8 +55,7 @@ pub enum QueryStep
 
 /// Matching row input for a tabular query
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
-pub struct MatchingRowInput
-{
+pub struct MatchingRowInput {
     /// Proof key of this row proof
     pub proof_key: ProofKey,
     /// Collumn cells info
@@ -71,8 +68,7 @@ pub struct MatchingRowInput
 
 /// Input of an aggregation (batching) query
 #[derive(Dbg, Clone, Deserialize, Serialize)]
-pub struct AggregationInput
-{
+pub struct AggregationInput {
     /// Proof key of this aggregation proof
     pub proof_key: ProofKey,
     /// Different proof inputs of an aggregation query
@@ -81,8 +77,7 @@ pub struct AggregationInput
 
 /// Different proof inputs of an aggregation (batching) query
 #[derive(Clone, Dbg, Deserialize, Serialize)]
-pub enum ProofInputKind
-{
+pub enum ProofInputKind {
     /// Rows chunk input
     #[serde(rename = "1")]
     RowsChunk(RowsChunkInput),
@@ -98,76 +93,52 @@ pub enum ProofInputKind
 
 /// Handling a matching row proof, it could contain a proof key or the proof data.
 #[derive(Clone, Dbg, Serialize, Deserialize)]
-pub struct HydratableMatchingRow
-{
+pub struct HydratableMatchingRow {
     pub proof: Hydratable<ProofKey>,
     pub path: RowPath,
     pub result: Vec<U256>,
 }
 
-impl HydratableMatchingRow
-{
-    pub fn into_matching_row(self) -> MatchingRow
-    {
-        MatchingRow::new(
-            self.proof
-                .clone_proof(),
-            self.path,
-            self.result,
-        )
+impl HydratableMatchingRow {
+    pub fn into_matching_row(self) -> MatchingRow {
+        MatchingRow::new(self.proof.clone_proof(), self.path, self.result)
     }
 }
 
 /// Either a `Dehydrated` variant containing a key to a stored proof, or a
 /// `Hydrated` containing the proof itself.
 #[derive(Clone, Serialize, Deserialize)]
-pub enum Hydratable<K: Clone + std::fmt::Debug>
-{
+pub enum Hydratable<K: Clone + std::fmt::Debug> {
     Dehydrated(K),
     Hydrated(Arc<Vec<u8>>),
 }
 
-impl<T: Clone + std::fmt::Debug> std::fmt::Debug for Hydratable<T>
-{
+impl<T: Clone + std::fmt::Debug> std::fmt::Debug for Hydratable<T> {
     fn fmt(
         &self,
         f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result
-    {
-        match self
-        {
-            Hydratable::Dehydrated(k) =>
-            {
-                write!(
-                    f,
-                    "dehydrated: {k:?}"
-                )
+    ) -> std::fmt::Result {
+        match self {
+            Hydratable::Dehydrated(k) => {
+                write!(f, "dehydrated: {k:?}")
             },
-            Hydratable::Hydrated(_) =>
-            {
-                write!(
-                    f,
-                    "hydrated"
-                )
+            Hydratable::Hydrated(_) => {
+                write!(f, "hydrated")
             },
         }
     }
 }
 
-impl<K: Clone + std::fmt::Debug> Hydratable<K>
-{
+impl<K: Clone + std::fmt::Debug> Hydratable<K> {
     /// Wrap a proof key into a `Dehydrated` variant.
-    pub fn new(k: K) -> Self
-    {
+    pub fn new(k: K) -> Self {
         Hydratable::Dehydrated(k)
     }
 
     /// Consume a `Hydrated` variant into its embedded proof; panic if it is
     /// not hydrated.
-    pub fn proof(&self) -> Arc<Vec<u8>>
-    {
-        match self
-        {
+    pub fn proof(&self) -> Arc<Vec<u8>> {
+        match self {
             Hydratable::Dehydrated(_) => unreachable!(),
             Hydratable::Hydrated(proof) => proof.clone(),
         }
@@ -175,26 +146,17 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K>
 
     /// Consume a `Hydrated` variant into its embedded proof; panic if it is
     /// not hydrated.
-    pub fn clone_proof(&self) -> Vec<u8>
-    {
-        match self
-        {
+    pub fn clone_proof(&self) -> Vec<u8> {
+        match self {
             Hydratable::Dehydrated(_) => unreachable!(),
-            Hydratable::Hydrated(proof) =>
-            {
-                proof
-                    .clone()
-                    .to_vec()
-            },
+            Hydratable::Hydrated(proof) => proof.clone().to_vec(),
         }
     }
 
     /// Convert a `Dehydrated` variant into its embedded key; panic if it is
     /// not hydrated.
-    pub fn key(&self) -> K
-    {
-        match self
-        {
+    pub fn key(&self) -> K {
+        match self {
             Hydratable::Dehydrated(k) => k.clone(),
             Hydratable::Hydrated(_) => unreachable!(),
         }
@@ -204,25 +166,17 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K>
     pub fn hydrate(
         &mut self,
         proof: Vec<u8>,
-    )
-    {
-        assert!(
-            matches!(
-                self,
-                Hydratable::Dehydrated(_)
-            )
-        );
+    ) {
+        assert!(matches!(self, Hydratable::Dehydrated(_)));
         *self = Hydratable::Hydrated(Arc::new(proof))
     }
 }
 
 /// Revelation input
 #[derive(Clone, Dbg, Deserialize, Serialize)]
-pub enum RevelationInput
-{
+pub enum RevelationInput {
     /// Input for an aggregation query
-    Aggregated
-    {
+    Aggregated {
         placeholders: PlaceHolderLgn,
 
         #[dbg(placeholder = "...")]
@@ -236,8 +190,7 @@ pub enum RevelationInput
         query_proof: Hydratable<ProofKey>,
     },
     /// Input for a tabular query
-    Tabular
-    {
+    Tabular {
         placeholders: PlaceHolderLgn,
         indexing_proof: Hydratable<db_keys::ProofKey>,
         matching_rows: Vec<HydratableMatchingRow>,
@@ -249,8 +202,7 @@ pub enum RevelationInput
 
 /// Non existence input of an aggregation query
 #[derive(Clone, Dbg, Deserialize, Serialize)]
-pub struct NonExistenceInput
-{
+pub struct NonExistenceInput {
     pub index_path: TreePathInputs,
 
     pub column_ids: ColumnIDs,
@@ -258,25 +210,17 @@ pub struct NonExistenceInput
     pub placeholders: PlaceHolderLgn,
 }
 
-impl From<&WorkerTask> for ProofKey
-{
-    fn from(task: &WorkerTask) -> Self
-    {
-        match &task.task_type
-        {
-            WorkerTaskType::Query(qr) =>
-            {
-                qr.proof_key
-                    .clone()
-            },
+impl From<&WorkerTask> for ProofKey {
+    fn from(task: &WorkerTask) -> Self {
+        match &task.task_type {
+            WorkerTaskType::Query(qr) => qr.proof_key.clone(),
         }
     }
 }
 
 /// Rows chunk input of an aggregation query
 #[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
-pub struct RowsChunkInput
-{
+pub struct RowsChunkInput {
     pub rows: Vec<RowInput>,
 
     pub placeholders: PlaceHolderLgn,
@@ -284,7 +228,6 @@ pub struct RowsChunkInput
 
 /// Chunk aggregation input of an aggregation query
 #[derive(Clone, Dbg, Deserialize, Serialize)]
-pub struct ChunkAggregationInput
-{
+pub struct ChunkAggregationInput {
     pub child_proofs: Vec<Hydratable<ProofKey>>,
 }

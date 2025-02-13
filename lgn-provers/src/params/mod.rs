@@ -30,35 +30,19 @@ const DOWNLOAD_MAX_RETRIES: u8 = 3;
 /// Utility to open a file and format an error if it errors.
 ///
 /// [std::fs::File::open] does not format the file name into its error, it only returns NotFound.
-fn open(file_path: &PathBuf) -> anyhow::Result<File>
-{
-    File::open(file_path).with_context(
-        || {
-            format!(
-                "failed to open `{:?}`",
-                file_path
-            )
-        },
-    )
+fn open(file_path: &PathBuf) -> anyhow::Result<File> {
+    File::open(file_path).with_context(|| format!("failed to open `{:?}`", file_path))
 }
 
 /// Utility to create a directory and format the error if it happens.
 ///
 /// Returns an error if a normal file already exists and its name clash with the requested path.
-fn create_dir_all(directories: &str) -> anyhow::Result<()>
-{
-    std::fs::create_dir_all(directories).with_context(
-        || {
-            format!(
-                "failed to create directories `{:?}`",
-                directories
-            )
-        },
-    )
+fn create_dir_all(directories: &str) -> anyhow::Result<()> {
+    std::fs::create_dir_all(directories)
+        .with_context(|| format!("failed to create directories `{:?}`", directories))
 }
 
-impl ParamsLoader
-{
+impl ParamsLoader {
     pub fn prepare_raw(
         base_url: &str,
         base_dir: &str,
@@ -66,15 +50,13 @@ impl ParamsLoader
         checksum_expected_local_path: &str,
         skip_checksum: bool,
         skip_store: bool,
-    ) -> anyhow::Result<Bytes>
-    {
+    ) -> anyhow::Result<Bytes> {
         create_dir_all(base_dir)?;
         let mut file = PathBuf::from(base_dir);
         file.push(file_name);
 
         let mut retries = 0;
-        loop
-        {
+        loop {
             info!(
                 "Checking params checksum. file_path: {:?} retries: {}",
                 file, retries,
@@ -84,27 +66,15 @@ impl ParamsLoader
                 "Downloading file {:?} failed",
                 file
             );
-            let result = if !skip_checksum
-            {
-                Self::verify_file_checksum(
-                    file_name,
-                    &file,
-                    checksum_expected_local_path,
-                )
-            }
-            else
-            {
+            let result = if !skip_checksum {
+                Self::verify_file_checksum(file_name, &file, checksum_expected_local_path)
+            } else {
                 Ok(true)
             };
 
-            match result
-            {
-                Result::Ok(true) =>
-                {
-                    info!(
-                        "Loading params from local storage {:?}",
-                        file
-                    );
+            match result {
+                Result::Ok(true) => {
+                    info!("Loading params from local storage {:?}", file);
 
                     let file = open(&file)?;
                     let mut reader = std::io::BufReader::new(file);
@@ -116,31 +86,20 @@ impl ParamsLoader
                     let bytes = Bytes::from(buffer);
                     info!(
                         "Loaded params of size in KB: {}",
-                        bytes
-                            .as_ref()
-                            .len()
-                            / 1024
+                        bytes.as_ref().len() / 1024
                     );
 
                     return Ok(bytes);
                 },
 
-                _ =>
-                {
+                _ => {
                     info!("public params are not locally stored yet, or checksum mismatch");
                     retries += 1;
 
-                    let params = Self::download_file(
-                        base_url,
-                        file_name,
-                    )?;
-                    if !skip_store
-                    {
-                        Self::store_file(
-                            &file,
-                            &params,
-                        )
-                        .context("Failed to store params to local storage")?;
+                    let params = Self::download_file(base_url, file_name)?;
+                    if !skip_store {
+                        Self::store_file(&file, &params)
+                            .context("Failed to store params to local storage")?;
                     }
                 },
             }
@@ -150,13 +109,9 @@ impl ParamsLoader
     fn download_file(
         base_url: &str,
         file_name: &str,
-    ) -> anyhow::Result<Bytes>
-    {
+    ) -> anyhow::Result<Bytes> {
         let file_url = format!("{base_url}/{file_name}");
-        info!(
-            "Downloading params from {}",
-            file_url
-        );
+        info!("Downloading params from {}", file_url);
 
         let client = reqwest::blocking::Client::builder()
             .timeout(std::time::Duration::from_secs(HTTP_TIMEOUT))
@@ -168,10 +123,7 @@ impl ParamsLoader
             .send()
             .context("Failed to download params from remote")?;
 
-        if !response
-            .status()
-            .is_success()
-        {
+        if !response.status().is_success() {
             anyhow::bail!(
                 "Failed to download params from remote: {}",
                 response.status()
@@ -182,10 +134,7 @@ impl ParamsLoader
             .bytes()
             .context("Failed to download params from remote")?;
 
-        info!(
-            "Downloaded params of size in KB: {}",
-            params.len() / 1024
-        );
+        info!("Downloaded params of size in KB: {}", params.len() / 1024);
         Ok(params)
     }
 
@@ -193,17 +142,11 @@ impl ParamsLoader
         file_name: &str,
         file: &Path,
         checksum_expected_local_path: &str,
-    ) -> anyhow::Result<bool>
-    {
+    ) -> anyhow::Result<bool> {
         // checking if file exists
-        if File::open(file).is_err()
-        {
-            if let Err(err) = std::fs::remove_file(Path::new(file))
-            {
-                debug!(
-                    "non existing file {:?}: {}",
-                    file, err
-                );
+        if File::open(file).is_err() {
+            if let Err(err) = std::fs::remove_file(Path::new(file)) {
+                debug!("non existing file {:?}: {}", file, err);
             }
             return Ok(false);
         }
@@ -221,24 +164,13 @@ impl ParamsLoader
 
         let computed_hash: BTreeMap<String, String> = computed_hashes
             .iter()
-            .map(
-                |hash| {
-                    (
-                        file_name.to_owned(),
-                        hash.1
-                            .to_owned(),
-                    )
-                },
-            )
+            .map(|hash| (file_name.to_owned(), hash.1.to_owned()))
             .collect();
 
         let expected_hashes_file = Path::new(&checksum_expected_local_path);
         let expected_hashes = read_hashes(
             &mut std::io::stderr(),
-            &(
-                "output".to_string(),
-                expected_hashes_file.to_path_buf(),
-            ),
+            &("output".to_string(), expected_hashes_file.to_path_buf()),
         );
 
         let expected_hash: BTreeMap<String, String> = expected_hashes
@@ -246,16 +178,7 @@ impl ParamsLoader
             .unwrap()
             .iter()
             .filter(|hash| hash.0 == file_name)
-            .map(
-                |hash| {
-                    (
-                        hash.0
-                            .to_owned(),
-                        hash.1
-                            .to_owned(),
-                    )
-                },
-            )
+            .map(|hash| (hash.0.to_owned(), hash.1.to_owned()))
             .collect();
         let compare_hashes = compare_hashes(
             "compare_hashes",
@@ -279,10 +202,8 @@ impl ParamsLoader
             compare_hashes,
         );
 
-        match result
-        {
-            checksums::Error::NoError =>
-            {
+        match result {
+            checksums::Error::NoError => {
                 info!(
                     "Checksum is successful. file: {:?} computed_hash: {:?} expected_hash: {:?} compare_hashes: {:?}",
                     file,
@@ -293,8 +214,7 @@ impl ParamsLoader
                 Ok(true)
             },
 
-            _ =>
-            {
+            _ => {
                 warn!(
                     "Checksum failed. file: {:?} computed_hash: {:?} expected_hash: {:?} compare_hashes: {:?}",
                     file,
@@ -302,12 +222,8 @@ impl ParamsLoader
                     expected_hash,
                     compare_hashes,
                 );
-                if let Err(err) = std::fs::remove_file(Path::new(file))
-                {
-                    error!(
-                        "Error deleting file {:?}: {}",
-                        file, err
-                    );
+                if let Err(err) = std::fs::remove_file(Path::new(file)) {
+                    error!("Error deleting file {:?}: {}", file, err);
                 }
                 Ok(false)
             },
@@ -317,15 +233,10 @@ impl ParamsLoader
     fn store_file(
         file: &Path,
         params: &Bytes,
-    ) -> anyhow::Result<()>
-    {
-        info!(
-            "Storing params to local storage: {:?}",
-            file
-        );
+    ) -> anyhow::Result<()> {
+        info!("Storing params to local storage: {:?}", file);
 
-        if let Some(parent) = std::path::Path::new(file).parent()
-        {
+        if let Some(parent) = std::path::Path::new(file).parent() {
             std::fs::create_dir_all(parent)
                 .context("Failed to create directories for local storage")?;
         }

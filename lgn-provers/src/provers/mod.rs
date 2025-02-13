@@ -5,8 +5,7 @@ pub mod v1;
 
 /// The prover trait that accepts [`MessageEnvelope`] and is able to process tasks of type
 /// [`TaskType`].
-pub trait LgnProver<T, R>
-{
+pub trait LgnProver<T, R> {
     /// Run the prover with the given [`MessageEnvelope`] and return the result as a
     /// [`MessageReplyEnvelope`].
     ///
