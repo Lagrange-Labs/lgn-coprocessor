@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::Result;
 use groth16_framework_v1::Groth16Prover as InnerProver;
 use tracing::debug;
@@ -16,36 +18,13 @@ impl Groth16Prover {
         url: &str,
         dir: &str,
         circuit_file: &str,
-        checksum_expected_local_path: &str,
-        skip_checksum: bool,
         r1cs_file: &str,
         pk_file: &str,
-        skip_store: bool,
+        checksums: &HashMap<String, blake3::Hash>,
     ) -> Result<Self> {
-        let circuit_bytes = ParamsLoader::prepare_raw(
-            url,
-            dir,
-            circuit_file,
-            checksum_expected_local_path,
-            skip_checksum,
-            skip_store,
-        )?;
-        let r1cs_bytes = ParamsLoader::prepare_raw(
-            url,
-            dir,
-            r1cs_file,
-            checksum_expected_local_path,
-            skip_checksum,
-            skip_store,
-        )?;
-        let pk_bytes = ParamsLoader::prepare_raw(
-            url,
-            dir,
-            pk_file,
-            checksum_expected_local_path,
-            skip_checksum,
-            skip_store,
-        )?;
+        let circuit_bytes = ParamsLoader::prepare_raw(url, dir, circuit_file, checksums)?;
+        let r1cs_bytes = ParamsLoader::prepare_raw(url, dir, r1cs_file, checksums)?;
+        let pk_bytes = ParamsLoader::prepare_raw(url, dir, pk_file, checksums)?;
 
         debug!("Creating Groth16 prover");
         let inner = InnerProver::from_bytes(

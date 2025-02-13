@@ -54,7 +54,7 @@ pub fn read_keystore<P: AsRef<Path>, S: AsRef<[u8]>>(
     password: S,
 ) -> Result<Wallet<SigningKey>> {
     let wallet = Wallet::<SigningKey>::decrypt_keystore(&key_path, password)
-        .with_context(|| format!("while trying to open `{}`", key_path.as_ref().display()))?;
+        .with_context(|| anyhow!("trying to open `{}`", key_path.as_ref().display()))?;
 
     Ok(wallet)
 }

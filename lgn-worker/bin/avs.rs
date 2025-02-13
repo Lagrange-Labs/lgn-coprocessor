@@ -70,7 +70,7 @@ impl NewKey {
         let (wallet, _) = Wallet::new_keystore(dir, &mut thread_rng(), password, filename)?;
         println!("new Lagrange keystore stored under {}", self.lagr_keystore);
         let public_key: PublicKey = wallet.signer().verifying_key().into();
-        println!("\tpublic_key = {:?}", public_key.to_hex());
+        println!("public key: {}", public_key.to_hex());
         Ok(())
     }
 }

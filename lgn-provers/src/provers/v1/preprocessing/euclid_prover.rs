@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use alloy::primitives::Address;
 use alloy::primitives::U256;
 use anyhow::bail;
@@ -44,18 +46,9 @@ impl EuclidProver {
         url: &str,
         dir: &str,
         file: &str,
-        checksum_expected_local_path: &str,
-        skip_checksum: bool,
-        skip_store: bool,
+        checksums: &HashMap<String, blake3::Hash>,
     ) -> anyhow::Result<Self> {
-        let params = ParamsLoader::prepare_raw(
-            url,
-            dir,
-            file,
-            checksum_expected_local_path,
-            skip_checksum,
-            skip_store,
-        )?;
+        let params = ParamsLoader::prepare_raw(url, dir, file, checksums)?;
         let reader = std::io::BufReader::new(params.as_ref());
         let params = bincode::deserialize_from(reader)?;
         Ok(Self { params })

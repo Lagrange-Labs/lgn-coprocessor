@@ -3,7 +3,7 @@ version = "develop"
 instance_type = "medium"
 
 [avs]
-gateway_url = "ws://gateway.test-distributed-query.test.distributed-query.io:80"
+gateway_url = "http://localhost:10000"
 issuer = "issuer"
 worker_id = "worker_id"
 lagr_keystore = "lagr_keystore.json"
@@ -12,14 +12,10 @@ lagr_keystore = "lagr_keystore.json"
 port = 9090
 
 [public_params]
-# Where to store params
-dir = "./zkmr_params"
-checksum_expected_local_path = "/tmp/expected_checksums.txt"
-# Parameters common directory
-# v1.1.x PPs
+# PPs common directory
 params_root_url = "https://pub-a894572689a54c008859f232868fc67d.r2.dev"
-skip_checksum = false
-skip_store = false
+# Where to store PPs
+dir = "./zkmr_params"
 
 [public_params.preprocessing_params]
 # Parameters name in S3 and file name where it's will be stored

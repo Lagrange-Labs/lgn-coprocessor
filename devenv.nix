@@ -5,8 +5,8 @@ let
     version = "develop";
     keystore-file = "./runtime/lagr-keystore.json";
     keystore-password = "canihazsecurityplz";
-    gateway-url = "ws://localhost:4983";
-    params-url = "https://pub-2124403768df4a0285b77bcb8d224083.r2.dev";
+    gateway-url = "http://localhost:10000";
+    params-url = "https://pub-d7c7f0d6979a41f2b25137eaecf12d7b.r2.dev";
   };
 
   avsWorkerConfig = {
@@ -26,9 +26,8 @@ let
     prometheus.port = 9090;
 
     public_params = {
+      params_root_url = meta.params-url;
       dir = "./runtime/zkmr_params";
-      url = meta.params-url;
-      checksum_url = "${meta.params-url}/public_params.hash";
 
       preprocessing_params = {
         file = "preprocessing_params.bin";
@@ -62,7 +61,7 @@ in
     pull = [];
   };
 
-  packages = [ pkgs.git pkgs.openssl pkgs.pkg-config ]
+  packages = [ pkgs.git pkgs.openssl pkgs.pkg-config pkgs.protobuf ]
              ++ lib.optionals pkgs.stdenv.targetPlatform.isDarwin [
                pkgs.libiconv
                pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
@@ -74,18 +73,24 @@ in
     OPENSSL_DEV = pkgs.openssl.dev;
   };
 
-  scripts = {
+  scripts = let
+    log-levels = "RUST_LOG=info,lgn_worker=debug,lgn_provers=debug";
+    cargo-worker = "cargo run --bin lgn-worker";
+  in {
     toml-worker-avs.exec = "echo ${workerConfigFile}";
     toml-worker-lgn.exec = "echo ${lagrangeWorkerConfigFile}";
     generate-key-store.exec = "AVS__LAGR_PWD=${meta.keystore-password} cargo run --bin lgn-avs -- new-key -l ${meta.keystore-file}";
 
-    worker-lgn.exec = "RUST_LOG=warn,worker=debug cargo run --release --bin lgn-worker -- --config ${workerConfigFile}";
-    worker-lgn-dummy.exec = "RUST_LOG=warn,worker=debug cargo run --release -F dummy-prover --bin lgn-worker -- --config ${workerConfigFile}";
+    worker.exec = "${log-levels} ${cargo-worker}       --release       -- --config ${workerConfigFile}";
+    worker-dummy.exec = "${log-levels} ${cargo-worker} -F dummy-prover -- --config ${workerConfigFile}";
+
+    worker-lgn.exec = "${log-levels} ${cargo-worker}       --release       -- --config ${lagrangeWorkerConfigFile}";
+    worker-lgn-dummy.exec = "${log-levels} ${cargo-worker} -F dummy-prover -- --config ${lagrangeWorkerConfigFile}";
   };
 
   enterShell = ''
     echo "** ==========  Devenv enabled  ========== **"
-    echo "**  Welcome to lagrange/lgn-coprocessir!  **"
+    echo "**  Welcome to lagrange/lgn-coprocessor!  **"
   '';
 
   enterTest = ''

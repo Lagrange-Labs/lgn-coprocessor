@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::Context;
 use lgn_messages::types::v1::query::tasks::MatchingRowInput;
 use lgn_messages::types::v1::query::tasks::NonExistenceInput;
@@ -65,19 +67,10 @@ impl EuclidQueryProver {
         url: &str,
         dir: &str,
         file: &str,
-        checksum_expected_local_path: &str,
-        skip_checksum: bool,
-        skip_store: bool,
+        checksums: &HashMap<String, blake3::Hash>,
     ) -> anyhow::Result<Self> {
-        let params = ParamsLoader::prepare_raw(
-            url,
-            dir,
-            file,
-            checksum_expected_local_path,
-            skip_checksum,
-            skip_store,
-        )
-        .context("while loading bincode-serialized parameters")?;
+        let params = ParamsLoader::prepare_raw(url, dir, file, checksums)
+            .context("while loading bincode-serialized parameters")?;
         let reader = std::io::BufReader::new(params.as_ref());
         let params = bincode::deserialize_from(reader)?;
         Ok(Self { params })

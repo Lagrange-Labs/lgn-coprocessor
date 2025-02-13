@@ -11,7 +11,7 @@ verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git"
 
 anyhow = { version = "1.0" }
 bincode = { version = "1.0" }
-checksums = { version = "0.9" }
+blake3 = { version = "1", features = ["rayon"] }
 ethers = { version = "2.0" }
 hex = { version = "0.4" }
 object_store = { version = "0.11" }
@@ -47,9 +47,8 @@ redact = "0.1"
 rpassword = "7.0"
 serde_derive = "1.0"
 tokio-stream = "0.1"
-tonic = "0.12"
+tonic = { version = "0.12", features = [ "transport", "tls", "tls-roots", "tls-webpki-roots" ] }
 tonic-build = "0.12.3"
-tungstenite = "0.24"
 
 [patch.crates-io]
 plonky2 = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }
@@ -73,6 +72,7 @@ debug = true
 
 [workspace.metadata.cargo-machete]
 ignored = ["serde", "prost"]
+
 # [patch."https://github.com/Lagrange-Labs/mapreduce-plonky2.git"]
 # mp2_common = { path = "../mapreduce-plonky2/main/mp2-common/" }
 # mp2_v1 = { path = "../mapreduce-plonky2/main/mp2-v1/" }

@@ -13,55 +13,45 @@ path = "src/one-shot.rs"
 
 [dependencies]
 anyhow = { workspace = true }
-hex = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-checksums = { workspace = true }
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true, features = ["env-filter", "json"] }
-tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
-rand = { workspace = true, default-features = false, features = [
-  "std",
-  "std_rng",
-  "getrandom",
-  "min_const_gen",
-] }
-reqwest = { workspace = true, features = ["blocking"] }
-
-# The ethers macro `abigen` needs to import ethers as a crate.
 backtrace = { workspace = true }
-clap = { workspace = true, features = [
-  "derive",
-  "env",
-  "help",
-  "std",
-  "suggestions",
-] }
+blake3.workspace = true
+clap = { workspace = true, features = ["derive", "env", "help", "std", "suggestions"] }
 config = { workspace = true, features = ["toml"] }
 elliptic-curve = { workspace = true }
 # The ethers macro `abigen` needs to import ethers as a crate.
-ethers = { git = "https://github.com/Lagrange-Labs/ethers-rs", default-features = false, features = [
-  "rustls",
-], branch = "get-proof-0x" }
+ethers = { git = "https://github.com/Lagrange-Labs/ethers-rs", default-features = false, features = [ "rustls" ], branch = "get-proof-0x" }
+hex = { workspace = true }
 jwt = { workspace = true }
 k256 = { workspace = true, features = ["ecdsa", "std"] }
 lazy-static-include = { workspace = true }
-metrics = { workspace = true }
-metrics-exporter-prometheus = { workspace = true }
-mimalloc = { workspace = true }
-redact = { workspace = true, features = ["serde"] }
-rpassword = { workspace = true }
-serde_derive = { workspace = true }
-tungstenite = { workspace = true, features = ["rustls"] }
-tonic = { workspace = true }
-prost = { workspace = true }
-tokio-stream = { workspace = true }
-
-mp2_common = { workspace = true }
-
 lgn-auth = { path = "../lgn-auth" }
 lgn-messages = { path = "../lgn-messages" }
 lgn-provers = { path = "../lgn-provers" }
+metrics-exporter-prometheus = { workspace = true }
+metrics = { workspace = true }
+mimalloc = { workspace = true }
+mp2_common.workspace = true
+prost-types = "0.13.4"
+prost-wkt-types = "0.6.0"
+prost = { workspace = true }
+rand = { workspace = true, default-features = false, features = [ "std", "std_rng", "getrandom", "min_const_gen" ]  }
+redact = { workspace = true, features = ["serde"] }
+reqwest = { workspace = true, features = ["blocking"] }
+rpassword = { workspace = true }
+semver = "1.0.25"
+serde_derive = { workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true }
+tokio-stream = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"]  }
+tonic = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter", "json"] }
+tracing = { workspace = true }
+verifiable-db.workspace = true
+exponential-backoff = "2.0.0"
+rustl = "0.0.1"
+rustls = { version = "0.23.21", features = [ "ring" ] }
+
 
 [build-dependencies]
 miette = { workspace = true }
