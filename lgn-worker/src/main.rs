@@ -273,9 +273,8 @@ async fn run_worker(
                     }
                 };
                 let result = process_message_from_gateway(&mut provers_manager, msg, &mut outbound, &mp2_requirement).await ;
-                match result {
-                    Ok(_) => todo!(),
-                    Err(_) => todo!(),
+                if let Err(e) = result {
+                    tracing::error!("task processing failed: {e:?}");
                 }
             }
             else => break,
@@ -358,13 +357,15 @@ async fn process_message_from_gateway(
     outbound: &mut tokio::sync::mpsc::Sender<WorkerToGwRequest>,
     mp2_requirement: &semver::VersionReq,
 ) -> Result<()> {
-    let reply =
+    let uuid = message
+        .task_id
+        .as_ref()
+        .map(|id| uuid::Uuid::from_bytes_le(id.id.clone().try_into().unwrap()).to_string())
+        .unwrap_or_else(|| "UNKNOWN".to_string());
+
+    let reply = {
+        let uuid = uuid.clone();
         tokio::task::block_in_place(move || -> Result<MessageReplyEnvelope<ReplyType>, String> {
-            let uuid = message
-                .task_id
-                .as_ref()
-                .map(|id| uuid::Uuid::from_bytes_le(id.id.clone().try_into().unwrap()).to_string())
-                .unwrap_or_else(|| "UNKNOWN".to_string());
             serde_json::from_slice::<MessageEnvelope<TaskType>>(&message.task)
                 .map_err(|e| {
                     format!(
@@ -377,7 +378,8 @@ async fn process_message_from_gateway(
                     info!("processing task {}", message_envelope.id());
                     process_downstream_payload(provers_manager, message_envelope, mp2_requirement)
                 })
-        });
+        })
+    };
 
     let outbound_msg = match reply {
         Ok(reply) => {
@@ -391,6 +393,7 @@ async fn process_message_from_gateway(
             }
         },
         Err(error_str) => {
+            tracing::error!("failed to process task {uuid}: {error_str}");
             WorkerToGwRequest {
                 request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
                     WorkerDone {
