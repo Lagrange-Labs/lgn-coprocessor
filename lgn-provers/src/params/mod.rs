@@ -37,10 +37,22 @@ impl ParamsLoader {
         file_name: &str,
         checksums: &HashMap<String, blake3::Hash>,
     ) -> anyhow::Result<Bytes> {
-        std::fs::create_dir_all(param_dir)
-            .with_context(|| format!("failed to create directories `{:?}`", param_dir))?;
         let mut local_param_filename = PathBuf::from(param_dir);
         local_param_filename.push(file_name);
+        // The parameter filename may be relative, thus it may be required to create a directory
+        // deeper than just `param_dir`.
+        let current_param_dir = local_param_filename.parent().ok_or_else(|| {
+            anyhow!(
+                "parameter file `{}` has no parent directory",
+                local_param_filename.display()
+            )
+        })?;
+        std::fs::create_dir_all(current_param_dir).with_context(|| {
+            format!(
+                "failed to create directory `{}`",
+                current_param_dir.display()
+            )
+        })?;
 
         let expected_checksum = checksums
             .get(file_name)
