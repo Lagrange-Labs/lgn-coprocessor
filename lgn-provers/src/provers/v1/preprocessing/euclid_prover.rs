@@ -29,7 +29,7 @@ use mp2_v1::length_extraction::LengthCircuitInput;
 use mp2_v1::values_extraction;
 use tracing::debug;
 
-use crate::params::ParamsLoader;
+use crate::params;
 use crate::provers::v1::preprocessing::prover::StorageDatabaseProver;
 use crate::provers::v1::preprocessing::prover::StorageExtractionProver;
 
@@ -48,7 +48,7 @@ impl EuclidProver {
         file: &str,
         checksums: &HashMap<String, blake3::Hash>,
     ) -> anyhow::Result<Self> {
-        let params = ParamsLoader::prepare_raw(url, dir, file, checksums)?;
+        let params = params::prepare_raw(url, dir, file, checksums)?;
         let reader = std::io::BufReader::new(params.as_ref());
         let params = bincode::deserialize_from(reader)?;
         Ok(Self { params })

@@ -4,7 +4,7 @@ use anyhow::Result;
 use groth16_framework_v1::Groth16Prover as InnerProver;
 use tracing::debug;
 
-use crate::params::ParamsLoader;
+use crate::params;
 use crate::provers::v1::groth16::prover::Prover;
 
 #[derive(Debug)]
@@ -22,9 +22,9 @@ impl Groth16Prover {
         pk_file: &str,
         checksums: &HashMap<String, blake3::Hash>,
     ) -> Result<Self> {
-        let circuit_bytes = ParamsLoader::prepare_raw(url, dir, circuit_file, checksums)?;
-        let r1cs_bytes = ParamsLoader::prepare_raw(url, dir, r1cs_file, checksums)?;
-        let pk_bytes = ParamsLoader::prepare_raw(url, dir, pk_file, checksums)?;
+        let circuit_bytes = params::prepare_raw(url, dir, circuit_file, checksums)?;
+        let r1cs_bytes = params::prepare_raw(url, dir, r1cs_file, checksums)?;
+        let pk_bytes = params::prepare_raw(url, dir, pk_file, checksums)?;
 
         debug!("Creating Groth16 prover");
         let inner = InnerProver::from_bytes(

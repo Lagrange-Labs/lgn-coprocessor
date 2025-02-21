@@ -27,7 +27,7 @@ use super::MAX_NUM_PLACEHOLDERS;
 use super::MAX_NUM_PREDICATE_OPS;
 use super::MAX_NUM_RESULT_OPS;
 use super::ROW_TREE_MAX_DEPTH;
-use crate::params::ParamsLoader;
+use crate::params;
 
 pub(crate) struct EuclidQueryProver {
     params: QueryParameters<
@@ -69,7 +69,7 @@ impl EuclidQueryProver {
         file: &str,
         checksums: &HashMap<String, blake3::Hash>,
     ) -> anyhow::Result<Self> {
-        let params = ParamsLoader::prepare_raw(url, dir, file, checksums)
+        let params = params::prepare_raw(url, dir, file, checksums)
             .context("while loading bincode-serialized parameters")?;
         let reader = std::io::BufReader::new(params.as_ref());
         let params = bincode::deserialize_from(reader)?;
