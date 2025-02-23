@@ -139,8 +139,7 @@ async fn main() -> anyhow::Result<()> {
     }));
 
     if let Err(err) = run(cli, mp2_requirement).await {
-        error!("{err:?}");
-        bail!("Worker exited due to an error")
+        panic!("Worker exited due to an error: {err:?}")
     } else {
         Ok(())
     }
@@ -268,20 +267,19 @@ async fn run_worker(
                 let msg = match inbound_message {
                     Ok(ref msg) => msg,
                     Err(e) => {
-                        error!("connection to the gateway ended with status: {e}");
-                        break;
+                        bail!("connection to the gateway ended with status: {e}");
                     }
                 };
-                let result = process_message_from_gateway(&mut provers_manager, msg, &mut outbound, &mp2_requirement).await ;
+                let result = process_message_from_gateway(&mut provers_manager, msg, &mut outbound, &mp2_requirement).await;
                 if let Err(e) = result {
-                    tracing::error!("task processing failed: {e:?}");
+                    bail!("task processing failed: {e:?}");
                 }
             }
-            else => break,
+            else => {
+                bail!("inbound connection broken");
+            },
         }
     }
-
-    Ok(())
 }
 
 fn process_downstream_payload(
