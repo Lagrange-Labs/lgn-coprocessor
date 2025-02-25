@@ -39,6 +39,7 @@ use tracing::trace;
 use tracing::Level;
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::EnvFilter;
+use warp::Filter;
 
 use crate::config::Config;
 use crate::manager::v1::register_v1_provers;
@@ -259,6 +260,13 @@ async fn run_worker(
 
     info!("Bidirectional stream with GW opened");
     let mut inbound = response.into_inner();
+
+    // Start readiness check server
+    tokio::spawn(async {
+        let readiness_route = warp::path!("readiness")
+            .map(|| warp::reply::with_status("OK", warp::http::StatusCode::OK));
+        warp::serve(readiness_route).run(([0, 0, 0, 0], 8080)).await;
+    });
 
     loop {
         debug!("Waiting for message...");
