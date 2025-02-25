@@ -52,6 +52,7 @@ exponential-backoff = "2.0.0"
 rustl = "0.0.1"
 rustls = { version = "0.23.21", features = [ "ring" ] }
 uuid = "1.13.2"
+warp = "0.3.7"
 
 
 [build-dependencies]
