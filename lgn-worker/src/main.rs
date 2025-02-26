@@ -142,11 +142,11 @@ async fn main() -> anyhow::Result<()> {
         );
     }));
 
-    let last_task_processed = Arc::new(AtomicU64::new(
+    let last_task_processed = AtomicU64::new(
         SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
-    ));
+    );
 
-    if let Err(err) = run(cli, mp2_requirement, last_task_processed.clone()).await {
+    if let Err(err) = run(cli, mp2_requirement, last_task_processed).await {
         panic!("Worker exited due to an error: {err:?}")
     } else {
         Ok(())
@@ -156,7 +156,7 @@ async fn main() -> anyhow::Result<()> {
 async fn run(
     cli: Cli,
     mp2_requirement: semver::VersionReq,
-    last_task_processed: Arc<AtomicU64>,
+    last_task_processed: AtomicU64,
 ) -> Result<()> {
     let version = env!("CARGO_PKG_VERSION");
     info!("Starting worker. version: {}", version);
@@ -185,7 +185,7 @@ async fn run(
 async fn run_worker(
     config: &Config,
     mp2_requirement: semver::VersionReq,
-    last_task_processed: Arc<AtomicU64>,
+    last_task_processed: AtomicU64,
 ) -> Result<()> {
     let max_message_size = config
         .avs
@@ -270,8 +270,9 @@ async fn run_worker(
     info!("Bidirectional stream with GW opened");
     let mut inbound = response.into_inner();
 
-    let last_task_processed_clone = Arc::clone(&last_task_processed);
     let liveness_check_interval = config.worker.liveness_check_interval;
+    let last_task_processed = Arc::new(last_task_processed);
+    let last_task_processed_clone = Arc::clone(&last_task_processed);
 
     // Start readiness and liveness check server
     tokio::spawn(async move {
