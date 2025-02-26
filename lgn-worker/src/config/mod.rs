@@ -98,6 +98,7 @@ impl Groth16Assets {
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub(crate) struct WorkerConfig {
     pub(crate) instance_type: TaskDifficulty,
+    pub(crate) liveness_check_interval: u64,
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]

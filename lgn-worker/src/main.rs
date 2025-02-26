@@ -3,6 +3,9 @@ use std::fmt::Debug;
 use std::panic;
 use std::result::Result::Ok;
 use std::str::FromStr;
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering;
+use std::sync::Arc;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
@@ -139,7 +142,10 @@ async fn main() -> anyhow::Result<()> {
         );
     }));
 
-    if let Err(err) = run(cli, mp2_requirement).await {
+    let last_task_processed =
+        AtomicU64::new(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs());
+
+    if let Err(err) = run(cli, mp2_requirement, last_task_processed).await {
         panic!("Worker exited due to an error: {err:?}")
     } else {
         Ok(())
@@ -149,6 +155,7 @@ async fn main() -> anyhow::Result<()> {
 async fn run(
     cli: Cli,
     mp2_requirement: semver::VersionReq,
+    last_task_processed: AtomicU64,
 ) -> Result<()> {
     let version = env!("CARGO_PKG_VERSION");
     info!("Starting worker. version: {}", version);
@@ -171,12 +178,13 @@ async fn run(
         .install()
         .context("setting up Prometheus")?;
 
-    run_worker(&config, mp2_requirement).await
+    run_worker(&config, mp2_requirement, last_task_processed).await
 }
 
 async fn run_worker(
     config: &Config,
     mp2_requirement: semver::VersionReq,
+    last_task_processed: AtomicU64,
 ) -> Result<()> {
     let max_message_size = config
         .avs
@@ -261,11 +269,28 @@ async fn run_worker(
     info!("Bidirectional stream with GW opened");
     let mut inbound = response.into_inner();
 
-    // Start readiness check server
-    tokio::spawn(async {
+    let liveness_check_interval = config.worker.liveness_check_interval;
+    let last_task_processed = Arc::new(last_task_processed);
+    let last_task_processed_clone = Arc::clone(&last_task_processed);
+
+    // Start readiness and liveness check server
+    tokio::spawn(async move {
         let readiness_route = warp::path!("readiness")
             .map(|| warp::reply::with_status("OK", warp::http::StatusCode::OK));
-        warp::serve(readiness_route).run(([0, 0, 0, 0], 8080)).await;
+        let liveness_route = warp::path!("liveness").map(move || {
+            let last_processed = last_task_processed_clone.load(Ordering::Relaxed);
+            let now = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs();
+            if now - last_processed <= liveness_check_interval {
+                warp::reply::with_status("OK", warp::http::StatusCode::OK)
+            } else {
+                warp::reply::with_status("FAIL", warp::http::StatusCode::INTERNAL_SERVER_ERROR)
+            }
+        });
+        let routes = readiness_route.or(liveness_route);
+        warp::serve(routes).run(([0, 0, 0, 0], 8080)).await;
     });
 
     loop {
@@ -279,6 +304,9 @@ async fn run_worker(
                     }
                 };
                 let result = process_message_from_gateway(&mut provers_manager, msg, &mut outbound, &mp2_requirement).await;
+                if result.is_ok() {
+                    last_task_processed.store(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(), Ordering::Relaxed);
+                }
                 if let Err(e) = result {
                     bail!("task processing failed: {e:?}");
                 }

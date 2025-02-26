@@ -62,6 +62,12 @@ docker compose up -d
 ### Observability
 #### Metrics
 The worker exposes the prometheus metrics by default on port 9000
+
+#### Liveness and Readiness Endpoints
+The worker exposes liveness and readiness endpoints on port 8080:
+- Liveness: `http://<worker-ip>:8080/liveness`
+- Readiness: `http://<worker-ip>:8080/readiness`
+
 #### Dashboard
 Starting from worker version `v0.2.1`, you can import this [grafana dashboard ](https://grafana.com/grafana/dashboards/21302-worker/)
 
