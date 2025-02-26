@@ -304,7 +304,7 @@ async fn run_worker(
                     }
                 };
                 let result = process_message_from_gateway(&mut provers_manager, msg, &mut outbound, &mp2_requirement).await;
-                if let Ok(_) = result {
+                if result.is_ok() {
                     last_task_processed.store(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(), Ordering::Relaxed);
                 }
                 if let Err(e) = result {
