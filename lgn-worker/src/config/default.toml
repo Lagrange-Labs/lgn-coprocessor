@@ -2,6 +2,9 @@
 version = "develop"
 instance_type = "medium"
 
+# If the worker does not process any task for the last hour it shall be marked as unhealthy
+liveness_check_interval = 3600
+
 [avs]
 gateway_url = "http://localhost:10000"
 issuer = "issuer"
