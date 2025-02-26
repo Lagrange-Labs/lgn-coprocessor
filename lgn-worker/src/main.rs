@@ -142,9 +142,8 @@ async fn main() -> anyhow::Result<()> {
         );
     }));
 
-    let last_task_processed = AtomicU64::new(
-        SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
-    );
+    let last_task_processed =
+        AtomicU64::new(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs());
 
     if let Err(err) = run(cli, mp2_requirement, last_task_processed).await {
         panic!("Worker exited due to an error: {err:?}")
