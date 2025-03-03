@@ -48,7 +48,7 @@ pub fn read_password(
     }
 }
 
-/// Read the key-store from a file path with the sepcified password.
+/// Read the key-store from a file path with the specified password.
 pub fn read_keystore<P: AsRef<Path>, S: AsRef<[u8]>>(
     key_path: P,
     password: S,
