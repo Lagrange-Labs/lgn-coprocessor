@@ -18,6 +18,7 @@ use lgn_messages::types::ProofCategory;
 use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::WorkerReply;
+use mp2_v1::contract_extraction;
 use mp2_v1::length_extraction::LengthCircuitInput;
 
 use crate::provers::v1::preprocessing::prover::StorageDatabaseProver;
@@ -131,10 +132,10 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         let mut nodes = length.nodes;
 
                         nodes.reverse();
-                        let first = nodes.pop().context("Missing leaf node")?;
+                        let first = nodes.pop().context("Missing length extraction leaf node")?;
 
                         if node_type(&first)? != NodeType::Leaf {
-                            bail!("The first node must be a leaf node");
+                            bail!("The first node for a length extraction must be a leaf node");
                         }
 
                         let mut proof =
@@ -164,24 +165,44 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         proof
                     },
                     ExtractionType::ContractExtraction(contract) => {
-                        let mut proofs = vec![];
-                        for (i, node) in contract.nodes.iter().enumerate() {
-                            if i == 0 {
-                                let proof = self.prover.prove_contract_leaf(
-                                    node.clone(),
-                                    contract.storage_root.clone(),
-                                    contract.contract,
-                                )?;
-                                proofs.push(proof);
-                            } else {
-                                let proof = self.prover.prove_contract_branch(
-                                    node.clone(),
-                                    proofs.last().unwrap().clone(),
-                                )?;
-                                proofs.push(proof);
+                        let mut nodes = contract.nodes;
+
+                        nodes.reverse();
+                        let first = nodes
+                            .pop()
+                            .context("Missing contract extraction leaf node")?;
+
+                        if node_type(&first)? != NodeType::Leaf {
+                            bail!("The first node for a contract extraction must be a leaf node");
+                        }
+
+                        let mut proof = self.prover.prove_contract_extraction(
+                            contract_extraction::CircuitInput::new_leaf(
+                                first,
+                                &contract.storage_root,
+                                contract.contract,
+                            ),
+                        )?;
+
+                        for node in nodes {
+                            match node_type(&node)? {
+                                NodeType::Branch => {
+                                    proof = self.prover.prove_contract_extraction(
+                                        contract_extraction::CircuitInput::new_branch(node, proof),
+                                    )?;
+                                },
+                                NodeType::Extension => {
+                                    proof = self.prover.prove_contract_extraction(
+                                        contract_extraction::CircuitInput::new_extension(
+                                            node, proof,
+                                        ),
+                                    )?;
+                                },
+                                NodeType::Leaf => bail!("Only the first node can be a leaf"),
                             }
                         }
-                        proofs.last().unwrap().clone()
+
+                        proof
                     },
                     ExtractionType::BlockExtraction(block) => {
                         self.prover.prove_block(block.rlp_header.to_owned())?

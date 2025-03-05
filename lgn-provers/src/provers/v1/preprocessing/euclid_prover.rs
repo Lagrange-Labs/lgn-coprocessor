@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use alloy::primitives::Address;
 use alloy::primitives::U256;
 use mp2_common::digest::TableDimension;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
@@ -9,7 +8,6 @@ use mp2_v1::api::generate_proof;
 use mp2_v1::api::CircuitInput::BlockExtraction;
 use mp2_v1::api::CircuitInput::BlockTree;
 use mp2_v1::api::CircuitInput::CellsTree;
-use mp2_v1::api::CircuitInput::ContractExtraction;
 use mp2_v1::api::CircuitInput::FinalExtraction;
 use mp2_v1::api::CircuitInput::RowsTree;
 use mp2_v1::api::CircuitInput::IVC;
@@ -98,30 +96,14 @@ impl StorageExtractionProver for EuclidProver {
         )
     }
 
-    fn prove_contract_leaf(
+    fn prove_contract_extraction(
         &self,
-        node: Vec<u8>,
-        storage_root: Vec<u8>,
-        contract_address: Address,
+        circuit_input: contract_extraction::CircuitInput,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = ContractExtraction(contract_extraction::CircuitInput::new_leaf(
-            node,
-            &storage_root,
-            contract_address,
-        ));
-        self.prove(input, "contract leaf")
-    }
-
-    fn prove_contract_branch(
-        &self,
-        node: Vec<u8>,
-        child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
-        let input = ContractExtraction(contract_extraction::CircuitInput::new_branch(
-            node,
-            child_proof,
-        ));
-        self.prove(input, "contract branch")
+        self.prove(
+            CircuitInput::ContractExtraction(circuit_input),
+            "contract extraction",
+        )
     }
 
     fn prove_block(
