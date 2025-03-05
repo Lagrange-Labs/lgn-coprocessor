@@ -59,7 +59,7 @@ where
     /// A message reply envelope containing the result of the proving task
     pub(crate) fn delegate_proving(
         &self,
-        envelope: &MessageEnvelope<T>,
+        envelope: MessageEnvelope<T>,
     ) -> anyhow::Result<MessageReplyEnvelope<R>> {
         let prover_type: ProverType = envelope.inner.to_prover_type();
 

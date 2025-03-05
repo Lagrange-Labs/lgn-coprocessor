@@ -384,8 +384,8 @@ impl From<&WorkerTask> for db_keys::ProofKey {
                     DatabaseType::IVC(ivc) => db_keys::ProofKey::IVC(ivc.table_id, tt.block_nr),
                 }
             },
-            _ => {
-                unimplemented!("Task type not supported: {:?}", tt.task_type)
+            WorkerTaskType::Extraction(..) => {
+                panic!("Unsupported task type. task_type: Extraction")
             },
         }
     }

@@ -36,7 +36,7 @@ pub mod ext_tasks;
 const KEYS_PREPROCESSING_PREFIX: &str = "V1_PREPROCESSING";
 pub const ROUTING_DOMAIN: &str = "sp";
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct WorkerTask {
     /// Which block we are proving.
     pub block_nr: BlockNr,
@@ -63,7 +63,7 @@ impl WorkerTask {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum WorkerTaskType {
     #[serde(rename = "1")]
