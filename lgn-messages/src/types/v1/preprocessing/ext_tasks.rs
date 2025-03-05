@@ -3,6 +3,7 @@ use derive_debug_plus::Dbg;
 use ethers::types::H256;
 use ethers::utils::rlp;
 use mp2_common::digest::TableDimension;
+use mp2_v1::values_extraction;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
@@ -59,7 +60,7 @@ impl Mpt {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub enum MptType {
     #[serde(rename = "1")]
     MappingLeaf(MappingLeafInput),
@@ -68,7 +69,7 @@ pub enum MptType {
     MappingBranch(MappingBranchInput),
 
     #[serde(rename = "3")]
-    VariableLeaf(VariableLeafInput),
+    VariableLeaf(values_extraction::CircuitInput),
 
     #[serde(rename = "4")]
     VariableBranch(VariableBranchInput),
@@ -120,27 +121,6 @@ impl MappingBranchInput {
             node,
             children,
             children_proofs: vec![],
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct VariableLeafInput {
-    pub node: Vec<u8>,
-    pub slot: u8,
-    pub column_id: u64,
-}
-
-impl VariableLeafInput {
-    pub fn new(
-        node: Vec<u8>,
-        slot: u8,
-        column_id: u64,
-    ) -> Self {
-        Self {
-            node,
-            slot,
-            column_id,
         }
     }
 }

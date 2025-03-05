@@ -83,16 +83,14 @@ impl EuclidProver {
 }
 
 impl StorageExtractionProver for EuclidProver {
-    fn prove_single_variable_leaf(
+    fn prove_value_extraction(
         &self,
-        node: Vec<u8>,
-        slot: u8,
-        column_id: u64,
+        circuit_input: values_extraction::CircuitInput,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = ValuesExtraction(values_extraction::CircuitInput::new_single_variable_leaf(
-            node, slot, column_id,
-        ));
-        self.prove(input, "single variable leaf")
+        self.prove(
+            CircuitInput::ValuesExtraction(circuit_input),
+            "value extraction",
+        )
     }
 
     fn prove_single_variable_branch(

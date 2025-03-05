@@ -80,13 +80,9 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
             WorkerTaskType::Extraction(extraction) => {
                 match extraction {
                     ExtractionType::MptExtraction(mpt) => {
-                        match &mpt.mpt_type {
-                            MptType::VariableLeaf(variable_leaf) => {
-                                self.prover.prove_single_variable_leaf(
-                                    variable_leaf.node.clone(),
-                                    variable_leaf.slot,
-                                    variable_leaf.column_id,
-                                )?
+                        match mpt.mpt_type {
+                            MptType::VariableLeaf(circuit_input) => {
+                                self.prover.prove_value_extraction(circuit_input)?
                             },
                             MptType::MappingLeaf(mapping_leaf) => {
                                 self.prover.prove_mapping_variable_leaf(
