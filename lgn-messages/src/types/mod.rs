@@ -26,7 +26,7 @@ pub type HashOutput = [u8; 32];
 #[derive(Deserialize, Serialize)]
 pub enum TaskType {
     V1Preprocessing(v1::preprocessing::WorkerTask),
-    V1Query(v1::query::WorkerTask),
+    V1Query(v1::query::WorkerTaskType),
 
     /// Carries the plonky2 proof that will be wrapped on a groth16.
     V1Groth16(Vec<u8>),

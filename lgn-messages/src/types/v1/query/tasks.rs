@@ -14,8 +14,6 @@ use verifiable_db::revelation::RowPath;
 use crate::types::v1::preprocessing::db_keys;
 use crate::types::v1::query::keys::ProofKey;
 use crate::types::v1::query::PlaceHolderLgn;
-use crate::types::v1::query::WorkerTask;
-use crate::types::v1::query::WorkerTaskType;
 
 /// Query input for a proving task
 #[derive(Dbg, Clone, Deserialize, Serialize)]
@@ -204,18 +202,8 @@ pub enum RevelationInput {
 #[derive(Clone, Dbg, Deserialize, Serialize)]
 pub struct NonExistenceInput {
     pub index_path: TreePathInputs,
-
     pub column_ids: ColumnIDs,
-
     pub placeholders: PlaceHolderLgn,
-}
-
-impl From<&WorkerTask> for ProofKey {
-    fn from(task: &WorkerTask) -> Self {
-        match &task.task_type {
-            WorkerTaskType::Query(qr) => qr.proof_key.clone(),
-        }
-    }
 }
 
 /// Rows chunk input of an aggregation query

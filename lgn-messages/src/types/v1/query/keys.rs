@@ -5,6 +5,7 @@ use object_store::path::Path;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
+use super::WorkerTaskType;
 use super::NUM_CHUNKS;
 
 pub(crate) const KEYS_QUERIES_PREFIX: &str = "V1_QUERIES";
@@ -37,6 +38,14 @@ pub enum ProofKey {
     NonExistence(QueryId),
 
     Revelation(QueryId),
+}
+
+impl From<&WorkerTaskType> for ProofKey {
+    fn from(value: &WorkerTaskType) -> Self {
+        match value {
+            WorkerTaskType::Query(qr) => qr.proof_key.clone(),
+        }
+    }
 }
 
 impl Display for ProofKey {
