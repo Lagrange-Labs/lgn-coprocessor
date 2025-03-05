@@ -30,11 +30,10 @@ impl<P: StorageQueryProver> LgnProver<TaskType, ReplyType> for Querying<P> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
 
-        if let TaskType::V1Query(ref task @ WorkerTask { chain_id, .. }) = envelope.inner {
+        if let TaskType::V1Query(ref task @ WorkerTask { .. }) = envelope.inner {
             let key: ProofKey = task.into();
             let result = self.run_inner(task)?;
             let reply_type = ReplyType::V1Query(WorkerReply::new(
-                chain_id,
                 Some((key.to_string(), result)),
                 ProofCategory::Querying,
             ));

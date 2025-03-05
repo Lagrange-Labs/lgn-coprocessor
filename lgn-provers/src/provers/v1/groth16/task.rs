@@ -45,7 +45,7 @@ impl<GP: Prover> LgnProver<TaskType, ReplyType> for Groth16<GP> {
             );
 
             let proof = (key, proof);
-            let reply = WorkerReply::new(task.chain_id, Some(proof), ProofCategory::Querying);
+            let reply = WorkerReply::new(Some(proof), ProofCategory::Querying);
 
             let reply_type = ReplyType::V1Groth16(reply);
             let reply_envelope = MessageReplyEnvelope::new(
