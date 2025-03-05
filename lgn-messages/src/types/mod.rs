@@ -198,26 +198,18 @@ pub enum ProofCategory {
 
 #[derive(Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
 pub struct WorkerReply {
-    pub chain_id: u64,
-
     #[dbg(formatter = crate::types::kp_pretty)]
     pub proof: Option<KeyedPayload>,
-
     pub proof_type: ProofCategory,
 }
 
 impl WorkerReply {
     #[must_use]
     pub fn new(
-        chain_id: u64,
         proof: Option<KeyedPayload>,
         proof_type: ProofCategory,
     ) -> Self {
-        Self {
-            chain_id,
-            proof,
-            proof_type,
-        }
+        Self { proof, proof_type }
     }
 }
 
