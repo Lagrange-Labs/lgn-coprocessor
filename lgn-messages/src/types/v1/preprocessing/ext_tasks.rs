@@ -41,7 +41,7 @@ pub struct Mpt {
     pub table_hash: TableHash,
     pub block_nr: BlockNr,
     pub node_hash: H256,
-    pub mpt_type: MptType,
+    pub circuit_input: values_extraction::CircuitInput,
 }
 
 impl Mpt {
@@ -49,20 +49,15 @@ impl Mpt {
         table_hash: TableId,
         block_nr: BlockNr,
         node_hash: H256,
-        mpt_type: MptType,
+        circuit_input: values_extraction::CircuitInput,
     ) -> Self {
         Self {
             table_hash,
             block_nr,
             node_hash,
-            mpt_type,
+            circuit_input,
         }
     }
-}
-
-#[derive(Deserialize, Serialize)]
-pub enum MptType {
-    VariableExtraction(values_extraction::CircuitInput),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -406,13 +401,9 @@ impl From<&WorkerTask> for ProofKey {
                 match extraction {
                     ExtractionType::MptExtraction(mpt_extraction) => {
                         let node_version = (mpt_extraction.block_nr, mpt_extraction.node_hash);
-                        match &mpt_extraction.mpt_type {
-                            MptType::VariableExtraction(_) => {
-                                ProofKey::MptVariable {
-                                    table_hash: mpt_extraction.table_hash,
-                                    mpt_node_version: node_version,
-                                }
-                            },
+                        ProofKey::MptVariable {
+                            table_hash: mpt_extraction.table_hash,
+                            mpt_node_version: node_version,
                         }
                     },
                     ExtractionType::LengthExtraction(length) => {

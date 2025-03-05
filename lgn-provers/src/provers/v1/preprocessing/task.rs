@@ -7,7 +7,6 @@ use lgn_messages::types::v1::preprocessing::ext_keys;
 use lgn_messages::types::v1::preprocessing::ext_tasks::ExtractionType;
 use lgn_messages::types::v1::preprocessing::ext_tasks::FinalExtraction;
 use lgn_messages::types::v1::preprocessing::ext_tasks::FinalExtractionType;
-use lgn_messages::types::v1::preprocessing::ext_tasks::MptType;
 use lgn_messages::types::v1::preprocessing::WorkerTask;
 use lgn_messages::types::v1::preprocessing::WorkerTaskType;
 use lgn_messages::types::MessageEnvelope;
@@ -80,11 +79,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
             WorkerTaskType::Extraction(extraction) => {
                 match extraction {
                     ExtractionType::MptExtraction(mpt) => {
-                        match mpt.mpt_type {
-                            MptType::VariableExtraction(circuit_input) => {
-                                self.prover.prove_value_extraction(circuit_input)?
-                            },
-                        }
+                        self.prover.prove_value_extraction(mpt.circuit_input)?
                     },
                     ExtractionType::LengthExtraction(length) => {
                         let mut proofs = vec![];
