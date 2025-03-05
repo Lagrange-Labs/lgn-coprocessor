@@ -30,7 +30,9 @@ pub enum TaskType {
     RecProof(experimental::rec_proof::WorkerTask),
     V1Preprocessing(v1::preprocessing::WorkerTask),
     V1Query(v1::query::WorkerTask),
-    V1Groth16(v1::groth16::WorkerTask),
+
+    /// Carries the plonky2 proof that will be wrapped on a groth16.
+    V1Groth16(Vec<u8>),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
