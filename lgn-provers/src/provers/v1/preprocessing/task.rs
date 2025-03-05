@@ -77,12 +77,6 @@ impl<P: PreprocessingProver> LgnProver<TaskType, ReplyType> for Preprocessing<P>
         let task_id = envelope.task_id.clone();
 
         match envelope.inner {
-            TaskType::TxTrie(..) => {
-                panic!("Unsupported task type. task_type: TxTrie")
-            },
-            TaskType::RecProof(..) => {
-                panic!("Unsupported task type. task_type: RecProof")
-            },
             TaskType::V1Preprocessing(task) => {
                 let key = match &task.task_type {
                     WorkerTaskType::Extraction(_) => {
