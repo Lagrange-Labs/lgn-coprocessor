@@ -63,8 +63,11 @@ where
     ) -> anyhow::Result<MessageReplyEnvelope<R>> {
         let prover_type: ProverType = envelope.inner.to_prover_type();
 
-        counter!("zkmr_worker_tasks_received_total", "task_type" => prover_type.to_string())
-            .increment(1);
+        counter!(
+            "zkmr_worker_tasks_received_total",
+            "task_type" => prover_type.to_string(),
+        )
+        .increment(1);
 
         match self.provers.get(&prover_type) {
             Some(prover) => {
@@ -74,17 +77,25 @@ where
 
                 let result = prover.run(envelope)?;
 
-                counter!("zkmr_worker_tasks_processed_total", "task_type" => prover_type.to_string())
-                    .increment(1);
-                histogram!("zkmr_worker_task_processing_duration_seconds", "task_type" => prover_type.to_string())
-            .record(start_time.elapsed().as_secs_f64());
+                counter!(
+                    "zkmr_worker_tasks_processed_total",
+                    "task_type" => prover_type.to_string(),
+                )
+                .increment(1);
+                histogram!(
+                    "zkmr_worker_task_processing_duration_seconds",
+                    "task_type" => prover_type.to_string()
+                )
+                .record(start_time.elapsed().as_secs_f64());
 
                 Ok(result)
             },
             None => {
-                counter!("zkmr_worker_tasks_failed_total", "task_type" => prover_type.to_string())
-                    .increment(1);
-
+                counter!(
+                    "zkmr_worker_tasks_failed_total",
+                    "task_type" => prover_type.to_string(),
+                )
+                .increment(1);
                 bail!("No prover found for task type: {:?}", prover_type);
             },
         }
