@@ -20,8 +20,6 @@ impl<GP: Prover> LgnProver<TaskType, ReplyType> for Groth16<GP> {
         envelope: MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         match envelope.inner() {
-            TaskType::TxTrie(..) => panic!("Unsupported task type. task_type: TxTrie"),
-            TaskType::RecProof(..) => panic!("Unsupported task type. task_type: RecProof"),
             TaskType::V1Preprocessing(..) => {
                 panic!("Unsupported task type. task_type: V1Preprocessing")
             },
