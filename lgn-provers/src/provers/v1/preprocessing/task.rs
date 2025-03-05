@@ -21,8 +21,7 @@ use lgn_messages::types::WorkerReply;
 use mp2_v1::contract_extraction;
 use mp2_v1::length_extraction::LengthCircuitInput;
 
-use crate::provers::v1::preprocessing::prover::StorageDatabaseProver;
-use crate::provers::v1::preprocessing::prover::StorageExtractionProver;
+use crate::provers::v1::preprocessing::prover::PreprocessingProver;
 use crate::provers::LgnProver;
 
 /// Different types of node types.
@@ -70,9 +69,7 @@ pub struct Preprocessing<P> {
     prover: P,
 }
 
-impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, ReplyType>
-    for Preprocessing<P>
-{
+impl<P: PreprocessingProver> LgnProver<TaskType, ReplyType> for Preprocessing<P> {
     fn run(
         &self,
         envelope: MessageEnvelope<TaskType>,
@@ -113,7 +110,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
     }
 }
 
-impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
+impl<P: PreprocessingProver> Preprocessing<P> {
     pub fn new(prover: P) -> Self {
         Self { prover }
     }

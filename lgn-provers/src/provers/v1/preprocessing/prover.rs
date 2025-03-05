@@ -5,7 +5,7 @@ use mp2_v1::contract_extraction;
 use mp2_v1::length_extraction;
 use mp2_v1::values_extraction;
 
-pub trait StorageExtractionProver {
+pub trait PreprocessingProver {
     /// Prove a value extraction
     fn prove_value_extraction(
         &self,
@@ -57,9 +57,7 @@ pub trait StorageExtractionProver {
         simple_table_proof: Vec<u8>,
         mapping_table_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
-}
 
-pub trait StorageDatabaseProver {
     /// Prove a cell tree leaf node.
     fn prove_cell_leaf(
         &self,

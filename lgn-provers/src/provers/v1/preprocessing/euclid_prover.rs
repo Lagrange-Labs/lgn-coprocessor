@@ -23,8 +23,7 @@ use mp2_v1::values_extraction;
 use tracing::debug;
 
 use crate::params;
-use crate::provers::v1::preprocessing::prover::StorageDatabaseProver;
-use crate::provers::v1::preprocessing::prover::StorageExtractionProver;
+use crate::provers::v1::preprocessing::prover::PreprocessingProver;
 
 pub struct EuclidProver {
     params: PublicParameters,
@@ -75,7 +74,7 @@ impl EuclidProver {
     }
 }
 
-impl StorageExtractionProver for EuclidProver {
+impl PreprocessingProver for EuclidProver {
     fn prove_value_extraction(
         &self,
         circuit_input: values_extraction::CircuitInput,
@@ -165,9 +164,7 @@ impl StorageExtractionProver for EuclidProver {
         );
         self.prove(input, "final extraction merge")
     }
-}
 
-impl StorageDatabaseProver for EuclidProver {
     fn prove_cell_leaf(
         &self,
         identifier: u64,
