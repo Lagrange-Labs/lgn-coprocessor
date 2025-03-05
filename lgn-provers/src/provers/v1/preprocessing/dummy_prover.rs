@@ -2,93 +2,41 @@ use alloy::primitives::Address;
 use alloy::primitives::U256;
 use mp2_common::digest::TableDimension;
 use mp2_common::types::HashOutput;
+use mp2_v1::contract_extraction;
+use mp2_v1::length_extraction;
+use mp2_v1::values_extraction;
 use tracing::debug;
 
 use crate::dummy_utils::dummy_proof;
-use crate::provers::v1::preprocessing::prover::StorageDatabaseProver;
-use crate::provers::v1::preprocessing::prover::StorageExtractionProver;
+use crate::provers::v1::preprocessing::prover::PreprocessingProver;
 
 const PROOF_SIZE: usize = 120;
 
 /// Prover implementation which performs no proving and returns random data as a proof.
 pub struct DummyProver;
 
-impl StorageExtractionProver for DummyProver {
-    fn prove_single_variable_leaf(
+impl PreprocessingProver for DummyProver {
+    fn prove_value_extraction(
         &self,
-        _node: Vec<u8>,
-        _slot: u8,
-        _column_id: u64,
+        _circuit_input: values_extraction::CircuitInput,
     ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving single variable leaf");
+        debug!("Proving value extraction");
         Ok(dummy_proof(PROOF_SIZE))
     }
 
-    fn prove_single_variable_branch(
+    fn prove_length_extraction(
         &self,
-        _node: Vec<u8>,
-        _child_proofs: Vec<Vec<u8>>,
+        _circuit_input: length_extraction::LengthCircuitInput,
     ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving single variable branch");
+        debug!("Proving length extraction");
         Ok(dummy_proof(PROOF_SIZE))
     }
 
-    fn prove_mapping_variable_leaf(
+    fn prove_contract_extraction(
         &self,
-        _key: Vec<u8>,
-        _node: Vec<u8>,
-        _slot: u8,
-        _key_id: u64,
-        _value_id: u64,
+        _circuit_input: contract_extraction::CircuitInput,
     ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving mapping variable leaf");
-        Ok(dummy_proof(PROOF_SIZE))
-    }
-
-    fn prove_mapping_variable_branch(
-        &self,
-        _node: Vec<u8>,
-        _child_proofs: Vec<Vec<u8>>,
-    ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving mapping variable branch");
-        Ok(dummy_proof(PROOF_SIZE))
-    }
-
-    fn prove_length_leaf(
-        &self,
-        _node: Vec<u8>,
-        _length_slot: usize,
-        _variable_slot: usize,
-    ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving length leaf");
-        Ok(dummy_proof(PROOF_SIZE))
-    }
-
-    fn prove_length_branch(
-        &self,
-        _node: Vec<u8>,
-        _child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving length branch");
-        Ok(dummy_proof(PROOF_SIZE))
-    }
-
-    fn prove_contract_leaf(
-        &self,
-        _node: Vec<u8>,
-        _storage_root: Vec<u8>,
-        _contract_address: Address,
-    ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving contract leaf");
-        Ok(dummy_proof(PROOF_SIZE))
-    }
-
-    fn prove_contract_branch(
-        &self,
-        _node: Vec<u8>,
-        _child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving contract branch");
+        debug!("Proving contract extraction");
         Ok(dummy_proof(PROOF_SIZE))
     }
 
@@ -132,37 +80,12 @@ impl StorageExtractionProver for DummyProver {
         debug!("Proving final extraction merge table");
         Ok(dummy_proof(PROOF_SIZE))
     }
-}
 
-impl StorageDatabaseProver for DummyProver {
-    fn prove_cell_leaf(
+    fn prove_cells_tree(
         &self,
-        _identifier: u64,
-        _value: U256,
-        _is_multiplier: bool,
+        _circuit_input: verifiable_db::cells_tree::CircuitInput,
     ) -> anyhow::Result<Vec<u8>> {
-        Ok(dummy_proof(PROOF_SIZE))
-    }
-
-    fn prove_cell_partial(
-        &self,
-        _identifier: u64,
-        _value: U256,
-        _is_multiplier: bool,
-        _child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving cell partial");
-        Ok(dummy_proof(PROOF_SIZE))
-    }
-
-    fn prove_cell_full(
-        &self,
-        _identifier: u64,
-        _value: U256,
-        _is_multiplier: bool,
-        _child_proofs: Vec<Vec<u8>>,
-    ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving cell full");
+        debug!("Proving cells tree");
         Ok(dummy_proof(PROOF_SIZE))
     }
 
@@ -202,20 +125,6 @@ impl StorageDatabaseProver for DummyProver {
         Ok(dummy_proof(PROOF_SIZE))
     }
 
-    fn prove_membership(
-        &self,
-        _block_id: u64,
-        _index_value: U256,
-        _old_min: U256,
-        _old_max: U256,
-        _left_child: HashOutput,
-        _rows_tree_hash: HashOutput,
-        _right_child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving membership");
-        Ok(dummy_proof(PROOF_SIZE))
-    }
-
     fn prove_block_leaf(
         &self,
         _block_id: u64,
@@ -239,6 +148,20 @@ impl StorageDatabaseProver for DummyProver {
         _rows_tree_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving block parent");
+        Ok(dummy_proof(PROOF_SIZE))
+    }
+
+    fn prove_membership(
+        &self,
+        _block_id: u64,
+        _index_value: U256,
+        _old_min: U256,
+        _old_max: U256,
+        _left_child: HashOutput,
+        _rows_tree_hash: HashOutput,
+        _right_child_proof: Vec<u8>,
+    ) -> anyhow::Result<Vec<u8>> {
+        debug!("Proving membership");
         Ok(dummy_proof(PROOF_SIZE))
     }
 
