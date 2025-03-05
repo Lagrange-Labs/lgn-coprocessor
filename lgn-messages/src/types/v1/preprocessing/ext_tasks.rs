@@ -3,6 +3,7 @@ use derive_debug_plus::Dbg;
 use ethers::types::H256;
 use ethers::utils::rlp;
 use mp2_common::digest::TableDimension;
+use mp2_v1::values_extraction;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
@@ -17,7 +18,7 @@ pub const ROUTING_DOMAIN: &str = "sp";
 pub type Identifier = u64;
 pub type MptNodeVersion = (BlockNr, H256);
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub enum ExtractionType {
     #[serde(rename = "1")]
     MptExtraction(Mpt),
@@ -35,12 +36,12 @@ pub enum ExtractionType {
     FinalExtraction(Box<FinalExtraction>),
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Mpt {
     pub table_hash: TableHash,
     pub block_nr: BlockNr,
     pub node_hash: H256,
-    pub mpt_type: MptType,
+    pub circuit_input: values_extraction::CircuitInput,
 }
 
 impl Mpt {
@@ -48,30 +49,15 @@ impl Mpt {
         table_hash: TableId,
         block_nr: BlockNr,
         node_hash: H256,
-        mpt_type: MptType,
+        circuit_input: values_extraction::CircuitInput,
     ) -> Self {
         Self {
             table_hash,
             block_nr,
             node_hash,
-            mpt_type,
+            circuit_input,
         }
     }
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub enum MptType {
-    #[serde(rename = "1")]
-    MappingLeaf(MappingLeafInput),
-
-    #[serde(rename = "2")]
-    MappingBranch(MappingBranchInput),
-
-    #[serde(rename = "3")]
-    VariableLeaf(VariableLeafInput),
-
-    #[serde(rename = "4")]
-    VariableBranch(VariableBranchInput),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -120,27 +106,6 @@ impl MappingBranchInput {
             node,
             children,
             children_proofs: vec![],
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct VariableLeafInput {
-    pub node: Vec<u8>,
-    pub slot: u8,
-    pub column_id: u64,
-}
-
-impl VariableLeafInput {
-    pub fn new(
-        node: Vec<u8>,
-        slot: u8,
-        column_id: u64,
-    ) -> Self {
-        Self {
-            node,
-            slot,
-            column_id,
         }
     }
 }
@@ -436,31 +401,9 @@ impl From<&WorkerTask> for ProofKey {
                 match extraction {
                     ExtractionType::MptExtraction(mpt_extraction) => {
                         let node_version = (mpt_extraction.block_nr, mpt_extraction.node_hash);
-                        match &mpt_extraction.mpt_type {
-                            MptType::MappingLeaf(_) => {
-                                ProofKey::MptVariable {
-                                    table_hash: mpt_extraction.table_hash,
-                                    mpt_node_version: node_version,
-                                }
-                            },
-                            MptType::MappingBranch(_) => {
-                                ProofKey::MptVariable {
-                                    table_hash: mpt_extraction.table_hash,
-                                    mpt_node_version: node_version,
-                                }
-                            },
-                            MptType::VariableLeaf(_) => {
-                                ProofKey::MptVariable {
-                                    table_hash: mpt_extraction.table_hash,
-                                    mpt_node_version: node_version,
-                                }
-                            },
-                            MptType::VariableBranch(_) => {
-                                ProofKey::MptVariable {
-                                    table_hash: mpt_extraction.table_hash,
-                                    mpt_node_version: node_version,
-                                }
-                            },
+                        ProofKey::MptVariable {
+                            table_hash: mpt_extraction.table_hash,
+                            mpt_node_version: node_version,
                         }
                     },
                     ExtractionType::LengthExtraction(length) => {
