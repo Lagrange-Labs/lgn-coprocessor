@@ -81,7 +81,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                 match extraction {
                     ExtractionType::MptExtraction(mpt) => {
                         match mpt.mpt_type {
-                            MptType::VariableLeaf(circuit_input) => {
+                            MptType::VariableExtraction(circuit_input) => {
                                 self.prover.prove_value_extraction(circuit_input)?
                             },
                             MptType::MappingLeaf(mapping_leaf) => {
@@ -97,12 +97,6 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                                 self.prover.prove_mapping_variable_branch(
                                     mapping_branch.node.clone(),
                                     mapping_branch.children_proofs.to_owned(),
-                                )?
-                            },
-                            MptType::VariableBranch(variable_branch) => {
-                                self.prover.prove_single_variable_branch(
-                                    variable_branch.node.clone(),
-                                    variable_branch.children_proofs.clone(),
                                 )?
                             },
                         }

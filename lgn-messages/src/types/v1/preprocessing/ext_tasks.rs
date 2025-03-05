@@ -69,10 +69,7 @@ pub enum MptType {
     MappingBranch(MappingBranchInput),
 
     #[serde(rename = "3")]
-    VariableLeaf(values_extraction::CircuitInput),
-
-    #[serde(rename = "4")]
-    VariableBranch(VariableBranchInput),
+    VariableExtraction(values_extraction::CircuitInput),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -429,13 +426,7 @@ impl From<&WorkerTask> for ProofKey {
                                     mpt_node_version: node_version,
                                 }
                             },
-                            MptType::VariableLeaf(_) => {
-                                ProofKey::MptVariable {
-                                    table_hash: mpt_extraction.table_hash,
-                                    mpt_node_version: node_version,
-                                }
-                            },
-                            MptType::VariableBranch(_) => {
+                            MptType::VariableExtraction(_) => {
                                 ProofKey::MptVariable {
                                     table_hash: mpt_extraction.table_hash,
                                     mpt_node_version: node_version,

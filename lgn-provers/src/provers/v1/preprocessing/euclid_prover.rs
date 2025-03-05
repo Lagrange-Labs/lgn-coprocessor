@@ -93,20 +93,6 @@ impl StorageExtractionProver for EuclidProver {
         )
     }
 
-    fn prove_single_variable_branch(
-        &self,
-        node: Vec<u8>,
-        child_proofs: Vec<Vec<u8>>,
-    ) -> anyhow::Result<Vec<u8>> {
-        self.prove(
-            ValuesExtraction(values_extraction::CircuitInput::new_single_variable_branch(
-                node,
-                child_proofs,
-            )),
-            "single variable branch",
-        )
-    }
-
     fn prove_mapping_variable_leaf(
         &self,
         key: Vec<u8>,
