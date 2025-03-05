@@ -2,14 +2,13 @@ use alloy::primitives::Address;
 use alloy::primitives::U256;
 use mp2_common::digest::TableDimension;
 use mp2_common::types::HashOutput;
+use mp2_v1::values_extraction;
 
 pub trait StorageExtractionProver {
-    /// Prove a leaf MPT node of single variable.
-    fn prove_single_variable_leaf(
+    /// Prove a value extraction
+    fn prove_value_extraction(
         &self,
-        node: Vec<u8>,
-        slot: u8,
-        column_id: u64,
+        circuit_input: values_extraction::CircuitInput,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a branch MPT node of single variable.

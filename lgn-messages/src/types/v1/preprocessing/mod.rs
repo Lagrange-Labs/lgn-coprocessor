@@ -2,6 +2,7 @@ use alloy_primitives::Address;
 use alloy_primitives::U256;
 use ethers::prelude::H256;
 use mp2_common::digest::TableDimension;
+use mp2_v1::values_extraction;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
@@ -23,7 +24,6 @@ use crate::types::v1::preprocessing::ext_tasks::Mpt;
 use crate::types::v1::preprocessing::ext_tasks::MptNodeVersion;
 use crate::types::v1::preprocessing::ext_tasks::MptType;
 use crate::types::v1::preprocessing::ext_tasks::VariableBranchInput;
-use crate::types::v1::preprocessing::ext_tasks::VariableLeafInput;
 use crate::BlockNr;
 use crate::TableHash;
 use crate::TableId;
@@ -78,15 +78,13 @@ impl WorkerTaskType {
         table_hash: TableHash,
         block_nr: BlockNr,
         node_hash: H256,
-        node: Vec<u8>,
-        slot: u8,
-        column_id: u64,
+        circuit_input: values_extraction::CircuitInput,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
             table_hash,
             block_nr,
             node_hash,
-            mpt_type: MptType::VariableLeaf(VariableLeafInput::new(node, slot, column_id)),
+            mpt_type: MptType::VariableLeaf(circuit_input),
         }))
     }
 
