@@ -20,7 +20,6 @@ use crate::types::v1::preprocessing::ext_tasks::Identifier;
 use crate::types::v1::preprocessing::ext_tasks::Length;
 use crate::types::v1::preprocessing::ext_tasks::Mpt;
 use crate::types::v1::preprocessing::ext_tasks::MptNodeVersion;
-use crate::types::v1::preprocessing::ext_tasks::MptType;
 use crate::BlockNr;
 use crate::TableHash;
 use crate::TableId;
@@ -81,7 +80,7 @@ impl WorkerTaskType {
             table_hash,
             block_nr,
             node_hash,
-            mpt_type: MptType::VariableExtraction(circuit_input),
+            circuit_input,
         }))
     }
 
