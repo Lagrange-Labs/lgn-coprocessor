@@ -20,12 +20,12 @@ impl<GP: Prover> LgnProver<TaskType, ReplyType> for Groth16<GP> {
         &self,
         envelope: &MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
-        if let TaskType::V1Groth16(task) = envelope.inner() {
+        if let TaskType::V1Groth16(revelation_proof) = envelope.inner() {
             let now = Instant::now();
             let key = ProofKey(envelope.query_id.to_string()).to_string();
             let proof = self
                 .prover
-                .prove(task.revelation_proof.proof().as_slice())
+                .prove(revelation_proof.as_slice())
                 .with_context(|| {
                     format!(
                         "Failed to generate the Groth16 proof: query_id = {}, task_id = {}",
