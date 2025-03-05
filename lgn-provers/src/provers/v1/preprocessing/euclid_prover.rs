@@ -5,15 +5,7 @@ use mp2_common::digest::TableDimension;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::generate_proof;
-use mp2_v1::api::CircuitInput::BlockExtraction;
-use mp2_v1::api::CircuitInput::BlockTree;
-use mp2_v1::api::CircuitInput::CellsTree;
-use mp2_v1::api::CircuitInput::FinalExtraction;
-use mp2_v1::api::CircuitInput::RowsTree;
-use mp2_v1::api::CircuitInput::IVC;
-use mp2_v1::api::CircuitInput::{
-    self,
-};
+use mp2_v1::api::CircuitInput;
 use mp2_v1::api::PublicParameters;
 use mp2_v1::block_extraction;
 use mp2_v1::contract_extraction;
@@ -109,9 +101,9 @@ impl PreprocessingProver for EuclidProver {
         &self,
         rlp_header: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = BlockExtraction(block_extraction::CircuitInput::from_block_header(
-            rlp_header,
-        ));
+        let input = CircuitInput::BlockExtraction(
+            block_extraction::CircuitInput::from_block_header(rlp_header),
+        );
         self.prove(input, "block")
     }
 
@@ -122,12 +114,13 @@ impl PreprocessingProver for EuclidProver {
         value_proof: Vec<u8>,
         dimension: TableDimension,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = FinalExtraction(final_extraction::CircuitInput::new_simple_input(
-            block_proof,
-            contract_proof,
-            value_proof,
-            dimension,
-        )?);
+        let input =
+            CircuitInput::FinalExtraction(final_extraction::CircuitInput::new_simple_input(
+                block_proof,
+                contract_proof,
+                value_proof,
+                dimension,
+            )?);
         self.prove(input, "final extraction simple")
     }
 
@@ -138,12 +131,13 @@ impl PreprocessingProver for EuclidProver {
         value_proof: Vec<u8>,
         length_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = FinalExtraction(final_extraction::CircuitInput::new_lengthed_input(
-            block_proof,
-            contract_proof,
-            value_proof,
-            length_proof,
-        )?);
+        let input =
+            CircuitInput::FinalExtraction(final_extraction::CircuitInput::new_lengthed_input(
+                block_proof,
+                contract_proof,
+                value_proof,
+                length_proof,
+            )?);
         self.prove(input, "final extraction lengthed")
     }
 
@@ -154,7 +148,7 @@ impl PreprocessingProver for EuclidProver {
         simple_table_proof: Vec<u8>,
         mapping_table_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = FinalExtraction(
+        let input = CircuitInput::FinalExtraction(
             final_extraction::CircuitInput::new_merge_single_and_mapping(
                 block_proof,
                 contract_proof,
@@ -171,7 +165,7 @@ impl PreprocessingProver for EuclidProver {
         value: U256,
         is_multiplier: bool,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = CellsTree(verifiable_db::cells_tree::CircuitInput::leaf(
+        let input = CircuitInput::CellsTree(verifiable_db::cells_tree::CircuitInput::leaf(
             identifier,
             value,
             is_multiplier,
@@ -186,7 +180,7 @@ impl PreprocessingProver for EuclidProver {
         is_multiplier: bool,
         child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = CellsTree(verifiable_db::cells_tree::CircuitInput::partial(
+        let input = CircuitInput::CellsTree(verifiable_db::cells_tree::CircuitInput::partial(
             identifier,
             value,
             is_multiplier,
@@ -203,7 +197,7 @@ impl PreprocessingProver for EuclidProver {
         child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
         let child_proofs = [child_proofs[0].to_owned(), child_proofs[1].to_vec()];
-        let input = CellsTree(verifiable_db::cells_tree::CircuitInput::full(
+        let input = CircuitInput::CellsTree(verifiable_db::cells_tree::CircuitInput::full(
             identifier,
             value,
             is_multiplier,
@@ -225,7 +219,7 @@ impl PreprocessingProver for EuclidProver {
             self.params.empty_cell_tree_proof()?
         };
 
-        let input = RowsTree(verifiable_db::row_tree::CircuitInput::leaf(
+        let input = CircuitInput::RowsTree(verifiable_db::row_tree::CircuitInput::leaf(
             identifier,
             value,
             is_multiplier,
@@ -248,7 +242,7 @@ impl PreprocessingProver for EuclidProver {
         } else {
             self.params.empty_cell_tree_proof()?
         };
-        let input = RowsTree(verifiable_db::row_tree::CircuitInput::partial(
+        let input = CircuitInput::RowsTree(verifiable_db::row_tree::CircuitInput::partial(
             identifier,
             value,
             is_multiplier,
@@ -272,7 +266,7 @@ impl PreprocessingProver for EuclidProver {
         } else {
             self.params.empty_cell_tree_proof()?
         };
-        let input = RowsTree(verifiable_db::row_tree::CircuitInput::full(
+        let input = CircuitInput::RowsTree(verifiable_db::row_tree::CircuitInput::full(
             identifier,
             value,
             is_multiplier,
@@ -290,7 +284,7 @@ impl PreprocessingProver for EuclidProver {
         rows_tree_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         let block_id: u64 = u64::from_be_bytes(block_id.to_be_bytes());
-        let input = BlockTree(verifiable_db::block_tree::CircuitInput::new_leaf(
+        let input = CircuitInput::BlockTree(verifiable_db::block_tree::CircuitInput::new_leaf(
             block_id,
             extraction_proof,
             rows_tree_proof,
@@ -314,7 +308,7 @@ impl PreprocessingProver for EuclidProver {
             left_child.unwrap_or_else(|| empty_poseidon_hash_as_vec().try_into().unwrap());
         let right_hash =
             right_child.unwrap_or_else(|| empty_poseidon_hash_as_vec().try_into().unwrap());
-        let input = BlockTree(verifiable_db::block_tree::CircuitInput::new_parent(
+        let input = CircuitInput::BlockTree(verifiable_db::block_tree::CircuitInput::new_parent(
             block_id,
             old_block_number,
             old_min,
@@ -338,15 +332,16 @@ impl PreprocessingProver for EuclidProver {
         rows_tree_hash: HashOutput,
         right_child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = BlockTree(verifiable_db::block_tree::CircuitInput::new_membership(
-            block_id,
-            index_value,
-            old_min,
-            old_max,
-            &(left_child),
-            &(rows_tree_hash),
-            right_child_proof,
-        ));
+        let input =
+            CircuitInput::BlockTree(verifiable_db::block_tree::CircuitInput::new_membership(
+                block_id,
+                index_value,
+                old_min,
+                old_max,
+                &(left_child),
+                &(rows_tree_hash),
+                right_child_proof,
+            ));
         self.prove(input, "membership")
     }
 
@@ -357,13 +352,13 @@ impl PreprocessingProver for EuclidProver {
     ) -> anyhow::Result<Vec<u8>> {
         let input = match previous_proof {
             Some(previous_proof) => {
-                IVC(verifiable_db::ivc::CircuitInput::new_subsequent_input(
+                CircuitInput::IVC(verifiable_db::ivc::CircuitInput::new_subsequent_input(
                     index_proof,
                     previous_proof,
                 )?)
             },
             None => {
-                IVC(verifiable_db::ivc::CircuitInput::new_first_input(
+                CircuitInput::IVC(verifiable_db::ivc::CircuitInput::new_first_input(
                     index_proof,
                 )?)
             },
