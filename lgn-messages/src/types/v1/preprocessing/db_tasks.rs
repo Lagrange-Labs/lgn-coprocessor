@@ -12,7 +12,7 @@ use crate::types::v1::preprocessing::WorkerTaskType;
 use crate::BlockNr;
 use crate::TableId;
 
-#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub enum DatabaseType {
     #[serde(rename = "1")]
     Cell(DbCellType),
@@ -26,7 +26,7 @@ pub enum DatabaseType {
     IVC(IvcInput),
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub enum DbCellType {
     #[serde(rename = "1")]
     Leaf(CellLeafInput),
@@ -38,7 +38,7 @@ pub enum DbCellType {
     Full(CellFullInput),
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct CellLeafInput {
     pub table_id: TableId,
     pub row_id: String,
@@ -48,7 +48,7 @@ pub struct CellLeafInput {
     pub is_multiplier: bool,
 }
 
-#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct CellPartialInput {
     pub table_id: TableId,
     pub row_id: String,
@@ -57,12 +57,10 @@ pub struct CellPartialInput {
     pub value: U256,
     pub is_multiplier: bool,
     pub child_location: db_keys::ProofKey,
-
-    #[dbg(placeholder = "...")]
     pub child_proof: Vec<u8>,
 }
 
-#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct CellFullInput {
     pub table_id: TableId,
     pub row_id: String,
@@ -71,8 +69,6 @@ pub struct CellFullInput {
     pub value: U256,
     pub is_multiplier: bool,
     pub child_locations: Vec<db_keys::ProofKey>,
-
-    #[dbg(placeholder = "...")]
     pub child_proofs: Vec<Vec<u8>>,
 }
 
