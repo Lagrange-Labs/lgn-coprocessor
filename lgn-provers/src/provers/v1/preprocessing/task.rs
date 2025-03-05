@@ -1,3 +1,6 @@
+use anyhow::bail;
+use anyhow::Context;
+use ethers::utils::rlp::Rlp;
 use lgn_messages::types::v1::preprocessing::db_keys;
 use lgn_messages::types::v1::preprocessing::db_tasks::DatabaseType;
 use lgn_messages::types::v1::preprocessing::db_tasks::DbBlockType;
@@ -15,10 +18,52 @@ use lgn_messages::types::ProofCategory;
 use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::WorkerReply;
+use mp2_v1::length_extraction::LengthCircuitInput;
 
 use crate::provers::v1::preprocessing::prover::StorageDatabaseProver;
 use crate::provers::v1::preprocessing::prover::StorageExtractionProver;
 use crate::provers::LgnProver;
+
+/// Different types of node types.
+#[derive(Debug, PartialEq, Eq)]
+pub enum NodeType {
+    Branch,
+    Extension,
+    Leaf,
+}
+
+/// Returns the node type given an encoded node.
+///
+/// The node spec is at [1].
+///
+/// 1- https://github.com/ethereum/execution-specs/blob/78fb726158c69d8fa164e28f195fabf6ab59b915/src/ethereum/cancun/trie.py#L177-L191
+pub fn node_type(rlp_data: &[u8]) -> anyhow::Result<NodeType> {
+    let rlp = Rlp::new(rlp_data);
+
+    let item_count = rlp.item_count()?;
+
+    if item_count == 17 {
+        Ok(NodeType::Branch)
+    } else if item_count == 2 {
+        // The first item is the encoded path, if it begins with a 2 or 3 it is a leaf, else it is
+        // an extension node
+        let first_item = rlp.at(0)?;
+
+        // We want the first byte
+        let first_byte = first_item.as_raw()[0];
+
+        // The we divide by 16 to get the first nibble
+        match first_byte / 16 {
+            0 | 1 => Ok(NodeType::Extension),
+            2 | 3 => Ok(NodeType::Leaf),
+            _ => {
+                bail!("Expected compact encoding beginning with 0,1,2 or 3")
+            },
+        }
+    } else {
+        bail!("RLP encoded Node item count was {item_count}, expected either 17 or 2")
+    }
+}
 
 pub struct Preprocessing<P> {
     prover: P,
@@ -66,6 +111,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
         }
     }
 }
+
 impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
     pub fn new(prover: P) -> Self {
         Self { prover }
@@ -82,23 +128,40 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         self.prover.prove_value_extraction(mpt.circuit_input)?
                     },
                     ExtractionType::LengthExtraction(length) => {
-                        let mut proofs = vec![];
-                        for (i, node) in length.nodes.iter().enumerate() {
-                            if i == 0 {
-                                let proof = self.prover.prove_length_leaf(
-                                    node.clone(),
-                                    length.length_slot,
-                                    length.variable_slot,
-                                )?;
-                                proofs.push(proof);
-                            } else {
-                                self.prover.prove_length_branch(
-                                    node.clone(),
-                                    proofs.last().unwrap().clone(),
-                                )?;
+                        let mut nodes = length.nodes;
+
+                        nodes.reverse();
+                        let first = nodes.pop().context("Missing leaf node")?;
+
+                        if node_type(&first)? != NodeType::Leaf {
+                            bail!("The first node must be a leaf node");
+                        }
+
+                        let mut proof =
+                            self.prover
+                                .prove_length_extraction(LengthCircuitInput::new_leaf(
+                                    length.length_slot as u8,
+                                    first,
+                                    length.variable_slot as u8,
+                                ))?;
+
+                        for node in nodes {
+                            match node_type(&node)? {
+                                NodeType::Branch => {
+                                    proof = self.prover.prove_length_extraction(
+                                        LengthCircuitInput::new_branch(node, proof),
+                                    )?;
+                                },
+                                NodeType::Extension => {
+                                    proof = self.prover.prove_length_extraction(
+                                        LengthCircuitInput::new_extension(node, proof),
+                                    )?;
+                                },
+                                NodeType::Leaf => bail!("Only the first node can be a leaf"),
                             }
                         }
-                        proofs.last().unwrap().clone()
+
+                        proof
                     },
                     ExtractionType::ContractExtraction(contract) => {
                         let mut proofs = vec![];

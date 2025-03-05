@@ -11,7 +11,6 @@ use mp2_v1::api::CircuitInput::BlockTree;
 use mp2_v1::api::CircuitInput::CellsTree;
 use mp2_v1::api::CircuitInput::ContractExtraction;
 use mp2_v1::api::CircuitInput::FinalExtraction;
-use mp2_v1::api::CircuitInput::LengthExtraction;
 use mp2_v1::api::CircuitInput::RowsTree;
 use mp2_v1::api::CircuitInput::IVC;
 use mp2_v1::api::CircuitInput::{
@@ -21,7 +20,7 @@ use mp2_v1::api::PublicParameters;
 use mp2_v1::block_extraction;
 use mp2_v1::contract_extraction;
 use mp2_v1::final_extraction;
-use mp2_v1::length_extraction::LengthCircuitInput;
+use mp2_v1::length_extraction;
 use mp2_v1::values_extraction;
 use tracing::debug;
 
@@ -89,27 +88,14 @@ impl StorageExtractionProver for EuclidProver {
         )
     }
 
-    fn prove_length_leaf(
+    fn prove_length_extraction(
         &self,
-        node: Vec<u8>,
-        length_slot: usize,
-        variable_slot: usize,
+        circuit_input: length_extraction::LengthCircuitInput,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = LengthExtraction(LengthCircuitInput::new_leaf(
-            length_slot as u8,
-            node,
-            variable_slot as u8,
-        ));
-        self.prove(input, "length leaf")
-    }
-
-    fn prove_length_branch(
-        &self,
-        node: Vec<u8>,
-        child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
-        let input = LengthExtraction(LengthCircuitInput::new_branch(node, child_proof));
-        self.prove(input, "length branch")
+        self.prove(
+            CircuitInput::LengthExtraction(circuit_input),
+            "length extraction",
+        )
     }
 
     fn prove_contract_leaf(
