@@ -1,7 +1,7 @@
-use alloy::primitives::Address;
 use alloy::primitives::U256;
 use mp2_common::digest::TableDimension;
 use mp2_common::types::HashOutput;
+use mp2_v1::contract_extraction;
 use mp2_v1::length_extraction;
 use mp2_v1::values_extraction;
 
@@ -12,25 +12,16 @@ pub trait StorageExtractionProver {
         circuit_input: values_extraction::CircuitInput,
     ) -> anyhow::Result<Vec<u8>>;
 
-    /// Prove the length extraction.
+    /// Prove a length extraction.
     fn prove_length_extraction(
         &self,
         circuit_input: length_extraction::LengthCircuitInput,
     ) -> anyhow::Result<Vec<u8>>;
 
-    /// Prove a leaf MPT node of contract.
-    fn prove_contract_leaf(
+    /// Prove a contract extraction.
+    fn prove_contract_extraction(
         &self,
-        node: Vec<u8>,
-        storage_root: Vec<u8>,
-        contract_address: Address,
-    ) -> anyhow::Result<Vec<u8>>;
-
-    /// Prove a branch MPT node of contract.
-    fn prove_contract_branch(
-        &self,
-        node: Vec<u8>,
-        child_proof: Vec<u8>,
+        circuit_input: contract_extraction::CircuitInput,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a block.
