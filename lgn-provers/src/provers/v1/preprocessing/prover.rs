@@ -58,30 +58,10 @@ pub trait PreprocessingProver {
         mapping_table_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
 
-    /// Prove a cell tree leaf node.
-    fn prove_cell_leaf(
+    /// Computes a proof for a cells tree.
+    fn prove_cells_tree(
         &self,
-        identifier: u64,
-        value: U256,
-        is_multiplier: bool,
-    ) -> anyhow::Result<Vec<u8>>;
-
-    /// Prove a cell tree partial branch node.
-    fn prove_cell_partial(
-        &self,
-        identifier: u64,
-        value: U256,
-        is_multiplier: bool,
-        child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>;
-
-    /// Prove a cell tree full branch node.
-    fn prove_cell_full(
-        &self,
-        identifier: u64,
-        value: U256,
-        is_multiplier: bool,
-        child_proofs: Vec<Vec<u8>>,
+        circuit_input: verifiable_db::cells_tree::CircuitInput,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a row tree leaf node.

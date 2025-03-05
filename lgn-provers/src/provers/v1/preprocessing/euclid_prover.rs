@@ -159,51 +159,11 @@ impl PreprocessingProver for EuclidProver {
         self.prove(input, "final extraction merge")
     }
 
-    fn prove_cell_leaf(
+    fn prove_cells_tree(
         &self,
-        identifier: u64,
-        value: U256,
-        is_multiplier: bool,
+        circuit_input: verifiable_db::cells_tree::CircuitInput,
     ) -> anyhow::Result<Vec<u8>> {
-        let input = CircuitInput::CellsTree(verifiable_db::cells_tree::CircuitInput::leaf(
-            identifier,
-            value,
-            is_multiplier,
-        ));
-        self.prove(input, "cell leaf")
-    }
-
-    fn prove_cell_partial(
-        &self,
-        identifier: u64,
-        value: U256,
-        is_multiplier: bool,
-        child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
-        let input = CircuitInput::CellsTree(verifiable_db::cells_tree::CircuitInput::partial(
-            identifier,
-            value,
-            is_multiplier,
-            child_proof,
-        ));
-        self.prove(input, "cell partial")
-    }
-
-    fn prove_cell_full(
-        &self,
-        identifier: u64,
-        value: U256,
-        is_multiplier: bool,
-        child_proofs: Vec<Vec<u8>>,
-    ) -> anyhow::Result<Vec<u8>> {
-        let child_proofs = [child_proofs[0].to_owned(), child_proofs[1].to_vec()];
-        let input = CircuitInput::CellsTree(verifiable_db::cells_tree::CircuitInput::full(
-            identifier,
-            value,
-            is_multiplier,
-            child_proofs,
-        ));
-        self.prove(input, "cell full")
+        self.prove(CircuitInput::CellsTree(circuit_input), "cells tree")
     }
 
     fn prove_row_leaf(

@@ -4,7 +4,6 @@ use ethers::utils::rlp::Rlp;
 use lgn_messages::types::v1::preprocessing::db_keys;
 use lgn_messages::types::v1::preprocessing::db_tasks::DatabaseType;
 use lgn_messages::types::v1::preprocessing::db_tasks::DbBlockType;
-use lgn_messages::types::v1::preprocessing::db_tasks::DbCellType;
 use lgn_messages::types::v1::preprocessing::db_tasks::DbRowType;
 use lgn_messages::types::v1::preprocessing::ext_keys;
 use lgn_messages::types::v1::preprocessing::ext_tasks::ExtractionType;
@@ -240,32 +239,8 @@ impl<P: PreprocessingProver> Preprocessing<P> {
             },
             WorkerTaskType::Database(db) => {
                 match db {
-                    DatabaseType::Cell(cell_type) => {
-                        match cell_type {
-                            DbCellType::Leaf(leaf) => {
-                                self.prover.prove_cell_leaf(
-                                    leaf.identifier,
-                                    leaf.value,
-                                    leaf.is_multiplier,
-                                )?
-                            },
-                            DbCellType::Partial(branch) => {
-                                self.prover.prove_cell_partial(
-                                    branch.identifier,
-                                    branch.value,
-                                    branch.is_multiplier,
-                                    branch.child_proof,
-                                )?
-                            },
-                            DbCellType::Full(full) => {
-                                self.prover.prove_cell_full(
-                                    full.identifier,
-                                    full.value,
-                                    full.is_multiplier,
-                                    full.child_proofs,
-                                )?
-                            },
-                        }
+                    DatabaseType::Cell { circuit_input, .. } => {
+                        self.prover.prove_cells_tree(circuit_input)?
                     },
                     DatabaseType::Row(row_type) => {
                         match row_type {

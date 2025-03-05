@@ -15,7 +15,12 @@ use crate::TableId;
 #[derive(Deserialize, Serialize)]
 pub enum DatabaseType {
     #[serde(rename = "1")]
-    Cell(DbCellType),
+    Cell {
+        table_id: TableId,
+        row_id: String,
+        cell_id: usize,
+        circuit_input: verifiable_db::cells_tree::CircuitInput,
+    },
 
     #[serde(rename = "2")]
     Row(DbRowType),
@@ -24,52 +29,6 @@ pub enum DatabaseType {
     Index(IndexInputs),
 
     IVC(IvcInput),
-}
-
-#[derive(Deserialize, Serialize)]
-pub enum DbCellType {
-    #[serde(rename = "1")]
-    Leaf(CellLeafInput),
-
-    #[serde(rename = "2")]
-    Partial(CellPartialInput),
-
-    #[serde(rename = "3")]
-    Full(CellFullInput),
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct CellLeafInput {
-    pub table_id: TableId,
-    pub row_id: String,
-    pub cell_id: usize,
-    pub identifier: Identifier,
-    pub value: U256,
-    pub is_multiplier: bool,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct CellPartialInput {
-    pub table_id: TableId,
-    pub row_id: String,
-    pub cell_id: usize,
-    pub identifier: Identifier,
-    pub value: U256,
-    pub is_multiplier: bool,
-    pub child_location: db_keys::ProofKey,
-    pub child_proof: Vec<u8>,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct CellFullInput {
-    pub table_id: TableId,
-    pub row_id: String,
-    pub cell_id: usize,
-    pub identifier: Identifier,
-    pub value: U256,
-    pub is_multiplier: bool,
-    pub child_locations: Vec<db_keys::ProofKey>,
-    pub child_proofs: Vec<Vec<u8>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -319,65 +278,54 @@ impl IvcInput {
 }
 
 impl From<&WorkerTask> for db_keys::ProofKey {
-    fn from(tt: &WorkerTask) -> Self {
-        match &tt.task_type {
+    fn from(worker_task: &WorkerTask) -> Self {
+        match &worker_task.task_type {
             WorkerTaskType::Database(db) => {
                 match db {
-                    DatabaseType::Cell(ct) => {
-                        match ct {
-                            DbCellType::Leaf(cl) => {
-                                db_keys::ProofKey::Cell(
-                                    cl.table_id,
-                                    tt.block_nr,
-                                    cl.row_id.to_owned(),
-                                    cl.cell_id,
+                    DatabaseType::Cell {
+                        table_id,
+                        row_id,
+                        cell_id,
+                        ..
+                    } => {
+                        db_keys::ProofKey::Cell(
+                            *table_id,
+                            worker_task.block_nr,
+                            row_id.to_owned(),
+                            *cell_id,
+                        )
+                    },
+                    DatabaseType::Row(db_row) => {
+                        match db_row {
+                            DbRowType::Leaf(row_leaf) => {
+                                db_keys::ProofKey::Row(
+                                    row_leaf.table_id,
+                                    worker_task.block_nr,
+                                    row_leaf.row_id.to_string(),
                                 )
                             },
-                            DbCellType::Partial(cp) => {
-                                db_keys::ProofKey::Cell(
-                                    cp.table_id,
-                                    tt.block_nr,
-                                    cp.row_id.to_owned(),
-                                    cp.cell_id,
+                            DbRowType::Partial(row_partial) => {
+                                db_keys::ProofKey::Row(
+                                    row_partial.table_id,
+                                    worker_task.block_nr,
+                                    row_partial.row_id.to_string(),
                                 )
                             },
-                            DbCellType::Full(cf) => {
-                                db_keys::ProofKey::Cell(
-                                    cf.table_id,
-                                    tt.block_nr,
-                                    cf.row_id.to_owned(),
-                                    cf.cell_id,
+                            DbRowType::Full(row_full) => {
+                                db_keys::ProofKey::Row(
+                                    row_full.table_id,
+                                    worker_task.block_nr,
+                                    row_full.row_id.to_string(),
                                 )
                             },
                         }
                     },
-                    DatabaseType::Row(rt) => {
-                        match rt {
-                            DbRowType::Leaf(rl) => {
-                                db_keys::ProofKey::Row(
-                                    rl.table_id,
-                                    tt.block_nr,
-                                    rl.row_id.to_string(),
-                                )
-                            },
-                            DbRowType::Partial(rp) => {
-                                db_keys::ProofKey::Row(
-                                    rp.table_id,
-                                    tt.block_nr,
-                                    rp.row_id.to_string(),
-                                )
-                            },
-                            DbRowType::Full(rf) => {
-                                db_keys::ProofKey::Row(
-                                    rf.table_id,
-                                    tt.block_nr,
-                                    rf.row_id.to_string(),
-                                )
-                            },
-                        }
+                    DatabaseType::Index(index) => {
+                        db_keys::ProofKey::Block(index.table_id, worker_task.block_nr)
                     },
-                    DatabaseType::Index(bt) => db_keys::ProofKey::Block(bt.table_id, tt.block_nr),
-                    DatabaseType::IVC(ivc) => db_keys::ProofKey::IVC(ivc.table_id, tt.block_nr),
+                    DatabaseType::IVC(ivc) => {
+                        db_keys::ProofKey::IVC(ivc.table_id, worker_task.block_nr)
+                    },
                 }
             },
             WorkerTaskType::Extraction(..) => {
