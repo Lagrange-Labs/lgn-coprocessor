@@ -23,7 +23,6 @@ use crate::types::v1::preprocessing::ext_tasks::MappingLeafInput;
 use crate::types::v1::preprocessing::ext_tasks::Mpt;
 use crate::types::v1::preprocessing::ext_tasks::MptNodeVersion;
 use crate::types::v1::preprocessing::ext_tasks::MptType;
-use crate::types::v1::preprocessing::ext_tasks::VariableBranchInput;
 use crate::BlockNr;
 use crate::TableHash;
 use crate::TableId;
@@ -74,7 +73,7 @@ pub enum WorkerTaskType {
 }
 
 impl WorkerTaskType {
-    pub fn ext_variable_leaf(
+    pub fn ext_variable(
         table_hash: TableHash,
         block_nr: BlockNr,
         node_hash: H256,
@@ -84,22 +83,7 @@ impl WorkerTaskType {
             table_hash,
             block_nr,
             node_hash,
-            mpt_type: MptType::VariableLeaf(circuit_input),
-        }))
-    }
-
-    pub fn ext_variable_branch(
-        table_hash: TableHash,
-        block_nr: BlockNr,
-        node_hash: H256,
-        node: Vec<u8>,
-        children: Vec<MptNodeVersion>,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
-            table_hash,
-            block_nr,
-            node_hash,
-            mpt_type: MptType::VariableBranch(VariableBranchInput::new(table_hash, node, children)),
+            mpt_type: MptType::VariableExtraction(circuit_input),
         }))
     }
 
