@@ -5,7 +5,6 @@ use lgn_messages::types::v1::query::tasks::HydratableMatchingRow;
 use lgn_messages::types::v1::query::tasks::ProofInputKind;
 use lgn_messages::types::v1::query::tasks::QueryStep;
 use lgn_messages::types::v1::query::tasks::RevelationInput;
-use lgn_messages::types::v1::query::WorkerTask;
 use lgn_messages::types::v1::query::WorkerTaskType;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
@@ -30,9 +29,9 @@ impl<P: StorageQueryProver> LgnProver<TaskType, ReplyType> for Querying<P> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
 
-        if let TaskType::V1Query(ref task @ WorkerTask { .. }) = envelope.inner {
-            let key: ProofKey = task.into();
-            let result = self.run_inner(task)?;
+        if let TaskType::V1Query(ref task_type) = envelope.inner {
+            let key: ProofKey = task_type.into();
+            let result = self.run_inner(task_type)?;
             let reply_type = ReplyType::V1Query(WorkerReply::new(
                 Some((key.to_string(), result)),
                 ProofCategory::Querying,
@@ -51,12 +50,12 @@ impl<P: StorageQueryProver> Querying<P> {
 
     pub fn run_inner(
         &self,
-        task: &WorkerTask,
+        task_type: &WorkerTaskType,
     ) -> anyhow::Result<Vec<u8>> {
         #[allow(irrefutable_let_patterns)]
-        let WorkerTaskType::Query(ref input) = task.task_type
+        let WorkerTaskType::Query(ref input) = task_type
         else {
-            bail!("Unexpected task type: {:?}", task.task_type);
+            bail!("Unexpected task type: {:?}", task_type);
         };
 
         let pis: DynamicCircuitPis = serde_json::from_slice(&input.pis)?;
