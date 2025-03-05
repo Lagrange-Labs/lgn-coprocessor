@@ -17,7 +17,7 @@ pub const ROUTING_DOMAIN: &str = "sp";
 pub type Identifier = u64;
 pub type MptNodeVersion = (BlockNr, H256);
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub enum ExtractionType {
     #[serde(rename = "1")]
     MptExtraction(Mpt),
@@ -35,7 +35,7 @@ pub enum ExtractionType {
     FinalExtraction(Box<FinalExtraction>),
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Mpt {
     pub table_hash: TableHash,
     pub block_nr: BlockNr,

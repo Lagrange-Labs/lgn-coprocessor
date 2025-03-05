@@ -30,29 +30,40 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, Rep
 {
     fn run(
         &self,
-        envelope: &MessageEnvelope<TaskType>,
+        envelope: MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
-        if let TaskType::V1Preprocessing(task @ WorkerTask { .. }) = &envelope.inner {
-            let key = match &task.task_type {
-                WorkerTaskType::Extraction(_) => {
-                    let key: ext_keys::ProofKey = task.into();
-                    key.to_string()
-                },
-                WorkerTaskType::Database(_) => {
-                    let key: db_keys::ProofKey = task.into();
-                    key.to_string()
-                },
-            };
-            let result = self.run_inner(task.clone())?;
-            let reply_type = ReplyType::V1Preprocessing(WorkerReply::new(
-                Some((key, result)),
-                ProofCategory::Querying,
-            ));
-            Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
-        } else {
-            anyhow::bail!("Received unexpected task: {:?}", envelope);
+
+        match envelope.inner {
+            TaskType::TxTrie(..) => {
+                panic!("Unsupported task type. task_type: TxTrie")
+            },
+            TaskType::RecProof(..) => {
+                panic!("Unsupported task type. task_type: RecProof")
+            },
+            TaskType::V1Preprocessing(task) => {
+                let key = match &task.task_type {
+                    WorkerTaskType::Extraction(_) => {
+                        let key: ext_keys::ProofKey = (&task).into();
+                        key.to_string()
+                    },
+                    WorkerTaskType::Database(_) => {
+                        let key: db_keys::ProofKey = (&task).into();
+                        key.to_string()
+                    },
+                };
+                let result = self.run_inner(task)?;
+                let reply_type = ReplyType::V1Preprocessing(WorkerReply::new(
+                    Some((key, result)),
+                    ProofCategory::Querying,
+                ));
+                Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
+            },
+            TaskType::V1Query(..) => {
+                panic!("Unsupported task type. task_type: V1Query")
+            },
+            TaskType::V1Groth16(..) => panic!("Unsupported task type. task_type: V1Groth16"),
         }
     }
 }

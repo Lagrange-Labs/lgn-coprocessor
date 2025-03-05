@@ -24,7 +24,7 @@ pub trait ToKeyedPayload {
 
 pub type HashOutput = [u8; 32];
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub enum TaskType {
     TxTrie(experimental::tx_trie::WorkerTask),
     RecProof(experimental::rec_proof::WorkerTask),
@@ -431,9 +431,8 @@ impl ToProverType for TaskType {
             TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
             TaskType::V1Query(_) => ProverType::V1Query,
             TaskType::V1Groth16(_) => ProverType::V1Groth16,
-            _ => {
-                panic!("Unsupported task type: {:?}", self)
-            },
+            TaskType::TxTrie(..) => panic!("Unsupported task type. task_type: TxTrie"),
+            TaskType::RecProof(..) => panic!("Unsupported task type. task_type: RecProof"),
         }
     }
 }
