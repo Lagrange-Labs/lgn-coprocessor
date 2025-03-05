@@ -84,15 +84,6 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                             MptType::VariableExtraction(circuit_input) => {
                                 self.prover.prove_value_extraction(circuit_input)?
                             },
-                            MptType::MappingLeaf(mapping_leaf) => {
-                                self.prover.prove_mapping_variable_leaf(
-                                    mapping_leaf.key.clone(),
-                                    mapping_leaf.node.clone(),
-                                    mapping_leaf.slot,
-                                    mapping_leaf.key_id,
-                                    mapping_leaf.value_id,
-                                )?
-                            },
                             MptType::MappingBranch(mapping_branch) => {
                                 self.prover.prove_mapping_variable_branch(
                                     mapping_branch.node.clone(),
