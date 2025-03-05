@@ -11,15 +11,6 @@ pub trait StorageExtractionProver {
         circuit_input: values_extraction::CircuitInput,
     ) -> anyhow::Result<Vec<u8>>;
 
-    fn prove_mapping_variable_leaf(
-        &self,
-        key: Vec<u8>,
-        node: Vec<u8>,
-        slot: u8,
-        key_id: u64,
-        value_id: u64,
-    ) -> anyhow::Result<Vec<u8>>;
-
     /// Prove a branch MPT node of mapping variable.
     fn prove_mapping_variable_branch(
         &self,

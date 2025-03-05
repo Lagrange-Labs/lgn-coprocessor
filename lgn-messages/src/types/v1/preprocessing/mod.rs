@@ -19,7 +19,6 @@ use crate::types::v1::preprocessing::ext_tasks::FinalExtraction;
 use crate::types::v1::preprocessing::ext_tasks::Identifier;
 use crate::types::v1::preprocessing::ext_tasks::Length;
 use crate::types::v1::preprocessing::ext_tasks::MappingBranchInput;
-use crate::types::v1::preprocessing::ext_tasks::MappingLeafInput;
 use crate::types::v1::preprocessing::ext_tasks::Mpt;
 use crate::types::v1::preprocessing::ext_tasks::MptNodeVersion;
 use crate::types::v1::preprocessing::ext_tasks::MptType;
@@ -84,27 +83,6 @@ impl WorkerTaskType {
             block_nr,
             node_hash,
             mpt_type: MptType::VariableExtraction(circuit_input),
-        }))
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    pub fn ext_mapping_leaf(
-        table_hash: TableHash,
-        block_nr: BlockNr,
-        node_hash: H256,
-        key: Vec<u8>,
-        node: Vec<u8>,
-        slot: u8,
-        key_id: u64,
-        value_id: u64,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
-            table_hash,
-            block_nr,
-            node_hash,
-            mpt_type: MptType::MappingLeaf(MappingLeafInput::new(
-                key, node, slot, key_id, value_id,
-            )),
         }))
     }
 

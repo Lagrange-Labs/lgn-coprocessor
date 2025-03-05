@@ -62,9 +62,6 @@ impl Mpt {
 
 #[derive(Deserialize, Serialize)]
 pub enum MptType {
-    #[serde(rename = "1")]
-    MappingLeaf(MappingLeafInput),
-
     #[serde(rename = "2")]
     MappingBranch(MappingBranchInput),
 
@@ -414,12 +411,6 @@ impl From<&WorkerTask> for ProofKey {
                     ExtractionType::MptExtraction(mpt_extraction) => {
                         let node_version = (mpt_extraction.block_nr, mpt_extraction.node_hash);
                         match &mpt_extraction.mpt_type {
-                            MptType::MappingLeaf(_) => {
-                                ProofKey::MptVariable {
-                                    table_hash: mpt_extraction.table_hash,
-                                    mpt_node_version: node_version,
-                                }
-                            },
                             MptType::MappingBranch(_) => {
                                 ProofKey::MptVariable {
                                     table_hash: mpt_extraction.table_hash,

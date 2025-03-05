@@ -93,20 +93,6 @@ impl StorageExtractionProver for EuclidProver {
         )
     }
 
-    fn prove_mapping_variable_leaf(
-        &self,
-        key: Vec<u8>,
-        node: Vec<u8>,
-        slot: u8,
-        key_id: u64,
-        value_id: u64,
-    ) -> anyhow::Result<Vec<u8>> {
-        let input = ValuesExtraction(values_extraction::CircuitInput::new_mapping_variable_leaf(
-            node, slot, key, key_id, value_id,
-        ));
-        self.prove(input, "mapping variable leaf")
-    }
-
     fn prove_mapping_variable_branch(
         &self,
         node: Vec<u8>,
