@@ -2,9 +2,6 @@ use std::collections::HashMap;
 
 use alloy::primitives::Address;
 use alloy::primitives::U256;
-use anyhow::bail;
-use ethers::utils::rlp::Prototype;
-use ethers::utils::rlp::Rlp;
 use mp2_common::digest::TableDimension;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
@@ -16,7 +13,6 @@ use mp2_v1::api::CircuitInput::ContractExtraction;
 use mp2_v1::api::CircuitInput::FinalExtraction;
 use mp2_v1::api::CircuitInput::LengthExtraction;
 use mp2_v1::api::CircuitInput::RowsTree;
-use mp2_v1::api::CircuitInput::ValuesExtraction;
 use mp2_v1::api::CircuitInput::IVC;
 use mp2_v1::api::CircuitInput::{
     self,
@@ -91,33 +87,6 @@ impl StorageExtractionProver for EuclidProver {
             CircuitInput::ValuesExtraction(circuit_input),
             "value extraction",
         )
-    }
-
-    fn prove_mapping_variable_branch(
-        &self,
-        node: Vec<u8>,
-        child_proofs: Vec<Vec<u8>>,
-    ) -> anyhow::Result<Vec<u8>> {
-        let rlp = Rlp::new(&node);
-        match rlp.prototype()? {
-            Prototype::List(2) => {
-                let input = ValuesExtraction(values_extraction::CircuitInput::new_extension(
-                    node,
-                    child_proofs[0].to_owned(),
-                ));
-                self.prove(input, "mapping variable extension")
-            },
-            Prototype::List(17) => {
-                let input = ValuesExtraction(
-                    values_extraction::CircuitInput::new_mapping_variable_branch(
-                        node,
-                        child_proofs,
-                    ),
-                );
-                self.prove(input, "mapping variable branch")
-            },
-            _ => bail!("Invalid RLP item count"),
-        }
     }
 
     fn prove_length_leaf(
