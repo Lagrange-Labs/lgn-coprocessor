@@ -6,9 +6,6 @@ use mp2_v1::values_extraction;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
-use crate::types::v1::preprocessing::db_tasks::CellFullInput;
-use crate::types::v1::preprocessing::db_tasks::CellLeafInput;
-use crate::types::v1::preprocessing::db_tasks::CellPartialInput;
 use crate::types::v1::preprocessing::db_tasks::DatabaseType;
 use crate::types::v1::preprocessing::db_tasks::IvcInput;
 use crate::types::v1::preprocessing::db_tasks::RowLeafInput;
@@ -179,70 +176,18 @@ impl WorkerTaskType {
         )))
     }
 
-    pub fn db_cell_leaf(
+    pub fn db_cells_tree(
         table_id: TableId,
         row_id: String,
         cell_id: usize,
-        identifier: Identifier,
-        value: U256,
-        is_multiplier: bool,
+        circuit_input: verifiable_db::cells_tree::CircuitInput,
     ) -> WorkerTaskType {
-        WorkerTaskType::Database(DatabaseType::Cell(db_tasks::DbCellType::Leaf(
-            CellLeafInput {
-                table_id,
-                row_id,
-                cell_id,
-                identifier,
-                value,
-                is_multiplier,
-            },
-        )))
-    }
-
-    pub fn db_cell_partial(
-        table_id: TableId,
-        row_id: String,
-        cell_id: usize,
-        identifier: Identifier,
-        value: U256,
-        is_multiplier: bool,
-        child_location: db_keys::ProofKey,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Database(DatabaseType::Cell(db_tasks::DbCellType::Partial(
-            CellPartialInput {
-                table_id,
-                row_id,
-                cell_id,
-                identifier,
-                value,
-                is_multiplier,
-                child_location,
-                child_proof: vec![],
-            },
-        )))
-    }
-
-    pub fn db_cell_full(
-        table_id: TableId,
-        row_id: String,
-        cell_id: usize,
-        identifier: Identifier,
-        value: U256,
-        is_multiplier: bool,
-        child_locations: Vec<db_keys::ProofKey>,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Database(DatabaseType::Cell(db_tasks::DbCellType::Full(
-            CellFullInput {
-                table_id,
-                row_id,
-                cell_id,
-                identifier,
-                value,
-                is_multiplier,
-                child_locations,
-                child_proofs: vec![],
-            },
-        )))
+        WorkerTaskType::Database(DatabaseType::Cell {
+            table_id,
+            row_id,
+            cell_id,
+            circuit_input,
+        })
     }
 
     pub fn db_row_leaf(
