@@ -55,9 +55,6 @@ pub struct MessageEnvelope<T> {
     /// process queries relatively fast.
     pub rtt: u64,
 
-    /// How much work prover has to do
-    pub gas: Option<u64>,
-
     /// Details of the task to be executed.
     pub inner: T,
 
@@ -90,7 +87,6 @@ impl<T> MessageEnvelope<T> {
             query_id,
             inner,
             rtt: u64::MAX,
-            gas: None,
             task_id,
             db_task_id: None,
             version,
