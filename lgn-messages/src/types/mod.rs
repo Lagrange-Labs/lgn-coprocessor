@@ -48,13 +48,6 @@ pub struct MessageEnvelope<T> {
     /// Task id referenced in the DB tasks table
     pub db_task_id: Option<i32>,
 
-    /// Estimate how long it takes this task to finish.
-    /// This includes may factors like: redis queue current length, workers count, parallel queries
-    /// count, etc. Ideally assigned by an "intelligent" algorithm. Not important for now
-    /// though. Might become relevant then we have clients waiting for results, and we can
-    /// process queries relatively fast.
-    pub rtt: u64,
-
     /// Details of the task to be executed.
     pub inner: T,
 
@@ -86,7 +79,6 @@ impl<T> MessageEnvelope<T> {
         Self {
             query_id,
             inner,
-            rtt: u64::MAX,
             task_id,
             db_task_id: None,
             version,
