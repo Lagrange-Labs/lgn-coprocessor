@@ -319,10 +319,7 @@ async fn run_worker(
 
 #[tracing::instrument(
     skip(provers_manager, envelope),
-    fields(
-        query_id = envelope.query_id,
-        task_id = envelope.task_id,
-    )
+    fields(task_id = envelope.task_id)
 )]
 fn process_downstream_payload(
     provers_manager: &ProversManager,
@@ -343,7 +340,7 @@ fn process_downstream_payload(
         ));
     }
 
-    let id = envelope.id().clone();
+    let id = envelope.task_id().to_owned();
     match std::panic::catch_unwind(|| provers_manager.delegate_proving(envelope)) {
         Ok(result) => {
             match result {
@@ -408,7 +405,7 @@ async fn process_message_from_gateway(
                     )
                 })
                 .and_then(|message_envelope| {
-                    info!("processing task {}", message_envelope.id());
+                    info!("Processing task. task_id: {}", message_envelope.task_id());
                     process_downstream_payload(provers_manager, message_envelope, mp2_requirement)
                 })
         })
@@ -439,9 +436,12 @@ async fn process_message_from_gateway(
     };
     outbound.send(outbound_msg).await?;
 
-    counter!("zkmr_worker_grpc_messages_sent_total",
-                                    "message_type" => "text")
+    counter!(
+        "zkmr_worker_grpc_messages_sent_total",
+        "message_type" => "text",
+    )
     .increment(1);
+
     Ok(())
 }
 

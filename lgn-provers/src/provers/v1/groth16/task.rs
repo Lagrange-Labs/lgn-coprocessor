@@ -26,19 +26,19 @@ impl<GP: Prover> LgnProver for Groth16<GP> {
             TaskType::V1Query(..) => panic!("Unsupported task type. task_type: V1Query"),
             TaskType::V1Groth16(revelation_proof) => {
                 let now = Instant::now();
-                let key = ProofKey(envelope.query_id.to_string()).to_string();
+                let key = ProofKey(envelope.task_id.to_string()).to_string();
                 let proof = self
                     .prover
                     .prove(revelation_proof.as_slice())
                     .with_context(|| {
                         format!(
-                            "Failed to generate the Groth16 proof: query_id = {}, task_id = {}",
-                            envelope.query_id, envelope.task_id,
+                            "Failed to generate the Groth16 proof. task_id = {}",
+                            envelope.task_id,
                         )
                     })?;
                 debug!(
-                    "Finish generating the Groth16 proof: query_id = {}, task_id = {}",
-                    envelope.query_id, envelope.task_id,
+                    "Finish generating the Groth16 proof. task_id = {}",
+                    envelope.task_id,
                 );
 
                 info!(
@@ -52,11 +52,8 @@ impl<GP: Prover> LgnProver for Groth16<GP> {
                 let reply = WorkerReply::new(Some(proof), ProofCategory::Querying);
 
                 let reply_type = ReplyType::V1Groth16(reply);
-                let reply_envelope = MessageReplyEnvelope::new(
-                    envelope.query_id.clone(),
-                    envelope.task_id.clone(),
-                    reply_type,
-                );
+                let reply_envelope =
+                    MessageReplyEnvelope::new(envelope.task_id.clone(), reply_type);
                 Ok(reply_envelope)
             },
         }

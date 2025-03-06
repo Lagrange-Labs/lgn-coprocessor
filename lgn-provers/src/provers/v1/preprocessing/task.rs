@@ -73,7 +73,6 @@ impl<P: PreprocessingProver> LgnProver for Preprocessing<P> {
         &self,
         envelope: MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
-        let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
 
         match envelope.inner {
@@ -93,7 +92,7 @@ impl<P: PreprocessingProver> LgnProver for Preprocessing<P> {
                     Some((key, result)),
                     ProofCategory::Querying,
                 ));
-                Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
+                Ok(MessageReplyEnvelope::new(task_id, reply_type))
             },
             TaskType::V1Query(..) => {
                 panic!("Unsupported task type. task_type: V1Query")

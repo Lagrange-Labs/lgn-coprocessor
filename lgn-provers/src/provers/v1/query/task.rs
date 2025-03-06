@@ -26,7 +26,6 @@ impl<P: StorageQueryProver> LgnProver for Querying<P> {
         &self,
         envelope: MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
-        let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
 
         if let TaskType::V1Query(ref task_type) = envelope.inner {
@@ -36,7 +35,7 @@ impl<P: StorageQueryProver> LgnProver for Querying<P> {
                 Some((key.to_string(), result)),
                 ProofCategory::Querying,
             ));
-            Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
+            Ok(MessageReplyEnvelope::new(task_id, reply_type))
         } else {
             bail!("Received unexpected task: {:?}", envelope);
         }

@@ -39,52 +39,45 @@ pub enum ReplyType {
 
 #[derive(Clone, PartialEq, Deserialize, Serialize)]
 pub struct MessageEnvelope<T> {
-    /// Query id is unique for each query and shared between all its tasks
-    pub query_id: String,
-
-    /// Task id is unique for each task and helps to map replies to tasks
+    /// Identifier to relate proofs with tasks.
     pub task_id: String,
 
-    /// Details of the task to be executed.
+    /// The task to be proved.
     pub inner: T,
 
-    /// The proving system version
+    /// The proving system version target version.
+    ///
+    /// Used to check the worker is compatible with the task.
     pub version: String,
 }
+
 impl<T> std::fmt::Debug for MessageEnvelope<T> {
     fn fmt(
         &self,
         f: &mut Formatter<'_>,
     ) -> std::fmt::Result {
-        write!(f, "MSG<{}>", self.id())
+        f.debug_struct("MessageEnvelope")
+            .field("task_id", &self.task_id)
+            .field("version", &self.version)
+            .finish_non_exhaustive()
     }
 }
 
 impl<T> MessageEnvelope<T> {
     pub fn new(
-        query_id: String,
         task_id: String,
         inner: T,
         version: String,
     ) -> Self {
         Self {
-            query_id,
             inner,
             task_id,
             version,
         }
     }
 
-    pub fn query_id(&self) -> &str {
-        &self.query_id
-    }
-
     pub fn task_id(&self) -> &str {
         &self.task_id
-    }
-
-    pub fn id(&self) -> String {
-        format!("{}-{}", self.query_id, self.task_id)
     }
 
     pub fn inner(&self) -> &T {
@@ -98,45 +91,41 @@ impl<T> MessageEnvelope<T> {
 
 #[derive(Clone, PartialEq, Deserialize, Serialize)]
 pub struct MessageReplyEnvelope<T> {
-    /// Query id is unique for each query and shared between all its tasks
-    pub query_id: String,
-
-    /// Task id is unique for each task and helps to map replies to tasks
+    /// The original task id.
     pub task_id: String,
 
+    /// The proof result.
     inner: T,
 
+    /// Error details, if any.
     error: Option<WorkerError>,
 }
+
 impl<T> std::fmt::Debug for MessageReplyEnvelope<T> {
     fn fmt(
         &self,
         f: &mut Formatter<'_>,
     ) -> std::fmt::Result {
-        write!(f, "REPLY<{}, {}>", self.task_id, self.query_id)
+        f.debug_struct("MessageReplyEnvelope")
+            .field("task_id", &self.task_id)
+            .field("error", &self.error)
+            .finish_non_exhaustive()
     }
 }
 
 impl<T> MessageReplyEnvelope<T> {
     pub fn new(
-        query_id: String,
         task_id: String,
         inner: T,
     ) -> Self {
         Self {
-            query_id,
             task_id,
             inner,
             error: None,
         }
     }
 
-    pub fn id(&self) -> String {
-        format!("{}-{}", self.query_id, self.task_id)
-    }
-
-    /// Flatten `inner`, returning either Ok(successful_proof) or
-    /// Err(WorkerError)
+    /// Return the proof or the error if one occured.
     pub fn inner(&self) -> Result<&T, &WorkerError> {
         match self.error.as_ref() {
             None => Ok(&self.inner),
@@ -147,10 +136,6 @@ impl<T> MessageReplyEnvelope<T> {
     /// Return the proof in this envelope, be it successful or not.
     pub fn content(&self) -> &T {
         &self.inner
-    }
-
-    pub fn query_id(&self) -> &str {
-        &self.query_id
     }
 
     pub fn task_id(&self) -> &str {
