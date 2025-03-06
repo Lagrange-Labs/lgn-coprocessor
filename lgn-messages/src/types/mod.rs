@@ -6,8 +6,6 @@ use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use thiserror::Error;
 
-use crate::routing::RoutingKey;
-
 pub mod v1;
 
 const REQUIRED_STAKE_SMALL_USD: Stake = 98777;
@@ -60,9 +58,6 @@ pub struct MessageEnvelope<T> {
     /// How much work prover has to do
     pub gas: Option<u64>,
 
-    /// How and where to route the message.
-    pub routing_key: RoutingKey,
-
     /// Details of the task to be executed.
     pub inner: T,
 
@@ -89,7 +84,6 @@ impl<T> MessageEnvelope<T> {
         query_id: String,
         task_id: String,
         inner: T,
-        routing_key: RoutingKey,
         version: String,
     ) -> Self {
         Self {
@@ -97,7 +91,6 @@ impl<T> MessageEnvelope<T> {
             inner,
             rtt: u64::MAX,
             gas: None,
-            routing_key,
             task_id,
             db_task_id: None,
             version,
@@ -246,17 +239,6 @@ impl TaskDifficulty {
             TaskDifficulty::Large => REQUIRED_STAKE_LARGE_USD,
 
             _ => 0,
-        }
-    }
-
-    /// Returns the minimal worker class required to process a task of the given queue
-    pub fn from_queue(domain: &str) -> Self {
-        let domain = domain.split('_').next().expect("invalid routing key");
-        match domain {
-            v1::preprocessing::ROUTING_DOMAIN => TaskDifficulty::Medium,
-            v1::query::ROUTING_DOMAIN => TaskDifficulty::Small,
-            v1::groth16::ROUTING_DOMAIN => TaskDifficulty::Large,
-            _ => panic!("unknown routing domain"),
         }
     }
 }

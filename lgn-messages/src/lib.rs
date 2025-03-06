@@ -1,4 +1,3 @@
-pub mod routing;
 pub mod types;
 
 pub type BlockNr = u64;
