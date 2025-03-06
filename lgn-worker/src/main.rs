@@ -321,21 +321,21 @@ async fn run_worker(
     }
 }
 
+#[tracing::instrument(
+    skip(provers_manager, envelope),
+    fields(
+        query_id = envelope.query_id,
+        task_id = envelope.task_id,
+        db_id = ?envelope.db_task_id,
+    )
+)]
 fn process_downstream_payload(
     provers_manager: &ProversManager,
     envelope: MessageEnvelope<TaskType>,
     mp2_requirement: &semver::VersionReq,
 ) -> Result<MessageReplyEnvelope<ReplyType>, String> {
-    let span = span!(
-        Level::INFO,
-        "Received Task",
-        "query_id" = envelope.query_id,
-        "task_id" = envelope.task_id,
-        "db_id" = ?envelope.db_task_id,
-    );
-    let _guard = span.enter();
+    info!("Received Task. task_id: {}", envelope.task_id);
 
-    trace!("Received task. envelope: {:?}", envelope);
     counter!("zkmr_worker_tasks_received_total").increment(1);
 
     let envelope_version = semver::Version::parse(&envelope.version)
