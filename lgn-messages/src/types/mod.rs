@@ -30,14 +30,14 @@ pub enum TaskType {
     V1Groth16(Vec<u8>),
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum ReplyType {
     V1Preprocessing(WorkerReply),
     V1Query(WorkerReply),
     V1Groth16(WorkerReply),
 }
 
-#[derive(Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct MessageEnvelope<T> {
     /// Identifier to relate proofs with tasks.
     pub task_id: String,
@@ -89,7 +89,7 @@ impl<T> MessageEnvelope<T> {
     }
 }
 
-#[derive(Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct MessageReplyEnvelope<T> {
     /// The original task id.
     pub task_id: String,
