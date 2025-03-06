@@ -24,11 +24,11 @@ pub struct Querying<P> {
 impl<P: StorageQueryProver> LgnProver for Querying<P> {
     fn run(
         &self,
-        envelope: MessageEnvelope<TaskType>,
+        envelope: MessageEnvelope,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let task_id = envelope.task_id.clone();
 
-        if let TaskType::V1Query(ref task_type) = envelope.inner {
+        if let TaskType::V1Query(ref task_type) = envelope.task {
             let key: ProofKey = task_type.into();
             let result = self.run_inner(task_type)?;
             let reply_type = ReplyType::V1Query(WorkerReply::new(

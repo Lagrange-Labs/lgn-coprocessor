@@ -17,9 +17,9 @@ use crate::provers::LgnProver;
 impl<GP: Prover> LgnProver for Groth16<GP> {
     fn run(
         &self,
-        envelope: MessageEnvelope<TaskType>,
+        envelope: MessageEnvelope,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
-        match envelope.inner() {
+        match envelope.task() {
             TaskType::V1Preprocessing(..) => {
                 panic!("Unsupported task type. task_type: V1Preprocessing")
             },

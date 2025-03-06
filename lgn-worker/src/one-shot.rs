@@ -2,7 +2,6 @@ use anyhow::*;
 use checksum::fetch_checksums;
 use clap::Parser;
 use lgn_messages::types::MessageEnvelope;
-use lgn_messages::types::TaskType;
 use manager::v1::register_v1_provers;
 use manager::ProversManager;
 use tracing::error;
@@ -85,8 +84,7 @@ async fn main() -> Result<()> {
     let envelope = std::fs::read_to_string(&cli.input)
         .with_context(|| format!("failed to open `{}`", cli.input))
         .and_then(|content| {
-            serde_json::from_str::<MessageEnvelope<TaskType>>(&content)
-                .context("failed to parse input JSON")
+            serde_json::from_str::<MessageEnvelope>(&content).context("failed to parse input JSON")
         })?;
 
     provers_manager

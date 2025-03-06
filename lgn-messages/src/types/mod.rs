@@ -38,12 +38,12 @@ pub enum ReplyType {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct MessageEnvelope<T> {
+pub struct MessageEnvelope {
     /// Identifier to relate proofs with tasks.
     pub task_id: String,
 
     /// The task to be proved.
-    pub inner: T,
+    pub task: TaskType,
 
     /// The proving system version target version.
     ///
@@ -51,7 +51,7 @@ pub struct MessageEnvelope<T> {
     pub version: String,
 }
 
-impl<T> std::fmt::Debug for MessageEnvelope<T> {
+impl std::fmt::Debug for MessageEnvelope {
     fn fmt(
         &self,
         f: &mut Formatter<'_>,
@@ -63,29 +63,27 @@ impl<T> std::fmt::Debug for MessageEnvelope<T> {
     }
 }
 
-impl<T> MessageEnvelope<T> {
+impl MessageEnvelope {
     pub fn new(
         task_id: String,
-        inner: T,
+        task: TaskType,
         version: String,
     ) -> Self {
         Self {
-            inner,
+            task,
             task_id,
             version,
         }
     }
 
+    /// Returns the task identifier.
     pub fn task_id(&self) -> &str {
         &self.task_id
     }
 
-    pub fn inner(&self) -> &T {
-        &self.inner
-    }
-
-    pub fn inner_mut(&mut self) -> &mut T {
-        &mut self.inner
+    /// Returns this message's task.
+    pub fn task(&self) -> &TaskType {
+        &self.task
     }
 }
 

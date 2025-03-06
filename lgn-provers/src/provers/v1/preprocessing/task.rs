@@ -71,11 +71,11 @@ pub struct Preprocessing<P> {
 impl<P: PreprocessingProver> LgnProver for Preprocessing<P> {
     fn run(
         &self,
-        envelope: MessageEnvelope<TaskType>,
+        envelope: MessageEnvelope,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let task_id = envelope.task_id.clone();
 
-        match envelope.inner {
+        match envelope.task {
             TaskType::V1Preprocessing(task) => {
                 let key = match &task.task_type {
                     WorkerTaskType::Extraction(_) => {
