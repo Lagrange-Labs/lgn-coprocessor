@@ -322,7 +322,6 @@ async fn run_worker(
     fields(
         query_id = envelope.query_id,
         task_id = envelope.task_id,
-        db_id = ?envelope.db_task_id,
     )
 )]
 fn process_downstream_payload(

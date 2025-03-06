@@ -45,9 +45,6 @@ pub struct MessageEnvelope<T> {
     /// Task id is unique for each task and helps to map replies to tasks
     pub task_id: String,
 
-    /// Task id referenced in the DB tasks table
-    pub db_task_id: Option<i32>,
-
     /// Details of the task to be executed.
     pub inner: T,
 
@@ -59,13 +56,7 @@ impl<T> std::fmt::Debug for MessageEnvelope<T> {
         &self,
         f: &mut Formatter<'_>,
     ) -> std::fmt::Result {
-        write!(
-            f,
-            "MSG#{:?}<{}, {}>",
-            self.db_task_id.unwrap_or_default(),
-            self.task_id,
-            self.query_id
-        )
+        write!(f, "MSG<{}>", self.id())
     }
 }
 
@@ -80,7 +71,6 @@ impl<T> MessageEnvelope<T> {
             query_id,
             inner,
             task_id,
-            db_task_id: None,
             version,
         }
     }
