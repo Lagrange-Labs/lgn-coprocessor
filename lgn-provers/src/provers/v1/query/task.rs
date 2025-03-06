@@ -21,7 +21,7 @@ pub struct Querying<P> {
     prover: P,
 }
 
-impl<P: StorageQueryProver> LgnProver<TaskType, ReplyType> for Querying<P> {
+impl<P: StorageQueryProver> LgnProver for Querying<P> {
     fn run(
         &self,
         envelope: MessageEnvelope<TaskType>,

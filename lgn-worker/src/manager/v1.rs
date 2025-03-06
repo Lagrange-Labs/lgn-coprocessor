@@ -2,16 +2,14 @@ use std::collections::HashMap;
 
 use anyhow::*;
 use lgn_messages::types::ProverType;
-use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskDifficulty;
-use lgn_messages::types::TaskType;
 
 use crate::config::Config;
 use crate::manager::ProversManager;
 
 pub(crate) fn register_v1_provers(
     config: &Config,
-    manager: &mut ProversManager<TaskType, ReplyType>,
+    manager: &mut ProversManager,
     checksums: &HashMap<String, blake3::Hash>,
 ) -> Result<()> {
     if config.worker.instance_type >= TaskDifficulty::Small {

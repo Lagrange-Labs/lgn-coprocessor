@@ -1,11 +1,13 @@
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
+use lgn_messages::types::ReplyType;
+use lgn_messages::types::TaskType;
 
 pub mod v1;
 
 /// The prover trait that accepts [`MessageEnvelope`] and is able to process tasks of type
 /// [`TaskType`].
-pub trait LgnProver<T, R> {
+pub trait LgnProver {
     /// Run the prover with the given [`MessageEnvelope`] and return the result as a
     /// [`MessageReplyEnvelope`].
     ///
@@ -16,6 +18,6 @@ pub trait LgnProver<T, R> {
     /// The result of processing the task as a [`MessageReplyEnvelope`].
     fn run(
         &self,
-        envelope: MessageEnvelope<T>,
-    ) -> anyhow::Result<MessageReplyEnvelope<R>>;
+        envelope: MessageEnvelope<TaskType>,
+    ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>>;
 }

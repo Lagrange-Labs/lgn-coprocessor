@@ -68,7 +68,7 @@ pub struct Preprocessing<P> {
     prover: P,
 }
 
-impl<P: PreprocessingProver> LgnProver<TaskType, ReplyType> for Preprocessing<P> {
+impl<P: PreprocessingProver> LgnProver for Preprocessing<P> {
     fn run(
         &self,
         envelope: MessageEnvelope<TaskType>,

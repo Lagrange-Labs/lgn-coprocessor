@@ -2,7 +2,6 @@ use anyhow::*;
 use checksum::fetch_checksums;
 use clap::Parser;
 use lgn_messages::types::MessageEnvelope;
-use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use manager::v1::register_v1_provers;
 use manager::ProversManager;
@@ -77,14 +76,11 @@ async fn main() -> Result<()> {
     config.validate();
     let checksums = fetch_checksums(config.public_params.checksum_file_url()).await?;
 
-    info!("Initializing the provers... ");
-    let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-    info!("done.");
-
-    info!("Registering the provers... ");
+    info!("Registering the provers");
+    let mut provers_manager = ProversManager::new();
     register_v1_provers(&config, &mut provers_manager, &checksums)
         .context("while registering provers")?;
-    info!("done.");
+    info!("Finished registering the provers.");
 
     let envelope = std::fs::read_to_string(&cli.input)
         .with_context(|| format!("failed to open `{}`", cli.input))
