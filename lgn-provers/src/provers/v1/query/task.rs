@@ -25,7 +25,7 @@ impl<P: StorageQueryProver> LgnProver for Querying<P> {
     fn run(
         &self,
         envelope: MessageEnvelope,
-    ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
+    ) -> anyhow::Result<MessageReplyEnvelope> {
         let task_id = envelope.task_id.clone();
 
         if let TaskType::V1Query(ref task_type) = envelope.task {

@@ -8,7 +8,6 @@ use anyhow::bail;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProverType;
-use lgn_messages::types::ReplyType;
 use lgn_messages::types::ToProverType;
 use lgn_provers::provers::LgnProver;
 use metrics::counter;
@@ -55,7 +54,7 @@ impl ProversManager {
     pub(crate) fn delegate_proving(
         &self,
         envelope: MessageEnvelope,
-    ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
+    ) -> anyhow::Result<MessageReplyEnvelope> {
         let prover_type: ProverType = envelope.task.to_prover_type();
 
         counter!(

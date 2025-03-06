@@ -72,7 +72,7 @@ impl<P: PreprocessingProver> LgnProver for Preprocessing<P> {
     fn run(
         &self,
         envelope: MessageEnvelope,
-    ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
+    ) -> anyhow::Result<MessageReplyEnvelope> {
         let task_id = envelope.task_id.clone();
 
         match envelope.task {

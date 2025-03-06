@@ -18,7 +18,7 @@ impl<GP: Prover> LgnProver for Groth16<GP> {
     fn run(
         &self,
         envelope: MessageEnvelope,
-    ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
+    ) -> anyhow::Result<MessageReplyEnvelope> {
         match envelope.task() {
             TaskType::V1Preprocessing(..) => {
                 panic!("Unsupported task type. task_type: V1Preprocessing")

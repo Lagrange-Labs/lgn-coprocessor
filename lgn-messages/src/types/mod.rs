@@ -88,18 +88,18 @@ impl MessageEnvelope {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct MessageReplyEnvelope<T> {
+pub struct MessageReplyEnvelope {
     /// The original task id.
     pub task_id: String,
 
     /// The proof result.
-    inner: T,
+    reply: ReplyType,
 
     /// Error details, if any.
     error: Option<WorkerError>,
 }
 
-impl<T> std::fmt::Debug for MessageReplyEnvelope<T> {
+impl std::fmt::Debug for MessageReplyEnvelope {
     fn fmt(
         &self,
         f: &mut Formatter<'_>,
@@ -111,31 +111,32 @@ impl<T> std::fmt::Debug for MessageReplyEnvelope<T> {
     }
 }
 
-impl<T> MessageReplyEnvelope<T> {
+impl MessageReplyEnvelope {
     pub fn new(
         task_id: String,
-        inner: T,
+        reply: ReplyType,
     ) -> Self {
         Self {
             task_id,
-            inner,
+            reply,
             error: None,
         }
     }
 
     /// Return the proof or the error if one occured.
-    pub fn inner(&self) -> Result<&T, &WorkerError> {
+    pub fn inner(&self) -> Result<&ReplyType, &WorkerError> {
         match self.error.as_ref() {
-            None => Ok(&self.inner),
+            None => Ok(&self.reply),
             Some(t) => Err(t),
         }
     }
 
-    /// Return the proof in this envelope, be it successful or not.
-    pub fn content(&self) -> &T {
-        &self.inner
+    /// Return the reply.
+    pub fn reply(&self) -> &ReplyType {
+        &self.reply
     }
 
+    /// Returns the task identifier.
     pub fn task_id(&self) -> &str {
         &self.task_id
     }
