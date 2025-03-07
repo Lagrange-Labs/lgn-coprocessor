@@ -1,7 +1,6 @@
 use std::fmt::Display;
 use std::fmt::Formatter;
 
-use derive_debug_plus::Dbg;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use thiserror::Error;
@@ -128,12 +127,6 @@ impl MessageReplyEnvelope {
     pub fn task_id(&self) -> &str {
         &self.task_id
     }
-}
-
-#[derive(Copy, Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
-pub enum ProofCategory {
-    Indexing,
-    Querying,
 }
 
 #[derive(Error, Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
