@@ -1,11 +1,20 @@
 use std::collections::HashMap;
 
+use anyhow::bail;
 use anyhow::Context;
+use lgn_messages::types::v1::query::tasks::Hydratable;
+use lgn_messages::types::v1::query::tasks::HydratableMatchingRow;
 use lgn_messages::types::v1::query::tasks::MatchingRowInput;
 use lgn_messages::types::v1::query::tasks::NonExistenceInput;
+use lgn_messages::types::v1::query::tasks::ProofInputKind;
+use lgn_messages::types::v1::query::tasks::QueryStep;
+use lgn_messages::types::v1::query::tasks::RevelationInput;
 use lgn_messages::types::v1::query::tasks::RowsChunkInput;
+use lgn_messages::types::v1::query::WorkerTaskType;
 use lgn_messages::types::v1::query::NUM_CHUNKS;
 use lgn_messages::types::v1::query::NUM_ROWS;
+use lgn_messages::types::MessageReplyEnvelope;
+use lgn_messages::types::TaskType;
 use metrics::histogram;
 use parsil::assembler::DynamicCircuitPis;
 use tracing::debug;
@@ -18,7 +27,6 @@ use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placehold
 use verifiable_db::revelation;
 use verifiable_db::revelation::api::MatchingRow;
 
-use super::prover::StorageQueryProver;
 use super::INDEX_TREE_MAX_DEPTH;
 use super::MAX_NUM_COLUMNS;
 use super::MAX_NUM_ITEMS_PER_OUTPUT;
@@ -28,8 +36,9 @@ use super::MAX_NUM_PREDICATE_OPS;
 use super::MAX_NUM_RESULT_OPS;
 use super::ROW_TREE_MAX_DEPTH;
 use crate::params;
+use crate::provers::LgnProver;
 
-pub(crate) struct EuclidQueryProver {
+pub struct EuclidQueryProver {
     params: QueryParameters<
         NUM_CHUNKS,
         NUM_ROWS,
@@ -45,7 +54,6 @@ pub(crate) struct EuclidQueryProver {
 }
 
 impl EuclidQueryProver {
-    #[allow(dead_code)]
     pub fn new(
         params: QueryParameters<
             NUM_CHUNKS,
@@ -63,7 +71,7 @@ impl EuclidQueryProver {
         Self { params }
     }
 
-    pub(crate) fn init(
+    pub fn init(
         url: &str,
         dir: &str,
         file: &str,
@@ -77,7 +85,7 @@ impl EuclidQueryProver {
     }
 }
 
-impl StorageQueryProver for EuclidQueryProver {
+impl EuclidQueryProver {
     fn prove_universal_circuit(
         &self,
         input: MatchingRowInput,
@@ -324,5 +332,125 @@ impl StorageQueryProver for EuclidQueryProver {
         debug!("revelation size in kB: {}", proof.len() / 1024);
 
         Ok(proof)
+    }
+
+    pub fn run_inner(
+        &self,
+        task_type: &WorkerTaskType,
+    ) -> anyhow::Result<Vec<u8>> {
+        let WorkerTaskType::Query(ref input) = task_type;
+
+        let pis: DynamicCircuitPis = serde_json::from_slice(&input.pis)?;
+
+        let final_proof = match &input.query_step {
+            QueryStep::Tabular(rows_inputs, revelation_input) => {
+                let RevelationInput::Tabular {
+                    placeholders,
+                    indexing_proof,
+                    matching_rows,
+                    column_ids,
+                    limit,
+                    offset,
+                    ..
+                } = revelation_input
+                else {
+                    panic!("Wrong RevelationInput for QueryStep::Tabular");
+                };
+
+                let mut matching_rows_proofs = vec![];
+                for (row_input, mut matching_row) in rows_inputs.iter().zip(matching_rows.clone()) {
+                    let proof = self.prove_universal_circuit(row_input.clone(), &pis)?;
+
+                    if let Hydratable::Dehydrated(_) = &matching_row.proof {
+                        matching_row.proof.hydrate(proof);
+                    }
+
+                    let matching_row_proof = HydratableMatchingRow::into_matching_row(matching_row);
+                    matching_rows_proofs.push(matching_row_proof);
+                }
+
+                self.prove_tabular_revelation(
+                    &pis,
+                    placeholders.clone().into(),
+                    indexing_proof.clone_proof(),
+                    matching_rows_proofs,
+                    column_ids,
+                    *limit,
+                    *offset,
+                )?
+            },
+            QueryStep::Aggregation(input) => {
+                match &input.input_kind {
+                    ProofInputKind::RowsChunk(rc) => self.prove_row_chunks(rc.clone(), &pis),
+                    ProofInputKind::ChunkAggregation(ca) => {
+                        let chunks_proofs = ca
+                            .child_proofs
+                            .iter()
+                            .map(|proof| proof.clone_proof())
+                            .collect::<Vec<_>>();
+                        self.prove_chunk_aggregation(&chunks_proofs)
+                    },
+                    ProofInputKind::NonExistence(ne) => self.prove_non_existence(*ne.clone(), &pis),
+                }?
+            },
+            QueryStep::Revelation(input) => {
+                match input {
+                    RevelationInput::Aggregated {
+                        placeholders,
+                        indexing_proof,
+                        query_proof,
+                        ..
+                    } => {
+                        self.prove_aggregated_revelation(
+                            &pis,
+                            placeholders.clone().into(),
+                            query_proof.clone_proof(),
+                            indexing_proof.clone_proof(),
+                        )
+                    },
+                    RevelationInput::Tabular {
+                        placeholders,
+                        indexing_proof,
+                        matching_rows,
+                        column_ids,
+                        limit,
+                        offset,
+                        ..
+                    } => {
+                        self.prove_tabular_revelation(
+                            &pis,
+                            placeholders.clone().into(),
+                            indexing_proof.clone_proof(),
+                            matching_rows
+                                .iter()
+                                .cloned()
+                                .map(HydratableMatchingRow::into_matching_row)
+                                .collect(),
+                            column_ids,
+                            *limit,
+                            *offset,
+                        )
+                    },
+                }?
+            },
+        };
+
+        Ok(final_proof)
+    }
+}
+
+impl LgnProver for EuclidQueryProver {
+    fn run(
+        &self,
+        envelope: lgn_messages::types::MessageEnvelope,
+    ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
+        let task_id = envelope.task_id.clone();
+
+        if let TaskType::V1Query(ref task_type) = envelope.task {
+            let proof = self.run_inner(task_type)?;
+            Ok(MessageReplyEnvelope::new(task_id, proof))
+        } else {
+            bail!("Received unexpected task: {:?}", envelope);
+        }
     }
 }
