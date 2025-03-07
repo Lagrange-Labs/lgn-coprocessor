@@ -38,36 +38,38 @@ use super::ROW_TREE_MAX_DEPTH;
 use crate::params;
 use crate::provers::LgnProver;
 
+pub type ConcreteCircuitInput = QueryCircuitInput<
+    NUM_CHUNKS,
+    NUM_ROWS,
+    ROW_TREE_MAX_DEPTH,
+    INDEX_TREE_MAX_DEPTH,
+    MAX_NUM_COLUMNS,
+    MAX_NUM_PREDICATE_OPS,
+    MAX_NUM_PREDICATE_OPS,
+    MAX_NUM_OUTPUTS,
+    MAX_NUM_ITEMS_PER_OUTPUT,
+    MAX_NUM_PLACEHOLDERS,
+>;
+
+pub type ConcreteQueryParameters = QueryParameters<
+    NUM_CHUNKS,
+    NUM_ROWS,
+    ROW_TREE_MAX_DEPTH,
+    INDEX_TREE_MAX_DEPTH,
+    MAX_NUM_COLUMNS,
+    MAX_NUM_PREDICATE_OPS,
+    MAX_NUM_RESULT_OPS,
+    MAX_NUM_OUTPUTS,
+    MAX_NUM_ITEMS_PER_OUTPUT,
+    MAX_NUM_PLACEHOLDERS,
+>;
+
 pub struct EuclidQueryProver {
-    params: QueryParameters<
-        NUM_CHUNKS,
-        NUM_ROWS,
-        ROW_TREE_MAX_DEPTH,
-        INDEX_TREE_MAX_DEPTH,
-        MAX_NUM_COLUMNS,
-        MAX_NUM_PREDICATE_OPS,
-        MAX_NUM_RESULT_OPS,
-        MAX_NUM_OUTPUTS,
-        MAX_NUM_ITEMS_PER_OUTPUT,
-        MAX_NUM_PLACEHOLDERS,
-    >,
+    params: ConcreteQueryParameters,
 }
 
 impl EuclidQueryProver {
-    pub fn new(
-        params: QueryParameters<
-            NUM_CHUNKS,
-            NUM_ROWS,
-            ROW_TREE_MAX_DEPTH,
-            INDEX_TREE_MAX_DEPTH,
-            MAX_NUM_COLUMNS,
-            MAX_NUM_PREDICATE_OPS,
-            MAX_NUM_RESULT_OPS,
-            MAX_NUM_OUTPUTS,
-            MAX_NUM_ITEMS_PER_OUTPUT,
-            MAX_NUM_PLACEHOLDERS,
-        >
-    ) -> Self {
+    pub fn new(params: ConcreteQueryParameters) -> Self {
         Self { params }
     }
 
@@ -105,7 +107,7 @@ impl EuclidQueryProver {
         )
         .context("while initializing the universal circuit")?;
 
-        let input = QueryCircuitInput::Query(circuit_input);
+        let input: ConcreteCircuitInput = QueryCircuitInput::Query(circuit_input);
         let proof = self
             .params
             .generate_proof(input)
@@ -146,7 +148,7 @@ impl EuclidQueryProver {
         )
         .context("while initializing the rows-chunk circuit")?;
 
-        let input = QueryCircuitInput::Query(input);
+        let input: ConcreteCircuitInput = QueryCircuitInput::Query(input);
 
         let proof = self
             .params
@@ -179,7 +181,7 @@ impl EuclidQueryProver {
         let input = CircuitInput::new_chunk_aggregation_input(chunks_proofs)
             .context("while initializing the chunk-aggregation circuit")?;
 
-        let input = QueryCircuitInput::Query(input);
+        let input: ConcreteCircuitInput = QueryCircuitInput::Query(input);
 
         let proof = self
             .params
@@ -222,7 +224,7 @@ impl EuclidQueryProver {
         )
         .context("while initializing the non-existence circuit")?;
 
-        let input = QueryCircuitInput::Query(input);
+        let input: ConcreteCircuitInput = QueryCircuitInput::Query(input);
 
         let proof = self
             .params
@@ -264,7 +266,7 @@ impl EuclidQueryProver {
         )
         .context("while initializing the (empty) revelation circuit")?;
 
-        let input = QueryCircuitInput::Revelation(circuit_input);
+        let input: ConcreteCircuitInput = QueryCircuitInput::Revelation(circuit_input);
 
         let proof = self
             .params
@@ -312,7 +314,7 @@ impl EuclidQueryProver {
         )
         .context("while initializing the (empty) revelation circuit")?;
 
-        let input = QueryCircuitInput::Revelation(circuit_input);
+        let input: ConcreteCircuitInput = QueryCircuitInput::Revelation(circuit_input);
 
         let proof = self
             .params
