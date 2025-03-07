@@ -9,10 +9,6 @@ use crate::Proof;
 
 pub mod v1;
 
-const REQUIRED_STAKE_SMALL_USD: Stake = 98777;
-const REQUIRED_STAKE_MEDIUM_USD: Stake = 98777;
-const REQUIRED_STAKE_LARGE_USD: Stake = 169111;
-
 pub type HashOutput = [u8; 32];
 
 #[derive(Deserialize, Serialize)]
@@ -154,19 +150,6 @@ pub enum TaskDifficulty {
     Medium,
     /// Accept L tasks
     Large,
-}
-
-impl TaskDifficulty {
-    /// Returns the stake required in order to run such a task
-    pub fn required_stake(&self) -> Stake {
-        match self {
-            TaskDifficulty::Small => REQUIRED_STAKE_SMALL_USD,
-            TaskDifficulty::Medium => REQUIRED_STAKE_MEDIUM_USD,
-            TaskDifficulty::Large => REQUIRED_STAKE_LARGE_USD,
-
-            _ => 0,
-        }
-    }
 }
 
 impl Display for TaskDifficulty {
