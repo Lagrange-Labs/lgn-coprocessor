@@ -22,9 +22,9 @@ impl LgnProver for Groth16DummyProver {
                 bail!("Groth16DummyProver: unsupported task type. task_type: V1Preprocessing task_id: {}", task_id)
             },
             TaskType::V1Query(..) => {
-                panic!(
+                bail!(
                     "Groth16DummyProver: unsupported task type. task_type: V1Query task_id: {}",
-                    task_id
+                    task_id,
                 )
             },
             TaskType::V1Groth16(_revelation_proof) => {

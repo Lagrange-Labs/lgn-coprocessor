@@ -1,18 +1,11 @@
 use std::collections::HashMap;
 
-use tracing::debug;
 use tracing::info;
 
-use crate::provers::v1::preprocessing::prover::PreprocessingProver;
-use crate::provers::v1::preprocessing::task::Preprocessing;
-pub mod prover;
-pub mod task;
-
-#[cfg(feature = "dummy-prover")]
+use crate::provers::LgnProver;
 mod dummy_prover;
-
-#[cfg(not(feature = "dummy-prover"))]
 pub mod euclid_prover;
+pub use euclid_prover::EuclidProver;
 
 #[allow(unused_variables)]
 pub fn create_prover(
@@ -20,23 +13,20 @@ pub fn create_prover(
     dir: &str,
     file: &str,
     checksums: &HashMap<String, blake3::Hash>,
-) -> anyhow::Result<Preprocessing<impl PreprocessingProver>> {
+) -> anyhow::Result<impl LgnProver> {
+    #[cfg(feature = "dummy-prover")]
     let prover = {
-        #[cfg(feature = "dummy-prover")]
-        let prover = {
-            use dummy_prover::DummyProver;
-            info!("Creating dummy preprocessing prover");
-            DummyProver
-        };
-
-        #[cfg(not(feature = "dummy-prover"))]
-        let prover = {
-            info!("Creating preprocessing prover");
-            euclid_prover::EuclidProver::init(url, dir, file, checksums)?
-        };
-        debug!("Preprocessing prover created");
-        prover
+        use dummy_prover::PreprocessingDummyProver;
+        info!("Creating dummy preprocessing prover");
+        PreprocessingDummyProver
     };
 
-    Ok(Preprocessing::new(prover))
+    #[cfg(not(feature = "dummy-prover"))]
+    let prover = {
+        info!("Creating preprocessing prover");
+        euclid_prover::EuclidProver::init(url, dir, file, checksums)?
+    };
+
+    info!("Preprocessing prover created");
+    Ok(prover)
 }
