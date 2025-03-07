@@ -136,22 +136,6 @@ pub enum ProofCategory {
     Querying,
 }
 
-#[derive(Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
-pub struct WorkerReply {
-    pub proof: Option<Vec<u8>>,
-    pub proof_type: ProofCategory,
-}
-
-impl WorkerReply {
-    #[must_use]
-    pub fn new(
-        proof: Option<Vec<u8>>,
-        proof_type: ProofCategory,
-    ) -> Self {
-        Self { proof, proof_type }
-    }
-}
-
 #[derive(Error, Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub enum WorkerError {
     // Start with general error to introduce the errors to replies
