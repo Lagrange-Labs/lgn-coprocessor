@@ -12,9 +12,6 @@ const REQUIRED_STAKE_SMALL_USD: Stake = 98777;
 const REQUIRED_STAKE_MEDIUM_USD: Stake = 98777;
 const REQUIRED_STAKE_LARGE_USD: Stake = 169111;
 
-/// A keyed payload contains a bunch of bytes accompanied by a storage index
-pub type KeyedPayload = (String, Vec<u8>);
-
 pub type HashOutput = [u8; 32];
 
 #[derive(Deserialize, Serialize)]
@@ -146,15 +143,14 @@ pub enum ProofCategory {
 
 #[derive(Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
 pub struct WorkerReply {
-    #[dbg(formatter = crate::types::kp_pretty)]
-    pub proof: Option<KeyedPayload>,
+    pub proof: Option<Vec<u8>>,
     pub proof_type: ProofCategory,
 }
 
 impl WorkerReply {
     #[must_use]
     pub fn new(
-        proof: Option<KeyedPayload>,
+        proof: Option<Vec<u8>>,
         proof_type: ProofCategory,
     ) -> Self {
         Self { proof, proof_type }
@@ -217,12 +213,6 @@ impl Display for TaskDifficulty {
             }
         )
     }
-}
-
-pub fn kp_pretty(kp: &Option<KeyedPayload>) -> String {
-    kp.as_ref()
-        .map(|kp| kp.0.to_owned())
-        .unwrap_or("empty".to_string())
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]

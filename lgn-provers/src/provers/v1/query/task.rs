@@ -1,5 +1,4 @@
 use anyhow::bail;
-use lgn_messages::types::v1::query::keys::ProofKey;
 use lgn_messages::types::v1::query::tasks::Hydratable;
 use lgn_messages::types::v1::query::tasks::HydratableMatchingRow;
 use lgn_messages::types::v1::query::tasks::ProofInputKind;
@@ -29,12 +28,9 @@ impl<P: StorageQueryProver> LgnProver for Querying<P> {
         let task_id = envelope.task_id.clone();
 
         if let TaskType::V1Query(ref task_type) = envelope.task {
-            let key: ProofKey = task_type.into();
-            let result = self.run_inner(task_type)?;
-            let reply_type = ReplyType::V1Query(WorkerReply::new(
-                Some((key.to_string(), result)),
-                ProofCategory::Querying,
-            ));
+            let proof = self.run_inner(task_type)?;
+            let reply_type =
+                ReplyType::V1Query(WorkerReply::new(Some(proof), ProofCategory::Querying));
             Ok(MessageReplyEnvelope::new(task_id, reply_type))
         } else {
             bail!("Received unexpected task: {:?}", envelope);

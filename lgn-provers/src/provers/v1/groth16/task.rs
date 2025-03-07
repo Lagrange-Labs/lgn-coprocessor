@@ -1,7 +1,6 @@
 use std::time::Instant;
 
 use anyhow::Context;
-use lgn_messages::types::v1::groth16::keys::ProofKey;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProofCategory;
@@ -26,7 +25,6 @@ impl<GP: Prover> LgnProver for Groth16<GP> {
             TaskType::V1Query(..) => panic!("Unsupported task type. task_type: V1Query"),
             TaskType::V1Groth16(revelation_proof) => {
                 let now = Instant::now();
-                let key = ProofKey(envelope.task_id.to_string()).to_string();
                 let proof = self
                     .prover
                     .prove(revelation_proof.as_slice())
@@ -48,7 +46,6 @@ impl<GP: Prover> LgnProver for Groth16<GP> {
                     now.elapsed()
                 );
 
-                let proof = (key, proof);
                 let reply = WorkerReply::new(Some(proof), ProofCategory::Querying);
 
                 let reply_type = ReplyType::V1Groth16(reply);

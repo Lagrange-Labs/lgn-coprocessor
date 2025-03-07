@@ -1,11 +1,9 @@
 use anyhow::bail;
 use anyhow::Context;
 use ethers::utils::rlp::Rlp;
-use lgn_messages::types::v1::preprocessing::db_keys;
 use lgn_messages::types::v1::preprocessing::db_tasks::DatabaseType;
 use lgn_messages::types::v1::preprocessing::db_tasks::DbBlockType;
 use lgn_messages::types::v1::preprocessing::db_tasks::DbRowType;
-use lgn_messages::types::v1::preprocessing::ext_keys;
 use lgn_messages::types::v1::preprocessing::ext_tasks::ExtractionType;
 use lgn_messages::types::v1::preprocessing::ext_tasks::FinalExtraction;
 use lgn_messages::types::v1::preprocessing::ext_tasks::FinalExtractionType;
@@ -77,19 +75,9 @@ impl<P: PreprocessingProver> LgnProver for Preprocessing<P> {
 
         match envelope.task {
             TaskType::V1Preprocessing(task) => {
-                let key = match &task.task_type {
-                    WorkerTaskType::Extraction(_) => {
-                        let key: ext_keys::ProofKey = (&task).into();
-                        key.to_string()
-                    },
-                    WorkerTaskType::Database(_) => {
-                        let key: db_keys::ProofKey = (&task).into();
-                        key.to_string()
-                    },
-                };
-                let result = self.run_inner(task)?;
+                let proof = self.run_inner(task)?;
                 let reply_type = ReplyType::V1Preprocessing(WorkerReply::new(
-                    Some((key, result)),
+                    Some(proof),
                     ProofCategory::Querying,
                 ));
                 Ok(MessageReplyEnvelope::new(task_id, reply_type))
