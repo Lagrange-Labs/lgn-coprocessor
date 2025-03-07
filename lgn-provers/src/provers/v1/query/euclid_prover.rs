@@ -15,9 +15,9 @@ use lgn_messages::types::v1::query::NUM_CHUNKS;
 use lgn_messages::types::v1::query::NUM_ROWS;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::TaskType;
+use lgn_messages::Proof;
 use metrics::histogram;
 use parsil::assembler::DynamicCircuitPis;
-use tracing::debug;
 use tracing::info;
 use verifiable_db::api::QueryCircuitInput;
 use verifiable_db::api::QueryParameters;
@@ -88,15 +88,35 @@ impl EuclidQueryProver {
 }
 
 impl EuclidQueryProver {
+    fn prove_circuit_input(
+        &self,
+        circuit_input: ConcreteCircuitInput,
+    ) -> anyhow::Result<Proof> {
+        info!("Proving query circuit");
+        let now = std::time::Instant::now();
+
+        let proof = self
+            .params
+            .generate_proof(circuit_input)
+            .context("while generating proof for the universal circuit")?;
+
+        let time = now.elapsed().as_secs_f32();
+        histogram!("zkmr_worker_proving_latency", "proof_type" => "circuit_input").record(time);
+
+        info!(
+            "Query circuit. proof_size_kb: {} time: {:?}",
+            proof.len() / 1024,
+            now.elapsed()
+        );
+
+        Ok(proof)
+    }
+
     fn prove_universal_circuit(
         &self,
         input: MatchingRowInput,
         pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving universal circuit");
-
-        let now = std::time::Instant::now();
-
+    ) -> anyhow::Result<Proof> {
         let circuit_input = CircuitInput::new_universal_circuit(
             &input.column_cells,
             &pis.predication_operations,
@@ -107,23 +127,7 @@ impl EuclidQueryProver {
         )
         .context("while initializing the universal circuit")?;
 
-        let input: ConcreteCircuitInput = QueryCircuitInput::Query(circuit_input);
-        let proof = self
-            .params
-            .generate_proof(input)
-            .context("while generating proof for the universal circuit")?;
-
-        let proof_type = "universal_circuit";
-        let time = now.elapsed().as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!("universal circuit size in kB: {}", proof.len() / 1024);
+        let proof = self.prove_circuit_input(QueryCircuitInput::Query(circuit_input))?;
 
         Ok(proof)
     }
@@ -132,13 +136,8 @@ impl EuclidQueryProver {
         &self,
         input: RowsChunkInput,
         pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving row-chunks");
-
-        let now = std::time::Instant::now();
-
+    ) -> anyhow::Result<Proof> {
         let placeholders = input.placeholders.into();
-
         let input = CircuitInput::new_row_chunks_input(
             &input.rows,
             &pis.predication_operations,
@@ -148,24 +147,7 @@ impl EuclidQueryProver {
         )
         .context("while initializing the rows-chunk circuit")?;
 
-        let input: ConcreteCircuitInput = QueryCircuitInput::Query(input);
-
-        let proof = self
-            .params
-            .generate_proof(input)
-            .context("while generating proof for the rows-chunk circuit")?;
-
-        let proof_type = "rows_chunk";
-        let time = now.elapsed().as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!("rows-chunk size in kB: {}", proof.len() / 1024);
+        let proof = self.prove_circuit_input(QueryCircuitInput::Query(input))?;
 
         Ok(proof)
     }
@@ -173,32 +155,11 @@ impl EuclidQueryProver {
     fn prove_chunk_aggregation(
         &self,
         chunks_proofs: &[Vec<u8>],
-    ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving row-chunks");
-
-        let now = std::time::Instant::now();
-
+    ) -> anyhow::Result<Proof> {
         let input = CircuitInput::new_chunk_aggregation_input(chunks_proofs)
             .context("while initializing the chunk-aggregation circuit")?;
 
-        let input: ConcreteCircuitInput = QueryCircuitInput::Query(input);
-
-        let proof = self
-            .params
-            .generate_proof(input)
-            .context("while generating proof for the chunk-aggregation circuit")?;
-
-        let proof_type = "chunk_aggregation";
-        let time = now.elapsed().as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!("chunk-aggregation size in kB: {}", proof.len() / 1024);
+        let proof = self.prove_circuit_input(QueryCircuitInput::Query(input))?;
 
         Ok(proof)
     }
@@ -208,12 +169,7 @@ impl EuclidQueryProver {
         input: NonExistenceInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving non-existence");
-
-        let now = std::time::Instant::now();
-
         let placeholders = input.placeholders.into();
-
         let input = CircuitInput::new_non_existence_input(
             input.index_path,
             &input.column_ids,
@@ -224,24 +180,7 @@ impl EuclidQueryProver {
         )
         .context("while initializing the non-existence circuit")?;
 
-        let input: ConcreteCircuitInput = QueryCircuitInput::Query(input);
-
-        let proof = self
-            .params
-            .generate_proof(input)
-            .context("while generating proof for the non-existence circuit")?;
-
-        let proof_type = "non_existence";
-        let time = now.elapsed().as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!("non-existence size in kB: {}", proof.len() / 1024);
+        let proof = self.prove_circuit_input(QueryCircuitInput::Query(input))?;
 
         Ok(proof)
     }
@@ -253,9 +192,6 @@ impl EuclidQueryProver {
         query_proof: Vec<u8>,
         indexing_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        debug!("proving aggregated revelation");
-        let now = std::time::Instant::now();
-
         let circuit_input = revelation::api::CircuitInput::new_revelation_aggregated(
             query_proof,
             indexing_proof,
@@ -266,24 +202,7 @@ impl EuclidQueryProver {
         )
         .context("while initializing the (empty) revelation circuit")?;
 
-        let input: ConcreteCircuitInput = QueryCircuitInput::Revelation(circuit_input);
-
-        let proof = self
-            .params
-            .generate_proof(input)
-            .context("while generating proof for the (empty) revelation circuit")?;
-
-        let proof_type = "revelation";
-        let time = now.elapsed().as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!("revelation size in kB: {}", proof.len() / 1024);
+        let proof = self.prove_circuit_input(QueryCircuitInput::Revelation(circuit_input))?;
 
         Ok(proof)
     }
@@ -298,9 +217,6 @@ impl EuclidQueryProver {
         limit: u32,
         offset: u32,
     ) -> anyhow::Result<Vec<u8>> {
-        debug!("proving tabular revelation");
-        let now = std::time::Instant::now();
-
         let circuit_input = revelation::api::CircuitInput::new_revelation_tabular(
             indexing_proof,
             matching_rows,
@@ -314,24 +230,7 @@ impl EuclidQueryProver {
         )
         .context("while initializing the (empty) revelation circuit")?;
 
-        let input: ConcreteCircuitInput = QueryCircuitInput::Revelation(circuit_input);
-
-        let proof = self
-            .params
-            .generate_proof(input)
-            .context("while generating proof for the (empty) revelation circuit")?;
-
-        let proof_type = "revelation";
-        let time = now.elapsed().as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!("revelation size in kB: {}", proof.len() / 1024);
+        let proof = self.prove_circuit_input(QueryCircuitInput::Revelation(circuit_input))?;
 
         Ok(proof)
     }
