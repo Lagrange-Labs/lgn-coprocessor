@@ -23,13 +23,6 @@ pub enum TaskType {
     V1Groth16(Vec<u8>),
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub enum ReplyType {
-    V1Preprocessing(WorkerReply),
-    V1Query(WorkerReply),
-    V1Groth16(WorkerReply),
-}
-
 #[derive(Deserialize, Serialize)]
 pub struct MessageEnvelope {
     /// Identifier to relate proofs with tasks.
@@ -86,7 +79,7 @@ pub struct MessageReplyEnvelope {
     pub task_id: String,
 
     /// The proof result.
-    reply: ReplyType,
+    reply: WorkerReply,
 
     /// Error details, if any.
     error: Option<WorkerError>,
@@ -107,7 +100,7 @@ impl std::fmt::Debug for MessageReplyEnvelope {
 impl MessageReplyEnvelope {
     pub fn new(
         task_id: String,
-        reply: ReplyType,
+        reply: WorkerReply,
     ) -> Self {
         Self {
             task_id,
@@ -117,7 +110,7 @@ impl MessageReplyEnvelope {
     }
 
     /// Return the proof or the error if one occured.
-    pub fn inner(&self) -> Result<&ReplyType, &WorkerError> {
+    pub fn inner(&self) -> Result<&WorkerReply, &WorkerError> {
         match self.error.as_ref() {
             None => Ok(&self.reply),
             Some(t) => Err(t),
@@ -125,7 +118,7 @@ impl MessageReplyEnvelope {
     }
 
     /// Return the reply.
-    pub fn reply(&self) -> &ReplyType {
+    pub fn reply(&self) -> &WorkerReply {
         &self.reply
     }
 

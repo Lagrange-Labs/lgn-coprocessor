@@ -4,7 +4,6 @@ use anyhow::Context;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProofCategory;
-use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::WorkerReply;
 use tracing::debug;
@@ -47,10 +46,7 @@ impl<GP: Prover> LgnProver for Groth16<GP> {
                 );
 
                 let reply = WorkerReply::new(Some(proof), ProofCategory::Querying);
-
-                let reply_type = ReplyType::V1Groth16(reply);
-                let reply_envelope =
-                    MessageReplyEnvelope::new(envelope.task_id.clone(), reply_type);
+                let reply_envelope = MessageReplyEnvelope::new(envelope.task_id.clone(), reply);
                 Ok(reply_envelope)
             },
         }

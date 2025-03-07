@@ -8,7 +8,6 @@ use lgn_messages::types::v1::query::WorkerTaskType;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProofCategory;
-use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::WorkerReply;
 use parsil::assembler::DynamicCircuitPis;
@@ -29,9 +28,8 @@ impl<P: StorageQueryProver> LgnProver for Querying<P> {
 
         if let TaskType::V1Query(ref task_type) = envelope.task {
             let proof = self.run_inner(task_type)?;
-            let reply_type =
-                ReplyType::V1Query(WorkerReply::new(Some(proof), ProofCategory::Querying));
-            Ok(MessageReplyEnvelope::new(task_id, reply_type))
+            let reply = WorkerReply::new(Some(proof), ProofCategory::Querying);
+            Ok(MessageReplyEnvelope::new(task_id, reply))
         } else {
             bail!("Received unexpected task: {:?}", envelope);
         }

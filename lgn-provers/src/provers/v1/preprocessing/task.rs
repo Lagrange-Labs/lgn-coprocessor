@@ -12,7 +12,6 @@ use lgn_messages::types::v1::preprocessing::WorkerTaskType;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProofCategory;
-use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::WorkerReply;
 use mp2_v1::contract_extraction;
@@ -76,11 +75,8 @@ impl<P: PreprocessingProver> LgnProver for Preprocessing<P> {
         match envelope.task {
             TaskType::V1Preprocessing(task) => {
                 let proof = self.run_inner(task)?;
-                let reply_type = ReplyType::V1Preprocessing(WorkerReply::new(
-                    Some(proof),
-                    ProofCategory::Querying,
-                ));
-                Ok(MessageReplyEnvelope::new(task_id, reply_type))
+                let reply = WorkerReply::new(Some(proof), ProofCategory::Querying);
+                Ok(MessageReplyEnvelope::new(task_id, reply))
             },
             TaskType::V1Query(..) => {
                 panic!("Unsupported task type. task_type: V1Query")
