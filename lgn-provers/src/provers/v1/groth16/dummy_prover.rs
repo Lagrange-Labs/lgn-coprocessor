@@ -15,18 +15,20 @@ impl LgnProver for Groth16DummyProver {
         &self,
         envelope: lgn_messages::types::MessageEnvelope,
     ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
+        let task_id = envelope.task_id.clone();
+
         match envelope.task() {
             TaskType::V1Preprocessing(..) => {
-                bail!("Groth16DummyProver: unsupported task type. task_type: V1Preprocessing")
+                bail!("Groth16DummyProver: unsupported task type. task_type: V1Preprocessing task_id: {}", task_id)
             },
             TaskType::V1Query(..) => {
-                panic!("Groth16DummyProver: unsupported task type. task_type: V1Query")
+                panic!(
+                    "Groth16DummyProver: unsupported task type. task_type: V1Query task_id: {}",
+                    task_id
+                )
             },
             TaskType::V1Groth16(_revelation_proof) => {
-                Ok(MessageReplyEnvelope::new(
-                    envelope.task_id.clone(),
-                    dummy_proof(PROOF_SIZE),
-                ))
+                Ok(MessageReplyEnvelope::new(task_id, dummy_proof(PROOF_SIZE)))
             },
         }
     }

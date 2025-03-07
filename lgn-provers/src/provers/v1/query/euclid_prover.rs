@@ -446,11 +446,23 @@ impl LgnProver for EuclidQueryProver {
     ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
         let task_id = envelope.task_id.clone();
 
-        if let TaskType::V1Query(ref task_type) = envelope.task {
-            let proof = self.run_inner(task_type)?;
-            Ok(MessageReplyEnvelope::new(task_id, proof))
-        } else {
-            bail!("Received unexpected task: {:?}", envelope);
+        match envelope.task() {
+            TaskType::V1Preprocessing(..) => {
+                bail!(
+                "EuclidQueryProver: unsupported task type. task_type: V1Preprocessing task_id: {}",
+                task_id,
+            )
+            },
+            TaskType::V1Query(task_type) => {
+                let proof = self.run_inner(task_type)?;
+                Ok(MessageReplyEnvelope::new(task_id, proof))
+            },
+            TaskType::V1Groth16(..) => {
+                bail!(
+                    "EuclidQueryProver: unsupported task type. task_type: V1Groth16 task_id: {}",
+                    task_id,
+                )
+            },
         }
     }
 }

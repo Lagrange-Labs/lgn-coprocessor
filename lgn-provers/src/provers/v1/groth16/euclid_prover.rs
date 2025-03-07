@@ -48,32 +48,39 @@ impl LgnProver for Groth16Prover {
         &self,
         envelope: lgn_messages::types::MessageEnvelope,
     ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
+        let task_id = envelope.task_id.clone();
+
         match envelope.task() {
             TaskType::V1Preprocessing(..) => {
-                bail!("Groth16: unsupported task type. task_type: V1Preprocessing")
+                bail!(
+                    "Groth16: unsupported task type. task_type: V1Preprocessing task_id: {}",
+                    task_id,
+                )
             },
-            TaskType::V1Query(..) => bail!("Groth16: unsupported task type. task_type: V1Query"),
+            TaskType::V1Query(..) => {
+                bail!(
+                    "Groth16: unsupported task type. task_type: V1Query task_id: {}",
+                    task_id,
+                )
+            },
             TaskType::V1Groth16(revelation_proof) => {
                 let now = Instant::now();
                 let proof = self
                     .inner
                     .prove(revelation_proof.as_slice())
                     .with_context(|| {
-                        format!(
-                            "Failed to generate the Groth16 proof. task_id = {}",
-                            envelope.task_id,
-                        )
+                        format!("Failed to generate the Groth16 proof. task_id: {}", task_id,)
                     })?;
 
                 info!(
                     time = now.elapsed().as_secs_f32(),
                     proof_type = "groth16",
                     "Finish generating the Groth16 proof. task_id: {} elapsed: {:?}",
-                    envelope.task_id,
+                    task_id,
                     now.elapsed(),
                 );
 
-                Ok(MessageReplyEnvelope::new(envelope.task_id.clone(), proof))
+                Ok(MessageReplyEnvelope::new(task_id, proof))
             },
         }
     }

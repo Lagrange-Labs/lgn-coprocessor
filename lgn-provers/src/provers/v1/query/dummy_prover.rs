@@ -1,4 +1,5 @@
 use anyhow::bail;
+use lgn_messages::types::v1::query::WorkerTaskType;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::TaskType;
 
@@ -17,11 +18,20 @@ impl LgnProver for QueryDummyProver {
     ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
         let task_id = envelope.task_id.clone();
 
-        if let TaskType::V1Query(..) = envelope.task {
-            let proof = dummy_proof(PROOF_SIZE);
-            Ok(MessageReplyEnvelope::new(task_id, proof))
-        } else {
-            bail!("Received unexpected task: {:?}", envelope)
+        match envelope.task() {
+            TaskType::V1Preprocessing(..) => {
+                bail!("QueryDummyProver: unsupported task type. task_type: V1Preprocessing task_id: {}", task_id)
+            },
+            TaskType::V1Query(WorkerTaskType::Query(..)) => {
+                let proof = dummy_proof(PROOF_SIZE);
+                Ok(MessageReplyEnvelope::new(task_id, proof))
+            },
+            TaskType::V1Groth16(..) => {
+                bail!(
+                    "QueryDummyProver: unsupported task type. task_type: V1Groth16 task_id: {}",
+                    task_id,
+                )
+            },
         }
     }
 }
