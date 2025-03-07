@@ -70,6 +70,9 @@ lto = "fat"
 inherits = "release"
 debug = true
 
+[workspace.metadata.cargo-shear]
+ignored = ["prost"]
+
 [workspace.metadata.cargo-machete]
 ignored = ["serde", "prost"]
 

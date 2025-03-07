@@ -57,7 +57,7 @@ tonic-build = { workspace = true }
 protox = { workspace = true }
 
 [package.metadata.cargo-shear]
-ignored = ["prost"]
+ignored = ["prost", "prost-types"]
 
 [package.metadata.cargo-machete]
 ignored = ["prost-types"]
