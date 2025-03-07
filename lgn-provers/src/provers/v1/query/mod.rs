@@ -27,9 +27,9 @@ pub fn create_prover(
 ) -> anyhow::Result<impl LgnProver> {
     #[cfg(feature = "dummy-prover")]
     let prover = {
-        use dummy_prover::DummyProver;
+        use dummy_prover::QueryDummyProver;
         info!("Creating dummy query prover");
-        DummyProver
+        QueryDummyProver
     };
 
     #[cfg(not(feature = "dummy-prover"))]
