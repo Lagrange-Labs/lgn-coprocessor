@@ -6,8 +6,6 @@ use serde_derive::Serialize;
 
 use crate::types::v1::preprocessing::db_keys;
 use crate::types::v1::preprocessing::ext_tasks::Identifier;
-use crate::types::v1::preprocessing::WorkerTask;
-use crate::types::v1::preprocessing::WorkerTaskType;
 use crate::BlockNr;
 use crate::TableId;
 
@@ -266,64 +264,6 @@ impl IvcInput {
             is_first_block,
             index_proof: vec![],
             previous_ivc_proof: None,
-        }
-    }
-}
-
-impl From<&WorkerTask> for db_keys::ProofKey {
-    fn from(worker_task: &WorkerTask) -> Self {
-        match &worker_task.task_type {
-            WorkerTaskType::Database(db) => {
-                match db {
-                    DatabaseType::Cell {
-                        table_id,
-                        row_id,
-                        cell_id,
-                        ..
-                    } => {
-                        db_keys::ProofKey::Cell(
-                            *table_id,
-                            worker_task.block_nr,
-                            row_id.to_owned(),
-                            *cell_id,
-                        )
-                    },
-                    DatabaseType::Row(db_row) => {
-                        match db_row {
-                            DbRowType::Leaf(row_leaf) => {
-                                db_keys::ProofKey::Row(
-                                    row_leaf.table_id,
-                                    worker_task.block_nr,
-                                    row_leaf.row_id.to_string(),
-                                )
-                            },
-                            DbRowType::Partial(row_partial) => {
-                                db_keys::ProofKey::Row(
-                                    row_partial.table_id,
-                                    worker_task.block_nr,
-                                    row_partial.row_id.to_string(),
-                                )
-                            },
-                            DbRowType::Full(row_full) => {
-                                db_keys::ProofKey::Row(
-                                    row_full.table_id,
-                                    worker_task.block_nr,
-                                    row_full.row_id.to_string(),
-                                )
-                            },
-                        }
-                    },
-                    DatabaseType::Index(index) => {
-                        db_keys::ProofKey::Block(index.table_id, worker_task.block_nr)
-                    },
-                    DatabaseType::IVC(ivc) => {
-                        db_keys::ProofKey::IVC(ivc.table_id, worker_task.block_nr)
-                    },
-                }
-            },
-            WorkerTaskType::Extraction(..) => {
-                panic!("Unsupported task type. task_type: Extraction")
-            },
         }
     }
 }
