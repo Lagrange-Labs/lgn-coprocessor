@@ -7,9 +7,9 @@ use crate::provers::LgnProver;
 const PROOF_SIZE: usize = 32;
 
 /// Prover implementation which performs no proving and returns random data as a proof.
-pub struct DummyProver;
+pub struct Groth16DummyProver;
 
-impl LgnProver for DummyProver {
+impl LgnProver for Groth16DummyProver {
     fn run(
         &self,
         envelope: lgn_messages::types::MessageEnvelope,
