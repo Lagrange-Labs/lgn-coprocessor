@@ -2,7 +2,6 @@
 pub mod params;
 pub mod provers;
 
-#[cfg(feature = "dummy-prover")]
 mod dummy_utils {
     /// Generates random data to be used as a dummy proof.
     pub fn dummy_proof(proof_size: usize) -> Vec<u8> {

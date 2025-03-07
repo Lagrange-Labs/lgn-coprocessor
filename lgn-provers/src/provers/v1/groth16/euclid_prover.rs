@@ -1,10 +1,14 @@
 use std::collections::HashMap;
+use std::time::Instant;
 
+use anyhow::Context;
 use anyhow::Result;
+use lgn_messages::types::MessageReplyEnvelope;
+use lgn_messages::types::TaskType;
 use tracing::info;
 
 use crate::params;
-use crate::provers::v1::groth16::prover::Prover;
+use crate::provers::LgnProver;
 
 #[derive(Debug)]
 pub struct Groth16Prover {
@@ -38,12 +42,38 @@ impl Groth16Prover {
     }
 }
 
-impl Prover for Groth16Prover {
-    /// Generate the Groth16 proof from the plonky2 proof.
-    fn prove(
+impl LgnProver for Groth16Prover {
+    fn run(
         &self,
-        revelation: &[u8],
-    ) -> Result<Vec<u8>> {
-        self.inner.prove(revelation)
+        envelope: lgn_messages::types::MessageEnvelope,
+    ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
+        match envelope.task() {
+            TaskType::V1Preprocessing(..) => {
+                panic!("Unsupported task type. task_type: V1Preprocessing")
+            },
+            TaskType::V1Query(..) => panic!("Unsupported task type. task_type: V1Query"),
+            TaskType::V1Groth16(revelation_proof) => {
+                let now = Instant::now();
+                let proof = self
+                    .inner
+                    .prove(revelation_proof.as_slice())
+                    .with_context(|| {
+                        format!(
+                            "Failed to generate the Groth16 proof. task_id = {}",
+                            envelope.task_id,
+                        )
+                    })?;
+
+                info!(
+                    time = now.elapsed().as_secs_f32(),
+                    proof_type = "groth16",
+                    "Finish generating the Groth16 proof. task_id: {} elapsed: {:?}",
+                    envelope.task_id,
+                    now.elapsed(),
+                );
+
+                Ok(MessageReplyEnvelope::new(envelope.task_id.clone(), proof))
+            },
+        }
     }
 }
