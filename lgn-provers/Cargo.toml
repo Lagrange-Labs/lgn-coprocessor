@@ -9,7 +9,6 @@ anyhow = { workspace = true }
 bincode = { workspace = true }
 blake3.workspace = true
 bytes = { workspace = true }
-ethers = { workspace = true }
 groth16_framework_v1 = { workspace = true }
 metrics = { workspace = true }
 mp2_common = { workspace = true }

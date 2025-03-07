@@ -30,9 +30,7 @@ lgn-provers = { path = "../lgn-provers" }
 metrics-exporter-prometheus = { workspace = true }
 metrics = { workspace = true }
 mimalloc = { workspace = true }
-mp2_common.workspace = true
 prost-types = "0.13.4"
-prost-wkt-types = "0.6.0"
 prost = { workspace = true }
 rand = { workspace = true, default-features = false, features = [ "std", "std_rng", "getrandom", "min_const_gen" ]  }
 redact = { workspace = true, features = ["serde"] }
@@ -48,8 +46,6 @@ tonic = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "json"] }
 tracing = { workspace = true }
 verifiable-db.workspace = true
-exponential-backoff = "2.0.0"
-rustl = "0.0.1"
 rustls = { version = "0.23.21", features = [ "ring" ] }
 uuid = "1.13.2"
 warp = "0.3.7"
@@ -62,3 +58,6 @@ protox = { workspace = true }
 
 [package.metadata.cargo-shear]
 ignored = ["prost"]
+
+[package.metadata.cargo-machete]
+ignored = ["prost-types"]
