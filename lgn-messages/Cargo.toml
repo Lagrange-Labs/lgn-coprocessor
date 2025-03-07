@@ -4,6 +4,7 @@ version = "1.1.6"
 edition = "2021"
 
 [dependencies]
+anyhow = { workspace = true }
 ethers = { workspace = true }
 mp2_common = { workspace = true }
 mp2_v1 = { workspace = true }

@@ -4070,6 +4070,7 @@ name = "lgn-messages"
 version = "1.1.6"
 dependencies = [
  "alloy-primitives 0.8.21",
+ "anyhow",
  "derive-debug-plus",
  "ethers 2.0.14",
  "mp2_common",

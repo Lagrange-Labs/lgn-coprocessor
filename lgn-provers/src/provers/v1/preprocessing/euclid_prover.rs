@@ -3,13 +3,14 @@ use std::collections::HashMap;
 use alloy::primitives::U256;
 use anyhow::bail;
 use anyhow::Context;
-use ethers::utils::rlp::Rlp;
 use lgn_messages::types::v1::preprocessing::db_tasks::DatabaseType;
 use lgn_messages::types::v1::preprocessing::db_tasks::DbBlockType;
 use lgn_messages::types::v1::preprocessing::db_tasks::DbRowType;
 use lgn_messages::types::v1::preprocessing::ext_tasks::ExtractionType;
 use lgn_messages::types::v1::preprocessing::ext_tasks::FinalExtraction;
 use lgn_messages::types::v1::preprocessing::ext_tasks::FinalExtractionType;
+use lgn_messages::types::v1::preprocessing::node_type;
+use lgn_messages::types::v1::preprocessing::NodeType;
 use lgn_messages::types::v1::preprocessing::WorkerTask;
 use lgn_messages::types::v1::preprocessing::WorkerTaskType;
 use lgn_messages::types::MessageReplyEnvelope;
@@ -30,47 +31,6 @@ use tracing::debug;
 
 use crate::params;
 use crate::provers::LgnProver;
-
-/// Different types of node types.
-#[derive(Debug, PartialEq, Eq)]
-pub enum NodeType {
-    Branch,
-    Extension,
-    Leaf,
-}
-
-/// Returns the node type given an encoded node.
-///
-/// The node spec is at [1].
-///
-/// 1- https://github.com/ethereum/execution-specs/blob/78fb726158c69d8fa164e28f195fabf6ab59b915/src/ethereum/cancun/trie.py#L177-L191
-pub fn node_type(rlp_data: &[u8]) -> anyhow::Result<NodeType> {
-    let rlp = Rlp::new(rlp_data);
-
-    let item_count = rlp.item_count()?;
-
-    if item_count == 17 {
-        Ok(NodeType::Branch)
-    } else if item_count == 2 {
-        // The first item is the encoded path, if it begins with a 2 or 3 it is a leaf, else it is
-        // an extension node
-        let first_item = rlp.at(0)?;
-
-        // We want the first byte
-        let first_byte = first_item.as_raw()[0];
-
-        // The we divide by 16 to get the first nibble
-        match first_byte / 16 {
-            0 | 1 => Ok(NodeType::Extension),
-            2 | 3 => Ok(NodeType::Leaf),
-            _ => {
-                bail!("Expected compact encoding beginning with 0,1,2 or 3")
-            },
-        }
-    } else {
-        bail!("RLP encoded Node item count was {item_count}, expected either 17 or 2")
-    }
-}
 
 pub struct EuclidProver {
     params: PublicParameters,

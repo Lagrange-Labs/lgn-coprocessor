@@ -1,12 +1,13 @@
 use alloy_primitives::Address;
 use derive_debug_plus::Dbg;
 use ethers::types::H256;
-use ethers::utils::rlp;
 use mp2_common::digest::TableDimension;
 use mp2_v1::values_extraction;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
+use super::node_type;
+use super::NodeType;
 use crate::BlockNr;
 use crate::TableHash;
 use crate::TableId;
@@ -142,39 +143,9 @@ pub struct Length {
     pub nodes: Vec<Vec<u8>>,
 }
 
-/// Helper type denoting if a proof request is for a leaf or extension or branch node.
-///
-/// This is used to associate the gas / time to the proof to generate, especially for tasks where
-/// there are many proofs to generate inside.
-pub enum MPTExtractionType {
-    Branch,
-    Extension,
-    Leaf,
-}
-
-impl MPTExtractionType {
-    pub fn from_rlp_node(
-        node: &[u8],
-        i: usize,
-    ) -> Self {
-        let list: Vec<Vec<_>> = rlp::decode_list(node);
-        match list.len() {
-            // assuming the first node in the path is the leaf
-            2 if i == 0 => MPTExtractionType::Leaf,
-            2 => MPTExtractionType::Extension,
-            // assuming all nodes are valid so branch is the only choice left
-            _ => MPTExtractionType::Branch,
-        }
-    }
-}
-
 impl Length {
-    pub fn extraction_types(&self) -> Vec<MPTExtractionType> {
-        self.nodes
-            .iter()
-            .enumerate()
-            .map(|(i, n)| MPTExtractionType::from_rlp_node(n, i))
-            .collect()
+    pub fn extraction_types(&self) -> anyhow::Result<Vec<NodeType>> {
+        self.nodes.iter().map(|node| node_type(node)).collect()
     }
 }
 
@@ -189,12 +160,8 @@ pub struct Contract {
 }
 
 impl Contract {
-    pub fn extraction_types(&self) -> Vec<MPTExtractionType> {
-        self.nodes
-            .iter()
-            .enumerate()
-            .map(|(i, n)| MPTExtractionType::from_rlp_node(n, i))
-            .collect()
+    pub fn extraction_types(&self) -> anyhow::Result<Vec<NodeType>> {
+        self.nodes.iter().map(|node| node_type(node)).collect()
     }
 }
 
