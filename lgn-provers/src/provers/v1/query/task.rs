@@ -36,7 +36,7 @@ impl LgnProver for EuclidQueryProver {
             ));
             Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
         } else {
-            bail!("Received unexpected task: {:?}", envelope);
+            bail!("Unexpected task: {:?}", envelope);
         }
     }
 }
@@ -46,11 +46,7 @@ impl EuclidQueryProver {
         &self,
         task: &WorkerTask,
     ) -> anyhow::Result<Vec<u8>> {
-        #[allow(irrefutable_let_patterns)]
-        let WorkerTaskType::Query(ref input) = task.task_type
-        else {
-            bail!("Unexpected task type: {:?}", task.task_type);
-        };
+        let WorkerTaskType::Query(ref input) = task.task_type;
 
         let pis: DynamicCircuitPis = serde_json::from_slice(&input.pis)?;
 
@@ -66,7 +62,7 @@ impl EuclidQueryProver {
                     ..
                 } = revelation_input
                 else {
-                    panic!("Wrong RevelationInput for QueryStep::Tabular");
+                    bail!("Wrong RevelationInput for QueryStep::Tabular");
                 };
 
                 let mut matching_rows_proofs = vec![];

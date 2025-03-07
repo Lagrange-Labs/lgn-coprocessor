@@ -33,7 +33,7 @@ impl LgnProver for Groth16Prover {
             let reply_envelope = MessageReplyEnvelope::new(query_id, task_id, reply_type);
             Ok(reply_envelope)
         } else {
-            bail!("Unexpected task type: {:?}", envelope.inner());
+            bail!("Unexpected task: {:?}", envelope);
         }
     }
 }

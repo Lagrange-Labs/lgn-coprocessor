@@ -1,3 +1,4 @@
+use anyhow::bail;
 use lgn_messages::types::v1::preprocessing::db_keys;
 use lgn_messages::types::v1::preprocessing::db_tasks::DatabaseType;
 use lgn_messages::types::v1::preprocessing::db_tasks::DbBlockType;
@@ -46,7 +47,7 @@ impl LgnProver for EuclidProver {
             ));
             Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
         } else {
-            anyhow::bail!("Received unexpected task: {:?}", envelope);
+            bail!("Unexpected task: {:?}", envelope);
         }
     }
 }
