@@ -6,6 +6,8 @@ use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use thiserror::Error;
 
+use crate::Proof;
+
 pub mod v1;
 
 const REQUIRED_STAKE_SMALL_USD: Stake = 98777;
@@ -79,7 +81,7 @@ pub struct MessageReplyEnvelope {
     pub task_id: String,
 
     /// The proof result.
-    reply: WorkerReply,
+    proof: Option<Proof>,
 
     /// Error details, if any.
     error: Option<WorkerError>,
@@ -100,26 +102,26 @@ impl std::fmt::Debug for MessageReplyEnvelope {
 impl MessageReplyEnvelope {
     pub fn new(
         task_id: String,
-        reply: WorkerReply,
+        proof: Proof,
     ) -> Self {
         Self {
             task_id,
-            reply,
+            proof: Some(proof),
             error: None,
         }
     }
 
     /// Return the proof or the error if one occured.
-    pub fn inner(&self) -> Result<&WorkerReply, &WorkerError> {
+    pub fn inner(&self) -> Result<&Option<Proof>, &WorkerError> {
         match self.error.as_ref() {
-            None => Ok(&self.reply),
+            None => Ok(&self.proof),
             Some(t) => Err(t),
         }
     }
 
     /// Return the reply.
-    pub fn reply(&self) -> &WorkerReply {
-        &self.reply
+    pub fn proof(&self) -> &Option<Proof> {
+        &self.proof
     }
 
     /// Returns the task identifier.

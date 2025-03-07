@@ -3,9 +3,7 @@ use std::time::Instant;
 use anyhow::Context;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
-use lgn_messages::types::ProofCategory;
 use lgn_messages::types::TaskType;
-use lgn_messages::types::WorkerReply;
 use tracing::debug;
 use tracing::info;
 
@@ -45,9 +43,7 @@ impl<GP: Prover> LgnProver for Groth16<GP> {
                     now.elapsed()
                 );
 
-                let reply = WorkerReply::new(Some(proof), ProofCategory::Querying);
-                let reply_envelope = MessageReplyEnvelope::new(envelope.task_id.clone(), reply);
-                Ok(reply_envelope)
+                Ok(MessageReplyEnvelope::new(envelope.task_id.clone(), proof))
             },
         }
     }
