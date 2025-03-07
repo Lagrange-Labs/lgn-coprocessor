@@ -14,7 +14,6 @@ use crate::BlockNr;
 use crate::TableHash;
 use crate::TableId;
 
-pub const ROUTING_DOMAIN: &str = "sp";
 pub type Identifier = u64;
 pub type MptNodeVersion = (BlockNr, H256);
 
