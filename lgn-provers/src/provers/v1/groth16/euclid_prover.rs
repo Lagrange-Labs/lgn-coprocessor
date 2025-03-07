@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::time::Instant;
 
+use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
 use lgn_messages::types::MessageReplyEnvelope;
@@ -49,9 +50,9 @@ impl LgnProver for Groth16Prover {
     ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
         match envelope.task() {
             TaskType::V1Preprocessing(..) => {
-                panic!("Unsupported task type. task_type: V1Preprocessing")
+                bail!("Groth16: unsupported task type. task_type: V1Preprocessing")
             },
-            TaskType::V1Query(..) => panic!("Unsupported task type. task_type: V1Query"),
+            TaskType::V1Query(..) => bail!("Groth16: unsupported task type. task_type: V1Query"),
             TaskType::V1Groth16(revelation_proof) => {
                 let now = Instant::now();
                 let proof = self

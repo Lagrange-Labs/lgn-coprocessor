@@ -1,3 +1,4 @@
+use anyhow::bail;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::TaskType;
 
@@ -16,9 +17,11 @@ impl LgnProver for Groth16DummyProver {
     ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
         match envelope.task() {
             TaskType::V1Preprocessing(..) => {
-                panic!("Unsupported task type. task_type: V1Preprocessing")
+                bail!("Groth16DummyProver: unsupported task type. task_type: V1Preprocessing")
             },
-            TaskType::V1Query(..) => panic!("Unsupported task type. task_type: V1Query"),
+            TaskType::V1Query(..) => {
+                panic!("Groth16DummyProver: unsupported task type. task_type: V1Query")
+            },
             TaskType::V1Groth16(_revelation_proof) => {
                 Ok(MessageReplyEnvelope::new(
                     envelope.task_id.clone(),
