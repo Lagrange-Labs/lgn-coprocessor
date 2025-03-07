@@ -5,7 +5,6 @@ use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
 use crate::types::v1::preprocessing::db_keys;
-use crate::types::v1::preprocessing::ext_keys;
 use crate::types::v1::preprocessing::ext_tasks::Identifier;
 use crate::types::v1::preprocessing::WorkerTask;
 use crate::types::v1::preprocessing::WorkerTaskType;
@@ -128,7 +127,6 @@ pub enum DbBlockType {
 pub struct BlockLeafInput {
     pub table_id: TableId,
     pub block_id: BlockNr,
-    pub extraction_proof_location: ext_keys::ProofKey,
     pub rows_proof_location: db_keys::ProofKey,
 
     #[dbg(placeholder = "...")]
@@ -142,13 +140,11 @@ impl BlockLeafInput {
     pub fn new(
         table_id: TableId,
         block_id: BlockNr,
-        extraction_proof_location: ext_keys::ProofKey,
         rows_proof_location: db_keys::ProofKey,
     ) -> Self {
         Self {
             table_id,
             block_id,
-            extraction_proof_location,
             rows_proof_location,
             extraction_proof: vec![],
             rows_proof: vec![],
@@ -166,7 +162,6 @@ pub struct BlockParentInput {
     pub prev_left_child: Option<HashOutput>,
     pub prev_right_child: Option<HashOutput>,
     pub old_rows_tree_hash: HashOutput,
-    pub extraction_proof_location: ext_keys::ProofKey,
     pub rows_proof_location: db_keys::ProofKey,
 
     #[dbg(placeholder = "...")]
@@ -187,7 +182,6 @@ impl BlockParentInput {
         prev_left_child: Option<HashOutput>,
         prev_right_child: Option<HashOutput>,
         old_rows_tree_hash: HashOutput,
-        extraction_proof_location: ext_keys::ProofKey,
         rows_proof_location: db_keys::ProofKey,
     ) -> Self {
         Self {
@@ -199,7 +193,6 @@ impl BlockParentInput {
             prev_left_child,
             prev_right_child,
             old_rows_tree_hash,
-            extraction_proof_location,
             rows_proof_location,
             extraction_proof: vec![],
             rows_proof: vec![],

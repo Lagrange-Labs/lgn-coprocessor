@@ -7,9 +7,6 @@ use mp2_v1::values_extraction;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
-use crate::types::v1::preprocessing::ext_keys::ProofKey;
-use crate::types::v1::preprocessing::WorkerTask;
-use crate::types::v1::preprocessing::WorkerTaskType;
 use crate::BlockNr;
 use crate::TableHash;
 use crate::TableId;
@@ -221,20 +218,6 @@ pub enum FinalExtraction {
 }
 
 impl FinalExtraction {
-    fn table_id(&self) -> BlockNr {
-        match self {
-            FinalExtraction::Single(single_table_extraction) => single_table_extraction.table_id,
-            FinalExtraction::Merge(merge_table_extraction) => merge_table_extraction.table_id,
-        }
-    }
-
-    fn block_nr(&self) -> BlockNr {
-        match self {
-            FinalExtraction::Single(single_table_extraction) => single_table_extraction.block_nr,
-            FinalExtraction::Merge(merge_table_extraction) => merge_table_extraction.block_nr,
-        }
-    }
-
     pub fn new_single_table(
         table_id: TableId,
         table_hash: TableHash,
@@ -391,46 +374,4 @@ impl MergeTableExtraction {
 pub enum FinalExtractionType {
     Simple(TableDimension),
     Lengthed,
-}
-
-impl From<&WorkerTask> for ProofKey {
-    fn from(task: &WorkerTask) -> Self {
-        match &task.task_type {
-            WorkerTaskType::Extraction(extraction) => {
-                match extraction {
-                    ExtractionType::MptExtraction(mpt_extraction) => {
-                        let node_version = (mpt_extraction.block_nr, mpt_extraction.node_hash);
-                        ProofKey::MptVariable {
-                            table_hash: mpt_extraction.table_hash,
-                            mpt_node_version: node_version,
-                        }
-                    },
-                    ExtractionType::LengthExtraction(length) => {
-                        ProofKey::MptLength {
-                            table_hash: length.table_hash,
-                            block_nr: length.block_nr,
-                        }
-                    },
-                    ExtractionType::ContractExtraction(contract) => {
-                        ProofKey::Contract {
-                            address: contract.contract,
-                            block_nr: contract.block_nr,
-                        }
-                    },
-                    ExtractionType::BlockExtraction(_) => {
-                        ProofKey::Block {
-                            block_nr: task.block_nr,
-                        }
-                    },
-                    ExtractionType::FinalExtraction(final_extraction) => {
-                        ProofKey::FinalExtraction {
-                            table_id: final_extraction.table_id(),
-                            block_nr: final_extraction.block_nr(),
-                        }
-                    },
-                }
-            },
-            _ => unimplemented!("WorkerTaskType not implemented"),
-        }
-    }
 }
