@@ -193,10 +193,14 @@ async fn run_worker(
         * 1024
         * 1024;
 
-    // Preparing the prover
-    let checksums = fetch_checksums(config.public_params.checksum_file_url())
-        .await
-        .context("downloading checksum file")?;
+    let checksums = if cfg!(not(feature = "dummy-prover")) {
+        fetch_checksums(config.public_params.checksum_file_url())
+            .await
+            .context("downloading checksum file")?
+    } else {
+        Default::default()
+    };
+
     let mut provers_manager =
         tokio::task::block_in_place(move || -> Result<ProversManager<TaskType, ReplyType>> {
             let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
