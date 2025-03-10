@@ -105,8 +105,6 @@ impl EuclidQueryProver {
     ) -> anyhow::Result<Proof> {
         let WorkerTaskType::Query(input) = task_type;
 
-        let pis: DynamicCircuitPis = serde_json::from_slice(&input.pis)?;
-
         let final_proof = match input.query_step {
             QueryStep::QueryCircuitInput(circuit_input) => {
                 self.prove_circuit_input(*circuit_input)?
@@ -119,7 +117,9 @@ impl EuclidQueryProver {
                 column_ids,
                 limit,
                 offset,
+                pis,
             } => {
+                let pis: DynamicCircuitPis = serde_json::from_slice(&pis)?;
                 let mut matching_rows_proofs = vec![];
                 for (row_input, matching_row) in rows_inputs.iter().zip(matching_rows) {
                     let circuit_input = CircuitInput::new_universal_circuit(

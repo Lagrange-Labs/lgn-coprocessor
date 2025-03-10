@@ -15,9 +15,6 @@ use crate::Proof;
 pub struct QueryInput {
     /// Query step info
     pub query_step: QueryStep,
-
-    /// Public inputs data
-    pub pis: Vec<u8>,
 }
 
 /// Query step info
@@ -37,6 +34,7 @@ pub enum QueryStep {
         column_ids: ColumnIDs,
         limit: u32,
         offset: u32,
+        pis: Vec<u8>,
     },
 }
 
