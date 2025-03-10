@@ -3,15 +3,13 @@ use std::collections::HashMap;
 use anyhow::bail;
 use anyhow::Context;
 use lgn_messages::types::v1::query::tasks::HydratableMatchingRow;
-use lgn_messages::types::v1::query::tasks::MatchingRowInput;
 use lgn_messages::types::v1::query::tasks::NonExistenceInput;
 use lgn_messages::types::v1::query::tasks::ProofInputKind;
 use lgn_messages::types::v1::query::tasks::QueryStep;
 use lgn_messages::types::v1::query::tasks::RevelationInput;
-use lgn_messages::types::v1::query::tasks::RowsChunkInput;
+use lgn_messages::types::v1::query::ConcreteCircuitInput;
+use lgn_messages::types::v1::query::ConcreteQueryParameters;
 use lgn_messages::types::v1::query::WorkerTaskType;
-use lgn_messages::types::v1::query::NUM_CHUNKS;
-use lgn_messages::types::v1::query::NUM_ROWS;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::TaskType;
 use lgn_messages::Proof;
@@ -19,49 +17,14 @@ use metrics::histogram;
 use parsil::assembler::DynamicCircuitPis;
 use tracing::info;
 use verifiable_db::api::QueryCircuitInput;
-use verifiable_db::api::QueryParameters;
 use verifiable_db::query::api::CircuitInput;
 use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
 use verifiable_db::revelation;
 use verifiable_db::revelation::api::MatchingRow;
 
-use super::INDEX_TREE_MAX_DEPTH;
-use super::MAX_NUM_COLUMNS;
-use super::MAX_NUM_ITEMS_PER_OUTPUT;
-use super::MAX_NUM_OUTPUTS;
-use super::MAX_NUM_PLACEHOLDERS;
-use super::MAX_NUM_PREDICATE_OPS;
-use super::MAX_NUM_RESULT_OPS;
-use super::ROW_TREE_MAX_DEPTH;
 use crate::params;
 use crate::provers::LgnProver;
-
-pub type ConcreteCircuitInput = QueryCircuitInput<
-    NUM_CHUNKS,
-    NUM_ROWS,
-    ROW_TREE_MAX_DEPTH,
-    INDEX_TREE_MAX_DEPTH,
-    MAX_NUM_COLUMNS,
-    MAX_NUM_PREDICATE_OPS,
-    MAX_NUM_PREDICATE_OPS,
-    MAX_NUM_OUTPUTS,
-    MAX_NUM_ITEMS_PER_OUTPUT,
-    MAX_NUM_PLACEHOLDERS,
->;
-
-pub type ConcreteQueryParameters = QueryParameters<
-    NUM_CHUNKS,
-    NUM_ROWS,
-    ROW_TREE_MAX_DEPTH,
-    INDEX_TREE_MAX_DEPTH,
-    MAX_NUM_COLUMNS,
-    MAX_NUM_PREDICATE_OPS,
-    MAX_NUM_RESULT_OPS,
-    MAX_NUM_OUTPUTS,
-    MAX_NUM_ITEMS_PER_OUTPUT,
-    MAX_NUM_PLACEHOLDERS,
->;
 
 pub struct EuclidQueryProver {
     params: ConcreteQueryParameters,
@@ -107,46 +70,6 @@ impl EuclidQueryProver {
             proof.len() / 1024,
             now.elapsed()
         );
-
-        Ok(proof)
-    }
-
-    fn prove_universal_circuit(
-        &self,
-        input: &MatchingRowInput,
-        pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Proof> {
-        let circuit_input = CircuitInput::new_universal_circuit(
-            &input.column_cells,
-            &pis.predication_operations,
-            &pis.result,
-            &((&input.placeholders).into()),
-            input.is_leaf,
-            &pis.bounds,
-        )
-        .context("while initializing the universal circuit")?;
-
-        let proof = self.prove_circuit_input(QueryCircuitInput::Query(circuit_input))?;
-
-        Ok(proof)
-    }
-
-    fn prove_row_chunks(
-        &self,
-        input: &RowsChunkInput,
-        pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Proof> {
-        let placeholders = (&input.placeholders).into();
-        let input = CircuitInput::new_row_chunks_input(
-            &input.rows,
-            &pis.predication_operations,
-            &placeholders,
-            &pis.bounds,
-            &pis.result,
-        )
-        .context("while initializing the rows-chunk circuit")?;
-
-        let proof = self.prove_circuit_input(QueryCircuitInput::Query(input))?;
 
         Ok(proof)
     }
@@ -260,7 +183,18 @@ impl EuclidQueryProver {
 
                 let mut matching_rows_proofs = vec![];
                 for (row_input, matching_row) in rows_inputs.iter().zip(matching_rows) {
-                    let proof = self.prove_universal_circuit(row_input, &pis)?;
+                    let circuit_input = CircuitInput::new_universal_circuit(
+                        &row_input.column_cells,
+                        &pis.predication_operations,
+                        &pis.result,
+                        &((&row_input.placeholders).into()),
+                        row_input.is_leaf,
+                        &pis.bounds,
+                    )
+                    .context("while initializing the universal circuit")?;
+
+                    let proof =
+                        self.prove_circuit_input(QueryCircuitInput::Query(circuit_input))?;
                     matching_rows_proofs.push(matching_row.hydrate(proof));
                 }
 
@@ -275,8 +209,10 @@ impl EuclidQueryProver {
                 )?
             },
             QueryStep::Aggregation(input) => {
-                match &input.input_kind {
-                    ProofInputKind::RowsChunk(rc) => self.prove_row_chunks(rc, &pis),
+                match input.input_kind {
+                    ProofInputKind::RowsChunk(circuit_input) => {
+                        self.prove_circuit_input(*circuit_input)
+                    },
                     ProofInputKind::ChunkAggregation(ca) => {
                         let chunks_proofs = ca
                             .child_proofs
@@ -285,7 +221,9 @@ impl EuclidQueryProver {
                             .collect::<Vec<_>>();
                         self.prove_chunk_aggregation(&chunks_proofs)
                     },
-                    ProofInputKind::NonExistence(ne) => self.prove_non_existence(ne, &pis),
+                    ProofInputKind::NonExistence(non_existence) => {
+                        self.prove_non_existence(&non_existence, &pis)
+                    },
                 }?
             },
             QueryStep::Revelation(input) => {

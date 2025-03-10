@@ -1,3 +1,4 @@
+#![feature(generic_const_exprs)]
 use anyhow::*;
 use checksum::fetch_checksums;
 use clap::Parser;

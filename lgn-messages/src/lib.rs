@@ -1,3 +1,4 @@
+#![feature(generic_const_exprs)]
 pub mod types;
 
 pub type BlockNr = u64;

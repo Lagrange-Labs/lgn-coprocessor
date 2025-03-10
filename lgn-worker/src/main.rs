@@ -1,3 +1,4 @@
+#![feature(generic_const_exprs)]
 use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::panic;

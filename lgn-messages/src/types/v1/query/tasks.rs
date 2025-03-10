@@ -10,6 +10,7 @@ use verifiable_db::query::universal_circuit::universal_circuit_inputs::RowCells;
 use verifiable_db::revelation::api::MatchingRow;
 use verifiable_db::revelation::RowPath;
 
+use super::ConcreteCircuitInput;
 use crate::types::v1::preprocessing::db_keys;
 use crate::types::v1::query::keys::ProofKey;
 use crate::types::v1::query::PlaceHolderLgn;
@@ -76,7 +77,7 @@ pub struct AggregationInput {
 pub enum ProofInputKind {
     /// Rows chunk input
     #[serde(rename = "1")]
-    RowsChunk(RowsChunkInput),
+    RowsChunk(Box<ConcreteCircuitInput>),
 
     /// Chunk aggregation input
     #[serde(rename = "2")]
