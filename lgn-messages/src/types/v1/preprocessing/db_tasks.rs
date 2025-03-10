@@ -3,54 +3,8 @@ use mp2_common::types::HashOutput;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
-use crate::types::v1::preprocessing::ext_tasks::Identifier;
 use crate::BlockNr;
 use crate::TableId;
-
-#[derive(PartialEq, Deserialize, Serialize)]
-pub enum DbRowType {
-    #[serde(rename = "1")]
-    Leaf(RowLeafInput),
-
-    #[serde(rename = "2")]
-    Partial(RowPartialInput),
-
-    #[serde(rename = "3")]
-    Full(RowFullInput),
-}
-
-#[derive(PartialEq, Deserialize, Serialize)]
-pub struct RowLeafInput {
-    pub table_id: TableId,
-    pub row_id: String,
-    pub identifier: Identifier,
-    pub value: U256,
-    pub is_multiplier: bool,
-    pub cells_proof: Vec<u8>,
-}
-
-#[derive(PartialEq, Deserialize, Serialize)]
-pub struct RowPartialInput {
-    pub table_id: TableId,
-    pub row_id: String,
-    pub identifier: Identifier,
-    pub value: U256,
-    pub is_multiplier: bool,
-    pub is_child_left: bool,
-    pub child_proof: Vec<u8>,
-    pub cells_proof: Vec<u8>,
-}
-
-#[derive(PartialEq, Deserialize, Serialize)]
-pub struct RowFullInput {
-    pub table_id: TableId,
-    pub row_id: String,
-    pub identifier: Identifier,
-    pub value: U256,
-    pub is_multiplier: bool,
-    pub child_proofs: Vec<Vec<u8>>,
-    pub cells_proof: Vec<u8>,
-}
 
 #[derive(PartialEq, Deserialize, Serialize)]
 pub struct BatchedIndex {
@@ -180,31 +134,6 @@ impl BlockMembershipInput {
             left_child,
             rows_tree_hash,
             right_proof: vec![],
-        }
-    }
-}
-
-#[derive(PartialEq, Deserialize, Serialize)]
-pub struct IvcInput {
-    pub table_id: TableId,
-    pub block_nr: BlockNr,
-    pub is_first_block: bool,
-    pub index_proof: Vec<u8>,
-    pub previous_ivc_proof: Option<Vec<u8>>,
-}
-
-impl IvcInput {
-    pub fn new(
-        table_id: TableId,
-        block_nr: BlockNr,
-        is_first_block: bool,
-    ) -> Self {
-        Self {
-            table_id,
-            block_nr,
-            is_first_block,
-            index_proof: vec![],
-            previous_ivc_proof: None,
         }
     }
 }
