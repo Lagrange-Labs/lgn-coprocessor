@@ -1,7 +1,6 @@
 use std::fmt::Display;
 
 use mp2_v1::query::batching_planner::UTKey;
-use object_store::path::Path;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
@@ -62,17 +61,5 @@ impl Display for ProofKey {
                 write!(f, "{KEYS_QUERIES_PREFIX}/{query_id}/{REVELATION}",)
             },
         }
-    }
-}
-
-impl From<ProofKey> for Path {
-    fn from(key: ProofKey) -> Self {
-        Path::from(key.to_string())
-    }
-}
-
-impl From<ProofKey> for String {
-    fn from(key: ProofKey) -> Self {
-        key.to_string()
     }
 }
