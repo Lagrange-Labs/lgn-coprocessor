@@ -4,18 +4,15 @@ version = "1.1.6"
 edition = "2021"
 
 [dependencies]
+alloy-primitives = { workspace = true }
 anyhow = { workspace = true }
+derive-debug-plus = { workspace = true }
 ethers = { workspace = true }
 mp2_common = { workspace = true }
 mp2_v1 = { workspace = true }
-object_store = { workspace = true }
 serde = { workspace = true }
-thiserror = { workspace = true }
-verifiable-db = { workspace = true }
-
-alloy-primitives = { workspace = true }
-derive-debug-plus = { workspace = true }
 serde_derive = { workspace = true }
+verifiable-db = { workspace = true }
 
 [package.metadata.cargo-shear]
 ignored = ["serde"]
