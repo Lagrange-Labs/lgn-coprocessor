@@ -3,10 +3,7 @@ use std::collections::HashMap;
 use alloy::primitives::U256;
 use anyhow::bail;
 use anyhow::Context;
-use lgn_messages::types::v1::preprocessing::db_tasks::DatabaseType;
 use lgn_messages::types::v1::preprocessing::db_tasks::DbBlockType;
-use lgn_messages::types::v1::preprocessing::db_tasks::DbRowType;
-use lgn_messages::types::v1::preprocessing::ext_tasks::ExtractionType;
 use lgn_messages::types::v1::preprocessing::node_type;
 use lgn_messages::types::v1::preprocessing::NodeType;
 use lgn_messages::types::v1::preprocessing::WorkerTaskType;
@@ -175,127 +172,115 @@ impl EuclidProver {
             WorkerTaskType::CircuitInput(circuit_input) => {
                 self.prove(circuit_input, "circuit_input")?
             },
-            WorkerTaskType::Extraction(extraction) => {
-                match extraction {
-                    ExtractionType::LengthExtraction(length) => {
-                        let mut nodes = length.nodes;
-
-                        nodes.reverse();
-                        let first = nodes.pop().context("Missing length extraction leaf node")?;
-
-                        if node_type(&first)? != NodeType::Leaf {
-                            bail!("The first node for a length extraction must be a leaf node");
-                        }
-
-                        let mut proof =
-                            self.prove_length_extraction(LengthCircuitInput::new_leaf(
-                                length.length_slot as u8,
-                                first,
-                                length.variable_slot as u8,
-                            ))?;
-
-                        for node in nodes {
-                            match node_type(&node)? {
-                                NodeType::Branch => {
-                                    proof = self.prove_length_extraction(
-                                        LengthCircuitInput::new_branch(node, proof),
-                                    )?;
-                                },
-                                NodeType::Extension => {
-                                    proof = self.prove_length_extraction(
-                                        LengthCircuitInput::new_extension(node, proof),
-                                    )?;
-                                },
-                                NodeType::Leaf => bail!("Only the first node can be a leaf"),
-                            }
-                        }
-
-                        proof
-                    },
-                    ExtractionType::ContractExtraction(contract) => {
-                        let mut nodes = contract.nodes;
-
-                        nodes.reverse();
-                        let first = nodes
-                            .pop()
-                            .context("Missing contract extraction leaf node")?;
-
-                        if node_type(&first)? != NodeType::Leaf {
-                            bail!("The first node for a contract extraction must be a leaf node");
-                        }
-
-                        let mut proof = self.prove_contract_extraction(
-                            contract_extraction::CircuitInput::new_leaf(
-                                first,
-                                &contract.storage_root,
-                                contract.contract,
-                            ),
-                        )?;
-
-                        for node in nodes {
-                            match node_type(&node)? {
-                                NodeType::Branch => {
-                                    proof = self.prove_contract_extraction(
-                                        contract_extraction::CircuitInput::new_branch(node, proof),
-                                    )?;
-                                },
-                                NodeType::Extension => {
-                                    proof = self.prove_contract_extraction(
-                                        contract_extraction::CircuitInput::new_extension(
-                                            node, proof,
-                                        ),
-                                    )?;
-                                },
-                                NodeType::Leaf => bail!("Only the first node can be a leaf"),
-                            }
-                        }
-
-                        proof
-                    },
+            WorkerTaskType::BatchedIndex(batched_index) => {
+                let mut last_proof = None;
+                for input in &batched_index.inputs {
+                    last_proof = Some(match input {
+                        DbBlockType::Leaf(leaf) => {
+                            self.prove_block_leaf(
+                                leaf.block_id,
+                                leaf.extraction_proof.to_owned(),
+                                leaf.rows_proof.to_owned(),
+                            )?
+                        },
+                        DbBlockType::Parent(parent) => {
+                            self.prove_block_parent(
+                                parent.block_id,
+                                parent.old_block_number,
+                                parent.old_min,
+                                parent.old_max,
+                                parent.prev_left_child.to_owned(),
+                                parent.prev_right_child.to_owned(),
+                                parent.old_rows_tree_hash.to_owned(),
+                                parent.extraction_proof.to_owned(),
+                                parent.rows_proof.to_owned(),
+                            )?
+                        },
+                        DbBlockType::Membership(membership) => {
+                            self.prove_membership(
+                                membership.block_id,
+                                membership.index_value,
+                                membership.old_min,
+                                membership.old_max,
+                                membership.left_child.to_owned(),
+                                membership.rows_tree_hash.to_owned(),
+                                last_proof.take().unwrap(),
+                            )?
+                        },
+                    });
                 }
+                last_proof.take().unwrap()
             },
-            WorkerTaskType::Database(db) => {
-                match db {
-                    DatabaseType::Index(block) => {
-                        let mut last_proof = None;
-                        for input in &block.inputs {
-                            last_proof = Some(match input {
-                                DbBlockType::Leaf(leaf) => {
-                                    self.prove_block_leaf(
-                                        leaf.block_id,
-                                        leaf.extraction_proof.to_owned(),
-                                        leaf.rows_proof.to_owned(),
-                                    )?
-                                },
-                                DbBlockType::Parent(parent) => {
-                                    self.prove_block_parent(
-                                        parent.block_id,
-                                        parent.old_block_number,
-                                        parent.old_min,
-                                        parent.old_max,
-                                        parent.prev_left_child.to_owned(),
-                                        parent.prev_right_child.to_owned(),
-                                        parent.old_rows_tree_hash.to_owned(),
-                                        parent.extraction_proof.to_owned(),
-                                        parent.rows_proof.to_owned(),
-                                    )?
-                                },
-                                DbBlockType::Membership(membership) => {
-                                    self.prove_membership(
-                                        membership.block_id,
-                                        membership.index_value,
-                                        membership.old_min,
-                                        membership.old_max,
-                                        membership.left_child.to_owned(),
-                                        membership.rows_tree_hash.to_owned(),
-                                        last_proof.take().unwrap(),
-                                    )?
-                                },
-                            });
-                        }
-                        last_proof.take().unwrap()
-                    },
+            WorkerTaskType::BatchedLength(batched_length) => {
+                let mut nodes = batched_length.nodes;
+
+                nodes.reverse();
+                let first = nodes.pop().context("Missing length extraction leaf node")?;
+
+                if node_type(&first)? != NodeType::Leaf {
+                    bail!("The first node for a length extraction must be a leaf node");
                 }
+
+                let mut proof = self.prove_length_extraction(LengthCircuitInput::new_leaf(
+                    batched_length.length_slot as u8,
+                    first,
+                    batched_length.variable_slot as u8,
+                ))?;
+
+                for node in nodes {
+                    match node_type(&node)? {
+                        NodeType::Branch => {
+                            proof = self.prove_length_extraction(
+                                LengthCircuitInput::new_branch(node, proof),
+                            )?;
+                        },
+                        NodeType::Extension => {
+                            proof = self.prove_length_extraction(
+                                LengthCircuitInput::new_extension(node, proof),
+                            )?;
+                        },
+                        NodeType::Leaf => bail!("Only the first node can be a leaf"),
+                    }
+                }
+
+                proof
+            },
+            WorkerTaskType::BatchedContract(batched_contract) => {
+                let mut nodes = batched_contract.nodes;
+
+                nodes.reverse();
+                let first = nodes
+                    .pop()
+                    .context("Missing contract extraction leaf node")?;
+
+                if node_type(&first)? != NodeType::Leaf {
+                    bail!("The first node for a contract extraction must be a leaf node");
+                }
+
+                let mut proof =
+                    self.prove_contract_extraction(contract_extraction::CircuitInput::new_leaf(
+                        first,
+                        &batched_contract.storage_root,
+                        batched_contract.contract,
+                    ))?;
+
+                for node in nodes {
+                    match node_type(&node)? {
+                        NodeType::Branch => {
+                            proof = self.prove_contract_extraction(
+                                contract_extraction::CircuitInput::new_branch(node, proof),
+                            )?;
+                        },
+                        NodeType::Extension => {
+                            proof = self.prove_contract_extraction(
+                                contract_extraction::CircuitInput::new_extension(node, proof),
+                            )?;
+                        },
+                        NodeType::Leaf => bail!("Only the first node can be a leaf"),
+                    }
+                }
+
+                proof
             },
         })
     }

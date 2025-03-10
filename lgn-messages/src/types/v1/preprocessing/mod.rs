@@ -1,6 +1,8 @@
-use alloy_primitives::Address;
 use anyhow::bail;
+use db_tasks::BatchedIndex;
 use ethers::utils::rlp::Rlp;
+use ext_tasks::BatchedContract;
+use ext_tasks::BatchedLength;
 use mp2_v1::api::MAX_FIELD_PER_EVM;
 use mp2_v1::values_extraction;
 use serde_derive::Deserialize;
@@ -8,12 +10,6 @@ use serde_derive::Serialize;
 
 use super::query::MAX_NUM_COLUMNS;
 use super::ConcreteCircuitInput;
-use crate::types::v1::preprocessing::db_tasks::DatabaseType;
-use crate::types::v1::preprocessing::ext_tasks::Contract;
-use crate::types::v1::preprocessing::ext_tasks::ExtractionType;
-use crate::types::v1::preprocessing::ext_tasks::Length;
-use crate::BlockNr;
-use crate::TableHash;
 
 pub mod db_tasks;
 pub mod ext_tasks;
@@ -65,44 +61,8 @@ pub fn node_type(rlp_data: &[u8]) -> anyhow::Result<NodeType> {
 #[derive(Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum WorkerTaskType {
-    #[serde(rename = "1")]
-    Extraction(ExtractionType),
-
-    #[serde(rename = "2")]
-    Database(DatabaseType),
-
-    #[serde(rename = "3")]
+    BatchedIndex(BatchedIndex),
+    BatchedLength(BatchedLength),
+    BatchedContract(BatchedContract),
     CircuitInput(ConcreteCircuitInput),
-}
-
-impl WorkerTaskType {
-    pub fn ext_length(
-        table_hash: TableHash,
-        block_nr: BlockNr,
-        nodes: Vec<Vec<u8>>,
-        length_slot: usize,
-        variable_slot: usize,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(ExtractionType::LengthExtraction(Length {
-            table_hash,
-            block_nr,
-            length_slot,
-            variable_slot,
-            nodes,
-        }))
-    }
-
-    pub fn ext_contract(
-        block_nr: BlockNr,
-        contract_address: Address,
-        nodes: Vec<Vec<u8>>,
-        storage_root: Vec<u8>,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(ExtractionType::ContractExtraction(Contract {
-            block_nr,
-            storage_root,
-            contract: contract_address,
-            nodes,
-        }))
-    }
 }

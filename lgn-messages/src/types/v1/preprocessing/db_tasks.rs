@@ -7,11 +7,6 @@ use crate::types::v1::preprocessing::ext_tasks::Identifier;
 use crate::BlockNr;
 use crate::TableId;
 
-#[derive(Deserialize, Serialize)]
-pub enum DatabaseType {
-    Index(IndexInputs),
-}
-
 #[derive(PartialEq, Deserialize, Serialize)]
 pub enum DbRowType {
     #[serde(rename = "1")]
@@ -58,13 +53,13 @@ pub struct RowFullInput {
 }
 
 #[derive(PartialEq, Deserialize, Serialize)]
-pub struct IndexInputs {
+pub struct BatchedIndex {
     pub table_id: TableId,
     pub block_nr: BlockNr,
     pub inputs: Vec<DbBlockType>,
 }
 
-impl IndexInputs {
+impl BatchedIndex {
     pub fn new(
         table_id: TableId,
         block_nr: BlockNr,
