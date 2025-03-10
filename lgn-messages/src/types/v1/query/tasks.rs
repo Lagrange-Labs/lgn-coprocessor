@@ -3,8 +3,6 @@ use std::sync::Arc;
 use alloy_primitives::U256;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
-use verifiable_db::query::api::RowInput;
-use verifiable_db::query::api::TreePathInputs;
 use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::RowCells;
 use verifiable_db::revelation::api::MatchingRow;
@@ -137,25 +135,4 @@ pub enum RevelationInput {
         limit: u32,
         offset: u32,
     },
-}
-
-/// Non existence input of an aggregation query
-#[derive(Deserialize, Serialize)]
-pub struct NonExistenceInput {
-    pub index_path: TreePathInputs,
-    pub column_ids: ColumnIDs,
-    pub placeholders: PlaceHolderLgn,
-}
-
-/// Rows chunk input of an aggregation query
-#[derive(PartialEq, Deserialize, Serialize)]
-pub struct RowsChunkInput {
-    pub rows: Vec<RowInput>,
-    pub placeholders: PlaceHolderLgn,
-}
-
-/// Chunk aggregation input of an aggregation query
-#[derive(Deserialize, Serialize)]
-pub struct ChunkAggregationInput {
-    pub child_proofs: Vec<Hydratable<ProofKey>>,
 }
