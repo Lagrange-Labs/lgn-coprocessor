@@ -404,7 +404,7 @@ fn process_downstream_payload(
     );
 
     let envelope_version =
-        semver::Version::parse(&envelope.version).context("parsing message version")?;
+        semver::Version::parse(&envelope.mp2_version).context("parsing message version")?;
 
     ensure!(
         mp2_requirement.matches(&envelope_version),

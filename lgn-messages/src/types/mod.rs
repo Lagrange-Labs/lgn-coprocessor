@@ -28,7 +28,7 @@ pub struct MessageEnvelope {
     /// The proving system version target version.
     ///
     /// Used to check the worker is compatible with the task.
-    pub version: String,
+    pub mp2_version: String,
 }
 
 impl std::fmt::Debug for MessageEnvelope {
@@ -38,7 +38,7 @@ impl std::fmt::Debug for MessageEnvelope {
     ) -> std::fmt::Result {
         f.debug_struct("MessageEnvelope")
             .field("task_id", &self.task_id)
-            .field("version", &self.version)
+            .field("version", &self.mp2_version)
             .finish_non_exhaustive()
     }
 }
@@ -52,7 +52,7 @@ impl MessageEnvelope {
         Self {
             task,
             task_id,
-            version,
+            mp2_version: version,
         }
     }
 
