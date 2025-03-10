@@ -291,6 +291,8 @@ async fn run_worker(
             Some(inbound_message) = inbound.next() => {
                 match inbound_message {
                     Ok(ref msg) => {
+                        counter!("zkmr_worker_tasks_received_total").increment(1);
+
                         match process_message_from_gateway(
                             &mut provers_manager,
                             msg,
@@ -298,17 +300,20 @@ async fn run_worker(
                             &mp2_requirement,
                         ).await {
                             Ok(()) => {
+                                counter!("zkmr_worker_tasks_processed_total").increment(1);
                                 last_task_processed.store(
                                     SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
                                     Ordering::Relaxed,
                                 );
                             },
                             Err(err) => {
+                                counter!("zkmr_worker_error_total").increment(1);
                                 bail!("task processing failed. err: {:?}", err);
                             }
                         }
                     },
                     Err(status) => {
+                        counter!("zkmr_worker_error_total").increment(1);
                         bail!("connection to the gateway ended. status: {}", status);
                     }
                 };
@@ -369,7 +374,6 @@ async fn process_message_from_gateway(
     };
 
     outbound.send(outbound_msg).await?;
-    counter!("zkmr_worker_grpc_messages_sent_total").increment(1);
 
     Ok(())
 }
@@ -400,8 +404,6 @@ fn process_downstream_payload(
         uuid, envelope.task_id
     );
 
-    counter!("zkmr_worker_tasks_received_total").increment(1);
-
     let envelope_version =
         semver::Version::parse(&envelope.version).context("parsing message version")?;
 
@@ -418,20 +420,15 @@ fn process_downstream_payload(
             match result {
                 Ok(reply) => {
                     trace!("Sending reply: {:?}", reply);
-                    counter!("zkmr_worker_tasks_processed_total").increment(1);
                     Ok(reply)
                 },
                 Err(err) => {
                     error!("Error processing task. err: {:?}", err);
-                    counter!("zkmr_worker_error_count").increment(1);
-
                     return Err(err);
                 },
             }
         },
         Err(panic) => {
-            counter!("zkmr_worker_error_count").increment(1);
-
             let msg = match panic.downcast_ref::<&'static str>() {
                 Some(s) => *s,
                 None => {
