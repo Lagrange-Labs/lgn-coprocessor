@@ -137,12 +137,6 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K> {
 /// Revelation input
 #[derive(Deserialize, Serialize)]
 pub enum RevelationInput {
-    /// Input for an aggregation query
-    Aggregated {
-        placeholders: PlaceHolderLgn,
-        indexing_proof: Hydratable<db_keys::ProofKey>,
-        query_proof: Hydratable<ProofKey>,
-    },
     /// Input for a tabular query
     Tabular {
         placeholders: PlaceHolderLgn,

@@ -72,28 +72,6 @@ impl EuclidQueryProver {
         Ok(proof)
     }
 
-    fn prove_aggregated_revelation(
-        &self,
-        pis: &DynamicCircuitPis,
-        placeholders: Placeholders,
-        query_proof: Vec<u8>,
-        indexing_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
-        let circuit_input = revelation::api::CircuitInput::new_revelation_aggregated(
-            query_proof,
-            indexing_proof,
-            &pis.bounds,
-            &placeholders,
-            &pis.predication_operations,
-            &pis.result,
-        )
-        .context("while initializing the (empty) revelation circuit")?;
-
-        let proof = self.prove_circuit_input(QueryCircuitInput::Revelation(circuit_input))?;
-
-        Ok(proof)
-    }
-
     #[allow(clippy::too_many_arguments)]
     fn prove_tabular_revelation(
         &self,
@@ -141,10 +119,7 @@ impl EuclidQueryProver {
                     limit,
                     offset,
                     ..
-                } = revelation_input
-                else {
-                    panic!("Wrong RevelationInput for QueryStep::Tabular");
-                };
+                } = revelation_input;
 
                 let mut matching_rows_proofs = vec![];
                 for (row_input, matching_row) in rows_inputs.iter().zip(matching_rows) {
@@ -175,19 +150,6 @@ impl EuclidQueryProver {
             },
             QueryStep::Revelation(input) => {
                 match input {
-                    RevelationInput::Aggregated {
-                        placeholders,
-                        indexing_proof,
-                        query_proof,
-                        ..
-                    } => {
-                        self.prove_aggregated_revelation(
-                            &pis,
-                            placeholders.into(),
-                            query_proof.clone_proof(),
-                            indexing_proof.clone_proof(),
-                        )
-                    },
                     RevelationInput::Tabular {
                         placeholders,
                         indexing_proof,

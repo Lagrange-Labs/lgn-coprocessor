@@ -43,17 +43,6 @@ pub type ConcreteQueryCircuitInput = QueryCircuitInput<
     MAX_NUM_PLACEHOLDERS,
 >;
 
-pub type ConcreteRevelationCircuitInput = verifiable_db::revelation::api::CircuitInput<
-    ROW_TREE_MAX_DEPTH,
-    INDEX_TREE_MAX_DEPTH,
-    MAX_NUM_COLUMNS,
-    MAX_NUM_PREDICATE_OPS,
-    MAX_NUM_RESULT_OPS,
-    MAX_NUM_OUTPUTS,
-    MAX_NUM_ITEMS_PER_OUTPUT,
-    MAX_NUM_PLACEHOLDERS,
->;
-
 pub type ConcreteQueryParameters = QueryParameters<
     NUM_CHUNKS,
     NUM_ROWS,
