@@ -18,9 +18,6 @@ use crate::types::v1::query::PlaceHolderLgn;
 /// Query input for a proving task
 #[derive(Deserialize, Serialize)]
 pub struct QueryInput {
-    /// Proof storage key
-    pub proof_key: ProofKey,
-
     /// Query step info
     pub query_step: QueryStep,
 
