@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use alloy_primitives::U256;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
@@ -9,7 +7,6 @@ use verifiable_db::revelation::api::MatchingRow;
 use verifiable_db::revelation::RowPath;
 
 use super::ConcreteQueryCircuitInput;
-use crate::types::v1::query::keys::ProofKey;
 use crate::types::v1::query::PlaceHolderLgn;
 use crate::Proof;
 
@@ -46,8 +43,6 @@ pub enum QueryStep {
 /// Matching row input for a tabular query
 #[derive(PartialEq, Deserialize, Serialize)]
 pub struct MatchingRowInput {
-    /// Proof key of this row proof
-    pub proof_key: ProofKey,
     /// Collumn cells info
     pub column_cells: RowCells,
     /// The placeholders
@@ -69,56 +64,5 @@ impl HydratableMatchingRow {
         proof: Vec<u8>,
     ) -> MatchingRow {
         MatchingRow::new(proof, self.path, self.result)
-    }
-}
-
-/// Either a `Dehydrated` variant containing a key to a stored proof, or a
-/// `Hydrated` containing the proof itself.
-#[derive(Serialize, Deserialize)]
-pub enum Hydratable<K: Clone + std::fmt::Debug> {
-    Dehydrated(K),
-    Hydrated(Arc<Vec<u8>>),
-}
-
-impl<K: Clone + std::fmt::Debug> Hydratable<K> {
-    /// Wrap a proof key into a `Dehydrated` variant.
-    pub fn new(k: K) -> Self {
-        Hydratable::Dehydrated(k)
-    }
-
-    /// Consume a `Hydrated` variant into its embedded proof; panic if it is
-    /// not hydrated.
-    pub fn proof(&self) -> Arc<Vec<u8>> {
-        match self {
-            Hydratable::Dehydrated(_) => unreachable!(),
-            Hydratable::Hydrated(proof) => proof.clone(),
-        }
-    }
-
-    /// Consume a `Hydrated` variant into its embedded proof; panic if it is
-    /// not hydrated.
-    pub fn clone_proof(&self) -> Vec<u8> {
-        match self {
-            Hydratable::Dehydrated(_) => unreachable!(),
-            Hydratable::Hydrated(proof) => proof.clone().to_vec(),
-        }
-    }
-
-    /// Convert a `Dehydrated` variant into its embedded key; panic if it is
-    /// not hydrated.
-    pub fn key(&self) -> K {
-        match self {
-            Hydratable::Dehydrated(k) => k.clone(),
-            Hydratable::Hydrated(_) => unreachable!(),
-        }
-    }
-
-    /// Hydrates a `Dehydrated` variant; panic if it is already hydrated.
-    pub fn hydrate(
-        &mut self,
-        proof: Vec<u8>,
-    ) {
-        assert!(matches!(self, Hydratable::Dehydrated(_)));
-        *self = Hydratable::Hydrated(Arc::new(proof))
     }
 }
