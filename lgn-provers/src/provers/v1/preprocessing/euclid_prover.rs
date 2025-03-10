@@ -17,6 +17,7 @@ use lgn_messages::types::v1::ConcreteCircuitInput;
 use lgn_messages::types::v1::ConcretePublicParameters;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::TaskType;
+use lgn_messages::Proof;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::generate_proof;
@@ -56,7 +57,7 @@ impl EuclidProver {
         &self,
         input: ConcreteCircuitInput,
         name: &str,
-    ) -> anyhow::Result<Vec<u8>> {
+    ) -> anyhow::Result<Proof> {
         debug!("Proving {}", name);
 
         let now = std::time::Instant::now();
@@ -84,7 +85,7 @@ impl EuclidProver {
     fn prove_value_extraction(
         &self,
         circuit_input: ConcreteValueExtractionCircuitInput,
-    ) -> anyhow::Result<Vec<u8>> {
+    ) -> anyhow::Result<Proof> {
         self.prove(
             CircuitInput::ValuesExtraction(circuit_input),
             "value extraction",
@@ -94,7 +95,7 @@ impl EuclidProver {
     fn prove_length_extraction(
         &self,
         circuit_input: length_extraction::LengthCircuitInput,
-    ) -> anyhow::Result<Vec<u8>> {
+    ) -> anyhow::Result<Proof> {
         self.prove(
             CircuitInput::LengthExtraction(circuit_input),
             "length extraction",
@@ -104,7 +105,7 @@ impl EuclidProver {
     fn prove_contract_extraction(
         &self,
         circuit_input: contract_extraction::CircuitInput,
-    ) -> anyhow::Result<Vec<u8>> {
+    ) -> anyhow::Result<Proof> {
         self.prove(
             CircuitInput::ContractExtraction(circuit_input),
             "contract extraction",
@@ -113,8 +114,8 @@ impl EuclidProver {
 
     fn prove_block(
         &self,
-        rlp_header: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
+        rlp_header: Proof,
+    ) -> anyhow::Result<Proof> {
         let input = CircuitInput::BlockExtraction(
             block_extraction::CircuitInput::from_block_header(rlp_header),
         );
@@ -123,10 +124,10 @@ impl EuclidProver {
 
     fn prove_final_extraction(
         &self,
-        block_proof: Vec<u8>,
-        contract_proof: Vec<u8>,
-        value_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
+        block_proof: Proof,
+        contract_proof: Proof,
+        value_proof: Proof,
+    ) -> anyhow::Result<Proof> {
         let input =
             CircuitInput::FinalExtraction(final_extraction::CircuitInput::new_simple_input(
                 block_proof,
@@ -138,11 +139,11 @@ impl EuclidProver {
 
     fn prove_final_extraction_lengthed(
         &self,
-        block_proof: Vec<u8>,
-        contract_proof: Vec<u8>,
-        value_proof: Vec<u8>,
-        length_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
+        block_proof: Proof,
+        contract_proof: Proof,
+        value_proof: Proof,
+        length_proof: Proof,
+    ) -> anyhow::Result<Proof> {
         let input =
             CircuitInput::FinalExtraction(final_extraction::CircuitInput::new_lengthed_input(
                 block_proof,
@@ -155,11 +156,11 @@ impl EuclidProver {
 
     fn prove_final_extraction_merge(
         &self,
-        block_proof: Vec<u8>,
-        contract_proof: Vec<u8>,
-        simple_table_proof: Vec<u8>,
-        mapping_table_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
+        block_proof: Proof,
+        contract_proof: Proof,
+        simple_table_proof: Proof,
+        mapping_table_proof: Proof,
+    ) -> anyhow::Result<Proof> {
         let input = CircuitInput::FinalExtraction(
             final_extraction::CircuitInput::new_merge_single_and_mapping(
                 block_proof,
@@ -174,7 +175,7 @@ impl EuclidProver {
     fn prove_cells_tree(
         &self,
         circuit_input: verifiable_db::cells_tree::CircuitInput,
-    ) -> anyhow::Result<Vec<u8>> {
+    ) -> anyhow::Result<Proof> {
         self.prove(CircuitInput::CellsTree(circuit_input), "cells tree")
     }
 
@@ -183,8 +184,8 @@ impl EuclidProver {
         identifier: u64,
         value: U256,
         is_multiplier: bool,
-        cells_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
+        cells_proof: Proof,
+    ) -> anyhow::Result<Proof> {
         let cells_proof = if !cells_proof.is_empty() {
             cells_proof
         } else {
@@ -208,9 +209,9 @@ impl EuclidProver {
         value: U256,
         is_multiplier: bool,
         is_child_left: bool,
-        child_proof: Vec<u8>,
-        cells_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
+        child_proof: Proof,
+        cells_proof: Proof,
+    ) -> anyhow::Result<Proof> {
         let cells_proof = if !cells_proof.is_empty() {
             cells_proof
         } else {
@@ -233,9 +234,9 @@ impl EuclidProver {
         identifier: u64,
         value: U256,
         is_multiplier: bool,
-        child_proofs: Vec<Vec<u8>>,
-        cells_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
+        child_proofs: Vec<Proof>,
+        cells_proof: Proof,
+    ) -> anyhow::Result<Proof> {
         let cells_proof = if !cells_proof.is_empty() {
             cells_proof
         } else {
@@ -256,9 +257,9 @@ impl EuclidProver {
     fn prove_block_leaf(
         &self,
         block_id: u64,
-        extraction_proof: Vec<u8>,
-        rows_tree_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
+        extraction_proof: Proof,
+        rows_tree_proof: Proof,
+    ) -> anyhow::Result<Proof> {
         let block_id: u64 = u64::from_be_bytes(block_id.to_be_bytes());
         let input = CircuitInput::BlockTree(verifiable_db::block_tree::CircuitInput::new_leaf(
             block_id,
@@ -278,9 +279,9 @@ impl EuclidProver {
         left_child: Option<HashOutput>,
         right_child: Option<HashOutput>,
         old_rows_tree_hash: HashOutput,
-        extraction_proof: Vec<u8>,
-        rows_tree_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
+        extraction_proof: Proof,
+        rows_tree_proof: Proof,
+    ) -> anyhow::Result<Proof> {
         let left_hash =
             left_child.unwrap_or_else(|| empty_poseidon_hash_as_vec().try_into().unwrap());
         let right_hash =
@@ -308,8 +309,8 @@ impl EuclidProver {
         old_max: U256,
         left_child: HashOutput,
         rows_tree_hash: HashOutput,
-        right_child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>> {
+        right_child_proof: Proof,
+    ) -> anyhow::Result<Proof> {
         let input =
             CircuitInput::BlockTree(verifiable_db::block_tree::CircuitInput::new_membership(
                 block_id,
@@ -325,9 +326,9 @@ impl EuclidProver {
 
     fn prove_ivc(
         &self,
-        index_proof: Vec<u8>,
-        previous_proof: Option<Vec<u8>>,
-    ) -> anyhow::Result<Vec<u8>> {
+        index_proof: Proof,
+        previous_proof: Option<Proof>,
+    ) -> anyhow::Result<Proof> {
         let input = match previous_proof {
             Some(previous_proof) => {
                 CircuitInput::IVC(verifiable_db::ivc::CircuitInput::new_subsequent_input(
@@ -348,8 +349,11 @@ impl EuclidProver {
     pub fn run_inner(
         &self,
         task: WorkerTaskType,
-    ) -> anyhow::Result<Vec<u8>> {
+    ) -> anyhow::Result<Proof> {
         Ok(match task {
+            WorkerTaskType::CircuitInput(circuit_input) => {
+                self.prove(circuit_input, "circuit_input")?
+            },
             WorkerTaskType::Extraction(extraction) => {
                 match extraction {
                     ExtractionType::MptExtraction(mpt) => {

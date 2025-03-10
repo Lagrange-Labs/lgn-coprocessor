@@ -3,12 +3,14 @@ use alloy_primitives::U256;
 use anyhow::bail;
 use ethers::prelude::H256;
 use ethers::utils::rlp::Rlp;
+use mp2_v1::api::CircuitInput;
 use mp2_v1::api::MAX_FIELD_PER_EVM;
 use mp2_v1::values_extraction;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
 use super::query::MAX_NUM_COLUMNS;
+use super::ConcreteCircuitInput;
 use crate::types::v1::preprocessing::db_tasks::DatabaseType;
 use crate::types::v1::preprocessing::db_tasks::IvcInput;
 use crate::types::v1::preprocessing::db_tasks::RowLeafInput;
@@ -79,6 +81,9 @@ pub enum WorkerTaskType {
 
     #[serde(rename = "2")]
     Database(DatabaseType),
+
+    #[serde(rename = "3")]
+    CircuitInput(ConcreteCircuitInput),
 }
 
 impl WorkerTaskType {
