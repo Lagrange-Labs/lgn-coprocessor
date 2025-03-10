@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use anyhow::bail;
 use anyhow::Context;
 use lgn_messages::types::v1::query::tasks::QueryStep;
-use lgn_messages::types::v1::query::tasks::RevelationInput;
 use lgn_messages::types::v1::query::ConcreteQueryCircuitInput;
 use lgn_messages::types::v1::query::ConcreteQueryParameters;
 use lgn_messages::types::v1::query::WorkerTaskType;
@@ -109,17 +108,15 @@ impl EuclidQueryProver {
         let pis: DynamicCircuitPis = serde_json::from_slice(&input.pis)?;
 
         let final_proof = match input.query_step {
-            QueryStep::Tabular(rows_inputs, revelation_input) => {
-                let RevelationInput::Tabular {
-                    placeholders,
-                    indexing_proof,
-                    matching_rows,
-                    column_ids,
-                    limit,
-                    offset,
-                    ..
-                } = revelation_input;
-
+            QueryStep::Tabular {
+                rows_inputs,
+                placeholders,
+                indexing_proof,
+                matching_rows,
+                column_ids,
+                limit,
+                offset,
+            } => {
                 let mut matching_rows_proofs = vec![];
                 for (row_input, matching_row) in rows_inputs.iter().zip(matching_rows) {
                     let circuit_input = CircuitInput::new_universal_circuit(

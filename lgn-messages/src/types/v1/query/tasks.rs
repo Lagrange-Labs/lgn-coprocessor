@@ -26,14 +26,15 @@ pub struct QueryInput {
 /// Query step info
 #[derive(Deserialize, Serialize)]
 pub enum QueryStep {
-    /// Combine the rows and revelation proving for tabular queries in one task,
-    /// next step is Groth16
-    Tabular(
-        // Matching row inputs for a tabular query
-        Vec<MatchingRowInput>,
-        // The corresponding revelation input
-        RevelationInput,
-    ),
+    Tabular {
+        rows_inputs: Vec<MatchingRowInput>,
+        placeholders: PlaceHolderLgn,
+        indexing_proof: Hydratable<db_keys::ProofKey>,
+        matching_rows: Vec<HydratableMatchingRow>,
+        column_ids: ColumnIDs,
+        limit: u32,
+        offset: u32,
+    },
 
     QueryCircuitInput(Box<ConcreteQueryCircuitInput>),
 }
@@ -121,18 +122,4 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K> {
         assert!(matches!(self, Hydratable::Dehydrated(_)));
         *self = Hydratable::Hydrated(Arc::new(proof))
     }
-}
-
-/// Revelation input
-#[derive(Deserialize, Serialize)]
-pub enum RevelationInput {
-    /// Input for a tabular query
-    Tabular {
-        placeholders: PlaceHolderLgn,
-        indexing_proof: Hydratable<db_keys::ProofKey>,
-        matching_rows: Vec<HydratableMatchingRow>,
-        column_ids: ColumnIDs,
-        limit: u32,
-        offset: u32,
-    },
 }
