@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use anyhow::bail;
 use anyhow::Context;
-use lgn_messages::types::v1::query::tasks::Hydratable;
 use lgn_messages::types::v1::query::tasks::HydratableMatchingRow;
 use lgn_messages::types::v1::query::tasks::MatchingRowInput;
 use lgn_messages::types::v1::query::tasks::NonExistenceInput;
@@ -259,15 +258,9 @@ impl EuclidQueryProver {
                 };
 
                 let mut matching_rows_proofs = vec![];
-                for (row_input, mut matching_row) in rows_inputs.iter().zip(matching_rows.clone()) {
+                for (row_input, matching_row) in rows_inputs.iter().zip(matching_rows.clone()) {
                     let proof = self.prove_universal_circuit(row_input.clone(), &pis)?;
-
-                    if let Hydratable::Dehydrated(_) = &matching_row.proof {
-                        matching_row.proof.hydrate(proof);
-                    }
-
-                    let matching_row_proof = HydratableMatchingRow::into_matching_row(matching_row);
-                    matching_rows_proofs.push(matching_row_proof);
+                    matching_rows_proofs.push(matching_row.hydrate(proof));
                 }
 
                 self.prove_tabular_revelation(

@@ -101,6 +101,13 @@ impl HydratableMatchingRow {
     pub fn into_matching_row(self) -> MatchingRow {
         MatchingRow::new(self.proof.clone_proof(), self.path, self.result)
     }
+
+    pub fn hydrate(
+        self,
+        proof: Vec<u8>,
+    ) -> MatchingRow {
+        MatchingRow::new(proof, self.path, self.result)
+    }
 }
 
 /// Either a `Dehydrated` variant containing a key to a stored proof, or a

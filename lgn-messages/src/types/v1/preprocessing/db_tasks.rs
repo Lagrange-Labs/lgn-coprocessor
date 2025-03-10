@@ -4,7 +4,6 @@ use mp2_common::types::HashOutput;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
-use crate::types::v1::preprocessing::db_keys;
 use crate::types::v1::preprocessing::ext_tasks::Identifier;
 use crate::BlockNr;
 use crate::TableId;
@@ -47,7 +46,6 @@ pub struct RowLeafInput {
     pub identifier: Identifier,
     pub value: U256,
     pub is_multiplier: bool,
-    pub cells_proof_location: Option<db_keys::ProofKey>,
 
     #[dbg(placeholder = "...")]
     pub cells_proof: Vec<u8>,
@@ -61,8 +59,6 @@ pub struct RowPartialInput {
     pub value: U256,
     pub is_multiplier: bool,
     pub is_child_left: bool,
-    pub child_proof_location: db_keys::ProofKey,
-    pub cells_proof_location: Option<db_keys::ProofKey>,
 
     #[dbg(placeholder = "...")]
     pub child_proof: Vec<u8>,
@@ -78,8 +74,6 @@ pub struct RowFullInput {
     pub identifier: Identifier,
     pub value: U256,
     pub is_multiplier: bool,
-    pub child_proofs_locations: Vec<db_keys::ProofKey>,
-    pub cells_proof_location: Option<db_keys::ProofKey>,
 
     #[dbg(placeholder = "...")]
     pub child_proofs: Vec<Vec<u8>>,
@@ -125,7 +119,6 @@ pub enum DbBlockType {
 pub struct BlockLeafInput {
     pub table_id: TableId,
     pub block_id: BlockNr,
-    pub rows_proof_location: db_keys::ProofKey,
 
     #[dbg(placeholder = "...")]
     pub extraction_proof: Vec<u8>,
@@ -138,12 +131,10 @@ impl BlockLeafInput {
     pub fn new(
         table_id: TableId,
         block_id: BlockNr,
-        rows_proof_location: db_keys::ProofKey,
     ) -> Self {
         Self {
             table_id,
             block_id,
-            rows_proof_location,
             extraction_proof: vec![],
             rows_proof: vec![],
         }
@@ -160,7 +151,6 @@ pub struct BlockParentInput {
     pub prev_left_child: Option<HashOutput>,
     pub prev_right_child: Option<HashOutput>,
     pub old_rows_tree_hash: HashOutput,
-    pub rows_proof_location: db_keys::ProofKey,
 
     #[dbg(placeholder = "...")]
     pub extraction_proof: Vec<u8>,
@@ -180,7 +170,6 @@ impl BlockParentInput {
         prev_left_child: Option<HashOutput>,
         prev_right_child: Option<HashOutput>,
         old_rows_tree_hash: HashOutput,
-        rows_proof_location: db_keys::ProofKey,
     ) -> Self {
         Self {
             table_id,
@@ -191,7 +180,6 @@ impl BlockParentInput {
             prev_left_child,
             prev_right_child,
             old_rows_tree_hash,
-            rows_proof_location,
             extraction_proof: vec![],
             rows_proof: vec![],
         }
@@ -207,7 +195,6 @@ pub struct BlockMembershipInput {
     pub old_max: U256,
     pub left_child: HashOutput,
     pub rows_tree_hash: HashOutput,
-    pub right_proof_location: db_keys::ProofKey,
 
     #[dbg(placeholder = "...")]
     pub right_proof: Vec<u8>,
@@ -223,7 +210,6 @@ impl BlockMembershipInput {
         old_max: U256,
         left_child: HashOutput,
         rows_tree_hash: HashOutput,
-        right_proof_location: db_keys::ProofKey,
     ) -> Self {
         Self {
             table_id,
@@ -233,7 +219,6 @@ impl BlockMembershipInput {
             old_max,
             left_child,
             rows_tree_hash,
-            right_proof_location,
             right_proof: vec![],
         }
     }
