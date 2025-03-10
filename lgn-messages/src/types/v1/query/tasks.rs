@@ -10,7 +10,7 @@ use verifiable_db::query::universal_circuit::universal_circuit_inputs::RowCells;
 use verifiable_db::revelation::api::MatchingRow;
 use verifiable_db::revelation::RowPath;
 
-use super::ConcreteCircuitInput;
+use super::ConcreteQueryCircuitInput;
 use crate::types::v1::preprocessing::db_keys;
 use crate::types::v1::query::keys::ProofKey;
 use crate::types::v1::query::PlaceHolderLgn;
@@ -46,7 +46,7 @@ pub enum QueryStep {
     Revelation(RevelationInput),
 
     #[serde(rename = "4")]
-    CircuitInput(Box<ConcreteCircuitInput>),
+    QueryCircuitInput(Box<ConcreteQueryCircuitInput>),
 }
 
 /// Matching row input for a tabular query

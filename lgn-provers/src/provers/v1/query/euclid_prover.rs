@@ -5,7 +5,7 @@ use anyhow::Context;
 use lgn_messages::types::v1::query::tasks::HydratableMatchingRow;
 use lgn_messages::types::v1::query::tasks::QueryStep;
 use lgn_messages::types::v1::query::tasks::RevelationInput;
-use lgn_messages::types::v1::query::ConcreteCircuitInput;
+use lgn_messages::types::v1::query::ConcreteQueryCircuitInput;
 use lgn_messages::types::v1::query::ConcreteQueryParameters;
 use lgn_messages::types::v1::query::WorkerTaskType;
 use lgn_messages::types::MessageReplyEnvelope;
@@ -50,7 +50,7 @@ impl EuclidQueryProver {
 impl EuclidQueryProver {
     fn prove_circuit_input(
         &self,
-        circuit_input: ConcreteCircuitInput,
+        circuit_input: ConcreteQueryCircuitInput,
     ) -> anyhow::Result<Proof> {
         info!("Proving query circuit");
         let now = std::time::Instant::now();
@@ -212,7 +212,9 @@ impl EuclidQueryProver {
                     },
                 }?
             },
-            QueryStep::CircuitInput(circuit_input) => self.prove_circuit_input(*circuit_input)?,
+            QueryStep::QueryCircuitInput(circuit_input) => {
+                self.prove_circuit_input(*circuit_input)?
+            },
         };
 
         Ok(final_proof)
