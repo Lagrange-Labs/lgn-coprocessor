@@ -97,88 +97,6 @@ impl EuclidProver {
         )
     }
 
-    fn prove_cells_tree(
-        &self,
-        circuit_input: verifiable_db::cells_tree::CircuitInput,
-    ) -> anyhow::Result<Proof> {
-        self.prove(CircuitInput::CellsTree(circuit_input), "cells tree")
-    }
-
-    fn prove_row_leaf(
-        &self,
-        identifier: u64,
-        value: U256,
-        is_multiplier: bool,
-        cells_proof: Proof,
-    ) -> anyhow::Result<Proof> {
-        let cells_proof = if !cells_proof.is_empty() {
-            cells_proof
-        } else {
-            self.params.empty_cell_tree_proof()?
-        };
-
-        let input = CircuitInput::RowsTree(verifiable_db::row_tree::CircuitInput::leaf(
-            identifier,
-            value,
-            is_multiplier,
-            todo!(),
-            cells_proof,
-        )?);
-        self.prove(input, "row leaf")
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn prove_row_partial(
-        &self,
-        identifier: u64,
-        value: U256,
-        is_multiplier: bool,
-        is_child_left: bool,
-        child_proof: Proof,
-        cells_proof: Proof,
-    ) -> anyhow::Result<Proof> {
-        let cells_proof = if !cells_proof.is_empty() {
-            cells_proof
-        } else {
-            self.params.empty_cell_tree_proof()?
-        };
-        let input = CircuitInput::RowsTree(verifiable_db::row_tree::CircuitInput::partial(
-            identifier,
-            value,
-            is_multiplier,
-            is_child_left,
-            todo!(),
-            child_proof,
-            cells_proof,
-        )?);
-        self.prove(input, "row partial")
-    }
-
-    fn prove_row_full(
-        &self,
-        identifier: u64,
-        value: U256,
-        is_multiplier: bool,
-        child_proofs: Vec<Proof>,
-        cells_proof: Proof,
-    ) -> anyhow::Result<Proof> {
-        let cells_proof = if !cells_proof.is_empty() {
-            cells_proof
-        } else {
-            self.params.empty_cell_tree_proof()?
-        };
-        let input = CircuitInput::RowsTree(verifiable_db::row_tree::CircuitInput::full(
-            identifier,
-            value,
-            is_multiplier,
-            todo!(),
-            child_proofs[0].to_owned(),
-            child_proofs[1].to_owned(),
-            cells_proof,
-        )?);
-        self.prove(input, "row full")
-    }
-
     fn prove_block_leaf(
         &self,
         block_id: u64,
@@ -247,28 +165,6 @@ impl EuclidProver {
                 right_child_proof,
             ));
         self.prove(input, "membership")
-    }
-
-    fn prove_ivc(
-        &self,
-        index_proof: Proof,
-        previous_proof: Option<Proof>,
-    ) -> anyhow::Result<Proof> {
-        let input = match previous_proof {
-            Some(previous_proof) => {
-                CircuitInput::IVC(verifiable_db::ivc::CircuitInput::new_subsequent_input(
-                    index_proof,
-                    previous_proof,
-                )?)
-            },
-            None => {
-                CircuitInput::IVC(verifiable_db::ivc::CircuitInput::new_first_input(
-                    index_proof,
-                )?)
-            },
-        };
-
-        self.prove(input, "ivc")
     }
 
     pub fn run_inner(
@@ -360,40 +256,6 @@ impl EuclidProver {
             },
             WorkerTaskType::Database(db) => {
                 match db {
-                    DatabaseType::Cell { circuit_input, .. } => {
-                        self.prove_cells_tree(circuit_input)?
-                    },
-                    DatabaseType::Row(row_type) => {
-                        match row_type {
-                            DbRowType::Leaf(leaf) => {
-                                self.prove_row_leaf(
-                                    leaf.identifier,
-                                    leaf.value,
-                                    leaf.is_multiplier,
-                                    leaf.cells_proof,
-                                )?
-                            },
-                            DbRowType::Partial(partial) => {
-                                self.prove_row_partial(
-                                    partial.identifier,
-                                    partial.value,
-                                    partial.is_multiplier,
-                                    partial.is_child_left,
-                                    partial.child_proof.to_owned(),
-                                    partial.cells_proof.to_owned(),
-                                )?
-                            },
-                            DbRowType::Full(full) => {
-                                self.prove_row_full(
-                                    full.identifier,
-                                    full.value,
-                                    full.is_multiplier,
-                                    full.child_proofs,
-                                    full.cells_proof,
-                                )?
-                            },
-                        }
-                    },
                     DatabaseType::Index(block) => {
                         let mut last_proof = None;
                         for input in &block.inputs {
@@ -432,12 +294,6 @@ impl EuclidProver {
                             });
                         }
                         last_proof.take().unwrap()
-                    },
-                    DatabaseType::IVC(ivc) => {
-                        self.prove_ivc(
-                            ivc.index_proof.to_owned(),
-                            ivc.previous_ivc_proof.to_owned(),
-                        )?
                     },
                 }
             },

@@ -9,21 +9,7 @@ use crate::TableId;
 
 #[derive(Deserialize, Serialize)]
 pub enum DatabaseType {
-    #[serde(rename = "1")]
-    Cell {
-        table_id: TableId,
-        row_id: String,
-        cell_id: usize,
-        circuit_input: verifiable_db::cells_tree::CircuitInput,
-    },
-
-    #[serde(rename = "2")]
-    Row(DbRowType),
-
-    #[serde(rename = "3")]
     Index(IndexInputs),
-
-    IVC(IvcInput),
 }
 
 #[derive(PartialEq, Deserialize, Serialize)]

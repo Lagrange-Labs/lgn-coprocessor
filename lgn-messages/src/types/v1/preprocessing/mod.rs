@@ -1,5 +1,4 @@
 use alloy_primitives::Address;
-use alloy_primitives::U256;
 use anyhow::bail;
 use ethers::utils::rlp::Rlp;
 use mp2_v1::api::MAX_FIELD_PER_EVM;
@@ -10,15 +9,11 @@ use serde_derive::Serialize;
 use super::query::MAX_NUM_COLUMNS;
 use super::ConcreteCircuitInput;
 use crate::types::v1::preprocessing::db_tasks::DatabaseType;
-use crate::types::v1::preprocessing::db_tasks::IvcInput;
-use crate::types::v1::preprocessing::db_tasks::RowLeafInput;
 use crate::types::v1::preprocessing::ext_tasks::Contract;
 use crate::types::v1::preprocessing::ext_tasks::ExtractionType;
-use crate::types::v1::preprocessing::ext_tasks::Identifier;
 use crate::types::v1::preprocessing::ext_tasks::Length;
 use crate::BlockNr;
 use crate::TableHash;
-use crate::TableId;
 
 pub mod db_tasks;
 pub mod ext_tasks;
@@ -109,91 +104,5 @@ impl WorkerTaskType {
             contract: contract_address,
             nodes,
         }))
-    }
-
-    pub fn db_cells_tree(
-        table_id: TableId,
-        row_id: String,
-        cell_id: usize,
-        circuit_input: verifiable_db::cells_tree::CircuitInput,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Database(DatabaseType::Cell {
-            table_id,
-            row_id,
-            cell_id,
-            circuit_input,
-        })
-    }
-
-    pub fn db_row_leaf(
-        table_id: TableId,
-        row_id: String,
-        identifier: Identifier,
-        value: U256,
-        is_multiplier: bool,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Database(DatabaseType::Row(db_tasks::DbRowType::Leaf(RowLeafInput {
-            table_id,
-            row_id,
-            identifier,
-            value,
-            is_multiplier,
-            cells_proof: vec![],
-        })))
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    pub fn db_row_partial(
-        table_id: TableId,
-        row_id: String,
-        identifier: Identifier,
-        value: U256,
-        is_multiplier: bool,
-        is_child_left: bool,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Database(DatabaseType::Row(db_tasks::DbRowType::Partial(
-            db_tasks::RowPartialInput {
-                table_id,
-                row_id,
-                identifier,
-                value,
-                is_multiplier,
-                is_child_left,
-                child_proof: vec![],
-                cells_proof: vec![],
-            },
-        )))
-    }
-
-    pub fn db_row_full(
-        table_id: TableId,
-        row_id: String,
-        identifier: Identifier,
-        value: U256,
-        is_multiplier: bool,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Database(DatabaseType::Row(db_tasks::DbRowType::Full(
-            db_tasks::RowFullInput {
-                table_id,
-                row_id,
-                identifier,
-                value,
-                is_multiplier,
-                child_proofs: vec![],
-                cells_proof: vec![],
-            },
-        )))
-    }
-
-    pub fn ivc(
-        table_id: TableId,
-        block_nr: BlockNr,
-        is_first_block: bool,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Database(DatabaseType::IVC(IvcInput::new(
-            table_id,
-            block_nr,
-            is_first_block,
-        )))
     }
 }
