@@ -1,5 +1,4 @@
 use alloy_primitives::U256;
-use derive_debug_plus::Dbg;
 use mp2_common::types::HashOutput;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
@@ -27,7 +26,7 @@ pub enum DatabaseType {
     IVC(IvcInput),
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub enum DbRowType {
     #[serde(rename = "1")]
     Leaf(RowLeafInput),
@@ -39,19 +38,17 @@ pub enum DbRowType {
     Full(RowFullInput),
 }
 
-#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub struct RowLeafInput {
     pub table_id: TableId,
     pub row_id: String,
     pub identifier: Identifier,
     pub value: U256,
     pub is_multiplier: bool,
-
-    #[dbg(placeholder = "...")]
     pub cells_proof: Vec<u8>,
 }
 
-#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub struct RowPartialInput {
     pub table_id: TableId,
     pub row_id: String,
@@ -59,30 +56,22 @@ pub struct RowPartialInput {
     pub value: U256,
     pub is_multiplier: bool,
     pub is_child_left: bool,
-
-    #[dbg(placeholder = "...")]
     pub child_proof: Vec<u8>,
-
-    #[dbg(placeholder = "...")]
     pub cells_proof: Vec<u8>,
 }
 
-#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub struct RowFullInput {
     pub table_id: TableId,
     pub row_id: String,
     pub identifier: Identifier,
     pub value: U256,
     pub is_multiplier: bool,
-
-    #[dbg(placeholder = "...")]
     pub child_proofs: Vec<Vec<u8>>,
-
-    #[dbg(placeholder = "...")]
     pub cells_proof: Vec<u8>,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub struct IndexInputs {
     pub table_id: TableId,
     pub block_nr: BlockNr,
@@ -103,7 +92,7 @@ impl IndexInputs {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub enum DbBlockType {
     #[serde(rename = "1")]
     Leaf(BlockLeafInput),
@@ -115,15 +104,11 @@ pub enum DbBlockType {
     Membership(BlockMembershipInput),
 }
 
-#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub struct BlockLeafInput {
     pub table_id: TableId,
     pub block_id: BlockNr,
-
-    #[dbg(placeholder = "...")]
     pub extraction_proof: Vec<u8>,
-
-    #[dbg(placeholder = "...")]
     pub rows_proof: Vec<u8>,
 }
 
@@ -141,7 +126,7 @@ impl BlockLeafInput {
     }
 }
 
-#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub struct BlockParentInput {
     pub table_id: TableId,
     pub block_id: BlockNr,
@@ -151,11 +136,7 @@ pub struct BlockParentInput {
     pub prev_left_child: Option<HashOutput>,
     pub prev_right_child: Option<HashOutput>,
     pub old_rows_tree_hash: HashOutput,
-
-    #[dbg(placeholder = "...")]
     pub extraction_proof: Vec<u8>,
-
-    #[dbg(placeholder = "...")]
     pub rows_proof: Vec<u8>,
 }
 
@@ -186,7 +167,7 @@ impl BlockParentInput {
     }
 }
 
-#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub struct BlockMembershipInput {
     pub table_id: TableId,
     pub block_id: BlockNr,
@@ -195,8 +176,6 @@ pub struct BlockMembershipInput {
     pub old_max: U256,
     pub left_child: HashOutput,
     pub rows_tree_hash: HashOutput,
-
-    #[dbg(placeholder = "...")]
     pub right_proof: Vec<u8>,
 }
 
@@ -224,16 +203,12 @@ impl BlockMembershipInput {
     }
 }
 
-#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub struct IvcInput {
     pub table_id: TableId,
     pub block_nr: BlockNr,
     pub is_first_block: bool,
-
-    #[dbg(placeholder = "...")]
     pub index_proof: Vec<u8>,
-
-    #[dbg(placeholder = "...")]
     pub previous_ivc_proof: Option<Vec<u8>>,
 }
 
