@@ -8,8 +8,6 @@ use crate::Proof;
 
 pub mod v1;
 
-pub type HashOutput = [u8; 32];
-
 #[derive(Deserialize, Serialize)]
 pub enum TaskType {
     V1Preprocessing(v1::preprocessing::WorkerTask),
@@ -123,8 +121,6 @@ impl MessageReplyEnvelope {
         &self.task_id
     }
 }
-
-pub type Stake = u128;
 
 /// The segregation of job types according to their computational complexity
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
