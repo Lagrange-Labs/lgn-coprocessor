@@ -2,10 +2,8 @@ use anyhow::*;
 use checksum::fetch_checksums;
 use clap::Parser;
 use lgn_messages::types::MessageEnvelope;
-use manager::v1::register_v1_provers;
 use manager::ProversManager;
 use tracing::error;
-use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
@@ -75,11 +73,8 @@ async fn main() -> Result<()> {
     config.validate();
     let checksums = fetch_checksums(config.public_params.checksum_file_url()).await?;
 
-    info!("Registering the provers");
-    let mut provers_manager = ProversManager::new();
-    register_v1_provers(&config, &mut provers_manager, &checksums)
-        .context("while registering provers")?;
-    info!("Finished registering the provers.");
+    let provers_manager =
+        ProversManager::new(&config, &checksums).context("while registering provers")?;
 
     let envelope = std::fs::read_to_string(&cli.input)
         .with_context(|| format!("failed to open `{}`", cli.input))

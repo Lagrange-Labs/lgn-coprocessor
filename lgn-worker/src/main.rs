@@ -43,7 +43,6 @@ use tracing_subscriber::EnvFilter;
 use warp::Filter;
 
 use crate::config::Config;
-use crate::manager::v1::register_v1_provers;
 use crate::manager::ProversManager;
 
 pub mod lagrange {
@@ -196,9 +195,8 @@ async fn run_worker(
         .await
         .context("downloading checksum file")?;
     let mut provers_manager = tokio::task::block_in_place(move || -> Result<ProversManager> {
-        let mut provers_manager = ProversManager::new();
-        register_v1_provers(config, &mut provers_manager, &checksums)
-            .context("while registering provers")?;
+        let provers_manager =
+            ProversManager::new(config, &checksums).context("while registering provers")?;
         Ok(provers_manager)
     })
     .context("creating prover managers")?;
