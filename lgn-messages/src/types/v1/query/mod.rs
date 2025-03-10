@@ -10,7 +10,6 @@ use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placehold
 
 use crate::types::v1::query::tasks::QueryInput;
 
-pub mod keys;
 pub mod tasks;
 
 /// Maximum number of chunks that can be aggregated in a single proof of batching query
