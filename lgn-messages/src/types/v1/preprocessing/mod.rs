@@ -1,9 +1,7 @@
 use alloy_primitives::Address;
 use alloy_primitives::U256;
 use anyhow::bail;
-use ethers::prelude::H256;
 use ethers::utils::rlp::Rlp;
-use mp2_v1::api::CircuitInput;
 use mp2_v1::api::MAX_FIELD_PER_EVM;
 use mp2_v1::values_extraction;
 use serde_derive::Deserialize;
@@ -14,14 +12,10 @@ use super::ConcreteCircuitInput;
 use crate::types::v1::preprocessing::db_tasks::DatabaseType;
 use crate::types::v1::preprocessing::db_tasks::IvcInput;
 use crate::types::v1::preprocessing::db_tasks::RowLeafInput;
-use crate::types::v1::preprocessing::ext_tasks::BlockExtractionInput;
 use crate::types::v1::preprocessing::ext_tasks::Contract;
 use crate::types::v1::preprocessing::ext_tasks::ExtractionType;
-use crate::types::v1::preprocessing::ext_tasks::FinalExtraction;
 use crate::types::v1::preprocessing::ext_tasks::Identifier;
 use crate::types::v1::preprocessing::ext_tasks::Length;
-use crate::types::v1::preprocessing::ext_tasks::Mpt;
-use crate::types::v1::preprocessing::ext_tasks::MptNodeVersion;
 use crate::BlockNr;
 use crate::TableHash;
 use crate::TableId;
@@ -115,62 +109,6 @@ impl WorkerTaskType {
             contract: contract_address,
             nodes,
         }))
-    }
-
-    pub fn ext_final_extraction_simple(
-        table_id: TableId,
-        table_hash: TableHash,
-        block_nr: BlockNr,
-        contract: Address,
-        value_proof_version: MptNodeVersion,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
-            FinalExtraction::new_single_table(
-                table_id,
-                table_hash,
-                block_nr,
-                contract,
-                value_proof_version,
-            ),
-        )))
-    }
-
-    pub fn ext_final_extraction_lengthed(
-        table_id: TableId,
-        table_hash: TableHash,
-        block_nr: BlockNr,
-        contract: Address,
-        value_proof_version: MptNodeVersion,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
-            FinalExtraction::new_single_table(
-                table_id,
-                table_hash,
-                block_nr,
-                contract,
-                value_proof_version,
-            ),
-        )))
-    }
-
-    pub fn ext_final_extraction_merge(
-        table_id: TableId,
-        simple_table_hash: TableHash,
-        mapping_table_hash: TableHash,
-        block_nr: BlockNr,
-        contract: Address,
-        value_proof_version: MptNodeVersion,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
-            FinalExtraction::new_merge_table(
-                table_id,
-                simple_table_hash,
-                mapping_table_hash,
-                block_nr,
-                contract,
-                value_proof_version,
-            ),
-        )))
     }
 
     pub fn db_cells_tree(

@@ -21,9 +21,6 @@ pub enum ExtractionType {
 
     #[serde(rename = "3")]
     ContractExtraction(Contract),
-
-    #[serde(rename = "5")]
-    FinalExtraction(Box<FinalExtraction>),
 }
 
 #[derive(Deserialize, Serialize)]

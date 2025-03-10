@@ -7,10 +7,7 @@ use lgn_messages::types::v1::preprocessing::db_tasks::DatabaseType;
 use lgn_messages::types::v1::preprocessing::db_tasks::DbBlockType;
 use lgn_messages::types::v1::preprocessing::db_tasks::DbRowType;
 use lgn_messages::types::v1::preprocessing::ext_tasks::ExtractionType;
-use lgn_messages::types::v1::preprocessing::ext_tasks::FinalExtraction;
-use lgn_messages::types::v1::preprocessing::ext_tasks::FinalExtractionType;
 use lgn_messages::types::v1::preprocessing::node_type;
-use lgn_messages::types::v1::preprocessing::ConcreteValueExtractionCircuitInput;
 use lgn_messages::types::v1::preprocessing::NodeType;
 use lgn_messages::types::v1::preprocessing::WorkerTaskType;
 use lgn_messages::types::v1::ConcreteCircuitInput;
@@ -22,9 +19,7 @@ use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::generate_proof;
 use mp2_v1::api::CircuitInput;
-use mp2_v1::block_extraction;
 use mp2_v1::contract_extraction;
-use mp2_v1::final_extraction;
 use mp2_v1::length_extraction;
 use mp2_v1::length_extraction::LengthCircuitInput;
 use tracing::debug;
@@ -100,56 +95,6 @@ impl EuclidProver {
             CircuitInput::ContractExtraction(circuit_input),
             "contract extraction",
         )
-    }
-
-    fn prove_final_extraction(
-        &self,
-        block_proof: Proof,
-        contract_proof: Proof,
-        value_proof: Proof,
-    ) -> anyhow::Result<Proof> {
-        let input =
-            CircuitInput::FinalExtraction(final_extraction::CircuitInput::new_simple_input(
-                block_proof,
-                contract_proof,
-                value_proof,
-            )?);
-        self.prove(input, "final extraction simple")
-    }
-
-    fn prove_final_extraction_lengthed(
-        &self,
-        block_proof: Proof,
-        contract_proof: Proof,
-        value_proof: Proof,
-        length_proof: Proof,
-    ) -> anyhow::Result<Proof> {
-        let input =
-            CircuitInput::FinalExtraction(final_extraction::CircuitInput::new_lengthed_input(
-                block_proof,
-                contract_proof,
-                value_proof,
-                length_proof,
-            )?);
-        self.prove(input, "final extraction lengthed")
-    }
-
-    fn prove_final_extraction_merge(
-        &self,
-        block_proof: Proof,
-        contract_proof: Proof,
-        simple_table_proof: Proof,
-        mapping_table_proof: Proof,
-    ) -> anyhow::Result<Proof> {
-        let input = CircuitInput::FinalExtraction(
-            final_extraction::CircuitInput::new_merge_single_and_mapping(
-                block_proof,
-                contract_proof,
-                simple_table_proof,
-                mapping_table_proof,
-            )?,
-        );
-        self.prove(input, "final extraction merge")
     }
 
     fn prove_cells_tree(
@@ -410,37 +355,6 @@ impl EuclidProver {
                         }
 
                         proof
-                    },
-                    ExtractionType::FinalExtraction(final_extraction) => {
-                        match *final_extraction {
-                            FinalExtraction::Single(single_table_extraction) => {
-                                match single_table_extraction.extraction_type {
-                                    FinalExtractionType::Simple => {
-                                        self.prove_final_extraction(
-                                            single_table_extraction.block_proof.clone(),
-                                            single_table_extraction.contract_proof.clone(),
-                                            single_table_extraction.value_proof.clone(),
-                                        )?
-                                    },
-                                    FinalExtractionType::Lengthed => {
-                                        self.prove_final_extraction_lengthed(
-                                            single_table_extraction.block_proof.clone(),
-                                            single_table_extraction.contract_proof.clone(),
-                                            single_table_extraction.value_proof.clone(),
-                                            single_table_extraction.length_proof.clone(),
-                                        )?
-                                    },
-                                }
-                            },
-                            FinalExtraction::Merge(mapping_table_extraction) => {
-                                self.prove_final_extraction_merge(
-                                    mapping_table_extraction.block_proof.clone(),
-                                    mapping_table_extraction.contract_proof.clone(),
-                                    mapping_table_extraction.simple_table_proof.clone(),
-                                    mapping_table_extraction.mapping_table_proof.clone(),
-                                )?
-                            },
-                        }
                     },
                 }
             },
