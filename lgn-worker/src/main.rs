@@ -9,7 +9,9 @@ use std::sync::Arc;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
-use anyhow::*;
+use anyhow::bail;
+use anyhow::ensure;
+use anyhow::Context;
 use backtrace::Backtrace;
 use checksum::fetch_checksums;
 use clap::Parser;
@@ -153,7 +155,7 @@ async fn run(
     cli: Cli,
     mp2_requirement: semver::VersionReq,
     last_task_processed: AtomicU64,
-) -> Result<()> {
+) -> anyhow::Result<()> {
     let version = env!("CARGO_PKG_VERSION");
     info!("Starting worker. version: {}", version);
     let config = Config::load(cli.config);
@@ -182,7 +184,7 @@ async fn run_worker(
     config: &Config,
     mp2_requirement: semver::VersionReq,
     last_task_processed: AtomicU64,
-) -> Result<()> {
+) -> anyhow::Result<()> {
     let max_message_size = config
         .avs
         .max_grpc_message_size_mb
@@ -194,12 +196,13 @@ async fn run_worker(
     let checksums = fetch_checksums(config.public_params.checksum_file_url())
         .await
         .context("downloading checksum file")?;
-    let mut provers_manager = tokio::task::block_in_place(move || -> Result<ProversManager> {
-        let provers_manager =
-            ProversManager::new(config, &checksums).context("while registering provers")?;
-        Ok(provers_manager)
-    })
-    .context("creating prover managers")?;
+    let mut provers_manager =
+        tokio::task::block_in_place(move || -> anyhow::Result<ProversManager> {
+            let provers_manager =
+                ProversManager::new(config, &checksums).context("while registering provers")?;
+            Ok(provers_manager)
+        })
+        .context("creating prover managers")?;
 
     // Connecting to the GW
     let wallet = get_wallet(config).context("fetching wallet")?;
@@ -290,21 +293,32 @@ async fn run_worker(
 
     loop {
         debug!("Waiting for message...");
+
         tokio::select! {
             Some(inbound_message) = inbound.next() => {
-                let msg = match inbound_message {
-                    Ok(ref msg) => msg,
-                    Err(e) => {
-                        bail!("connection to the gateway ended with status: {e}");
+                match inbound_message {
+                    Ok(ref msg) => {
+                        match process_message_from_gateway(
+                            &mut provers_manager,
+                            msg,
+                            &mut outbound,
+                            &mp2_requirement,
+                        ).await {
+                            Ok(()) => {
+                                last_task_processed.store(
+                                    SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
+                                    Ordering::Relaxed,
+                                );
+                            },
+                            Err(err) => {
+                                bail!("task processing failed. err: {:?}", err);
+                            }
+                        }
+                    },
+                    Err(status) => {
+                        bail!("connection to the gateway ended. status: {}", status);
                     }
                 };
-                let result = process_message_from_gateway(&mut provers_manager, msg, &mut outbound, &mp2_requirement).await;
-                if result.is_ok() {
-                    last_task_processed.store(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(), Ordering::Relaxed);
-                }
-                if let Err(e) = result {
-                    bail!("task processing failed: {e:?}");
-                }
             }
             else => {
                 bail!("inbound connection broken");
@@ -313,97 +327,27 @@ async fn run_worker(
     }
 }
 
-#[tracing::instrument(
-    skip(provers_manager, envelope),
-    fields(task_id = envelope.task_id)
-)]
-fn process_downstream_payload(
-    provers_manager: &ProversManager,
-    envelope: MessageEnvelope,
-    mp2_requirement: &semver::VersionReq,
-) -> Result<MessageReplyEnvelope, String> {
-    info!("Received Task. task_id: {}", envelope.task_id);
-
-    counter!("zkmr_worker_tasks_received_total").increment(1);
-
-    let envelope_version = semver::Version::parse(&envelope.version)
-        .context("parsing message version")
-        .map_err(|e| e.to_string())?;
-
-    if !mp2_requirement.matches(&envelope_version) {
-        return Err(format!(
-            "version mismatch: worker requires {mp2_requirement}, task = {envelope_version}"
-        ));
-    }
-
-    let id = envelope.task_id().to_owned();
-    match std::panic::catch_unwind(|| provers_manager.delegate_proving(envelope)) {
-        Ok(result) => {
-            match result {
-                Ok(reply) => {
-                    trace!("Sending reply: {:?}", reply);
-                    counter!("zkmr_worker_tasks_processed_total").increment(1);
-                    Ok(reply)
-                },
-                Err(e) => {
-                    error!("Error processing task: {:?}", e);
-                    counter!("zkmr_worker_error_count", "error_type" =>  "proof processing")
-                        .increment(1);
-
-                    Err(format!("{e:?}"))
-                },
-            }
-        },
-        Err(panic) => {
-            counter!(
-                "zkmr_worker_error_count",
-                "error_type" => "proof_processing"
-            )
-            .increment(1);
-
-            let msg = match panic.downcast_ref::<&'static str>() {
-                Some(s) => *s,
-                None => {
-                    match panic.downcast_ref::<String>() {
-                        Some(s) => &s[..],
-                        None => "Box<dyn Any>",
-                    }
-                },
-            };
-
-            error!("panic encountered while proving {} : {msg}", id);
-            Err(format!("{}: {msg}", id))
-        },
-    }
+/// Parses the uuid in the GW message.
+fn parse_uuid(message: &WorkerToGwResponse) -> uuid::Uuid {
+    message
+        .task_id
+        .as_ref()
+        .map(|id| uuid::Uuid::from_bytes_le(id.id.clone().try_into().unwrap()))
+        .unwrap_or_else(|| uuid::Uuid::nil())
 }
 
+#[tracing::instrument(skip(provers_manager, message, outbound), err(Debug))]
 async fn process_message_from_gateway(
     provers_manager: &mut ProversManager,
     message: &WorkerToGwResponse,
     outbound: &mut tokio::sync::mpsc::Sender<WorkerToGwRequest>,
     mp2_requirement: &semver::VersionReq,
-) -> Result<()> {
-    let uuid = message
-        .task_id
-        .as_ref()
-        .map(|id| uuid::Uuid::from_bytes_le(id.id.clone().try_into().unwrap()).to_string())
-        .unwrap_or_else(|| "UNKNOWN".to_string());
+) -> anyhow::Result<()> {
+    let uuid = parse_uuid(message);
 
     let reply = {
-        let uuid = uuid.clone();
-        tokio::task::block_in_place(move || -> Result<MessageReplyEnvelope, String> {
-            serde_json::from_slice::<MessageEnvelope>(&message.task)
-                .map_err(|e| {
-                    format!(
-                        "failed to deserialize envelope for task {} ({}B): {e}",
-                        uuid,
-                        message.task.len(),
-                    )
-                })
-                .and_then(|message_envelope| {
-                    info!("Processing task. task_id: {}", message_envelope.task_id());
-                    process_downstream_payload(provers_manager, message_envelope, mp2_requirement)
-                })
+        tokio::task::block_in_place(move || {
+            process_downstream_payload(provers_manager, message, mp2_requirement, uuid.clone())
         })
     };
 
@@ -418,30 +362,115 @@ async fn process_message_from_gateway(
                 )),
             }
         },
-        Err(error_str) => {
-            tracing::error!("failed to process task {uuid}: {error_str}");
+        Err(err) => {
+            tracing::error!("failed to process task. uuid: {:?} err: {:?}", uuid, err);
             WorkerToGwRequest {
                 request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
                     WorkerDone {
                         task_id: message.task_id.clone(),
-                        reply: Some(Reply::WorkerError(error_str)),
+                        reply: Some(Reply::WorkerError(format!("{:?}", err))),
                     },
                 )),
             }
         },
     };
-    outbound.send(outbound_msg).await?;
 
-    counter!(
-        "zkmr_worker_grpc_messages_sent_total",
-        "message_type" => "text",
-    )
-    .increment(1);
+    outbound.send(outbound_msg).await?;
+    counter!("zkmr_worker_grpc_messages_sent_total").increment(1);
 
     Ok(())
 }
 
-fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>> {
+fn process_downstream_payload(
+    provers_manager: &ProversManager,
+    message: &WorkerToGwResponse,
+    mp2_requirement: &semver::VersionReq,
+    uuid: uuid::Uuid,
+) -> anyhow::Result<MessageReplyEnvelope> {
+    let envelope = serde_json::from_slice::<MessageEnvelope>(&message.task).with_context(|| {
+        format!(
+            "Failed to deserialize envelope. uuid: {} message_len: {}",
+            uuid,
+            message.task.len(),
+        )
+    })?;
+
+    let span = span!(
+        Level::INFO,
+        "task_uuid",
+        uuid = uuid.to_string(),
+        task_id = envelope.task_id,
+    );
+    let _guard = span.enter();
+    info!(
+        "Received Task. uuid: {} task_id: {}",
+        uuid, envelope.task_id
+    );
+
+    counter!("zkmr_worker_tasks_received_total").increment(1);
+
+    let envelope_version =
+        semver::Version::parse(&envelope.version).context("parsing message version")?;
+
+    ensure!(
+        mp2_requirement.matches(&envelope_version),
+        "Version mismatch. worker_requirement: {} task_requirement: {}",
+        mp2_requirement,
+        envelope_version,
+    );
+
+    let id = envelope.task_id().to_owned();
+    match std::panic::catch_unwind(|| provers_manager.delegate_proving(envelope)) {
+        Ok(result) => {
+            match result {
+                Ok(reply) => {
+                    trace!("Sending reply: {:?}", reply);
+                    counter!("zkmr_worker_tasks_processed_total").increment(1);
+                    Ok(reply)
+                },
+                Err(err) => {
+                    error!("Error processing task. err: {:?}", err);
+                    counter!(
+                        "zkmr_worker_error_count",
+                        "error_type" => "proof_processing",
+                    )
+                    .increment(1);
+
+                    return Err(err);
+                },
+            }
+        },
+        Err(panic) => {
+            counter!(
+                "zkmr_worker_error_count",
+                "error_type" => "proof_processing",
+            )
+            .increment(1);
+
+            let msg = match panic.downcast_ref::<&'static str>() {
+                Some(s) => *s,
+                None => {
+                    match panic.downcast_ref::<String>() {
+                        Some(s) => &s[..],
+                        None => "Box<dyn Any>",
+                    }
+                },
+            };
+
+            error!(
+                "panic encountered while proving. task_id: {} msg: {}",
+                id, msg,
+            );
+            bail!(
+                "panic encountered while proving. task_id: {} msg: {}",
+                id,
+                msg,
+            )
+        },
+    }
+}
+
+fn get_wallet(config: &Config) -> anyhow::Result<Wallet<SigningKey>> {
     let res = match (
         &config.avs.lagr_keystore,
         &config.avs.lagr_pwd,
@@ -459,7 +488,7 @@ fn get_wallet(config: &Config) -> Result<Wallet<SigningKey>> {
     Ok(res)
 }
 
-fn get_claims(config: &Config) -> Result<Claims> {
+fn get_claims(config: &Config) -> anyhow::Result<Claims> {
     let registered = RegisteredClaims {
         issuer: Some(config.avs.issuer.clone()),
         subject: Some(config.avs.worker_id.clone()),
