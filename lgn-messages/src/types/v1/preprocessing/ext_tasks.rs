@@ -16,9 +16,6 @@ pub type MptNodeVersion = (BlockNr, H256);
 
 #[derive(Deserialize, Serialize)]
 pub enum ExtractionType {
-    #[serde(rename = "1")]
-    MptExtraction(Mpt),
-
     #[serde(rename = "2")]
     LengthExtraction(Length),
 

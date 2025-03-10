@@ -356,9 +356,6 @@ impl EuclidProver {
             },
             WorkerTaskType::Extraction(extraction) => {
                 match extraction {
-                    ExtractionType::MptExtraction(mpt) => {
-                        self.prove_value_extraction(mpt.circuit_input)?
-                    },
                     ExtractionType::LengthExtraction(length) => {
                         let mut nodes = length.nodes;
 

@@ -87,20 +87,6 @@ pub enum WorkerTaskType {
 }
 
 impl WorkerTaskType {
-    pub fn ext_variable(
-        table_hash: TableHash,
-        block_nr: BlockNr,
-        node_hash: H256,
-        circuit_input: ConcreteValueExtractionCircuitInput,
-    ) -> WorkerTaskType {
-        WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
-            table_hash,
-            block_nr,
-            node_hash,
-            circuit_input,
-        }))
-    }
-
     pub fn ext_length(
         table_hash: TableHash,
         block_nr: BlockNr,
