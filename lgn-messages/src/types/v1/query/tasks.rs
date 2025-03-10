@@ -41,10 +41,6 @@ pub enum QueryStep {
         RevelationInput,
     ),
 
-    /// Aggregation batching queries, next step is Revelation
-    #[serde(rename = "2")]
-    Aggregation(AggregationInput),
-
     /// Revelation step, we only handle aggregation revelation for now, next step is Groth16
     #[serde(rename = "3")]
     Revelation(RevelationInput),
@@ -64,23 +60,6 @@ pub struct MatchingRowInput {
     pub placeholders: PlaceHolderLgn,
     /// Flag to identify if it's a leaf
     pub is_leaf: bool,
-}
-
-/// Input of an aggregation (batching) query
-#[derive(Deserialize, Serialize)]
-pub struct AggregationInput {
-    /// Proof key of this aggregation proof
-    pub proof_key: ProofKey,
-    /// Different proof inputs of an aggregation query
-    pub input_kind: ProofInputKind,
-}
-
-/// Different proof inputs of an aggregation (batching) query
-#[derive(Deserialize, Serialize)]
-pub enum ProofInputKind {
-    /// Non existence input
-    #[serde(rename = "3")]
-    NonExistence(Box<NonExistenceInput>),
 }
 
 /// Handling a matching row proof, it could contain a proof key or the proof data.

@@ -3,8 +3,6 @@ use std::collections::HashMap;
 use anyhow::bail;
 use anyhow::Context;
 use lgn_messages::types::v1::query::tasks::HydratableMatchingRow;
-use lgn_messages::types::v1::query::tasks::NonExistenceInput;
-use lgn_messages::types::v1::query::tasks::ProofInputKind;
 use lgn_messages::types::v1::query::tasks::QueryStep;
 use lgn_messages::types::v1::query::tasks::RevelationInput;
 use lgn_messages::types::v1::query::ConcreteCircuitInput;
@@ -70,27 +68,6 @@ impl EuclidQueryProver {
             proof.len() / 1024,
             now.elapsed()
         );
-
-        Ok(proof)
-    }
-
-    fn prove_non_existence(
-        &self,
-        input: &NonExistenceInput,
-        pis: &DynamicCircuitPis,
-    ) -> anyhow::Result<Vec<u8>> {
-        let placeholders = (&input.placeholders).into();
-        let input = CircuitInput::new_non_existence_input(
-            input.index_path.clone(),
-            &input.column_ids,
-            &pis.predication_operations,
-            &pis.result,
-            &placeholders,
-            &pis.bounds,
-        )
-        .context("while initializing the non-existence circuit")?;
-
-        let proof = self.prove_circuit_input(QueryCircuitInput::Query(input))?;
 
         Ok(proof)
     }
@@ -195,13 +172,6 @@ impl EuclidQueryProver {
                     limit,
                     offset,
                 )?
-            },
-            QueryStep::Aggregation(input) => {
-                match input.input_kind {
-                    ProofInputKind::NonExistence(non_existence) => {
-                        self.prove_non_existence(&non_existence, &pis)
-                    },
-                }?
             },
             QueryStep::Revelation(input) => {
                 match input {
