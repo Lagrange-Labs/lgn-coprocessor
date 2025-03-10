@@ -82,16 +82,6 @@ impl EuclidProver {
 }
 
 impl EuclidProver {
-    fn prove_value_extraction(
-        &self,
-        circuit_input: ConcreteValueExtractionCircuitInput,
-    ) -> anyhow::Result<Proof> {
-        self.prove(
-            CircuitInput::ValuesExtraction(circuit_input),
-            "value extraction",
-        )
-    }
-
     fn prove_length_extraction(
         &self,
         circuit_input: length_extraction::LengthCircuitInput,
@@ -110,16 +100,6 @@ impl EuclidProver {
             CircuitInput::ContractExtraction(circuit_input),
             "contract extraction",
         )
-    }
-
-    fn prove_block(
-        &self,
-        rlp_header: Proof,
-    ) -> anyhow::Result<Proof> {
-        let input = CircuitInput::BlockExtraction(
-            block_extraction::CircuitInput::from_block_header(rlp_header),
-        );
-        self.prove(input, "block")
     }
 
     fn prove_final_extraction(
@@ -430,9 +410,6 @@ impl EuclidProver {
                         }
 
                         proof
-                    },
-                    ExtractionType::BlockExtraction(block) => {
-                        self.prove_block(block.rlp_header.to_owned())?
                     },
                     ExtractionType::FinalExtraction(final_extraction) => {
                         match *final_extraction {

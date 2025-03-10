@@ -117,12 +117,6 @@ impl WorkerTaskType {
         }))
     }
 
-    pub fn ext_block(rlp_header: Vec<u8>) -> WorkerTaskType {
-        WorkerTaskType::Extraction(ExtractionType::BlockExtraction(BlockExtractionInput::new(
-            rlp_header,
-        )))
-    }
-
     pub fn ext_final_extraction_simple(
         table_id: TableId,
         table_hash: TableHash,

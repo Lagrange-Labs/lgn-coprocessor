@@ -22,9 +22,6 @@ pub enum ExtractionType {
     #[serde(rename = "3")]
     ContractExtraction(Contract),
 
-    #[serde(rename = "4")]
-    BlockExtraction(BlockExtractionInput),
-
     #[serde(rename = "5")]
     FinalExtraction(Box<FinalExtraction>),
 }
