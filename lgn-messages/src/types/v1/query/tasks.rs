@@ -9,9 +9,9 @@ use verifiable_db::revelation::api::MatchingRow;
 use verifiable_db::revelation::RowPath;
 
 use super::ConcreteQueryCircuitInput;
-use crate::types::v1::preprocessing::db_keys;
 use crate::types::v1::query::keys::ProofKey;
 use crate::types::v1::query::PlaceHolderLgn;
+use crate::Proof;
 
 /// Query input for a proving task
 #[derive(Deserialize, Serialize)]
@@ -35,7 +35,7 @@ pub enum QueryStep {
     BatchedTabular {
         rows_inputs: Vec<MatchingRowInput>,
         placeholders: PlaceHolderLgn,
-        indexing_proof: Hydratable<db_keys::ProofKey>,
+        indexing_proof: Proof,
         matching_rows: Vec<HydratableMatchingRow>,
         column_ids: ColumnIDs,
         limit: u32,
@@ -59,16 +59,11 @@ pub struct MatchingRowInput {
 /// Handling a matching row proof, it could contain a proof key or the proof data.
 #[derive(Serialize, Deserialize)]
 pub struct HydratableMatchingRow {
-    pub proof: Hydratable<ProofKey>,
     pub path: RowPath,
     pub result: Vec<U256>,
 }
 
 impl HydratableMatchingRow {
-    pub fn into_matching_row(self) -> MatchingRow {
-        MatchingRow::new(self.proof.clone_proof(), self.path, self.result)
-    }
-
     pub fn hydrate(
         self,
         proof: Vec<u8>,

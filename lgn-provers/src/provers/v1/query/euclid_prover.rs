@@ -75,12 +75,12 @@ impl EuclidQueryProver {
         &self,
         pis: &DynamicCircuitPis,
         placeholders: Placeholders,
-        indexing_proof: Vec<u8>,
+        indexing_proof: Proof,
         matching_rows: Vec<MatchingRow>,
         column_ids: &ColumnIDs,
         limit: u32,
         offset: u32,
-    ) -> anyhow::Result<Vec<u8>> {
+    ) -> anyhow::Result<Proof> {
         let circuit_input = revelation::api::CircuitInput::new_revelation_tabular(
             indexing_proof,
             matching_rows,
@@ -102,7 +102,7 @@ impl EuclidQueryProver {
     pub fn run_inner(
         &self,
         task_type: WorkerTaskType,
-    ) -> anyhow::Result<Vec<u8>> {
+    ) -> anyhow::Result<Proof> {
         let WorkerTaskType::Query(input) = task_type;
 
         let pis: DynamicCircuitPis = serde_json::from_slice(&input.pis)?;
@@ -140,7 +140,7 @@ impl EuclidQueryProver {
                 self.prove_tabular_revelation(
                     &pis,
                     placeholders.into(),
-                    indexing_proof.clone_proof(),
+                    indexing_proof,
                     matching_rows_proofs,
                     &column_ids,
                     limit,
