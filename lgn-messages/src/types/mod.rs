@@ -3,67 +3,53 @@ use std::fmt::Formatter;
 
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
+use v1::Envelope;
+use v1::Task;
 
 use crate::Proof;
 
 pub mod v1;
 
-#[derive(Deserialize, Serialize)]
-pub enum TaskType {
-    V1Preprocessing(v1::preprocessing::WorkerTaskType),
-    V1Query(v1::query::WorkerTaskType),
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(tag = "version")]
+pub enum Message {
+    /// Version 1 of the envelope format
+    #[serde(rename = "1")]
+    V1(Envelope),
 
-    /// Carries the plonky2 proof that will be wrapped on a groth16.
-    V1Groth16(Vec<u8>),
+    /// Used by serde if the payload's version tag is not known.
+    #[serde(other)]
+    Unsupported,
 }
 
-#[derive(Deserialize, Serialize)]
-pub struct MessageEnvelope {
-    /// Identifier to relate proofs with tasks.
-    pub task_id: String,
-
-    /// The task to be proved.
-    pub task: TaskType,
-
-    /// The proving system version target version.
-    ///
-    /// Used to check the worker is compatible with the task.
-    pub mp2_version: String,
-}
-
-impl std::fmt::Debug for MessageEnvelope {
-    fn fmt(
-        &self,
-        f: &mut Formatter<'_>,
-    ) -> std::fmt::Result {
-        f.debug_struct("MessageEnvelope")
-            .field("task_id", &self.task_id)
-            .field("version", &self.mp2_version)
-            .finish_non_exhaustive()
-    }
-}
-
-impl MessageEnvelope {
-    pub fn new(
+impl Message {
+    /// Creates a message using the `v1` format.
+    pub fn v1(
         task_id: String,
-        task: TaskType,
+        task: Task,
         version: String,
     ) -> Self {
-        Self {
+        Self::V1(v1::Envelope {
             task,
             task_id,
             mp2_version: version,
-        }
+        })
     }
 
     /// Returns the task identifier.
-    pub fn task_id(&self) -> &str {
-        &self.task_id
+    pub fn task_id(&self) -> Option<&str> {
+        match self {
+            Message::V1(v1::Envelope { task_id, .. }) => Some(task_id),
+            Message::Unsupported => None,
+        }
     }
 
     /// Returns this message's task.
-    pub fn task(&self) -> &TaskType {
-        &self.task
+    pub fn task(&self) -> Option<&Task> {
+        match self {
+            Message::V1(v1::Envelope { task, .. }) => Some(task),
+            Message::Unsupported => None,
+        }
     }
 }
 
@@ -73,10 +59,10 @@ pub struct MessageReplyEnvelope {
     pub task_id: String,
 
     /// The proof result.
-    proof: Option<Proof>,
+    pub proof: Option<Proof>,
 
     /// Error details, if any.
-    error: Option<String>,
+    pub error: Option<String>,
 }
 
 impl std::fmt::Debug for MessageReplyEnvelope {
@@ -160,6 +146,7 @@ impl Display for TaskDifficulty {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ProverType {
+    Unsupported,
     V1Preprocessing,
     V1Query,
     V1Groth16,
@@ -174,6 +161,7 @@ impl Display for ProverType {
             f,
             "{}",
             match self {
+                ProverType::Unsupported => "Unsupported",
                 ProverType::V1Preprocessing => "V1Preprocessing",
                 ProverType::V1Query => "V1Query",
                 ProverType::V1Groth16 => "V1Groth16",
@@ -184,14 +172,4 @@ impl Display for ProverType {
 
 pub trait ToProverType {
     fn to_prover_type(&self) -> ProverType;
-}
-
-impl ToProverType for TaskType {
-    fn to_prover_type(&self) -> ProverType {
-        match self {
-            TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
-            TaskType::V1Query(_) => ProverType::V1Query,
-            TaskType::V1Groth16(_) => ProverType::V1Groth16,
-        }
-    }
 }

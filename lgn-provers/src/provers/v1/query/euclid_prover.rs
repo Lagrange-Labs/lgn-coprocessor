@@ -2,12 +2,11 @@ use std::collections::HashMap;
 
 use anyhow::bail;
 use anyhow::Context;
+use lgn_messages::types::v1;
 use lgn_messages::types::v1::query::ConcreteQueryCircuitInput;
 use lgn_messages::types::v1::query::ConcreteQueryParameters;
 use lgn_messages::types::v1::query::QueryStep;
 use lgn_messages::types::v1::query::WorkerTaskType;
-use lgn_messages::types::MessageReplyEnvelope;
-use lgn_messages::types::TaskType;
 use lgn_messages::Proof;
 use metrics::histogram;
 use parsil::assembler::DynamicCircuitPis;
@@ -20,7 +19,7 @@ use verifiable_db::revelation;
 use verifiable_db::revelation::api::MatchingRow;
 
 use crate::params;
-use crate::provers::LgnProver;
+use crate::provers::v1::V1Prover;
 
 pub struct EuclidQueryProver {
     params: ConcreteQueryParameters,
@@ -153,28 +152,23 @@ impl EuclidQueryProver {
     }
 }
 
-impl LgnProver for EuclidQueryProver {
+impl V1Prover for EuclidQueryProver {
     fn run(
         &self,
-        envelope: lgn_messages::types::MessageEnvelope,
-    ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
-        let task_id = envelope.task_id.clone();
-
+        envelope: v1::Envelope,
+    ) -> anyhow::Result<Proof> {
         match envelope.task {
-            TaskType::V1Preprocessing(..) => {
+            v1::Task::Preprocessing(..) => {
                 bail!(
-                "EuclidQueryProver: unsupported task type. task_type: V1Preprocessing task_id: {}",
-                task_id,
-            )
+                    "EuclidQueryProver: unsupported task type. task_type: V1Preprocessing task_id: {}",
+                    envelope.task_id,
+                )
             },
-            TaskType::V1Query(task_type) => {
-                let proof = self.run_inner(task_type)?;
-                Ok(MessageReplyEnvelope::new(task_id, proof))
-            },
-            TaskType::V1Groth16(..) => {
+            v1::Task::Query(task_type) => self.run_inner(task_type),
+            v1::Task::Groth16(..) => {
                 bail!(
                     "EuclidQueryProver: unsupported task type. task_type: V1Groth16 task_id: {}",
-                    task_id,
+                    envelope.task_id,
                 )
             },
         }

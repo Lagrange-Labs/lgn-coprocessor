@@ -3,13 +3,14 @@ use std::panic::RefUnwindSafe;
 use std::panic::UnwindSafe;
 
 use anyhow::bail;
+use anyhow::ensure;
 use anyhow::Context;
-use lgn_messages::types::MessageEnvelope;
+use lgn_messages::types::Message;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProverType;
 use lgn_messages::types::TaskDifficulty;
 use lgn_messages::types::ToProverType;
-use lgn_provers::provers::LgnProver;
+use lgn_provers::provers::v1::V1Prover;
 use metrics::counter;
 use metrics::histogram;
 use tracing::info;
@@ -18,7 +19,8 @@ use crate::config::Config;
 
 /// Manages provers for different proving task types
 pub(crate) struct ProversManager {
-    provers: HashMap<ProverType, Box<dyn LgnProver>>,
+    provers: HashMap<ProverType, Box<dyn V1Prover>>,
+    mp2_requirement: semver::VersionReq,
 }
 
 impl UnwindSafe for ProversManager {
@@ -30,10 +32,11 @@ impl ProversManager {
     pub(crate) fn new(
         config: &Config,
         checksums: &HashMap<String, blake3::Hash>,
+        mp2_requirement: semver::VersionReq,
     ) -> anyhow::Result<Self> {
         info!("Registering the provers");
 
-        let mut provers = HashMap::<ProverType, Box<dyn LgnProver>>::new();
+        let mut provers = HashMap::<ProverType, Box<dyn V1Prover>>::new();
 
         if config.worker.instance_type >= TaskDifficulty::Small {
             let query_prover = lgn_provers::provers::v1::query::create_prover(
@@ -75,7 +78,10 @@ impl ProversManager {
 
         info!("Finished registering the provers.");
 
-        Ok(Self { provers })
+        Ok(Self {
+            provers,
+            mp2_requirement,
+        })
     }
 
     /// Sends proving request to a matching prover
@@ -87,8 +93,29 @@ impl ProversManager {
     /// A message reply envelope containing the result of the proving task
     pub(crate) fn delegate_proving(
         &self,
-        envelope: MessageEnvelope,
+        envelope: Message,
     ) -> anyhow::Result<MessageReplyEnvelope> {
+        let envelope = match envelope {
+            Message::V1(envelope) => envelope,
+            Message::Unsupported => {
+                counter!(
+                    "zkmr_worker_tasks_failed_total",
+                    "task_type" => "unsupported",
+                )
+                .increment(1);
+                bail!("Unsupported message, baling");
+            },
+        };
+
+        let envelope_version =
+            semver::Version::parse(&envelope.mp2_version).context("parsing message version")?;
+
+        ensure!(
+            self.mp2_requirement.matches(&envelope_version),
+            "Version mismatch. worker_requirement: {} task_requirement: {}",
+            self.mp2_requirement,
+            envelope_version,
+        );
         let prover_type: ProverType = envelope.task.to_prover_type();
 
         counter!(
@@ -99,14 +126,18 @@ impl ProversManager {
 
         match self.provers.get(&prover_type) {
             Some(prover) => {
-                info!("Running prover for task type: {prover_type:?}");
+                info!(
+                    "Running prover for task type. prover_type: {:?} task_id: {}",
+                    prover_type, envelope.task_id,
+                );
 
                 let start_time = std::time::Instant::now();
+                let task_id = envelope.task_id.clone();
 
-                let result = prover.run(envelope)?;
+                let proof = prover.run(envelope)?;
 
                 counter!(
-                    "zkmr_worker_tasks_processed_total",
+                    "zkmr_worker_tasks_successful_total",
                     "task_type" => prover_type.to_string(),
                 )
                 .increment(1);
@@ -116,7 +147,11 @@ impl ProversManager {
                 )
                 .record(start_time.elapsed().as_secs_f64());
 
-                Ok(result)
+                Ok(MessageReplyEnvelope {
+                    task_id,
+                    proof: Some(proof),
+                    error: None,
+                })
             },
             None => {
                 counter!(

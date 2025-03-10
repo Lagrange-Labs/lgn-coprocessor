@@ -3,11 +3,11 @@ use std::collections::HashMap;
 
 use tracing::info;
 
-use crate::provers::LgnProver;
-
 mod dummy_prover;
 mod euclid_prover;
 pub use euclid_prover::Groth16Prover;
+
+use super::V1Prover;
 
 #[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
@@ -18,7 +18,7 @@ pub fn create_prover(
     checksums: &HashMap<String, blake3::Hash>,
     pk_file: &str,
     vk_file: &str,
-) -> anyhow::Result<impl LgnProver> {
+) -> anyhow::Result<impl V1Prover> {
     #[cfg(feature = "dummy-prover")]
     let prover = {
         info!("Creating dummy groth16 prover");

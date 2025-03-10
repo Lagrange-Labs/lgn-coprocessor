@@ -1,35 +1,31 @@
 use anyhow::bail;
-use lgn_messages::types::MessageReplyEnvelope;
-use lgn_messages::types::TaskType;
+use lgn_messages::types::v1;
+use lgn_messages::Proof;
 
 use crate::dummy_utils::dummy_proof;
-use crate::provers::LgnProver;
+use crate::provers::v1::V1Prover;
 
 const PROOF_SIZE: usize = 32;
 
 /// Prover implementation which performs no proving and returns random data as a proof.
 pub struct Groth16DummyProver;
 
-impl LgnProver for Groth16DummyProver {
+impl V1Prover for Groth16DummyProver {
     fn run(
         &self,
-        envelope: lgn_messages::types::MessageEnvelope,
-    ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
-        let task_id = envelope.task_id.clone();
-
-        match envelope.task() {
-            TaskType::V1Preprocessing(..) => {
-                bail!("Groth16DummyProver: unsupported task type. task_type: V1Preprocessing task_id: {}", task_id)
+        envelope: v1::Envelope,
+    ) -> anyhow::Result<Proof> {
+        match envelope.task {
+            v1::Task::Preprocessing(..) => {
+                bail!("Groth16DummyProver: unsupported task type. task_type: V1Preprocessing task_id: {}", envelope.task_id)
             },
-            TaskType::V1Query(..) => {
+            v1::Task::Query(..) => {
                 bail!(
                     "Groth16DummyProver: unsupported task type. task_type: V1Query task_id: {}",
-                    task_id,
+                    envelope.task_id,
                 )
             },
-            TaskType::V1Groth16(_revelation_proof) => {
-                Ok(MessageReplyEnvelope::new(task_id, dummy_proof(PROOF_SIZE)))
-            },
+            v1::Task::Groth16(_revelation_proof) => Ok(dummy_proof(PROOF_SIZE)),
         }
     }
 }

@@ -2,11 +2,11 @@ use std::collections::HashMap;
 
 use tracing::info;
 
-use crate::provers::LgnProver;
-
 pub(crate) mod dummy_prover;
 pub(crate) mod euclid_prover;
 pub use euclid_prover::EuclidQueryProver;
+
+use super::V1Prover;
 
 #[allow(unused_variables)]
 pub fn create_prover(
@@ -14,7 +14,7 @@ pub fn create_prover(
     dir: &str,
     file: &str,
     checksums: &HashMap<String, blake3::Hash>,
-) -> anyhow::Result<impl LgnProver> {
+) -> anyhow::Result<impl V1Prover> {
     #[cfg(feature = "dummy-prover")]
     let prover = {
         use dummy_prover::QueryDummyProver;

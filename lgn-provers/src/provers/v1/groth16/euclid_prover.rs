@@ -4,12 +4,12 @@ use std::time::Instant;
 use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
-use lgn_messages::types::MessageReplyEnvelope;
-use lgn_messages::types::TaskType;
+use lgn_messages::types::v1;
+use lgn_messages::Proof;
 use tracing::info;
 
 use crate::params;
-use crate::provers::LgnProver;
+use crate::provers::v1::V1Prover;
 
 #[derive(Debug)]
 pub struct Groth16Prover {
@@ -43,44 +43,45 @@ impl Groth16Prover {
     }
 }
 
-impl LgnProver for Groth16Prover {
+impl V1Prover for Groth16Prover {
     fn run(
         &self,
-        envelope: lgn_messages::types::MessageEnvelope,
-    ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
-        let task_id = envelope.task_id.clone();
-
-        match envelope.task() {
-            TaskType::V1Preprocessing(..) => {
+        envelope: v1::Envelope,
+    ) -> anyhow::Result<Proof> {
+        match envelope.task {
+            v1::Task::Preprocessing(..) => {
                 bail!(
                     "Groth16: unsupported task type. task_type: V1Preprocessing task_id: {}",
-                    task_id,
+                    envelope.task_id,
                 )
             },
-            TaskType::V1Query(..) => {
+            v1::Task::Query(..) => {
                 bail!(
                     "Groth16: unsupported task type. task_type: V1Query task_id: {}",
-                    task_id,
+                    envelope.task_id,
                 )
             },
-            TaskType::V1Groth16(revelation_proof) => {
+            v1::Task::Groth16(revelation_proof) => {
                 let now = Instant::now();
                 let proof = self
                     .inner
                     .prove(revelation_proof.as_slice())
                     .with_context(|| {
-                        format!("Failed to generate the Groth16 proof. task_id: {}", task_id,)
+                        format!(
+                            "Failed to generate the Groth16 proof. task_id: {}",
+                            envelope.task_id,
+                        )
                     })?;
 
                 info!(
                     time = now.elapsed().as_secs_f32(),
                     proof_type = "groth16",
                     "Finish generating the Groth16 proof. task_id: {} elapsed: {:?}",
-                    task_id,
+                    envelope.task_id,
                     now.elapsed(),
                 );
 
-                Ok(MessageReplyEnvelope::new(task_id, proof))
+                Ok(proof)
             },
         }
     }

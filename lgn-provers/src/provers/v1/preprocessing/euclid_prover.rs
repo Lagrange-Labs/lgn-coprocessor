@@ -3,14 +3,13 @@ use std::collections::HashMap;
 use alloy::primitives::U256;
 use anyhow::bail;
 use anyhow::Context;
+use lgn_messages::types::v1;
 use lgn_messages::types::v1::preprocessing::db_tasks::DbBlockType;
 use lgn_messages::types::v1::preprocessing::node_type;
 use lgn_messages::types::v1::preprocessing::NodeType;
 use lgn_messages::types::v1::preprocessing::WorkerTaskType;
 use lgn_messages::types::v1::ConcreteCircuitInput;
 use lgn_messages::types::v1::ConcretePublicParameters;
-use lgn_messages::types::MessageReplyEnvelope;
-use lgn_messages::types::TaskType;
 use lgn_messages::Proof;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
@@ -22,7 +21,7 @@ use mp2_v1::length_extraction::LengthCircuitInput;
 use tracing::debug;
 
 use crate::params;
-use crate::provers::LgnProver;
+use crate::provers::v1::V1Prover;
 
 pub struct EuclidProver {
     params: ConcretePublicParameters,
@@ -286,28 +285,23 @@ impl EuclidProver {
     }
 }
 
-impl LgnProver for EuclidProver {
+impl V1Prover for EuclidProver {
     fn run(
         &self,
-        envelope: lgn_messages::types::MessageEnvelope,
-    ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
-        let task_id = envelope.task_id.clone();
-
+        envelope: v1::Envelope,
+    ) -> anyhow::Result<Proof> {
         match envelope.task {
-            TaskType::V1Preprocessing(task) => {
-                let proof = self.run_inner(task)?;
-                Ok(MessageReplyEnvelope::new(task_id, proof))
-            },
-            TaskType::V1Query(..) => {
+            v1::Task::Preprocessing(task) => self.run_inner(task),
+            v1::Task::Query(..) => {
                 bail!(
                     "EuclidProver: unsupported task type. task_type: V1Query task_id: {}",
-                    task_id,
+                    envelope.task_id,
                 )
             },
-            TaskType::V1Groth16(_revelation_proof) => {
+            v1::Task::Groth16(_revelation_proof) => {
                 bail!(
                     "EuclidProver: unsupported task type. task_type: V1Groth16 task_id: {}",
-                    task_id
+                    envelope.task_id,
                 )
             },
         }
