@@ -33,7 +33,6 @@ pub struct QueryInput {
 pub enum QueryStep {
     /// Combine the rows and revelation proving for tabular queries in one task,
     /// next step is Groth16
-    #[serde(rename = "1")]
     Tabular(
         // Matching row inputs for a tabular query
         Vec<MatchingRowInput>,
@@ -41,11 +40,6 @@ pub enum QueryStep {
         RevelationInput,
     ),
 
-    /// Revelation step, we only handle aggregation revelation for now, next step is Groth16
-    #[serde(rename = "3")]
-    Revelation(RevelationInput),
-
-    #[serde(rename = "4")]
     QueryCircuitInput(Box<ConcreteQueryCircuitInput>),
 }
 

@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use anyhow::bail;
 use anyhow::Context;
-use lgn_messages::types::v1::query::tasks::HydratableMatchingRow;
 use lgn_messages::types::v1::query::tasks::QueryStep;
 use lgn_messages::types::v1::query::tasks::RevelationInput;
 use lgn_messages::types::v1::query::ConcreteQueryCircuitInput;
@@ -147,32 +146,6 @@ impl EuclidQueryProver {
                     limit,
                     offset,
                 )?
-            },
-            QueryStep::Revelation(input) => {
-                match input {
-                    RevelationInput::Tabular {
-                        placeholders,
-                        indexing_proof,
-                        matching_rows,
-                        column_ids,
-                        limit,
-                        offset,
-                        ..
-                    } => {
-                        self.prove_tabular_revelation(
-                            &pis,
-                            placeholders.into(),
-                            indexing_proof.clone_proof(),
-                            matching_rows
-                                .into_iter()
-                                .map(HydratableMatchingRow::into_matching_row)
-                                .collect(),
-                            &column_ids,
-                            limit,
-                            offset,
-                        )
-                    },
-                }?
             },
             QueryStep::QueryCircuitInput(circuit_input) => {
                 self.prove_circuit_input(*circuit_input)?
