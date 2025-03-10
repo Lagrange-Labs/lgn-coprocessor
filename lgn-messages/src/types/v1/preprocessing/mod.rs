@@ -72,28 +72,14 @@ pub fn node_type(rlp_data: &[u8]) -> anyhow::Result<NodeType> {
 
 #[derive(Deserialize, Serialize)]
 pub struct WorkerTask {
-    /// Which block we are proving.
-    pub block_nr: BlockNr,
-
-    /// Chain ID
-    pub chain_id: u64,
-
     /// What we are proving.
     pub task_type: WorkerTaskType,
 }
 
 impl WorkerTask {
     #[must_use]
-    pub fn new(
-        chain_id: u64,
-        block_nr: BlockNr,
-        task_type: WorkerTaskType,
-    ) -> Self {
-        Self {
-            chain_id,
-            block_nr,
-            task_type,
-        }
+    pub fn new(task_type: WorkerTaskType) -> Self {
+        Self { task_type }
     }
 }
 
