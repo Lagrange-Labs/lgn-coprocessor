@@ -10,17 +10,18 @@ use lgn_messages::types::v1::preprocessing::ext_tasks::ExtractionType;
 use lgn_messages::types::v1::preprocessing::ext_tasks::FinalExtraction;
 use lgn_messages::types::v1::preprocessing::ext_tasks::FinalExtractionType;
 use lgn_messages::types::v1::preprocessing::node_type;
+use lgn_messages::types::v1::preprocessing::ConcreteValueExtractionCircuitInput;
 use lgn_messages::types::v1::preprocessing::NodeType;
 use lgn_messages::types::v1::preprocessing::WorkerTask;
 use lgn_messages::types::v1::preprocessing::WorkerTaskType;
+use lgn_messages::types::v1::ConcreteCircuitInput;
+use lgn_messages::types::v1::ConcretePublicParameters;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::TaskType;
-use mp2_common::digest::TableDimension;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::generate_proof;
 use mp2_v1::api::CircuitInput;
-use mp2_v1::api::PublicParameters;
 use mp2_v1::block_extraction;
 use mp2_v1::contract_extraction;
 use mp2_v1::final_extraction;
@@ -33,11 +34,11 @@ use crate::params;
 use crate::provers::LgnProver;
 
 pub struct EuclidProver {
-    params: PublicParameters,
+    params: ConcretePublicParameters,
 }
 
 impl EuclidProver {
-    pub fn new(params: PublicParameters) -> Self {
+    pub fn new(params: ConcretePublicParameters) -> Self {
         Self { params }
     }
 
@@ -55,7 +56,7 @@ impl EuclidProver {
 
     fn prove(
         &self,
-        input: CircuitInput,
+        input: ConcreteCircuitInput,
         name: &str,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving {}", name);
@@ -84,7 +85,7 @@ impl EuclidProver {
 impl EuclidProver {
     fn prove_value_extraction(
         &self,
-        circuit_input: values_extraction::CircuitInput,
+        circuit_input: ConcreteValueExtractionCircuitInput,
     ) -> anyhow::Result<Vec<u8>> {
         self.prove(
             CircuitInput::ValuesExtraction(circuit_input),
@@ -122,19 +123,17 @@ impl EuclidProver {
         self.prove(input, "block")
     }
 
-    fn prove_final_extraction_simple(
+    fn prove_final_extraction(
         &self,
         block_proof: Vec<u8>,
         contract_proof: Vec<u8>,
         value_proof: Vec<u8>,
-        dimension: TableDimension,
     ) -> anyhow::Result<Vec<u8>> {
         let input =
             CircuitInput::FinalExtraction(final_extraction::CircuitInput::new_simple_input(
                 block_proof,
                 contract_proof,
                 value_proof,
-                dimension,
             )?);
         self.prove(input, "final extraction simple")
     }
@@ -198,6 +197,7 @@ impl EuclidProver {
             identifier,
             value,
             is_multiplier,
+            todo!(),
             cells_proof,
         )?);
         self.prove(input, "row leaf")
@@ -223,6 +223,7 @@ impl EuclidProver {
             value,
             is_multiplier,
             is_child_left,
+            todo!(),
             child_proof,
             cells_proof,
         )?);
@@ -246,6 +247,7 @@ impl EuclidProver {
             identifier,
             value,
             is_multiplier,
+            todo!(),
             child_proofs[0].to_owned(),
             child_proofs[1].to_owned(),
             cells_proof,
@@ -437,12 +439,11 @@ impl EuclidProver {
                         match *final_extraction {
                             FinalExtraction::Single(single_table_extraction) => {
                                 match single_table_extraction.extraction_type {
-                                    FinalExtractionType::Simple(compound) => {
-                                        self.prove_final_extraction_simple(
+                                    FinalExtractionType::Simple => {
+                                        self.prove_final_extraction(
                                             single_table_extraction.block_proof.clone(),
                                             single_table_extraction.contract_proof.clone(),
                                             single_table_extraction.value_proof.clone(),
-                                            compound,
                                         )?
                                     },
                                     FinalExtractionType::Lengthed => {

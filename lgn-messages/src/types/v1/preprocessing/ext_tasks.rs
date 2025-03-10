@@ -1,12 +1,11 @@
 use alloy_primitives::Address;
 use derive_debug_plus::Dbg;
 use ethers::types::H256;
-use mp2_common::digest::TableDimension;
-use mp2_v1::values_extraction;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
 use super::node_type;
+use super::ConcreteValueExtractionCircuitInput;
 use super::NodeType;
 use crate::BlockNr;
 use crate::TableHash;
@@ -38,7 +37,7 @@ pub struct Mpt {
     pub table_hash: TableHash,
     pub block_nr: BlockNr,
     pub node_hash: H256,
-    pub circuit_input: values_extraction::CircuitInput,
+    pub circuit_input: ConcreteValueExtractionCircuitInput,
 }
 
 impl Mpt {
@@ -46,7 +45,7 @@ impl Mpt {
         table_hash: TableId,
         block_nr: BlockNr,
         node_hash: H256,
-        circuit_input: values_extraction::CircuitInput,
+        circuit_input: ConcreteValueExtractionCircuitInput,
     ) -> Self {
         Self {
             table_hash,
@@ -190,7 +189,6 @@ impl FinalExtraction {
         table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
-        compound: Option<TableDimension>,
         value_proof_version: MptNodeVersion,
     ) -> Self {
         Self::Single(SingleTableExtraction::new(
@@ -198,7 +196,6 @@ impl FinalExtraction {
             table_hash,
             block_nr,
             contract,
-            compound,
             value_proof_version,
         ))
     }
@@ -256,21 +253,15 @@ impl SingleTableExtraction {
         table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
-        compound: Option<TableDimension>,
         value_proof_version: MptNodeVersion,
     ) -> Self {
-        let extraction_type = match compound {
-            Some(compound) => FinalExtractionType::Simple(compound),
-            None => FinalExtractionType::Lengthed,
-        };
-
         Self {
             table_id,
             table_hash,
             block_nr,
             contract,
             value_proof_version,
-            extraction_type,
+            extraction_type: todo!(),
             block_proof: vec![],
             contract_proof: vec![],
             value_proof: vec![],
@@ -339,6 +330,6 @@ impl MergeTableExtraction {
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum FinalExtractionType {
-    Simple(TableDimension),
+    Simple,
     Lengthed,
 }

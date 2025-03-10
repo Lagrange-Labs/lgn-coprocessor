@@ -3,11 +3,12 @@ use alloy_primitives::U256;
 use anyhow::bail;
 use ethers::prelude::H256;
 use ethers::utils::rlp::Rlp;
-use mp2_common::digest::TableDimension;
+use mp2_v1::api::MAX_FIELD_PER_EVM;
 use mp2_v1::values_extraction;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
+use super::query::MAX_NUM_COLUMNS;
 use crate::types::v1::preprocessing::db_tasks::DatabaseType;
 use crate::types::v1::preprocessing::db_tasks::IvcInput;
 use crate::types::v1::preprocessing::db_tasks::RowLeafInput;
@@ -25,6 +26,9 @@ use crate::TableId;
 
 pub mod db_tasks;
 pub mod ext_tasks;
+
+pub type ConcreteValueExtractionCircuitInput =
+    values_extraction::CircuitInput<69, MAX_NUM_COLUMNS, MAX_FIELD_PER_EVM>;
 
 /// Different types of node types.
 #[derive(Debug, PartialEq, Eq)]
@@ -95,7 +99,7 @@ impl WorkerTaskType {
         table_hash: TableHash,
         block_nr: BlockNr,
         node_hash: H256,
-        circuit_input: values_extraction::CircuitInput,
+        circuit_input: ConcreteValueExtractionCircuitInput,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
             table_hash,
@@ -146,7 +150,6 @@ impl WorkerTaskType {
         table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
-        compound: TableDimension,
         value_proof_version: MptNodeVersion,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
@@ -155,7 +158,6 @@ impl WorkerTaskType {
                 table_hash,
                 block_nr,
                 contract,
-                Some(compound),
                 value_proof_version,
             ),
         )))
@@ -174,7 +176,6 @@ impl WorkerTaskType {
                 table_hash,
                 block_nr,
                 contract,
-                None,
                 value_proof_version,
             ),
         )))
