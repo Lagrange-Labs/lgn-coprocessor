@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use alloy_primitives::U256;
-use derive_debug_plus::Dbg;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use verifiable_db::query::api::RowInput;
@@ -16,7 +15,7 @@ use crate::types::v1::query::keys::ProofKey;
 use crate::types::v1::query::PlaceHolderLgn;
 
 /// Query input for a proving task
-#[derive(Dbg, Clone, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct QueryInput {
     /// Proof storage key
     pub proof_key: ProofKey,
@@ -25,12 +24,11 @@ pub struct QueryInput {
     pub query_step: QueryStep,
 
     /// Public inputs data
-    #[dbg(placeholder = "...")]
     pub pis: Vec<u8>,
 }
 
 /// Query step info
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub enum QueryStep {
     /// Combine the rows and revelation proving for tabular queries in one task,
     /// next step is Groth16
@@ -52,7 +50,7 @@ pub enum QueryStep {
 }
 
 /// Matching row input for a tabular query
-#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub struct MatchingRowInput {
     /// Proof key of this row proof
     pub proof_key: ProofKey,
@@ -65,7 +63,7 @@ pub struct MatchingRowInput {
 }
 
 /// Input of an aggregation (batching) query
-#[derive(Dbg, Clone, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct AggregationInput {
     /// Proof key of this aggregation proof
     pub proof_key: ProofKey,
@@ -74,7 +72,7 @@ pub struct AggregationInput {
 }
 
 /// Different proof inputs of an aggregation (batching) query
-#[derive(Clone, Dbg, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub enum ProofInputKind {
     /// Rows chunk input
     #[serde(rename = "1")]
@@ -90,7 +88,7 @@ pub enum ProofInputKind {
 }
 
 /// Handling a matching row proof, it could contain a proof key or the proof data.
-#[derive(Clone, Dbg, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct HydratableMatchingRow {
     pub proof: Hydratable<ProofKey>,
     pub path: RowPath,
@@ -112,26 +110,10 @@ impl HydratableMatchingRow {
 
 /// Either a `Dehydrated` variant containing a key to a stored proof, or a
 /// `Hydrated` containing the proof itself.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub enum Hydratable<K: Clone + std::fmt::Debug> {
     Dehydrated(K),
     Hydrated(Arc<Vec<u8>>),
-}
-
-impl<T: Clone + std::fmt::Debug> std::fmt::Debug for Hydratable<T> {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
-        match self {
-            Hydratable::Dehydrated(k) => {
-                write!(f, "dehydrated: {k:?}")
-            },
-            Hydratable::Hydrated(_) => {
-                write!(f, "hydrated")
-            },
-        }
-    }
 }
 
 impl<K: Clone + std::fmt::Debug> Hydratable<K> {
@@ -178,20 +160,12 @@ impl<K: Clone + std::fmt::Debug> Hydratable<K> {
 }
 
 /// Revelation input
-#[derive(Clone, Dbg, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub enum RevelationInput {
     /// Input for an aggregation query
     Aggregated {
         placeholders: PlaceHolderLgn,
-
-        #[dbg(placeholder = "...")]
-        // Used in DQ
-        #[allow(unused_variables)]
         indexing_proof: Hydratable<db_keys::ProofKey>,
-
-        #[dbg(placeholder = "...")]
-        // Used in DQ
-        #[allow(unused_variables)]
         query_proof: Hydratable<ProofKey>,
     },
     /// Input for a tabular query
@@ -206,7 +180,7 @@ pub enum RevelationInput {
 }
 
 /// Non existence input of an aggregation query
-#[derive(Clone, Dbg, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct NonExistenceInput {
     pub index_path: TreePathInputs,
     pub column_ids: ColumnIDs,
@@ -214,15 +188,14 @@ pub struct NonExistenceInput {
 }
 
 /// Rows chunk input of an aggregation query
-#[derive(Clone, PartialEq, Dbg, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub struct RowsChunkInput {
     pub rows: Vec<RowInput>,
-
     pub placeholders: PlaceHolderLgn,
 }
 
 /// Chunk aggregation input of an aggregation query
-#[derive(Clone, Dbg, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct ChunkAggregationInput {
     pub child_proofs: Vec<Hydratable<ProofKey>>,
 }

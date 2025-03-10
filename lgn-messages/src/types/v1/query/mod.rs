@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use alloy_primitives::U256;
-use derive_debug_plus::Dbg;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use verifiable_db::query::computational_hash_ids::PlaceholderIdentifier;
@@ -19,26 +18,38 @@ pub const NUM_CHUNKS: usize = 66;
 /// We must use the same value of this constant for both DQ and Worker.
 pub const NUM_ROWS: usize = 100;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum WorkerTaskType {
     #[serde(rename = "1")]
     Query(QueryInput),
 }
 
-#[derive(Dbg, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 pub struct PlaceHolderLgn(HashMap<String, U256>);
 
 impl From<PlaceHolderLgn> for Placeholders {
-    fn from(ph: PlaceHolderLgn) -> Self {
-        let min_block = ph.0.get("0").cloned().unwrap();
-        let max_block = ph.0.get("1").cloned().unwrap();
+    fn from(place_holder: PlaceHolderLgn) -> Self {
+        (&place_holder).into()
+    }
+}
+
+impl From<Placeholders> for PlaceHolderLgn {
+    fn from(place_holder: Placeholders) -> Self {
+        (&place_holder).into()
+    }
+}
+
+impl From<&PlaceHolderLgn> for Placeholders {
+    fn from(place_holder: &PlaceHolderLgn) -> Self {
+        let min_block = place_holder.0.get("0").cloned().unwrap();
+        let max_block = place_holder.0.get("1").cloned().unwrap();
         let mut placeholders = Placeholders::new_empty(min_block, max_block);
 
-        for (k, v) in ph.0.into_iter() {
+        for (k, v) in place_holder.0.iter() {
             if k != "0" && k != "1" {
                 let index = k.parse::<usize>().unwrap();
-                placeholders.insert(PlaceholderIdentifier::Generic(index - 1), v);
+                placeholders.insert(PlaceholderIdentifier::Generic(index - 1), *v);
             }
         }
 
@@ -46,15 +57,19 @@ impl From<PlaceHolderLgn> for Placeholders {
     }
 }
 
-impl From<Placeholders> for PlaceHolderLgn {
-    fn from(ph: Placeholders) -> Self {
-        let min_block = ph.get(&PlaceholderIdentifier::MinQueryOnIdx1).unwrap();
-        let max_block = ph.get(&PlaceholderIdentifier::MaxQueryOnIdx1).unwrap();
+impl From<&Placeholders> for PlaceHolderLgn {
+    fn from(place_holder: &Placeholders) -> Self {
+        let min_block = place_holder
+            .get(&PlaceholderIdentifier::MinQueryOnIdx1)
+            .unwrap();
+        let max_block = place_holder
+            .get(&PlaceholderIdentifier::MaxQueryOnIdx1)
+            .unwrap();
         let mut map = HashMap::new();
         map.insert(0.to_string(), min_block);
         map.insert(1.to_string(), max_block);
 
-        for (k, v) in ph.0.iter() {
+        for (k, v) in place_holder.0.iter() {
             if let PlaceholderIdentifier::Generic(i) = k {
                 map.insert((*i + 1).to_string(), *v);
             }

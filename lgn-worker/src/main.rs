@@ -327,11 +327,9 @@ async fn run_worker(
 
 /// Parses the uuid in the GW message.
 fn parse_uuid(message: &WorkerToGwResponse) -> uuid::Uuid {
-    message
-        .task_id
-        .as_ref()
-        .map(|id| uuid::Uuid::from_bytes_le(id.id.clone().try_into().unwrap()))
-        .unwrap_or_else(|| uuid::Uuid::nil())
+    message.task_id.as_ref().map_or(uuid::Uuid::nil(), |id| {
+        uuid::Uuid::from_bytes_le(id.id.clone().try_into().unwrap())
+    })
 }
 
 #[tracing::instrument(skip(provers_manager, message, outbound), err(Debug))]
@@ -345,7 +343,7 @@ async fn process_message_from_gateway(
 
     let reply = {
         tokio::task::block_in_place(move || {
-            process_downstream_payload(provers_manager, message, mp2_requirement, uuid.clone())
+            process_downstream_payload(provers_manager, message, mp2_requirement, uuid)
         })
     };
 

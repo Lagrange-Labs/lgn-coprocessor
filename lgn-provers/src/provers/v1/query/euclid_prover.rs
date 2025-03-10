@@ -113,14 +113,14 @@ impl EuclidQueryProver {
 
     fn prove_universal_circuit(
         &self,
-        input: MatchingRowInput,
+        input: &MatchingRowInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Proof> {
         let circuit_input = CircuitInput::new_universal_circuit(
             &input.column_cells,
             &pis.predication_operations,
             &pis.result,
-            &input.placeholders.into(),
+            &((&input.placeholders).into()),
             input.is_leaf,
             &pis.bounds,
         )
@@ -133,10 +133,10 @@ impl EuclidQueryProver {
 
     fn prove_row_chunks(
         &self,
-        input: RowsChunkInput,
+        input: &RowsChunkInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Proof> {
-        let placeholders = input.placeholders.into();
+        let placeholders = (&input.placeholders).into();
         let input = CircuitInput::new_row_chunks_input(
             &input.rows,
             &pis.predication_operations,
@@ -165,12 +165,12 @@ impl EuclidQueryProver {
 
     fn prove_non_existence(
         &self,
-        input: NonExistenceInput,
+        input: &NonExistenceInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
-        let placeholders = input.placeholders.into();
+        let placeholders = (&input.placeholders).into();
         let input = CircuitInput::new_non_existence_input(
-            input.index_path,
+            input.index_path.clone(),
             &input.column_ids,
             &pis.predication_operations,
             &pis.result,
@@ -206,6 +206,7 @@ impl EuclidQueryProver {
         Ok(proof)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn prove_tabular_revelation(
         &self,
         pis: &DynamicCircuitPis,
@@ -236,13 +237,13 @@ impl EuclidQueryProver {
 
     pub fn run_inner(
         &self,
-        task_type: &WorkerTaskType,
+        task_type: WorkerTaskType,
     ) -> anyhow::Result<Vec<u8>> {
-        let WorkerTaskType::Query(ref input) = task_type;
+        let WorkerTaskType::Query(input) = task_type;
 
         let pis: DynamicCircuitPis = serde_json::from_slice(&input.pis)?;
 
-        let final_proof = match &input.query_step {
+        let final_proof = match input.query_step {
             QueryStep::Tabular(rows_inputs, revelation_input) => {
                 let RevelationInput::Tabular {
                     placeholders,
@@ -258,24 +259,24 @@ impl EuclidQueryProver {
                 };
 
                 let mut matching_rows_proofs = vec![];
-                for (row_input, matching_row) in rows_inputs.iter().zip(matching_rows.clone()) {
-                    let proof = self.prove_universal_circuit(row_input.clone(), &pis)?;
+                for (row_input, matching_row) in rows_inputs.iter().zip(matching_rows) {
+                    let proof = self.prove_universal_circuit(row_input, &pis)?;
                     matching_rows_proofs.push(matching_row.hydrate(proof));
                 }
 
                 self.prove_tabular_revelation(
                     &pis,
-                    placeholders.clone().into(),
+                    placeholders.into(),
                     indexing_proof.clone_proof(),
                     matching_rows_proofs,
-                    column_ids,
-                    *limit,
-                    *offset,
+                    &column_ids,
+                    limit,
+                    offset,
                 )?
             },
             QueryStep::Aggregation(input) => {
                 match &input.input_kind {
-                    ProofInputKind::RowsChunk(rc) => self.prove_row_chunks(rc.clone(), &pis),
+                    ProofInputKind::RowsChunk(rc) => self.prove_row_chunks(rc, &pis),
                     ProofInputKind::ChunkAggregation(ca) => {
                         let chunks_proofs = ca
                             .child_proofs
@@ -284,7 +285,7 @@ impl EuclidQueryProver {
                             .collect::<Vec<_>>();
                         self.prove_chunk_aggregation(&chunks_proofs)
                     },
-                    ProofInputKind::NonExistence(ne) => self.prove_non_existence(*ne.clone(), &pis),
+                    ProofInputKind::NonExistence(ne) => self.prove_non_existence(ne, &pis),
                 }?
             },
             QueryStep::Revelation(input) => {
@@ -297,7 +298,7 @@ impl EuclidQueryProver {
                     } => {
                         self.prove_aggregated_revelation(
                             &pis,
-                            placeholders.clone().into(),
+                            placeholders.into(),
                             query_proof.clone_proof(),
                             indexing_proof.clone_proof(),
                         )
@@ -313,16 +314,15 @@ impl EuclidQueryProver {
                     } => {
                         self.prove_tabular_revelation(
                             &pis,
-                            placeholders.clone().into(),
+                            placeholders.into(),
                             indexing_proof.clone_proof(),
                             matching_rows
-                                .iter()
-                                .cloned()
+                                .into_iter()
                                 .map(HydratableMatchingRow::into_matching_row)
                                 .collect(),
-                            column_ids,
-                            *limit,
-                            *offset,
+                            &column_ids,
+                            limit,
+                            offset,
                         )
                     },
                 }?
@@ -340,7 +340,7 @@ impl LgnProver for EuclidQueryProver {
     ) -> anyhow::Result<lgn_messages::types::MessageReplyEnvelope> {
         let task_id = envelope.task_id.clone();
 
-        match envelope.task() {
+        match envelope.task {
             TaskType::V1Preprocessing(..) => {
                 bail!(
                 "EuclidQueryProver: unsupported task type. task_type: V1Preprocessing task_id: {}",

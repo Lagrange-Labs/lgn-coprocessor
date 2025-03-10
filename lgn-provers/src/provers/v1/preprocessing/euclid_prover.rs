@@ -203,6 +203,7 @@ impl EuclidProver {
         self.prove(input, "row leaf")
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn prove_row_partial(
         &self,
         identifier: u64,
@@ -267,6 +268,7 @@ impl EuclidProver {
         self.prove(input, "block tree leaf")
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn prove_block_parent(
         &self,
         block_id: u64,
@@ -297,6 +299,7 @@ impl EuclidProver {
         self.prove(input, "block tree parent")
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn prove_membership(
         &self,
         block_id: u64,
