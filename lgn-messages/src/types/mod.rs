@@ -3,7 +3,6 @@ use std::fmt::Formatter;
 
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
-use thiserror::Error;
 
 use crate::Proof;
 
@@ -79,7 +78,7 @@ pub struct MessageReplyEnvelope {
     proof: Option<Proof>,
 
     /// Error details, if any.
-    error: Option<WorkerError>,
+    error: Option<String>,
 }
 
 impl std::fmt::Debug for MessageReplyEnvelope {
@@ -107,7 +106,7 @@ impl MessageReplyEnvelope {
     }
 
     /// Return the proof or the error if one occured.
-    pub fn inner(&self) -> Result<&Option<Proof>, &WorkerError> {
+    pub fn inner(&self) -> Result<&Option<Proof>, &str> {
         match self.error.as_ref() {
             None => Ok(&self.proof),
             Some(t) => Err(t),
@@ -123,13 +122,6 @@ impl MessageReplyEnvelope {
     pub fn task_id(&self) -> &str {
         &self.task_id
     }
-}
-
-#[derive(Error, Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub enum WorkerError {
-    // Start with general error to introduce the errors to replies
-    #[error("{0}")]
-    GeneralError(String),
 }
 
 pub type Stake = u128;
