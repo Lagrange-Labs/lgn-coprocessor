@@ -12,7 +12,6 @@ use lgn_messages::types::v1::preprocessing::ext_tasks::FinalExtractionType;
 use lgn_messages::types::v1::preprocessing::node_type;
 use lgn_messages::types::v1::preprocessing::ConcreteValueExtractionCircuitInput;
 use lgn_messages::types::v1::preprocessing::NodeType;
-use lgn_messages::types::v1::preprocessing::WorkerTask;
 use lgn_messages::types::v1::preprocessing::WorkerTaskType;
 use lgn_messages::types::v1::ConcreteCircuitInput;
 use lgn_messages::types::v1::ConcretePublicParameters;
@@ -27,7 +26,6 @@ use mp2_v1::contract_extraction;
 use mp2_v1::final_extraction;
 use mp2_v1::length_extraction;
 use mp2_v1::length_extraction::LengthCircuitInput;
-use mp2_v1::values_extraction;
 use tracing::debug;
 
 use crate::params;
@@ -349,9 +347,9 @@ impl EuclidProver {
 
     pub fn run_inner(
         &self,
-        task: WorkerTask,
+        task: WorkerTaskType,
     ) -> anyhow::Result<Vec<u8>> {
-        Ok(match task.task_type {
+        Ok(match task {
             WorkerTaskType::Extraction(extraction) => {
                 match extraction {
                     ExtractionType::MptExtraction(mpt) => {

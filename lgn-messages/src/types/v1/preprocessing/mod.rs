@@ -72,19 +72,6 @@ pub fn node_type(rlp_data: &[u8]) -> anyhow::Result<NodeType> {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct WorkerTask {
-    /// What we are proving.
-    pub task_type: WorkerTaskType,
-}
-
-impl WorkerTask {
-    #[must_use]
-    pub fn new(task_type: WorkerTaskType) -> Self {
-        Self { task_type }
-    }
-}
-
-#[derive(Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum WorkerTaskType {
     #[serde(rename = "1")]

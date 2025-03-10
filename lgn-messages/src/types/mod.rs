@@ -10,7 +10,7 @@ pub mod v1;
 
 #[derive(Deserialize, Serialize)]
 pub enum TaskType {
-    V1Preprocessing(v1::preprocessing::WorkerTask),
+    V1Preprocessing(v1::preprocessing::WorkerTaskType),
     V1Query(v1::query::WorkerTaskType),
 
     /// Carries the plonky2 proof that will be wrapped on a groth16.
