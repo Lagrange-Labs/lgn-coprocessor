@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use anyhow::bail;
 use anyhow::Context;
-use lgn_messages::types::v1::query::tasks::QueryStep;
 use lgn_messages::types::v1::query::ConcreteQueryCircuitInput;
 use lgn_messages::types::v1::query::ConcreteQueryParameters;
+use lgn_messages::types::v1::query::QueryStep;
 use lgn_messages::types::v1::query::WorkerTaskType;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::TaskType;
