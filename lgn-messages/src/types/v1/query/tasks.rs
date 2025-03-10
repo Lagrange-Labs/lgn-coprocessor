@@ -48,6 +48,9 @@ pub enum QueryStep {
     /// Revelation step, we only handle aggregation revelation for now, next step is Groth16
     #[serde(rename = "3")]
     Revelation(RevelationInput),
+
+    #[serde(rename = "4")]
+    CircuitInput(Box<ConcreteCircuitInput>),
 }
 
 /// Matching row input for a tabular query
@@ -75,14 +78,6 @@ pub struct AggregationInput {
 /// Different proof inputs of an aggregation (batching) query
 #[derive(Deserialize, Serialize)]
 pub enum ProofInputKind {
-    /// Rows chunk input
-    #[serde(rename = "1")]
-    RowsChunk(Box<ConcreteCircuitInput>),
-
-    /// Chunk aggregation input
-    #[serde(rename = "2")]
-    ChunkAggregation(ChunkAggregationInput),
-
     /// Non existence input
     #[serde(rename = "3")]
     NonExistence(Box<NonExistenceInput>),

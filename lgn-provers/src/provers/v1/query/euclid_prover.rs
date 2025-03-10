@@ -74,18 +74,6 @@ impl EuclidQueryProver {
         Ok(proof)
     }
 
-    fn prove_chunk_aggregation(
-        &self,
-        chunks_proofs: &[Vec<u8>],
-    ) -> anyhow::Result<Proof> {
-        let input = CircuitInput::new_chunk_aggregation_input(chunks_proofs)
-            .context("while initializing the chunk-aggregation circuit")?;
-
-        let proof = self.prove_circuit_input(QueryCircuitInput::Query(input))?;
-
-        Ok(proof)
-    }
-
     fn prove_non_existence(
         &self,
         input: &NonExistenceInput,
@@ -210,17 +198,6 @@ impl EuclidQueryProver {
             },
             QueryStep::Aggregation(input) => {
                 match input.input_kind {
-                    ProofInputKind::RowsChunk(circuit_input) => {
-                        self.prove_circuit_input(*circuit_input)
-                    },
-                    ProofInputKind::ChunkAggregation(ca) => {
-                        let chunks_proofs = ca
-                            .child_proofs
-                            .iter()
-                            .map(|proof| proof.clone_proof())
-                            .collect::<Vec<_>>();
-                        self.prove_chunk_aggregation(&chunks_proofs)
-                    },
                     ProofInputKind::NonExistence(non_existence) => {
                         self.prove_non_existence(&non_existence, &pis)
                     },
@@ -265,6 +242,7 @@ impl EuclidQueryProver {
                     },
                 }?
             },
+            QueryStep::CircuitInput(circuit_input) => self.prove_circuit_input(*circuit_input)?,
         };
 
         Ok(final_proof)
