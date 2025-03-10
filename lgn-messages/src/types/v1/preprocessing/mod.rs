@@ -23,11 +23,8 @@ use crate::BlockNr;
 use crate::TableHash;
 use crate::TableId;
 
-pub mod db_keys;
 pub mod db_tasks;
 pub mod ext_tasks;
-
-const KEYS_PREPROCESSING_PREFIX: &str = "V1_PREPROCESSING";
 
 /// Different types of node types.
 #[derive(Debug, PartialEq, Eq)]
