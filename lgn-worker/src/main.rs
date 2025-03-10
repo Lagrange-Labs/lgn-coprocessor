@@ -141,10 +141,7 @@ async fn main() -> anyhow::Result<()> {
         );
     }));
 
-    let last_task_processed =
-        AtomicU64::new(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs());
-
-    if let Err(err) = run(cli, mp2_requirement, last_task_processed).await {
+    if let Err(err) = run(cli, mp2_requirement).await {
         panic!("Worker exited due to an error: {err:?}")
     } else {
         Ok(())
@@ -154,7 +151,6 @@ async fn main() -> anyhow::Result<()> {
 async fn run(
     cli: Cli,
     mp2_requirement: semver::VersionReq,
-    last_task_processed: AtomicU64,
 ) -> anyhow::Result<()> {
     let version = env!("CARGO_PKG_VERSION");
     info!("Starting worker. version: {}", version);
@@ -177,13 +173,12 @@ async fn run(
         .install()
         .context("setting up Prometheus")?;
 
-    run_worker(&config, mp2_requirement, last_task_processed).await
+    run_worker(&config, mp2_requirement).await
 }
 
 async fn run_worker(
     config: &Config,
     mp2_requirement: semver::VersionReq,
-    last_task_processed: AtomicU64,
 ) -> anyhow::Result<()> {
     let max_message_size = config
         .avs
@@ -197,12 +192,8 @@ async fn run_worker(
         .await
         .context("downloading checksum file")?;
     let mut provers_manager =
-        tokio::task::block_in_place(move || -> anyhow::Result<ProversManager> {
-            let provers_manager =
-                ProversManager::new(config, &checksums).context("while registering provers")?;
-            Ok(provers_manager)
-        })
-        .context("creating prover managers")?;
+        tokio::task::block_in_place(move || ProversManager::new(config, &checksums))
+            .context("creating prover managers")?;
 
     // Connecting to the GW
     let wallet = get_wallet(config).context("fetching wallet")?;
@@ -211,7 +202,7 @@ async fn run_worker(
 
     let grpc_url = &config.avs.gateway_url;
     info!(
-        "connecting to the gateway: {}, max. mess. size = {}MB",
+        "Connecting to the gateway. url: {} max_messsage_size = {}MB",
         grpc_url,
         max_message_size / (1024 * 1024)
     );
@@ -262,13 +253,15 @@ async fn run_worker(
     let response = client
         .worker_to_gw(tonic::Request::new(outbound_rx))
         .await
-        .context("connecting `worker_to_gw`")?;
+        .context("connecting worker_to_gw")?;
 
     info!("Bidirectional stream with GW opened");
     let mut inbound = response.into_inner();
 
     let liveness_check_interval = config.worker.liveness_check_interval;
-    let last_task_processed = Arc::new(last_task_processed);
+    let last_task_processed = Arc::new(AtomicU64::new(
+        SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
+    ));
     let last_task_processed_clone = Arc::clone(&last_task_processed);
 
     // Start readiness and liveness check server
@@ -430,22 +423,14 @@ fn process_downstream_payload(
                 },
                 Err(err) => {
                     error!("Error processing task. err: {:?}", err);
-                    counter!(
-                        "zkmr_worker_error_count",
-                        "error_type" => "proof_processing",
-                    )
-                    .increment(1);
+                    counter!("zkmr_worker_error_count").increment(1);
 
                     return Err(err);
                 },
             }
         },
         Err(panic) => {
-            counter!(
-                "zkmr_worker_error_count",
-                "error_type" => "proof_processing",
-            )
-            .increment(1);
+            counter!("zkmr_worker_error_count").increment(1);
 
             let msg = match panic.downcast_ref::<&'static str>() {
                 Some(s) => *s,
