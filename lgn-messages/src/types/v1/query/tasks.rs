@@ -26,7 +26,13 @@ pub struct QueryInput {
 /// Query step info
 #[derive(Deserialize, Serialize)]
 pub enum QueryStep {
-    Tabular {
+    /// Inputs for a verifiable db circuit.
+    ///
+    /// This corresponds to a single circuit invocation.
+    QueryCircuitInput(Box<ConcreteQueryCircuitInput>),
+
+    /// Batched proof for tabular revelation
+    BatchedTabular {
         rows_inputs: Vec<MatchingRowInput>,
         placeholders: PlaceHolderLgn,
         indexing_proof: Hydratable<db_keys::ProofKey>,
@@ -35,8 +41,6 @@ pub enum QueryStep {
         limit: u32,
         offset: u32,
     },
-
-    QueryCircuitInput(Box<ConcreteQueryCircuitInput>),
 }
 
 /// Matching row input for a tabular query

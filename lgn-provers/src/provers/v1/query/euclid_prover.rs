@@ -108,7 +108,10 @@ impl EuclidQueryProver {
         let pis: DynamicCircuitPis = serde_json::from_slice(&input.pis)?;
 
         let final_proof = match input.query_step {
-            QueryStep::Tabular {
+            QueryStep::QueryCircuitInput(circuit_input) => {
+                self.prove_circuit_input(*circuit_input)?
+            },
+            QueryStep::BatchedTabular {
                 rows_inputs,
                 placeholders,
                 indexing_proof,
@@ -143,9 +146,6 @@ impl EuclidQueryProver {
                     limit,
                     offset,
                 )?
-            },
-            QueryStep::QueryCircuitInput(circuit_input) => {
-                self.prove_circuit_input(*circuit_input)?
             },
         };
 
