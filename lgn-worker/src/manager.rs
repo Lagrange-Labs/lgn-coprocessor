@@ -6,8 +6,8 @@ use anyhow::bail;
 use anyhow::ensure;
 use anyhow::Context;
 use lgn_messages::Message;
-use lgn_messages::MessageReplyEnvelope;
 use lgn_messages::ProverType;
+use lgn_messages::Response;
 use lgn_messages::TaskDifficulty;
 use lgn_messages::ToProverType;
 use lgn_provers::provers::v1::V1Prover;
@@ -94,7 +94,7 @@ impl ProversManager {
     pub(crate) fn delegate_proving(
         &self,
         envelope: Message,
-    ) -> anyhow::Result<MessageReplyEnvelope> {
+    ) -> anyhow::Result<Response> {
         let envelope = match envelope {
             Message::V1(envelope) => envelope,
             Message::Unsupported => {
@@ -147,11 +147,7 @@ impl ProversManager {
                 )
                 .record(start_time.elapsed().as_secs_f64());
 
-                Ok(MessageReplyEnvelope {
-                    task_id,
-                    proof: Some(proof),
-                    error: None,
-                })
+                Ok(Response::v1(task_id, proof))
             },
             None => {
                 counter!(

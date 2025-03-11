@@ -63,58 +63,20 @@ impl Message {
     }
 }
 
-#[derive(Deserialize, Serialize)]
-pub struct MessageReplyEnvelope {
-    /// The original task id.
-    pub task_id: String,
-
-    /// The proof result.
-    pub proof: Option<Proof>,
-
-    /// Error details, if any.
-    pub error: Option<String>,
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(tag = "version")]
+#[serde(rename_all = "snake_case")]
+pub enum Response {
+    #[serde(rename = "1")]
+    V1(v1::ReplyEnvelope),
 }
 
-impl std::fmt::Debug for MessageReplyEnvelope {
-    fn fmt(
-        &self,
-        f: &mut Formatter<'_>,
-    ) -> std::fmt::Result {
-        f.debug_struct("MessageReplyEnvelope")
-            .field("task_id", &self.task_id)
-            .field("error", &self.error)
-            .finish_non_exhaustive()
-    }
-}
-
-impl MessageReplyEnvelope {
-    pub fn new(
+impl Response {
+    pub fn v1(
         task_id: String,
         proof: Proof,
     ) -> Self {
-        Self {
-            task_id,
-            proof: Some(proof),
-            error: None,
-        }
-    }
-
-    /// Return the proof or the error if one occured.
-    pub fn inner(&self) -> Result<&Option<Proof>, &str> {
-        match self.error.as_ref() {
-            None => Ok(&self.proof),
-            Some(t) => Err(t),
-        }
-    }
-
-    /// Return the reply.
-    pub fn proof(&self) -> &Option<Proof> {
-        &self.proof
-    }
-
-    /// Returns the task identifier.
-    pub fn task_id(&self) -> &str {
-        &self.task_id
+        Response::V1(v1::ReplyEnvelope::Proof { task_id, proof })
     }
 }
 

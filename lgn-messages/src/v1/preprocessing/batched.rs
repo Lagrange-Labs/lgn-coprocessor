@@ -35,9 +35,7 @@ impl BatchedIndex {
 #[serde(tag = "type")]
 pub enum DbBlockType {
     Leaf(BlockLeafInput),
-
     Parent(BlockParentInput),
-
     Membership(BlockMembershipInput),
 }
 

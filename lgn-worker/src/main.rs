@@ -25,7 +25,7 @@ use lagrange::WorkerToGwRequest;
 use lagrange::WorkerToGwResponse;
 use lgn_auth::jwt::JWTAuth;
 use lgn_messages::Message;
-use lgn_messages::MessageReplyEnvelope;
+use lgn_messages::Response;
 use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
 use mimalloc::MiMalloc;
@@ -355,7 +355,7 @@ fn process_downstream_payload(
     provers_manager: &ProversManager,
     message: WorkerToGwResponse,
     uuid: uuid::Uuid,
-) -> anyhow::Result<MessageReplyEnvelope> {
+) -> anyhow::Result<Response> {
     let envelope = serde_json::from_slice::<Message>(&message.task).with_context(|| {
         format!(
             "Failed to deserialize envelope. uuid: {} message_len: {}",
