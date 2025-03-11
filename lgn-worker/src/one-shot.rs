@@ -2,7 +2,7 @@
 use anyhow::*;
 use checksum::fetch_checksums;
 use clap::Parser;
-use lgn_messages::types::Message;
+use lgn_messages::Message;
 use manager::ProversManager;
 use tracing::error;
 use tracing::level_filters::LevelFilter;

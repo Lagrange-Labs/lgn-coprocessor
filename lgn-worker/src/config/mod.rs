@@ -1,6 +1,6 @@
 use config::FileFormat;
 use lazy_static_include::*;
-use lgn_messages::types::TaskDifficulty;
+use lgn_messages::TaskDifficulty;
 use lgn_provers::params::PARAMS_CHECKSUM_FILENAME;
 use redact::Secret;
 use serde_derive::Deserialize;

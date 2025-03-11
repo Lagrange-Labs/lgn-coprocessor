@@ -1,4 +1,4 @@
-use lgn_messages::types::v1;
+use lgn_messages::v1;
 use lgn_messages::Proof;
 
 pub mod groth16;

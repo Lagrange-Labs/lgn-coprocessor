@@ -1,5 +1,5 @@
 use anyhow::bail;
-use lgn_messages::types::v1;
+use lgn_messages::v1;
 use lgn_messages::Proof;
 
 use crate::dummy_utils::dummy_proof;

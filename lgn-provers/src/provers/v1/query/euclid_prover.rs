@@ -2,10 +2,10 @@ use std::collections::HashMap;
 
 use anyhow::bail;
 use anyhow::Context;
-use lgn_messages::types::v1;
-use lgn_messages::types::v1::query::ConcreteQueryCircuitInput;
-use lgn_messages::types::v1::query::ConcreteQueryParameters;
-use lgn_messages::types::v1::query::WorkerTaskType;
+use lgn_messages::v1;
+use lgn_messages::v1::query::ConcreteQueryCircuitInput;
+use lgn_messages::v1::query::ConcreteQueryParameters;
+use lgn_messages::v1::query::WorkerTaskType;
 use lgn_messages::Proof;
 use metrics::histogram;
 use parsil::assembler::DynamicCircuitPis;

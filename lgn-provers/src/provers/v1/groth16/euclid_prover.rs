@@ -4,7 +4,7 @@ use std::time::Instant;
 use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
-use lgn_messages::types::v1;
+use lgn_messages::v1;
 use lgn_messages::Proof;
 use tracing::info;
 
