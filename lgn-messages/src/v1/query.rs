@@ -3,12 +3,13 @@ use std::collections::HashMap;
 use alloy_primitives::U256;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
-use verifiable_db::api::QueryCircuitInput;
-use verifiable_db::api::QueryParameters;
+use verifiable_db::query;
 use verifiable_db::query::computational_hash_ids::ColumnIDs;
 use verifiable_db::query::computational_hash_ids::PlaceholderIdentifier;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placeholders;
 use verifiable_db::query::universal_circuit::universal_circuit_inputs::RowCells;
+use verifiable_db::query::universal_circuit::universal_query_circuit;
+use verifiable_db::revelation;
 use verifiable_db::revelation::api::MatchingRow;
 use verifiable_db::revelation::RowPath;
 
@@ -31,7 +32,33 @@ pub const MAX_NUM_PLACEHOLDERS: usize = 5;
 pub const MAX_NUM_COLUMNS: usize = 20;
 pub const MAX_NUM_PREDICATE_OPS: usize = 20;
 
-pub type ConcreteQueryCircuitInput = QueryCircuitInput<
+pub type ConcreteRevelationCircuitInput = revelation::api::CircuitInput<
+    ROW_TREE_MAX_DEPTH,
+    INDEX_TREE_MAX_DEPTH,
+    MAX_NUM_COLUMNS,
+    MAX_NUM_PREDICATE_OPS,
+    MAX_NUM_PREDICATE_OPS,
+    MAX_NUM_OUTPUTS,
+    MAX_NUM_ITEMS_PER_OUTPUT,
+    MAX_NUM_PLACEHOLDERS,
+>;
+pub type ConcreteUniversalCircuit = universal_query_circuit::UniversalCircuitInput<
+    MAX_NUM_COLUMNS,
+    MAX_NUM_PREDICATE_OPS,
+    MAX_NUM_PREDICATE_OPS,
+    MAX_NUM_OUTPUTS,
+>;
+pub type ConcretInnerQueryCircuitInput = query::api::CircuitInput<
+    NUM_CHUNKS,
+    NUM_ROWS,
+    ROW_TREE_MAX_DEPTH,
+    INDEX_TREE_MAX_DEPTH,
+    MAX_NUM_COLUMNS,
+    MAX_NUM_PREDICATE_OPS,
+    MAX_NUM_PREDICATE_OPS,
+    MAX_NUM_OUTPUTS,
+>;
+pub type ConcreteQueryCircuitInput = verifiable_db::api::QueryCircuitInput<
     NUM_CHUNKS,
     NUM_ROWS,
     ROW_TREE_MAX_DEPTH,
@@ -43,8 +70,7 @@ pub type ConcreteQueryCircuitInput = QueryCircuitInput<
     MAX_NUM_ITEMS_PER_OUTPUT,
     MAX_NUM_PLACEHOLDERS,
 >;
-
-pub type ConcreteQueryParameters = QueryParameters<
+pub type ConcreteQueryParameters = verifiable_db::api::QueryParameters<
     NUM_CHUNKS,
     NUM_ROWS,
     ROW_TREE_MAX_DEPTH,

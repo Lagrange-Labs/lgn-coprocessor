@@ -26,8 +26,10 @@ use lagrange::WorkerToGwResponse;
 use lgn_auth::jwt::JWTAuth;
 use lgn_messages::Message;
 use lgn_messages::Response;
+use lgn_messages::ToMessageClass;
 use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
+use metrics::histogram;
 use mimalloc::MiMalloc;
 use tokio_stream::StreamExt;
 use tonic::metadata::MetadataValue;
@@ -290,7 +292,7 @@ async fn run_worker(
 
         match inbound.next().await {
             Some(Ok(msg)) => {
-                counter!("zkmr_worker_messages_received_total").increment(1);
+                counter!("zkmr_worker_messages_total").increment(1);
 
                 let task_id = msg.task_id.clone();
 
@@ -364,34 +366,87 @@ fn process_downstream_payload(
         )
     })?;
 
+    let message_class = envelope.message_class();
+
+    counter!(
+        "zkmr_worker_tasks_received_total",
+        "message_class" => message_class,
+    )
+    .increment(1);
+
     let span = span!(
         Level::INFO,
         "task_uuid",
         uuid = uuid.to_string(),
         task_id = envelope.task_id(),
+        message_class,
     );
     let _guard = span.enter();
     info!(
-        "Received Task. uuid: {} task_id: {:?}",
+        "Received Task. uuid: {} task_id: {:?} message_class: {}",
         uuid,
         envelope.task_id(),
+        message_class,
     );
 
-    let id = envelope.task_id().map(|s| s.to_owned());
+    let task_id = envelope.task_id().map(|s| s.to_owned());
+    let start_time = std::time::Instant::now();
+
     match std::panic::catch_unwind(|| provers_manager.delegate_proving(envelope)) {
         Ok(result) => {
             match result {
                 Ok(reply) => {
-                    trace!("Sending reply: {:?}", reply);
+                    counter!(
+                        "zkmr_worker_tasks_successful_total",
+                        "message_class" => message_class,
+                    )
+                    .increment(1);
+                    histogram!(
+                        "zkmr_worker_task_successful_processing_duration_seconds",
+                        "message_class" => message_class,
+                    )
+                    .record(start_time.elapsed().as_secs_f64());
+
+                    trace!(
+                        "Sending reply. uuid: {} task_id: {:?} reply: {:?}",
+                        uuid,
+                        task_id,
+                        reply
+                    );
                     Ok(reply)
                 },
                 Err(err) => {
-                    error!("Error processing task. err: {:?}", err);
+                    counter!(
+                        "zkmr_worker_tasks_failed_total",
+                        "message_class" => message_class,
+                    )
+                    .increment(1);
+                    histogram!(
+                        "zkmr_worker_task_failure_processing_duration_seconds",
+                        "message_class" => message_class,
+                    )
+                    .record(start_time.elapsed().as_secs_f64());
+
+                    error!(
+                        "Error processing task. uuid: {} task_id: {:?} err: {:?}",
+                        uuid, task_id, err
+                    );
                     return Err(err);
                 },
             }
         },
         Err(panic) => {
+            counter!(
+                "zkmr_worker_tasks_failed_total",
+                "message_class" => message_class,
+            )
+            .increment(1);
+            histogram!(
+                "zkmr_worker_task_failure_processing_duration_seconds",
+                "message_class" => message_class,
+            )
+            .record(start_time.elapsed().as_secs_f64());
+
             let msg = match panic.downcast_ref::<&'static str>() {
                 Some(s) => *s,
                 None => {
@@ -403,12 +458,13 @@ fn process_downstream_payload(
             };
 
             error!(
-                "panic encountered while proving. task_id: {:?} msg: {}",
-                id, msg,
+                "panic encountered while proving. uuid: {} task_id: {:?} msg: {}",
+                uuid, task_id, msg,
             );
             bail!(
-                "panic encountered while proving. task_id: {:?} msg: {}",
-                id,
+                "panic encountered while proving. uuid: {} task_id: {:?} msg: {}",
+                uuid,
+                task_id,
                 msg,
             )
         },

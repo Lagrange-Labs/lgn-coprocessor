@@ -11,8 +11,6 @@ use lgn_messages::Response;
 use lgn_messages::TaskDifficulty;
 use lgn_messages::ToProverType;
 use lgn_provers::provers::v1::V1Prover;
-use metrics::counter;
-use metrics::histogram;
 use tracing::info;
 
 use crate::config::Config;
@@ -98,11 +96,6 @@ impl ProversManager {
         let envelope = match envelope {
             Message::V1(envelope) => envelope,
             Message::Unsupported => {
-                counter!(
-                    "zkmr_worker_tasks_failed_total",
-                    "task_type" => "unsupported",
-                )
-                .increment(1);
                 bail!("Unsupported message, baling");
             },
         };
@@ -118,12 +111,6 @@ impl ProversManager {
         );
         let prover_type: ProverType = envelope.task.to_prover_type();
 
-        counter!(
-            "zkmr_worker_tasks_received_total",
-            "task_type" => prover_type.to_string(),
-        )
-        .increment(1);
-
         match self.provers.get(&prover_type) {
             Some(prover) => {
                 info!(
@@ -131,30 +118,12 @@ impl ProversManager {
                     prover_type, envelope.task_id,
                 );
 
-                let start_time = std::time::Instant::now();
                 let task_id = envelope.task_id.clone();
-
                 let proof = prover.run(envelope)?;
-
-                counter!(
-                    "zkmr_worker_tasks_successful_total",
-                    "task_type" => prover_type.to_string(),
-                )
-                .increment(1);
-                histogram!(
-                    "zkmr_worker_task_processing_duration_seconds",
-                    "task_type" => prover_type.to_string()
-                )
-                .record(start_time.elapsed().as_secs_f64());
 
                 Ok(Response::v1(task_id, proof))
             },
             None => {
-                counter!(
-                    "zkmr_worker_tasks_failed_total",
-                    "task_type" => prover_type.to_string(),
-                )
-                .increment(1);
                 bail!("No prover found for task type: {:?}", prover_type);
             },
         }
