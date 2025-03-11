@@ -51,6 +51,7 @@ impl std::fmt::Debug for Envelope {
 /// - `TaskType::Groth16` requires a large node.
 #[derive(Deserialize, Serialize)]
 #[serde(tag = "task_type")]
+#[serde(rename_all = "snake_case")]
 pub enum Task {
     /// Preprocessing tasks.
     ///

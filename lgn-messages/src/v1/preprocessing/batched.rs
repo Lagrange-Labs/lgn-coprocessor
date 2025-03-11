@@ -32,14 +32,12 @@ impl BatchedIndex {
 }
 
 #[derive(PartialEq, Deserialize, Serialize)]
+#[serde(tag = "type")]
 pub enum DbBlockType {
-    #[serde(rename = "1")]
     Leaf(BlockLeafInput),
 
-    #[serde(rename = "2")]
     Parent(BlockParentInput),
 
-    #[serde(rename = "3")]
     Membership(BlockMembershipInput),
 }
 

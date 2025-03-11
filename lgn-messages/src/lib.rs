@@ -21,6 +21,7 @@ pub type MptNodeVersion = (BlockNr, H256);
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "version")]
+#[serde(rename_all = "snake_case")]
 pub enum Message {
     /// Version 1 of the envelope format
     #[serde(rename = "1")]

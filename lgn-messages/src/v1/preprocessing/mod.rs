@@ -13,6 +13,7 @@ pub type ConcreteValueExtractionCircuitInput =
 
 #[derive(Deserialize, Serialize)]
 #[serde(tag = "type")]
+#[serde(rename_all = "snake_case")]
 pub enum PreprocessingTask {
     BatchedIndex(batched::BatchedIndex),
     BatchedLength(batched::BatchedLength),
