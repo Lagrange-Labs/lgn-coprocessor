@@ -58,7 +58,7 @@ pub type ConcreteQueryParameters = QueryParameters<
 >;
 
 #[derive(Deserialize, Serialize)]
-pub enum WorkerTaskType {
+pub enum QueryTask {
     /// Inputs for a verifiable db circuit.
     ///
     /// This corresponds to a single circuit invocation.

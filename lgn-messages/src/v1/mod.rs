@@ -56,12 +56,12 @@ pub enum Task {
     ///
     /// These tasks include tasks for extracting data and building
     /// the verifiable database.
-    Preprocessing(preprocessing::WorkerTaskType),
+    Preprocessing(preprocessing::PreprocessingTask),
 
     /// Query tasks.
     ///
     /// Tasks to query the verifiable database.
-    Query(query::WorkerTaskType),
+    Query(query::QueryTask),
 
     /// Task to wrap a query result in a final groth16 proof.
     Groth16(Vec<u8>),

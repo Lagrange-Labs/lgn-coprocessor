@@ -5,7 +5,7 @@ use anyhow::Context;
 use lgn_messages::v1;
 use lgn_messages::v1::query::ConcreteQueryCircuitInput;
 use lgn_messages::v1::query::ConcreteQueryParameters;
-use lgn_messages::v1::query::WorkerTaskType;
+use lgn_messages::v1::query::QueryTask;
 use lgn_messages::Proof;
 use metrics::histogram;
 use parsil::assembler::DynamicCircuitPis;
@@ -99,13 +99,13 @@ impl EuclidQueryProver {
 
     pub fn run_inner(
         &self,
-        task_type: WorkerTaskType,
+        task_type: QueryTask,
     ) -> anyhow::Result<Proof> {
         let final_proof = match task_type {
-            WorkerTaskType::QueryCircuitInput(circuit_input) => {
+            QueryTask::QueryCircuitInput(circuit_input) => {
                 self.prove_circuit_input(*circuit_input)?
             },
-            WorkerTaskType::BatchedTabular {
+            QueryTask::BatchedTabular {
                 rows_inputs,
                 placeholders,
                 indexing_proof,

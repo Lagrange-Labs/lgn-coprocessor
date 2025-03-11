@@ -17,7 +17,7 @@ pub type ConcreteValueExtractionCircuitInput =
 
 #[derive(Deserialize, Serialize)]
 #[serde(tag = "type")]
-pub enum WorkerTaskType {
+pub enum PreprocessingTask {
     BatchedIndex(BatchedIndex),
     BatchedLength(BatchedLength),
     BatchedContract(BatchedContract),

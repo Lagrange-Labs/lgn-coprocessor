@@ -5,7 +5,7 @@ use anyhow::bail;
 use anyhow::Context;
 use lgn_messages::v1;
 use lgn_messages::v1::preprocessing::db_tasks::DbBlockType;
-use lgn_messages::v1::preprocessing::WorkerTaskType;
+use lgn_messages::v1::preprocessing::PreprocessingTask;
 use lgn_messages::v1::ConcreteCircuitInput;
 use lgn_messages::v1::ConcretePublicParameters;
 use lgn_messages::Proof;
@@ -165,13 +165,13 @@ impl EuclidProver {
 
     pub fn run_inner(
         &self,
-        task: WorkerTaskType,
+        task: PreprocessingTask,
     ) -> anyhow::Result<Proof> {
         Ok(match task {
-            WorkerTaskType::CircuitInput(circuit_input) => {
+            PreprocessingTask::CircuitInput(circuit_input) => {
                 self.prove(circuit_input, "circuit_input")?
             },
-            WorkerTaskType::BatchedIndex(batched_index) => {
+            PreprocessingTask::BatchedIndex(batched_index) => {
                 let mut last_proof = None;
                 for input in &batched_index.inputs {
                     last_proof = Some(match input {
@@ -210,7 +210,7 @@ impl EuclidProver {
                 }
                 last_proof.take().unwrap()
             },
-            WorkerTaskType::BatchedLength(batched_length) => {
+            PreprocessingTask::BatchedLength(batched_length) => {
                 let mut nodes = batched_length.nodes;
 
                 nodes.reverse();
@@ -244,7 +244,7 @@ impl EuclidProver {
 
                 proof
             },
-            WorkerTaskType::BatchedContract(batched_contract) => {
+            PreprocessingTask::BatchedContract(batched_contract) => {
                 let mut nodes = batched_contract.nodes;
 
                 nodes.reverse();
