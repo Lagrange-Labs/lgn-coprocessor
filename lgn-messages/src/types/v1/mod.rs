@@ -50,6 +50,7 @@ impl std::fmt::Debug for Envelope {
 /// - `TaskType::Preprocessing` requires a medium node.
 /// - `TaskType::Groth16` requires a large node.
 #[derive(Deserialize, Serialize)]
+#[serde(tag = "task_type")]
 pub enum Task {
     /// Preprocessing tasks.
     ///

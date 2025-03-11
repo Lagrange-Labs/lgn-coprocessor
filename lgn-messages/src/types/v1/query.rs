@@ -58,10 +58,23 @@ pub type ConcreteQueryParameters = QueryParameters<
 >;
 
 #[derive(Deserialize, Serialize)]
-#[serde(tag = "type")]
 pub enum WorkerTaskType {
-    #[serde(rename = "1")]
-    Query(QueryInput),
+    /// Inputs for a verifiable db circuit.
+    ///
+    /// This corresponds to a single circuit invocation.
+    QueryCircuitInput(Box<ConcreteQueryCircuitInput>),
+
+    /// Batched proof for tabular revelation
+    BatchedTabular {
+        rows_inputs: Vec<MatchingRowInput>,
+        placeholders: PlaceHolderLgn,
+        indexing_proof: Proof,
+        matching_rows: Vec<HydratableMatchingRow>,
+        column_ids: ColumnIDs,
+        limit: u32,
+        offset: u32,
+        pis: Vec<u8>,
+    },
 }
 
 #[derive(PartialEq, Deserialize, Serialize)]
@@ -116,34 +129,6 @@ impl From<&Placeholders> for PlaceHolderLgn {
 
         PlaceHolderLgn(map)
     }
-}
-
-/// Query input for a proving task
-#[derive(Deserialize, Serialize)]
-pub struct QueryInput {
-    /// Query step info
-    pub query_step: QueryStep,
-}
-
-/// Query step info
-#[derive(Deserialize, Serialize)]
-pub enum QueryStep {
-    /// Inputs for a verifiable db circuit.
-    ///
-    /// This corresponds to a single circuit invocation.
-    QueryCircuitInput(Box<ConcreteQueryCircuitInput>),
-
-    /// Batched proof for tabular revelation
-    BatchedTabular {
-        rows_inputs: Vec<MatchingRowInput>,
-        placeholders: PlaceHolderLgn,
-        indexing_proof: Proof,
-        matching_rows: Vec<HydratableMatchingRow>,
-        column_ids: ColumnIDs,
-        limit: u32,
-        offset: u32,
-        pis: Vec<u8>,
-    },
 }
 
 /// Matching row input for a tabular query

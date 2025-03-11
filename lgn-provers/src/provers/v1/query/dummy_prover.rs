@@ -1,6 +1,5 @@
 use anyhow::bail;
 use lgn_messages::types::v1;
-use lgn_messages::types::v1::query::WorkerTaskType;
 use lgn_messages::Proof;
 
 use crate::dummy_utils::dummy_proof;
@@ -20,7 +19,7 @@ impl V1Prover for QueryDummyProver {
             v1::Task::Preprocessing(..) => {
                 bail!("QueryDummyProver: unsupported task type. task_type: V1Preprocessing task_id: {}", envelope.task_id)
             },
-            v1::Task::Query(WorkerTaskType::Query(..)) => {
+            v1::Task::Query(..) => {
                 let proof = dummy_proof(PROOF_SIZE);
                 Ok(proof)
             },

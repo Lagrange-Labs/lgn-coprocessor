@@ -5,7 +5,6 @@ use anyhow::Context;
 use lgn_messages::types::v1;
 use lgn_messages::types::v1::query::ConcreteQueryCircuitInput;
 use lgn_messages::types::v1::query::ConcreteQueryParameters;
-use lgn_messages::types::v1::query::QueryStep;
 use lgn_messages::types::v1::query::WorkerTaskType;
 use lgn_messages::Proof;
 use metrics::histogram;
@@ -102,13 +101,11 @@ impl EuclidQueryProver {
         &self,
         task_type: WorkerTaskType,
     ) -> anyhow::Result<Proof> {
-        let WorkerTaskType::Query(input) = task_type;
-
-        let final_proof = match input.query_step {
-            QueryStep::QueryCircuitInput(circuit_input) => {
+        let final_proof = match task_type {
+            WorkerTaskType::QueryCircuitInput(circuit_input) => {
                 self.prove_circuit_input(*circuit_input)?
             },
-            QueryStep::BatchedTabular {
+            WorkerTaskType::BatchedTabular {
                 rows_inputs,
                 placeholders,
                 indexing_proof,
