@@ -1,9 +1,13 @@
+use alloy_primitives::Address;
 use alloy_primitives::U256;
+use mp2_common::eth::node_type;
+use mp2_common::eth::NodeType;
 use mp2_common::types::HashOutput;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
 use crate::BlockNr;
+use crate::TableHash;
 use crate::TableId;
 
 #[derive(PartialEq, Deserialize, Serialize)]
@@ -135,5 +139,34 @@ impl BlockMembershipInput {
             rows_tree_hash,
             right_proof: vec![],
         }
+    }
+}
+
+#[derive(PartialEq, Deserialize, Serialize)]
+pub struct BatchedLength {
+    pub table_hash: TableHash,
+    pub block_nr: BlockNr,
+    pub length_slot: usize,
+    pub variable_slot: usize,
+    pub nodes: Vec<Vec<u8>>,
+}
+
+impl BatchedLength {
+    pub fn extraction_types(&self) -> anyhow::Result<Vec<NodeType>> {
+        self.nodes.iter().map(|node| node_type(node)).collect()
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq)]
+pub struct BatchedContract {
+    pub block_nr: BlockNr,
+    pub storage_root: Vec<u8>,
+    pub contract: Address,
+    pub nodes: Vec<Vec<u8>>,
+}
+
+impl BatchedContract {
+    pub fn extraction_types(&self) -> anyhow::Result<Vec<NodeType>> {
+        self.nodes.iter().map(|node| node_type(node)).collect()
     }
 }

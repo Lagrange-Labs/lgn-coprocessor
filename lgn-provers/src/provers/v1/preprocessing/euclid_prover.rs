@@ -4,7 +4,7 @@ use alloy::primitives::U256;
 use anyhow::bail;
 use anyhow::Context;
 use lgn_messages::v1;
-use lgn_messages::v1::preprocessing::db_tasks::DbBlockType;
+use lgn_messages::v1::preprocessing::batched::DbBlockType;
 use lgn_messages::v1::preprocessing::PreprocessingTask;
 use lgn_messages::v1::ConcreteCircuitInput;
 use lgn_messages::v1::ConcretePublicParameters;

@@ -3,6 +3,7 @@
 use std::fmt::Display;
 use std::fmt::Formatter;
 
+use ethers::types::H256;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -15,6 +16,8 @@ pub type ChainId = u64;
 pub type Proof = Vec<u8>;
 pub type QueryId = String;
 pub type RowKeyId = String;
+pub type Identifier = u64;
+pub type MptNodeVersion = (BlockNr, H256);
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "version")]
