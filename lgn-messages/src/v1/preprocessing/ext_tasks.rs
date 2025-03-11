@@ -1,11 +1,11 @@
 use alloy_primitives::Address;
 use derive_debug_plus::Dbg;
 use ethers::types::H256;
+use mp2_common::eth::node_type;
+use mp2_common::eth::NodeType;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
-use super::node_type;
-use super::NodeType;
 use crate::BlockNr;
 use crate::TableHash;
 
