@@ -1,13 +1,10 @@
+#![feature(generic_const_exprs)]
 use anyhow::*;
 use checksum::fetch_checksums;
 use clap::Parser;
-use lgn_messages::types::MessageEnvelope;
-use lgn_messages::types::ReplyType;
-use lgn_messages::types::TaskType;
-use manager::v1::register_v1_provers;
+use lgn_messages::Message;
 use manager::ProversManager;
 use tracing::error;
-use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
@@ -77,24 +74,19 @@ async fn main() -> Result<()> {
     config.validate();
     let checksums = fetch_checksums(config.public_params.checksum_file_url()).await?;
 
-    info!("Initializing the provers... ");
-    let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-    info!("done.");
-
-    info!("Registering the provers... ");
-    register_v1_provers(&config, &mut provers_manager, &checksums)
+    let mp2_version = semver::Version::parse(verifiable_db::version())?;
+    let mp2_requirement = semver::VersionReq::parse(&format!("^{mp2_version}"))?;
+    let provers_manager = ProversManager::new(&config, &checksums, mp2_requirement)
         .context("while registering provers")?;
-    info!("done.");
 
     let envelope = std::fs::read_to_string(&cli.input)
         .with_context(|| format!("failed to open `{}`", cli.input))
         .and_then(|content| {
-            serde_json::from_str::<MessageEnvelope<TaskType>>(&content)
-                .context("failed to parse input JSON")
+            serde_json::from_str::<Message>(&content).context("failed to parse input JSON")
         })?;
 
     provers_manager
-        .delegate_proving(&envelope)
+        .delegate_proving(envelope)
         .context("proof failed")?;
 
     Ok(())

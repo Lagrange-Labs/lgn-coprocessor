@@ -2138,16 +2138,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 
 [[package]]
-name = "erased-serde"
-version = "0.4.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24e2389d65ab4fab27dc2a5de7b191e1f6617d1f1c8855c0dc569c94a4cbb18d"
-dependencies = [
- "serde",
- "typeid",
-]
-
-[[package]]
 name = "errno"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3131,7 +3121,6 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3151,7 +3140,6 @@ dependencies = [
 [[package]]
 name = "groth16_framework"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -3809,15 +3797,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "inventory"
-version = "0.3.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54b12ebb6799019b044deaf431eadfe23245b259bba5a2c0796acec3943a3cdb"
-dependencies = [
- "rustversion",
-]
-
-[[package]]
 name = "ipnet"
 version = "2.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4070,14 +4049,13 @@ name = "lgn-messages"
 version = "1.1.6"
 dependencies = [
  "alloy-primitives 0.8.21",
+ "anyhow",
  "derive-debug-plus",
  "ethers 2.0.14",
  "mp2_common",
  "mp2_v1",
- "object_store",
  "serde",
  "serde_derive",
- "thiserror 2.0.11",
  "verifiable-db",
 ]
 
@@ -4090,7 +4068,6 @@ dependencies = [
  "bincode",
  "blake3",
  "bytes",
- "ethers 2.0.14",
  "exponential-backoff",
  "groth16_framework",
  "lgn-messages",
@@ -4100,7 +4077,6 @@ dependencies = [
  "parsil",
  "rand 0.8.5",
  "reqwest 0.12.12",
- "serde",
  "serde_json",
  "tracing",
  "verifiable-db",
@@ -4117,7 +4093,6 @@ dependencies = [
  "config",
  "elliptic-curve",
  "ethers 2.0.13",
- "exponential-backoff",
  "hex",
  "jwt",
  "k256",
@@ -4129,16 +4104,13 @@ dependencies = [
  "metrics-exporter-prometheus",
  "miette",
  "mimalloc",
- "mp2_common",
  "prost",
  "prost-types",
- "prost-wkt-types",
  "protox",
  "rand 0.8.5",
  "redact",
  "reqwest 0.12.12",
  "rpassword",
- "rustl",
  "rustls 0.23.23",
  "semver 1.0.25",
  "serde",
@@ -4434,7 +4406,6 @@ dependencies = [
 [[package]]
 name = "mp2_common"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -4462,7 +4433,6 @@ dependencies = [
 [[package]]
 name = "mp2_test"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -4481,7 +4451,6 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -4500,6 +4469,7 @@ dependencies = [
  "paste",
  "plonky2",
  "plonky2_crypto",
+ "plonky2_ecdsa",
  "plonky2_ecgfp5",
  "rand 0.8.5",
  "recursion_framework",
@@ -4713,27 +4683,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "object_store"
-version = "0.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cfccb68961a56facde1163f9319e0d15743352344e7808a11795fb99698dcaf"
-dependencies = [
- "async-trait",
- "bytes",
- "chrono",
- "futures",
- "humantime",
- "itertools 0.13.0",
- "parking_lot",
- "percent-encoding",
- "snafu",
- "tokio",
- "tracing",
- "url",
- "walkdir",
-]
-
-[[package]]
 name = "once_cell"
 version = "1.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4874,7 +4823,6 @@ dependencies = [
 [[package]]
 name = "parsil"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -5482,52 +5430,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "prost-wkt"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8d84e2bee181b04c2bac339f2bfe818c46a99750488cc6728ce4181d5aa8299"
-dependencies = [
- "chrono",
- "inventory",
- "prost",
- "serde",
- "serde_derive",
- "serde_json",
- "typetag",
-]
-
-[[package]]
-name = "prost-wkt-build"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a669d5acbe719010c6f62a64e6d7d88fdedc1fe46e419747949ecb6312e9b14"
-dependencies = [
- "heck",
- "prost",
- "prost-build",
- "prost-types",
- "quote",
-]
-
-[[package]]
-name = "prost-wkt-types"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01ef068e9b82e654614b22e6b13699bd545b6c0e2e721736008b00b38aeb4f64"
-dependencies = [
- "chrono",
- "prost",
- "prost-build",
- "prost-types",
- "prost-wkt",
- "prost-wkt-build",
- "regex",
- "serde",
- "serde_derive",
- "serde_json",
-]
-
-[[package]]
 name = "protox"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5711,7 +5613,6 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
 dependencies = [
  "anyhow",
  "log",
@@ -6141,12 +6042,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustl"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e2db7d5bc617b85d6ea5cb3d61e7a1a58d596df64fa66fac200ea32c3df9c01"
-
-[[package]]
 name = "rustls"
 version = "0.21.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6253,7 +6148,6 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
 dependencies = [
  "anyhow",
  "bb8",
@@ -6735,27 +6629,6 @@ name = "smallvec"
 version = "1.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
-
-[[package]]
-name = "snafu"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "223891c85e2a29c3fe8fb900c1fae5e69c2e42415e3177752e8718475efa5019"
-dependencies = [
- "snafu-derive",
-]
-
-[[package]]
-name = "snafu-derive"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03c3c6b7927ffe7ecaa769ee0e3994da3b8cafc8f444578982c83ecb161af917"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn 2.0.98",
-]
 
 [[package]]
 name = "socket2"
@@ -7606,40 +7479,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "typeid"
-version = "1.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e13db2e0ccd5e14a544e8a246ba2312cd25223f616442d7f2cb0e3db614236e"
-
-[[package]]
 name = "typenum"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
-
-[[package]]
-name = "typetag"
-version = "0.2.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "044fc3365ddd307c297fe0fe7b2e70588cdab4d0f62dc52055ca0d11b174cf0e"
-dependencies = [
- "erased-serde",
- "inventory",
- "once_cell",
- "serde",
- "typetag-impl",
-]
-
-[[package]]
-name = "typetag-impl"
-version = "0.2.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9d30226ac9cbd2d1ff775f74e8febdab985dab14fb14aa2582c29a92d5555dc"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.98",
-]
 
 [[package]]
 name = "ucd-trie"
@@ -7801,7 +7644,6 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "verifiable-db"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -7811,6 +7653,7 @@ dependencies = [
  "log",
  "mp2_common",
  "mp2_test",
+ "num",
  "plonky2",
  "plonky2_crypto",
  "plonky2_ecdsa",

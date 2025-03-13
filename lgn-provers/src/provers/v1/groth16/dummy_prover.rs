@@ -1,16 +1,31 @@
+use anyhow::bail;
+use lgn_messages::v1;
+use lgn_messages::Proof;
+
 use crate::dummy_utils::dummy_proof;
-use crate::provers::v1::groth16::prover::Prover;
+use crate::provers::v1::V1Prover;
 
 const PROOF_SIZE: usize = 32;
 
 /// Prover implementation which performs no proving and returns random data as a proof.
-pub struct DummyProver;
+pub struct Groth16DummyProver;
 
-impl Prover for DummyProver {
-    fn prove(
+impl V1Prover for Groth16DummyProver {
+    fn run(
         &self,
-        _aggregated_proof: &[u8],
-    ) -> anyhow::Result<Vec<u8>> {
-        Ok(dummy_proof(PROOF_SIZE))
+        envelope: v1::Envelope,
+    ) -> anyhow::Result<Proof> {
+        match envelope.task {
+            v1::Task::Preprocessing(..) => {
+                bail!("Groth16DummyProver: unsupported task type. task_type: V1Preprocessing task_id: {}", envelope.task_id)
+            },
+            v1::Task::Query(..) => {
+                bail!(
+                    "Groth16DummyProver: unsupported task type. task_type: V1Query task_id: {}",
+                    envelope.task_id,
+                )
+            },
+            v1::Task::Groth16(_revelation_proof) => Ok(dummy_proof(PROOF_SIZE)),
+        }
     }
 }

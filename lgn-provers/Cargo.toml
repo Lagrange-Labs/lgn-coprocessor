@@ -9,7 +9,6 @@ anyhow = { workspace = true }
 bincode = { workspace = true }
 blake3.workspace = true
 bytes = { workspace = true }
-ethers = { workspace = true }
 groth16_framework_v1 = { workspace = true }
 metrics = { workspace = true }
 mp2_common = { workspace = true }
@@ -17,7 +16,6 @@ mp2_v1 = { workspace = true }
 parsil = { workspace = true }
 rand = { workspace = true }
 reqwest = { workspace = true, features = ["blocking"] }
-serde = { workspace = true }
 serde_json = { workspace = true }
 tracing = { workspace = true }
 verifiable-db = { workspace = true }
