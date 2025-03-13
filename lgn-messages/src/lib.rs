@@ -97,7 +97,7 @@ impl Response {
 }
 
 /// The segregation of job types according to their computational complexity
-#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum TaskDifficulty {
     // Due to the implicit ordering on which PartialOrd is built, this **MUST**
@@ -130,36 +130,6 @@ impl Display for TaskDifficulty {
             }
         )
     }
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum ProverType {
-    Unsupported,
-    V1Preprocessing,
-    V1Query,
-    V1Groth16,
-}
-
-impl Display for ProverType {
-    fn fmt(
-        &self,
-        f: &mut Formatter<'_>,
-    ) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                ProverType::Unsupported => "Unsupported",
-                ProverType::V1Preprocessing => "V1Preprocessing",
-                ProverType::V1Query => "V1Query",
-                ProverType::V1Groth16 => "V1Groth16",
-            }
-        )
-    }
-}
-
-pub trait ToProverType {
-    fn to_prover_type(&self) -> ProverType;
 }
 
 const UNSUPPORTED: &str = "unsupported";

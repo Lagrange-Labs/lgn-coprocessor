@@ -10,7 +10,7 @@ use crate::BlockNr;
 use crate::TableHash;
 use crate::TableId;
 
-#[derive(PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct BatchedIndex {
     pub table_id: TableId,
     pub block_nr: BlockNr,
@@ -31,7 +31,7 @@ impl BatchedIndex {
     }
 }
 
-#[derive(PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum DbBlockType {
     Leaf(BlockLeafInput),
@@ -39,7 +39,7 @@ pub enum DbBlockType {
     Membership(BlockMembershipInput),
 }
 
-#[derive(PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct BlockLeafInput {
     pub table_id: TableId,
     pub block_id: BlockNr,
@@ -61,7 +61,7 @@ impl BlockLeafInput {
     }
 }
 
-#[derive(PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct BlockParentInput {
     pub table_id: TableId,
     pub block_id: BlockNr,
@@ -102,7 +102,7 @@ impl BlockParentInput {
     }
 }
 
-#[derive(PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct BlockMembershipInput {
     pub table_id: TableId,
     pub block_id: BlockNr,
@@ -138,7 +138,7 @@ impl BlockMembershipInput {
     }
 }
 
-#[derive(PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct BatchedLength {
     pub table_hash: TableHash,
     pub block_nr: BlockNr,
@@ -153,7 +153,7 @@ impl BatchedLength {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BatchedContract {
     pub block_nr: BlockNr,
     pub storage_root: Vec<u8>,

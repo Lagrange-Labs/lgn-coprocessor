@@ -6,10 +6,8 @@ use anyhow::bail;
 use anyhow::ensure;
 use anyhow::Context;
 use lgn_messages::Message;
-use lgn_messages::ProverType;
 use lgn_messages::Response;
 use lgn_messages::TaskDifficulty;
-use lgn_messages::ToProverType;
 use lgn_provers::provers::v1::V1Prover;
 use tracing::info;
 
@@ -17,7 +15,7 @@ use crate::config::Config;
 
 /// Manages provers for different proving task types
 pub(crate) struct ProversManager {
-    provers: HashMap<ProverType, Box<dyn V1Prover>>,
+    provers: HashMap<TaskDifficulty, Box<dyn V1Prover>>,
     mp2_requirement: semver::VersionReq,
 }
 
@@ -34,7 +32,7 @@ impl ProversManager {
     ) -> anyhow::Result<Self> {
         info!("Registering the provers");
 
-        let mut provers = HashMap::<ProverType, Box<dyn V1Prover>>::new();
+        let mut provers = HashMap::<TaskDifficulty, Box<dyn V1Prover>>::new();
 
         if config.worker.instance_type >= TaskDifficulty::Small {
             let query_prover = lgn_provers::provers::v1::query::create_prover(
@@ -45,7 +43,7 @@ impl ProversManager {
             )
             .context("initializing Small prover")?;
 
-            provers.insert(ProverType::V1Query, Box::new(query_prover));
+            provers.insert(TaskDifficulty::Small, Box::new(query_prover));
         }
 
         if config.worker.instance_type >= TaskDifficulty::Medium {
@@ -57,7 +55,7 @@ impl ProversManager {
             )
             .context("initializing Medium prover")?;
 
-            provers.insert(ProverType::V1Preprocessing, Box::new(preprocessing_prover));
+            provers.insert(TaskDifficulty::Medium, Box::new(preprocessing_prover));
         }
 
         if config.worker.instance_type >= TaskDifficulty::Large {
@@ -71,7 +69,7 @@ impl ProversManager {
             )
             .context("initializing Large prover")?;
 
-            provers.insert(ProverType::V1Groth16, Box::new(groth16_prover));
+            provers.insert(TaskDifficulty::Large, Box::new(groth16_prover));
         }
 
         info!("Finished registering the provers.");
@@ -109,13 +107,13 @@ impl ProversManager {
             self.mp2_requirement,
             envelope_version,
         );
-        let prover_type: ProverType = envelope.task.to_prover_type();
 
-        match self.provers.get(&prover_type) {
+        let task_difficulty = envelope.task.task_difficulty();
+        match self.provers.get(&task_difficulty) {
             Some(prover) => {
                 info!(
-                    "Running prover for task type. prover_type: {:?} task_id: {}",
-                    prover_type, envelope.task_id,
+                    "Running prover for task type. task_difficulty: {:?} task_id: {}",
+                    task_difficulty, envelope.task_id,
                 );
 
                 let task_id = envelope.task_id.clone();
@@ -124,7 +122,7 @@ impl ProversManager {
                 Ok(Response::v1(task_id, proof))
             },
             None => {
-                bail!("No prover found for task type: {:?}", prover_type);
+                bail!("No prover found for difficulty: {:?}", task_difficulty);
             },
         }
     }

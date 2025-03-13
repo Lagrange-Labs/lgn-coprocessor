@@ -6,9 +6,8 @@ use query::MAX_NUM_COLUMNS;
 use serde::Deserialize;
 use serde::Serialize;
 
-use super::ProverType;
-use super::ToProverType;
 use crate::Proof;
+use crate::TaskDifficulty;
 
 pub mod preprocessing;
 pub mod query;
@@ -74,12 +73,13 @@ pub enum Task {
     Groth16(Proof),
 }
 
-impl ToProverType for Task {
-    fn to_prover_type(&self) -> ProverType {
+impl Task {
+    /// Returns the task dificulty for this task.
+    pub fn task_difficulty(&self) -> TaskDifficulty {
         match self {
-            Task::Preprocessing(_) => ProverType::V1Preprocessing,
-            Task::Query(_) => ProverType::V1Query,
-            Task::Groth16(_) => ProverType::V1Groth16,
+            Task::Preprocessing(_) => TaskDifficulty::Medium,
+            Task::Query(_) => TaskDifficulty::Small,
+            Task::Groth16(_) => TaskDifficulty::Large,
         }
     }
 }
