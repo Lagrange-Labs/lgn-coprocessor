@@ -7,7 +7,6 @@ use lgn_messages::types::TaskType;
 use manager::v1::register_v1_provers;
 use manager::ProversManager;
 use tracing::error;
-use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
@@ -77,14 +76,14 @@ async fn main() -> Result<()> {
     config.validate();
     let checksums = fetch_checksums(config.public_params.checksum_file_url()).await?;
 
-    info!("Initializing the provers... ");
-    let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-    info!("done.");
-
-    info!("Registering the provers... ");
-    register_v1_provers(&config, &mut provers_manager, &checksums)
-        .context("while registering provers")?;
-    info!("done.");
+    let provers_manager =
+        tokio::task::block_in_place(move || -> Result<ProversManager<TaskType, ReplyType>> {
+            let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
+            register_v1_provers(&config, &mut provers_manager, &checksums)
+                .context("while registering provers")?;
+            Ok(provers_manager)
+        })
+        .context("creating prover managers")?;
 
     let envelope = std::fs::read_to_string(&cli.input)
         .with_context(|| format!("failed to open `{}`", cli.input))
