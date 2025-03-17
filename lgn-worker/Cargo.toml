@@ -54,7 +54,6 @@ rustls = { version = "0.23.21", features = [ "ring" ] }
 uuid = "1.13.2"
 warp = "0.3.7"
 
-
 [build-dependencies]
 miette = { workspace = true }
 tonic-build = { workspace = true }
@@ -62,3 +61,6 @@ protox = { workspace = true }
 
 [package.metadata.cargo-shear]
 ignored = ["prost"]
+
+[features]
+dummy-prover = ["lgn-provers/dummy-prover"]
