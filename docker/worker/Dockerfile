@@ -9,7 +9,7 @@ ARG BUILD_FLAGS="--release"
 # Build with caching
 RUN --mount=type=cache,id=lgn-worker,target=/usr/local/cargo/registry \
     --mount=type=cache,id=lgn-worker,target=/usr/local/cargo/git \
-    RUSTFLAGS=-Ctarget-cpu=${INSTRUCTION_SET} cargo build --bin lgn-worker --bin lgn-avs ${BUILD_FLAGS}
+    RUSTFLAGS=-Ctarget-cpu=${INSTRUCTION_SET} cargo build --bin lgn-worker --bin lgn-avs ${BUILD_FLAGS} --features dummy-prover
 
 
 # Adjust target directory if not in release mode
