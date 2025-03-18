@@ -3131,7 +3131,7 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fqueries_with_no_cells_tree#3b0480d39b8c3a1efbb389a091bd4e682f78f61e"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3151,7 +3151,7 @@ dependencies = [
 [[package]]
 name = "groth16_framework"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fqueries_with_no_cells_tree#3b0480d39b8c3a1efbb389a091bd4e682f78f61e"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -4434,7 +4434,7 @@ dependencies = [
 [[package]]
 name = "mp2_common"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fqueries_with_no_cells_tree#3b0480d39b8c3a1efbb389a091bd4e682f78f61e"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -4462,7 +4462,7 @@ dependencies = [
 [[package]]
 name = "mp2_test"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fqueries_with_no_cells_tree#3b0480d39b8c3a1efbb389a091bd4e682f78f61e"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -4481,7 +4481,7 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fqueries_with_no_cells_tree#3b0480d39b8c3a1efbb389a091bd4e682f78f61e"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -4874,7 +4874,7 @@ dependencies = [
 [[package]]
 name = "parsil"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fqueries_with_no_cells_tree#3b0480d39b8c3a1efbb389a091bd4e682f78f61e"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -5711,7 +5711,7 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fqueries_with_no_cells_tree#3b0480d39b8c3a1efbb389a091bd4e682f78f61e"
 dependencies = [
  "anyhow",
  "log",
@@ -6253,7 +6253,7 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fqueries_with_no_cells_tree#3b0480d39b8c3a1efbb389a091bd4e682f78f61e"
 dependencies = [
  "anyhow",
  "bb8",
@@ -7801,7 +7801,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "verifiable-db"
 version = "1.2.2"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=1.2.2#f13b97656f4ac86b69d2a0a0be056673d207e932"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=fix%2Fqueries_with_no_cells_tree#3b0480d39b8c3a1efbb389a091bd4e682f78f61e"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
