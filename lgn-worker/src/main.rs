@@ -349,7 +349,8 @@ fn process_downstream_payload(
         ));
     }
 
-    match std::panic::catch_unwind(|| provers_manager.delegate_proving(&envelope)) {
+    let id = envelope.id().clone();
+    match std::panic::catch_unwind(|| provers_manager.delegate_proving(envelope)) {
         Ok(result) => {
             match result {
                 Ok(reply) => {
@@ -383,8 +384,8 @@ fn process_downstream_payload(
                 },
             };
 
-            error!("panic encountered while proving {} : {msg}", envelope.id());
-            Err(format!("{}: {msg}", envelope.id()))
+            error!("panic encountered while proving {} : {msg}", id);
+            Err(format!("{}: {msg}", id))
         },
     }
 }
