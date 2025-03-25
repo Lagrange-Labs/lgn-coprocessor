@@ -1,68 +1,27 @@
-use alloy::primitives::Address;
 use alloy::primitives::U256;
 use mp2_common::digest::TableDimension;
 use mp2_common::types::HashOutput;
+use mp2_v1::contract_extraction;
+use mp2_v1::length_extraction;
+use mp2_v1::values_extraction;
 
-pub trait StorageExtractionProver {
-    /// Prove a leaf MPT node of single variable.
-    fn prove_single_variable_leaf(
+pub trait PreprocessingProver {
+    /// Prove a value extraction
+    fn prove_value_extraction(
         &self,
-        node: Vec<u8>,
-        slot: u8,
-        column_id: u64,
+        circuit_input: values_extraction::CircuitInput,
     ) -> anyhow::Result<Vec<u8>>;
 
-    /// Prove a branch MPT node of single variable.
-    fn prove_single_variable_branch(
+    /// Prove a length extraction.
+    fn prove_length_extraction(
         &self,
-        node: Vec<u8>,
-        child_proofs: Vec<Vec<u8>>,
+        circuit_input: length_extraction::LengthCircuitInput,
     ) -> anyhow::Result<Vec<u8>>;
 
-    fn prove_mapping_variable_leaf(
+    /// Prove a contract extraction.
+    fn prove_contract_extraction(
         &self,
-        key: Vec<u8>,
-        node: Vec<u8>,
-        slot: u8,
-        key_id: u64,
-        value_id: u64,
-    ) -> anyhow::Result<Vec<u8>>;
-
-    /// Prove a branch MPT node of mapping variable.
-    fn prove_mapping_variable_branch(
-        &self,
-        node: Vec<u8>,
-        child_proofs: Vec<Vec<u8>>,
-    ) -> anyhow::Result<Vec<u8>>;
-
-    /// Prove the length extraction of a leaf MPT node.
-    fn prove_length_leaf(
-        &self,
-        node: Vec<u8>,
-        length_slot: usize,
-        variable_slot: usize,
-    ) -> anyhow::Result<Vec<u8>>;
-
-    /// Prove the length extraction of a branch MPT node.
-    fn prove_length_branch(
-        &self,
-        node: Vec<u8>,
-        child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>;
-
-    /// Prove a leaf MPT node of contract.
-    fn prove_contract_leaf(
-        &self,
-        node: Vec<u8>,
-        storage_root: Vec<u8>,
-        contract_address: Address,
-    ) -> anyhow::Result<Vec<u8>>;
-
-    /// Prove a branch MPT node of contract.
-    fn prove_contract_branch(
-        &self,
-        node: Vec<u8>,
-        child_proof: Vec<u8>,
+        circuit_input: contract_extraction::CircuitInput,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a block.
@@ -98,33 +57,11 @@ pub trait StorageExtractionProver {
         simple_table_proof: Vec<u8>,
         mapping_table_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>>;
-}
 
-pub trait StorageDatabaseProver {
-    /// Prove a cell tree leaf node.
-    fn prove_cell_leaf(
+    /// Computes a proof for a cells tree.
+    fn prove_cells_tree(
         &self,
-        identifier: u64,
-        value: U256,
-        is_multiplier: bool,
-    ) -> anyhow::Result<Vec<u8>>;
-
-    /// Prove a cell tree partial branch node.
-    fn prove_cell_partial(
-        &self,
-        identifier: u64,
-        value: U256,
-        is_multiplier: bool,
-        child_proof: Vec<u8>,
-    ) -> anyhow::Result<Vec<u8>>;
-
-    /// Prove a cell tree full branch node.
-    fn prove_cell_full(
-        &self,
-        identifier: u64,
-        value: U256,
-        is_multiplier: bool,
-        child_proofs: Vec<Vec<u8>>,
+        circuit_input: verifiable_db::cells_tree::CircuitInput,
     ) -> anyhow::Result<Vec<u8>>;
 
     /// Prove a row tree leaf node.

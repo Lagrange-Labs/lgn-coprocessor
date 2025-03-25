@@ -8,7 +8,6 @@ use thiserror::Error;
 
 use crate::routing::RoutingKey;
 
-pub mod experimental;
 pub mod v1;
 
 const REQUIRED_STAKE_SMALL_USD: Stake = 98777;
@@ -24,19 +23,17 @@ pub trait ToKeyedPayload {
 
 pub type HashOutput = [u8; 32];
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 pub enum TaskType {
-    TxTrie(experimental::tx_trie::WorkerTask),
-    RecProof(experimental::rec_proof::WorkerTask),
     V1Preprocessing(v1::preprocessing::WorkerTask),
-    V1Query(v1::query::WorkerTask),
-    V1Groth16(v1::groth16::WorkerTask),
+    V1Query(v1::query::WorkerTaskType),
+
+    /// Carries the plonky2 proof that will be wrapped on a groth16.
+    V1Groth16(Vec<u8>),
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum ReplyType {
-    TxTrie(experimental::tx_trie::WorkerReply),
-    RecProof(experimental::rec_proof::WorkerReply),
     V1Preprocessing(WorkerReply),
     V1Query(WorkerReply),
     V1Groth16(WorkerReply),
@@ -198,26 +195,18 @@ pub enum ProofCategory {
 
 #[derive(Clone, Dbg, PartialEq, Eq, Deserialize, Serialize)]
 pub struct WorkerReply {
-    pub chain_id: u64,
-
     #[dbg(formatter = crate::types::kp_pretty)]
     pub proof: Option<KeyedPayload>,
-
     pub proof_type: ProofCategory,
 }
 
 impl WorkerReply {
     #[must_use]
     pub fn new(
-        chain_id: u64,
         proof: Option<KeyedPayload>,
         proof_type: ProofCategory,
     ) -> Self {
-        Self {
-            chain_id,
-            proof,
-            proof_type,
-        }
+        Self { proof, proof_type }
     }
 }
 
@@ -226,96 +215,6 @@ pub enum WorkerError {
     // Start with general error to introduce the errors to replies
     #[error("{0}")]
     GeneralError(String),
-}
-
-#[derive(
-    Default, Debug, Copy, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize,
-)]
-pub struct Position {
-    pub level: usize,
-    pub index: usize,
-}
-
-impl Position {
-    #[must_use]
-    pub fn new(
-        level: usize,
-        index: usize,
-    ) -> Self {
-        Self { level, index }
-    }
-
-    pub fn as_tuple(&self) -> (usize, usize) {
-        (self.level, self.index)
-    }
-}
-
-impl Display for Position {
-    fn fmt(
-        &self,
-        f: &mut Formatter<'_>,
-    ) -> std::fmt::Result {
-        write!(f, "{}/{}", self.level, self.index)
-    }
-}
-
-impl From<(usize, usize)> for Position {
-    fn from((level, index): (usize, usize)) -> Self {
-        Self { level, index }
-    }
-}
-
-impl From<Position> for (usize, usize) {
-    fn from(position: Position) -> Self {
-        (position.level, position.index)
-    }
-}
-
-/// All the messages that may transit from the worker to the server
-#[derive(Debug, Serialize, Deserialize)]
-pub enum UpstreamPayload<T> {
-    /// The worker is authenticating
-    Authentication { token: String },
-
-    /// The worker is ready to start working(after params loading)
-    Ready,
-
-    /// the workers sends back a proof for the given task ID
-    Done(MessageReplyEnvelope<T>),
-
-    /// the worker encountered an error when computing the proof
-    ProvingError(String),
-}
-
-impl<T> Display for UpstreamPayload<T> {
-    fn fmt(
-        &self,
-        f: &mut Formatter<'_>,
-    ) -> std::fmt::Result {
-        match self {
-            UpstreamPayload::Done(_) => {
-                write!(f, "Task done")
-            },
-            UpstreamPayload::Authentication { .. } => {
-                write!(f, "Authentication")
-            },
-            UpstreamPayload::Ready => {
-                write!(f, "Ready")
-            },
-            UpstreamPayload::ProvingError(_) => {
-                write!(f, "Proving error")
-            },
-        }
-    }
-}
-
-/// All the messages that may transit from the server to the worker
-#[derive(Debug, Serialize, Deserialize)]
-pub enum DownstreamPayload<T> {
-    /// indicate a successful authentication to the worker
-    Ack,
-    /// order the worker to process the given task
-    Todo { envelope: MessageEnvelope<T> },
 }
 
 pub type Stake = u128;
@@ -374,7 +273,7 @@ impl Display for TaskDifficulty {
                 TaskDifficulty::Small => "small",
                 TaskDifficulty::Medium => "medium",
                 TaskDifficulty::Large => "large",
-                TaskDifficulty::Disabled => "disbaled",
+                TaskDifficulty::Disabled => "disabled",
             }
         )
     }
@@ -388,21 +287,8 @@ pub fn kp_pretty(kp: &Option<KeyedPayload>) -> String {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ProverType {
-    /// V0 query preprocessing handler.
-    Query2Preprocess,
-
-    /// V0 query handler.
-    Query2Query,
-
-    QueryErc20,
-
-    /// V0 Groth16 handler.
-    Query2Groth16,
-
     V1Preprocessing,
-
     V1Query,
-
     V1Groth16,
 }
 
@@ -415,10 +301,6 @@ impl Display for ProverType {
             f,
             "{}",
             match self {
-                ProverType::Query2Preprocess => "Query2Preprocess",
-                ProverType::Query2Query => "Query2Query",
-                ProverType::Query2Groth16 => "Query2Groth16",
-                ProverType::QueryErc20 => "QueryErc20",
                 ProverType::V1Preprocessing => "V1Preprocessing",
                 ProverType::V1Query => "V1Query",
                 ProverType::V1Groth16 => "V1Groth16",
@@ -437,9 +319,6 @@ impl ToProverType for TaskType {
             TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
             TaskType::V1Query(_) => ProverType::V1Query,
             TaskType::V1Groth16(_) => ProverType::V1Groth16,
-            _ => {
-                panic!("Unsupported task type: {:?}", self)
-            },
         }
     }
 }
