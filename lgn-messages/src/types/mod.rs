@@ -213,49 +213,6 @@ pub enum WorkerError {
     GeneralError(String),
 }
 
-#[derive(
-    Default, Debug, Copy, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize,
-)]
-pub struct Position {
-    pub level: usize,
-    pub index: usize,
-}
-
-impl Position {
-    #[must_use]
-    pub fn new(
-        level: usize,
-        index: usize,
-    ) -> Self {
-        Self { level, index }
-    }
-
-    pub fn as_tuple(&self) -> (usize, usize) {
-        (self.level, self.index)
-    }
-}
-
-impl Display for Position {
-    fn fmt(
-        &self,
-        f: &mut Formatter<'_>,
-    ) -> std::fmt::Result {
-        write!(f, "{}/{}", self.level, self.index)
-    }
-}
-
-impl From<(usize, usize)> for Position {
-    fn from((level, index): (usize, usize)) -> Self {
-        Self { level, index }
-    }
-}
-
-impl From<Position> for (usize, usize) {
-    fn from(position: Position) -> Self {
-        (position.level, position.index)
-    }
-}
-
 /// All the messages that may transit from the worker to the server
 #[derive(Debug, Serialize, Deserialize)]
 pub enum UpstreamPayload<T> {
