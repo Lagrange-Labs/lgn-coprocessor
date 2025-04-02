@@ -117,15 +117,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: [dev, test, prod]
+        environment: [devnet, testnet]
         image: [worker]
         include:
-          - environment: dev
-            aws_account_id: ${{ vars.ZKMR_DEV_AWS_ACCOUNT_ID }}
-          - environment: test
-            aws_account_id: ${{ vars.ZKMR_TEST_AWS_ACCOUNT_ID }}
-          - environment: prod
-            aws_account_id: ${{ vars.ZKMR_PROD_AWS_ACCOUNT_ID }}
+          - environment: devnet
+            aws_account_id: ${{ vars.ZKMR_DEVNET_AWS_ACCOUNT_ID }}
+          - environment: testnet
+            aws_account_id: ${{ vars.ZKMR_TESTNET_AWS_ACCOUNT_ID }}
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
