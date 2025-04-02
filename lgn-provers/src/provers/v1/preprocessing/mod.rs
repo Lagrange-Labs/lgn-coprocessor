@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use tracing::debug;
 use tracing::info;
 
 use crate::provers::LgnProver;
@@ -33,6 +32,7 @@ pub fn create_prover(
         info!("Creating preprocessing prover");
         euclid_prover::EuclidProver::init(url, dir, file, checksums)?
     };
-    debug!("Preprocessing prover created");
+
+    info!("Preprocessing prover created");
     Ok(prover)
 }
