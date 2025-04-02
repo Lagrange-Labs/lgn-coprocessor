@@ -10,7 +10,6 @@ use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProverType;
 use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
-use lgn_messages::types::ToProverType;
 use lgn_provers::provers::LgnProver;
 use metrics::counter;
 use metrics::histogram;

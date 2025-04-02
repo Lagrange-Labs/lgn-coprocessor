@@ -292,12 +292,11 @@ impl Display for ProverType {
     }
 }
 
-pub trait ToProverType {
-    fn to_prover_type(&self) -> ProverType;
-}
-
-impl ToProverType for TaskType {
-    fn to_prover_type(&self) -> ProverType {
+impl TaskType {
+    /// Returns [ProverType] which supports proving this [TaskType].
+    ///
+    /// This is used to dispatch the message to the correct underlying prover.
+    pub fn to_prover_type(&self) -> ProverType {
         match self {
             TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
             TaskType::V1Query(_) => ProverType::V1Query,
