@@ -13,8 +13,6 @@ pub mod v1;
 /// A keyed payload contains a bunch of bytes accompanied by a storage index
 pub type KeyedPayload = (String, Vec<u8>);
 
-pub type HashOutput = [u8; 32];
-
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum TaskType {
     V1Preprocessing(v1::preprocessing::WorkerTask),
