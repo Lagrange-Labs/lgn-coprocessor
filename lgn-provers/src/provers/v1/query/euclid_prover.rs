@@ -275,6 +275,7 @@ impl EuclidQueryProver {
         Ok(proof)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn prove_tabular_revelation(
         &self,
         pis: &DynamicCircuitPis,
