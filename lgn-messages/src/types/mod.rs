@@ -383,21 +383,8 @@ pub fn kp_pretty(kp: &Option<KeyedPayload>) -> String {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ProverType {
-    /// V0 query preprocessing handler.
-    Query2Preprocess,
-
-    /// V0 query handler.
-    Query2Query,
-
-    QueryErc20,
-
-    /// V0 Groth16 handler.
-    Query2Groth16,
-
     V1Preprocessing,
-
     V1Query,
-
     V1Groth16,
 }
 
@@ -410,10 +397,6 @@ impl Display for ProverType {
             f,
             "{}",
             match self {
-                ProverType::Query2Preprocess => "Query2Preprocess",
-                ProverType::Query2Query => "Query2Query",
-                ProverType::Query2Groth16 => "Query2Groth16",
-                ProverType::QueryErc20 => "QueryErc20",
                 ProverType::V1Preprocessing => "V1Preprocessing",
                 ProverType::V1Query => "V1Query",
                 ProverType::V1Groth16 => "V1Groth16",
