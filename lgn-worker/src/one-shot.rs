@@ -2,7 +2,6 @@ use anyhow::*;
 use checksum::fetch_checksums;
 use clap::Parser;
 use lgn_messages::types::MessageEnvelope;
-use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use manager::v1::register_v1_provers;
 use manager::ProversManager;
@@ -76,14 +75,13 @@ async fn main() -> Result<()> {
     config.validate();
     let checksums = fetch_checksums(config.public_params.checksum_file_url()).await?;
 
-    let provers_manager =
-        tokio::task::block_in_place(move || -> Result<ProversManager<TaskType, ReplyType>> {
-            let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-            register_v1_provers(&config, &mut provers_manager, &checksums)
-                .context("while registering provers")?;
-            Ok(provers_manager)
-        })
-        .context("creating prover managers")?;
+    let provers_manager = tokio::task::block_in_place(move || -> Result<ProversManager> {
+        let mut provers_manager = ProversManager::new();
+        register_v1_provers(&config, &mut provers_manager, &checksums)
+            .context("while registering provers")?;
+        Ok(provers_manager)
+    })
+    .context("creating prover managers")?;
 
     let envelope = std::fs::read_to_string(&cli.input)
         .with_context(|| format!("failed to open `{}`", cli.input))

@@ -25,9 +25,7 @@ pub struct Preprocessing<P> {
     prover: P,
 }
 
-impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver<TaskType, ReplyType>
-    for Preprocessing<P>
-{
+impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver for Preprocessing<P> {
     fn run(
         &self,
         envelope: &MessageEnvelope<TaskType>,

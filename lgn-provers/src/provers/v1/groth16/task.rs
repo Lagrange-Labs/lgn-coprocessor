@@ -16,7 +16,7 @@ use tracing::info;
 use super::prover::Prover;
 use crate::provers::LgnProver;
 
-impl<GP: Prover> LgnProver<TaskType, ReplyType> for Groth16<GP> {
+impl<GP: Prover> LgnProver for Groth16<GP> {
     fn run(
         &self,
         envelope: &MessageEnvelope<TaskType>,

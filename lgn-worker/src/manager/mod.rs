@@ -8,6 +8,8 @@ use anyhow::bail;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProverType;
+use lgn_messages::types::ReplyType;
+use lgn_messages::types::TaskType;
 use lgn_messages::types::ToProverType;
 use lgn_provers::provers::LgnProver;
 use metrics::counter;
@@ -15,22 +17,16 @@ use metrics::histogram;
 use tracing::info;
 
 /// Manages provers for different proving task types
-pub(crate) struct ProversManager<T, R>
-where
-    T: ToProverType + UnwindSafe,
-{
-    provers: HashMap<ProverType, Box<dyn LgnProver<T, R>>>,
+pub(crate) struct ProversManager {
+    provers: HashMap<ProverType, Box<dyn LgnProver>>,
 }
 
-impl<T: ToProverType + UnwindSafe, R> UnwindSafe for ProversManager<T, R> {
+impl UnwindSafe for ProversManager {
 }
-impl<T: ToProverType + UnwindSafe, R> RefUnwindSafe for ProversManager<T, R> {
+impl RefUnwindSafe for ProversManager {
 }
 
-impl<T, R> ProversManager<T, R>
-where
-    T: ToProverType + UnwindSafe,
-{
+impl ProversManager {
     pub(crate) fn new() -> Self {
         Self {
             provers: HashMap::default(),
@@ -45,7 +41,7 @@ where
     pub(crate) fn add_prover(
         &mut self,
         task_type: ProverType,
-        prover: Box<dyn LgnProver<T, R>>,
+        prover: Box<dyn LgnProver>,
     ) {
         self.provers.insert(task_type, prover);
     }
@@ -59,8 +55,8 @@ where
     /// A message reply envelope containing the result of the proving task
     pub(crate) fn delegate_proving(
         &self,
-        envelope: &MessageEnvelope<T>,
-    ) -> anyhow::Result<MessageReplyEnvelope<R>> {
+        envelope: &MessageEnvelope<TaskType>,
+    ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let prover_type: ProverType = envelope.inner.to_prover_type();
 
         counter!("zkmr_worker_tasks_received_total", "task_type" => prover_type.to_string())
