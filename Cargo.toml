@@ -73,6 +73,9 @@ debug = true
 [workspace.metadata.cargo-machete]
 ignored = ["serde", "prost"]
 
+[workspace.metadata.cargo-shear]
+ignored = ["prost"]
+
 # [patch."https://github.com/Lagrange-Labs/mapreduce-plonky2.git"]
 # mp2_common = { path = "../mapreduce-plonky2/main/mp2-common/" }
 # mp2_v1 = { path = "../mapreduce-plonky2/main/mp2-v1/" }
