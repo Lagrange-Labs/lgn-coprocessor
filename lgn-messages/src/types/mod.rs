@@ -13,10 +13,6 @@ pub mod v1;
 /// A keyed payload contains a bunch of bytes accompanied by a storage index
 pub type KeyedPayload = (String, Vec<u8>);
 
-pub trait ToKeyedPayload {
-    fn to_keyed_payload(&self) -> KeyedPayload;
-}
-
 pub type HashOutput = [u8; 32];
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
