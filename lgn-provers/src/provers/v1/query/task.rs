@@ -15,14 +15,10 @@ use lgn_messages::types::TaskType;
 use lgn_messages::types::WorkerReply;
 use parsil::assembler::DynamicCircuitPis;
 
-use crate::provers::v1::query::prover::StorageQueryProver;
+use super::euclid_prover::EuclidQueryProver;
 use crate::provers::LgnProver;
 
-pub struct Querying<P> {
-    prover: P,
-}
-
-impl<P: StorageQueryProver> LgnProver for Querying<P> {
+impl LgnProver for EuclidQueryProver {
     fn run(
         &self,
         envelope: &MessageEnvelope<TaskType>,
@@ -45,11 +41,7 @@ impl<P: StorageQueryProver> LgnProver for Querying<P> {
     }
 }
 
-impl<P: StorageQueryProver> Querying<P> {
-    pub fn new(prover: P) -> Self {
-        Self { prover }
-    }
-
+impl EuclidQueryProver {
     pub fn run_inner(
         &self,
         task: &WorkerTask,
@@ -79,9 +71,7 @@ impl<P: StorageQueryProver> Querying<P> {
 
                 let mut matching_rows_proofs = vec![];
                 for (row_input, mut matching_row) in rows_inputs.iter().zip(matching_rows.clone()) {
-                    let proof = self
-                        .prover
-                        .prove_universal_circuit(row_input.clone(), &pis)?;
+                    let proof = self.prove_universal_circuit(row_input.clone(), &pis)?;
 
                     if let Hydratable::Dehydrated(_) = &matching_row.proof {
                         matching_row.proof.hydrate(proof);
@@ -91,7 +81,7 @@ impl<P: StorageQueryProver> Querying<P> {
                     matching_rows_proofs.push(matching_row_proof);
                 }
 
-                self.prover.prove_tabular_revelation(
+                self.prove_tabular_revelation(
                     &pis,
                     placeholders.clone().into(),
                     indexing_proof.clone_proof(),
@@ -103,18 +93,16 @@ impl<P: StorageQueryProver> Querying<P> {
             },
             QueryStep::Aggregation(input) => {
                 match &input.input_kind {
-                    ProofInputKind::RowsChunk(rc) => self.prover.prove_row_chunks(rc.clone(), &pis),
+                    ProofInputKind::RowsChunk(rc) => self.prove_row_chunks(rc.clone(), &pis),
                     ProofInputKind::ChunkAggregation(ca) => {
                         let chunks_proofs = ca
                             .child_proofs
                             .iter()
                             .map(|proof| proof.clone_proof())
                             .collect::<Vec<_>>();
-                        self.prover.prove_chunk_aggregation(&chunks_proofs)
+                        self.prove_chunk_aggregation(&chunks_proofs)
                     },
-                    ProofInputKind::NonExistence(ne) => {
-                        self.prover.prove_non_existence(*ne.clone(), &pis)
-                    },
+                    ProofInputKind::NonExistence(ne) => self.prove_non_existence(*ne.clone(), &pis),
                 }?
             },
             QueryStep::Revelation(input) => {
@@ -125,7 +113,7 @@ impl<P: StorageQueryProver> Querying<P> {
                         query_proof,
                         ..
                     } => {
-                        self.prover.prove_aggregated_revelation(
+                        self.prove_aggregated_revelation(
                             &pis,
                             placeholders.clone().into(),
                             query_proof.clone_proof(),
@@ -141,7 +129,7 @@ impl<P: StorageQueryProver> Querying<P> {
                         offset,
                         ..
                     } => {
-                        self.prover.prove_tabular_revelation(
+                        self.prove_tabular_revelation(
                             &pis,
                             placeholders.clone().into(),
                             indexing_proof.clone_proof(),
