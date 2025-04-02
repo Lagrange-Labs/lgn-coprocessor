@@ -10,32 +10,21 @@ use super::NUM_CHUNKS;
 pub(crate) const KEYS_QUERIES_PREFIX: &str = "V1_QUERIES";
 
 type QueryId = String;
-
 type RowKeyId = String;
-
 type BlockNr = u64;
 
 const ROWS_TREE: &str = "rows_tree";
-
 const INDEX_TREE: &str = "index_tree";
-
 const ROWS_CHUNK: &str = "rows_chunk";
-
 const NON_EXISTENCE: &str = "non_existence";
-
 const REVELATION: &str = "revelation";
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]
 pub enum ProofKey {
-    /// Initially just storing rows tree root proof
     Row(QueryId, BlockNr, RowKeyId),
-
     Index(QueryId, BlockNr),
-
     RowsChunk(QueryId, UTKey<NUM_CHUNKS>),
-
     NonExistence(QueryId),
-
     Revelation(QueryId),
 }
 
