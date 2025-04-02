@@ -2,6 +2,9 @@
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
+/// The routing domain for a message.
+///
+/// NOTE: This is no longer unused, maintained for backwards compatibility.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct RoutingKey {
     domain: String,
@@ -9,19 +12,11 @@ pub struct RoutingKey {
 }
 
 impl RoutingKey {
+    /// Creates a new [RoutingKey] given the `domain` and `priority`.
     pub fn combined(
         domain: String,
         priority: u64,
     ) -> Self {
         RoutingKey { domain, priority }
-    }
-
-    pub fn priority(&self) -> u64 {
-        self.priority
-    }
-
-    /// Get the route string for this routing key.
-    pub fn get_route(&self) -> String {
-        self.domain.clone()
     }
 }
