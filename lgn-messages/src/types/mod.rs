@@ -8,7 +8,6 @@ use thiserror::Error;
 
 use crate::routing::RoutingKey;
 
-pub mod experimental;
 pub mod v1;
 
 const REQUIRED_STAKE_SMALL_USD: Stake = 98777;
@@ -26,8 +25,6 @@ pub type HashOutput = [u8; 32];
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum TaskType {
-    TxTrie(experimental::tx_trie::WorkerTask),
-    RecProof(experimental::rec_proof::WorkerTask),
     V1Preprocessing(v1::preprocessing::WorkerTask),
     V1Query(v1::query::WorkerTask),
     V1Groth16(v1::groth16::WorkerTask),
@@ -35,8 +32,6 @@ pub enum TaskType {
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum ReplyType {
-    TxTrie(experimental::tx_trie::WorkerReply),
-    RecProof(experimental::rec_proof::WorkerReply),
     V1Preprocessing(WorkerReply),
     V1Query(WorkerReply),
     V1Groth16(WorkerReply),
@@ -437,9 +432,6 @@ impl ToProverType for TaskType {
             TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
             TaskType::V1Query(_) => ProverType::V1Query,
             TaskType::V1Groth16(_) => ProverType::V1Groth16,
-            _ => {
-                panic!("Unsupported task type: {:?}", self)
-            },
         }
     }
 }
