@@ -7,11 +7,9 @@ use serde_derive::Serialize;
 use thiserror::Error;
 
 use crate::routing::RoutingKey;
+use crate::KeyedPayload;
 
 pub mod v1;
-
-/// A keyed payload contains a bunch of bytes accompanied by a storage index
-pub type KeyedPayload = (String, Vec<u8>);
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum TaskType {

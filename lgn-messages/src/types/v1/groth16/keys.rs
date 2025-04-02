@@ -5,8 +5,7 @@ use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
 use crate::types::v1::query::keys::KEYS_QUERIES_PREFIX;
-
-pub type QueryId = String;
+use crate::QueryId;
 
 /// Where to store the Groth16 proof
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash, Serialize, Deserialize)]

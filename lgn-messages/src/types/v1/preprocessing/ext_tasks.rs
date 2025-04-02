@@ -10,11 +10,9 @@ use crate::types::v1::preprocessing::ext_keys::ProofKey;
 use crate::types::v1::preprocessing::WorkerTask;
 use crate::types::v1::preprocessing::WorkerTaskType;
 use crate::BlockNr;
+use crate::MptNodeVersion;
 use crate::TableHash;
 use crate::TableId;
-
-pub type Identifier = u64;
-pub type MptNodeVersion = (BlockNr, H256);
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum ExtractionType {

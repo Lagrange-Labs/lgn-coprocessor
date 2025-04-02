@@ -6,12 +6,11 @@ use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
 use super::NUM_CHUNKS;
+use crate::BlockNr;
+use crate::QueryId;
+use crate::RowKeyId;
 
 pub(crate) const KEYS_QUERIES_PREFIX: &str = "V1_QUERIES";
-
-type QueryId = String;
-type RowKeyId = String;
-type BlockNr = u64;
 
 const ROWS_TREE: &str = "rows_tree";
 const INDEX_TREE: &str = "index_tree";
