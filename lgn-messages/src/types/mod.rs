@@ -213,53 +213,6 @@ pub enum WorkerError {
     GeneralError(String),
 }
 
-/// All the messages that may transit from the worker to the server
-#[derive(Debug, Serialize, Deserialize)]
-pub enum UpstreamPayload<T> {
-    /// The worker is authenticating
-    Authentication { token: String },
-
-    /// The worker is ready to start working(after params loading)
-    Ready,
-
-    /// the workers sends back a proof for the given task ID
-    Done(MessageReplyEnvelope<T>),
-
-    /// the worker encountered an error when computing the proof
-    ProvingError(String),
-}
-
-impl<T> Display for UpstreamPayload<T> {
-    fn fmt(
-        &self,
-        f: &mut Formatter<'_>,
-    ) -> std::fmt::Result {
-        match self {
-            UpstreamPayload::Done(_) => {
-                write!(f, "Task done")
-            },
-            UpstreamPayload::Authentication { .. } => {
-                write!(f, "Authentication")
-            },
-            UpstreamPayload::Ready => {
-                write!(f, "Ready")
-            },
-            UpstreamPayload::ProvingError(_) => {
-                write!(f, "Proving error")
-            },
-        }
-    }
-}
-
-/// All the messages that may transit from the server to the worker
-#[derive(Debug, Serialize, Deserialize)]
-pub enum DownstreamPayload<T> {
-    /// indicate a successful authentication to the worker
-    Ack,
-    /// order the worker to process the given task
-    Todo { envelope: MessageEnvelope<T> },
-}
-
 pub type Stake = u128;
 
 /// The segregation of job types according to their computational complexity
