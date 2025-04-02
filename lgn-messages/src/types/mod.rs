@@ -213,8 +213,6 @@ pub enum WorkerError {
     GeneralError(String),
 }
 
-pub type Stake = u128;
-
 /// The segregation of job types according to their computational complexity
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
