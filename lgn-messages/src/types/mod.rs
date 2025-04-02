@@ -10,10 +10,6 @@ use crate::routing::RoutingKey;
 
 pub mod v1;
 
-const REQUIRED_STAKE_SMALL_USD: Stake = 98777;
-const REQUIRED_STAKE_MEDIUM_USD: Stake = 98777;
-const REQUIRED_STAKE_LARGE_USD: Stake = 169111;
-
 /// A keyed payload contains a bunch of bytes accompanied by a storage index
 pub type KeyedPayload = (String, Vec<u8>);
 
@@ -334,17 +330,6 @@ pub enum TaskDifficulty {
 }
 
 impl TaskDifficulty {
-    /// Returns the stake required in order to run such a task
-    pub fn required_stake(&self) -> Stake {
-        match self {
-            TaskDifficulty::Small => REQUIRED_STAKE_SMALL_USD,
-            TaskDifficulty::Medium => REQUIRED_STAKE_MEDIUM_USD,
-            TaskDifficulty::Large => REQUIRED_STAKE_LARGE_USD,
-
-            _ => 0,
-        }
-    }
-
     /// Returns the minimal worker class required to process a task of the given queue
     pub fn from_queue(domain: &str) -> Self {
         let domain = domain.split('_').next().expect("invalid routing key");
