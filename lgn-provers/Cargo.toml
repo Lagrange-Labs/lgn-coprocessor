@@ -10,7 +10,7 @@ bincode = { workspace = true }
 blake3.workspace = true
 bytes = { workspace = true }
 ethers = { workspace = true }
-groth16_framework_v1 = { workspace = true }
+groth16_framework = { workspace = true }
 metrics = { workspace = true }
 mp2_common = { workspace = true }
 mp2_v1 = { workspace = true }

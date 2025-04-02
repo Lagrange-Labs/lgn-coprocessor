@@ -82,7 +82,7 @@ ignored = ["prost"]
 # parsil = { path = "../mapreduce-plonky2/main/parsil/" }
 # verifiable-db = { path = "../mapreduce-plonky2/main/verifiable-db/" }
 # ryhope = { path = "../mapreduce-plonky2/main/ryhope/" }
-# groth16_framework_v1 = { package = "groth16_framework", path = "../mapreduce-plonky2/main/groth16-framework/" }
+# groth16_framework = { package = "groth16_framework", path = "../mapreduce-plonky2/main/groth16-framework/" }
 
 [workspace.metadata.release]
 publish = false
