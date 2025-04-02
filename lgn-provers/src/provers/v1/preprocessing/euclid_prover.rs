@@ -30,8 +30,6 @@ use mp2_v1::values_extraction;
 use tracing::debug;
 
 use crate::params;
-use crate::provers::v1::preprocessing::prover::StorageDatabaseProver;
-use crate::provers::v1::preprocessing::prover::StorageExtractionProver;
 
 pub struct EuclidProver {
     params: PublicParameters,
@@ -80,10 +78,8 @@ impl EuclidProver {
             },
         }
     }
-}
 
-impl StorageExtractionProver for EuclidProver {
-    fn prove_single_variable_leaf(
+    pub(super) fn prove_single_variable_leaf(
         &self,
         node: Vec<u8>,
         slot: u8,
@@ -95,7 +91,7 @@ impl StorageExtractionProver for EuclidProver {
         self.prove(input, "single variable leaf")
     }
 
-    fn prove_single_variable_branch(
+    pub(super) fn prove_single_variable_branch(
         &self,
         node: Vec<u8>,
         child_proofs: Vec<Vec<u8>>,
@@ -109,7 +105,7 @@ impl StorageExtractionProver for EuclidProver {
         )
     }
 
-    fn prove_mapping_variable_leaf(
+    pub(super) fn prove_mapping_variable_leaf(
         &self,
         key: Vec<u8>,
         node: Vec<u8>,
@@ -123,7 +119,7 @@ impl StorageExtractionProver for EuclidProver {
         self.prove(input, "mapping variable leaf")
     }
 
-    fn prove_mapping_variable_branch(
+    pub(super) fn prove_mapping_variable_branch(
         &self,
         node: Vec<u8>,
         child_proofs: Vec<Vec<u8>>,
@@ -150,7 +146,7 @@ impl StorageExtractionProver for EuclidProver {
         }
     }
 
-    fn prove_length_leaf(
+    pub(super) fn prove_length_leaf(
         &self,
         node: Vec<u8>,
         length_slot: usize,
@@ -164,7 +160,7 @@ impl StorageExtractionProver for EuclidProver {
         self.prove(input, "length leaf")
     }
 
-    fn prove_length_branch(
+    pub(super) fn prove_length_branch(
         &self,
         node: Vec<u8>,
         child_proof: Vec<u8>,
@@ -173,7 +169,7 @@ impl StorageExtractionProver for EuclidProver {
         self.prove(input, "length branch")
     }
 
-    fn prove_contract_leaf(
+    pub(super) fn prove_contract_leaf(
         &self,
         node: Vec<u8>,
         storage_root: Vec<u8>,
@@ -187,7 +183,7 @@ impl StorageExtractionProver for EuclidProver {
         self.prove(input, "contract leaf")
     }
 
-    fn prove_contract_branch(
+    pub(super) fn prove_contract_branch(
         &self,
         node: Vec<u8>,
         child_proof: Vec<u8>,
@@ -199,7 +195,7 @@ impl StorageExtractionProver for EuclidProver {
         self.prove(input, "contract branch")
     }
 
-    fn prove_block(
+    pub(super) fn prove_block(
         &self,
         rlp_header: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
@@ -209,7 +205,7 @@ impl StorageExtractionProver for EuclidProver {
         self.prove(input, "block")
     }
 
-    fn prove_final_extraction_simple(
+    pub(super) fn prove_final_extraction_simple(
         &self,
         block_proof: Vec<u8>,
         contract_proof: Vec<u8>,
@@ -225,7 +221,7 @@ impl StorageExtractionProver for EuclidProver {
         self.prove(input, "final extraction simple")
     }
 
-    fn prove_final_extraction_lengthed(
+    pub(super) fn prove_final_extraction_lengthed(
         &self,
         block_proof: Vec<u8>,
         contract_proof: Vec<u8>,
@@ -241,7 +237,7 @@ impl StorageExtractionProver for EuclidProver {
         self.prove(input, "final extraction lengthed")
     }
 
-    fn prove_final_extraction_merge(
+    pub(super) fn prove_final_extraction_merge(
         &self,
         block_proof: Vec<u8>,
         contract_proof: Vec<u8>,
@@ -258,10 +254,8 @@ impl StorageExtractionProver for EuclidProver {
         );
         self.prove(input, "final extraction merge")
     }
-}
 
-impl StorageDatabaseProver for EuclidProver {
-    fn prove_cell_leaf(
+    pub(super) fn prove_cell_leaf(
         &self,
         identifier: u64,
         value: U256,
@@ -275,7 +269,7 @@ impl StorageDatabaseProver for EuclidProver {
         self.prove(input, "cell leaf")
     }
 
-    fn prove_cell_partial(
+    pub(super) fn prove_cell_partial(
         &self,
         identifier: u64,
         value: U256,
@@ -291,7 +285,7 @@ impl StorageDatabaseProver for EuclidProver {
         self.prove(input, "cell partial")
     }
 
-    fn prove_cell_full(
+    pub(super) fn prove_cell_full(
         &self,
         identifier: u64,
         value: U256,
@@ -308,7 +302,7 @@ impl StorageDatabaseProver for EuclidProver {
         self.prove(input, "cell full")
     }
 
-    fn prove_row_leaf(
+    pub(super) fn prove_row_leaf(
         &self,
         identifier: u64,
         value: U256,
@@ -330,7 +324,7 @@ impl StorageDatabaseProver for EuclidProver {
         self.prove(input, "row leaf")
     }
 
-    fn prove_row_partial(
+    pub(super) fn prove_row_partial(
         &self,
         identifier: u64,
         value: U256,
@@ -355,7 +349,7 @@ impl StorageDatabaseProver for EuclidProver {
         self.prove(input, "row partial")
     }
 
-    fn prove_row_full(
+    pub(super) fn prove_row_full(
         &self,
         identifier: u64,
         value: U256,
@@ -379,7 +373,7 @@ impl StorageDatabaseProver for EuclidProver {
         self.prove(input, "row full")
     }
 
-    fn prove_block_leaf(
+    pub(super) fn prove_block_leaf(
         &self,
         block_id: u64,
         extraction_proof: Vec<u8>,
@@ -394,7 +388,7 @@ impl StorageDatabaseProver for EuclidProver {
         self.prove(input, "block tree leaf")
     }
 
-    fn prove_block_parent(
+    pub(super) fn prove_block_parent(
         &self,
         block_id: u64,
         old_block_number: U256,
@@ -424,7 +418,7 @@ impl StorageDatabaseProver for EuclidProver {
         self.prove(input, "block tree parent")
     }
 
-    fn prove_membership(
+    pub(super) fn prove_membership(
         &self,
         block_id: u64,
         index_value: U256,
@@ -446,7 +440,7 @@ impl StorageDatabaseProver for EuclidProver {
         self.prove(input, "membership")
     }
 
-    fn prove_ivc(
+    pub(super) fn prove_ivc(
         &self,
         index_proof: Vec<u8>,
         previous_proof: Option<Vec<u8>>,

@@ -17,15 +17,10 @@ use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::WorkerReply;
 
-use crate::provers::v1::preprocessing::prover::StorageDatabaseProver;
-use crate::provers::v1::preprocessing::prover::StorageExtractionProver;
+use super::euclid_prover::EuclidProver;
 use crate::provers::LgnProver;
 
-pub struct Preprocessing<P> {
-    prover: P,
-}
-
-impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver for Preprocessing<P> {
+impl LgnProver for EuclidProver {
     fn run(
         &self,
         envelope: &MessageEnvelope<TaskType>,
@@ -55,11 +50,8 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> LgnProver for Preproces
         }
     }
 }
-impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
-    pub fn new(prover: P) -> Self {
-        Self { prover }
-    }
 
+impl EuclidProver {
     pub fn run_inner(
         &self,
         task: WorkerTask,
@@ -70,14 +62,14 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                     ExtractionType::MptExtraction(mpt) => {
                         match &mpt.mpt_type {
                             MptType::VariableLeaf(variable_leaf) => {
-                                self.prover.prove_single_variable_leaf(
+                                self.prove_single_variable_leaf(
                                     variable_leaf.node.clone(),
                                     variable_leaf.slot,
                                     variable_leaf.column_id,
                                 )?
                             },
                             MptType::MappingLeaf(mapping_leaf) => {
-                                self.prover.prove_mapping_variable_leaf(
+                                self.prove_mapping_variable_leaf(
                                     mapping_leaf.key.clone(),
                                     mapping_leaf.node.clone(),
                                     mapping_leaf.slot,
@@ -86,13 +78,13 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                                 )?
                             },
                             MptType::MappingBranch(mapping_branch) => {
-                                self.prover.prove_mapping_variable_branch(
+                                self.prove_mapping_variable_branch(
                                     mapping_branch.node.clone(),
                                     mapping_branch.children_proofs.to_owned(),
                                 )?
                             },
                             MptType::VariableBranch(variable_branch) => {
-                                self.prover.prove_single_variable_branch(
+                                self.prove_single_variable_branch(
                                     variable_branch.node.clone(),
                                     variable_branch.children_proofs.clone(),
                                 )?
@@ -103,14 +95,14 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         let mut proofs = vec![];
                         for (i, node) in length.nodes.iter().enumerate() {
                             if i == 0 {
-                                let proof = self.prover.prove_length_leaf(
+                                let proof = self.prove_length_leaf(
                                     node.clone(),
                                     length.length_slot,
                                     length.variable_slot,
                                 )?;
                                 proofs.push(proof);
                             } else {
-                                self.prover.prove_length_branch(
+                                self.prove_length_branch(
                                     node.clone(),
                                     proofs.last().unwrap().clone(),
                                 )?;
@@ -122,14 +114,14 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         let mut proofs = vec![];
                         for (i, node) in contract.nodes.iter().enumerate() {
                             if i == 0 {
-                                let proof = self.prover.prove_contract_leaf(
+                                let proof = self.prove_contract_leaf(
                                     node.clone(),
                                     contract.storage_root.clone(),
                                     contract.contract,
                                 )?;
                                 proofs.push(proof);
                             } else {
-                                let proof = self.prover.prove_contract_branch(
+                                let proof = self.prove_contract_branch(
                                     node.clone(),
                                     proofs.last().unwrap().clone(),
                                 )?;
@@ -139,14 +131,14 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         proofs.last().unwrap().clone()
                     },
                     ExtractionType::BlockExtraction(block) => {
-                        self.prover.prove_block(block.rlp_header.to_owned())?
+                        self.prove_block(block.rlp_header.to_owned())?
                     },
                     ExtractionType::FinalExtraction(final_extraction) => {
                         match *final_extraction {
                             FinalExtraction::Single(single_table_extraction) => {
                                 match single_table_extraction.extraction_type {
                                     FinalExtractionType::Simple(compound) => {
-                                        self.prover.prove_final_extraction_simple(
+                                        self.prove_final_extraction_simple(
                                             single_table_extraction.block_proof.clone(),
                                             single_table_extraction.contract_proof.clone(),
                                             single_table_extraction.value_proof.clone(),
@@ -154,7 +146,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                                         )?
                                     },
                                     FinalExtractionType::Lengthed => {
-                                        self.prover.prove_final_extraction_lengthed(
+                                        self.prove_final_extraction_lengthed(
                                             single_table_extraction.block_proof.clone(),
                                             single_table_extraction.contract_proof.clone(),
                                             single_table_extraction.value_proof.clone(),
@@ -164,7 +156,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                                 }
                             },
                             FinalExtraction::Merge(mapping_table_extraction) => {
-                                self.prover.prove_final_extraction_merge(
+                                self.prove_final_extraction_merge(
                                     mapping_table_extraction.block_proof.clone(),
                                     mapping_table_extraction.contract_proof.clone(),
                                     mapping_table_extraction.simple_table_proof.clone(),
@@ -180,14 +172,14 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                     DatabaseType::Cell(cell_type) => {
                         match cell_type {
                             DbCellType::Leaf(leaf) => {
-                                self.prover.prove_cell_leaf(
+                                self.prove_cell_leaf(
                                     leaf.identifier,
                                     leaf.value,
                                     leaf.is_multiplier,
                                 )?
                             },
                             DbCellType::Partial(branch) => {
-                                self.prover.prove_cell_partial(
+                                self.prove_cell_partial(
                                     branch.identifier,
                                     branch.value,
                                     branch.is_multiplier,
@@ -195,7 +187,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                                 )?
                             },
                             DbCellType::Full(full) => {
-                                self.prover.prove_cell_full(
+                                self.prove_cell_full(
                                     full.identifier,
                                     full.value,
                                     full.is_multiplier,
@@ -207,7 +199,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                     DatabaseType::Row(row_type) => {
                         match row_type {
                             DbRowType::Leaf(leaf) => {
-                                self.prover.prove_row_leaf(
+                                self.prove_row_leaf(
                                     leaf.identifier,
                                     leaf.value,
                                     leaf.is_multiplier,
@@ -215,7 +207,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                                 )?
                             },
                             DbRowType::Partial(partial) => {
-                                self.prover.prove_row_partial(
+                                self.prove_row_partial(
                                     partial.identifier,
                                     partial.value,
                                     partial.is_multiplier,
@@ -225,7 +217,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                                 )?
                             },
                             DbRowType::Full(full) => {
-                                self.prover.prove_row_full(
+                                self.prove_row_full(
                                     full.identifier,
                                     full.value,
                                     full.is_multiplier,
@@ -240,14 +232,14 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         for input in &block.inputs {
                             last_proof = Some(match input {
                                 DbBlockType::Leaf(leaf) => {
-                                    self.prover.prove_block_leaf(
+                                    self.prove_block_leaf(
                                         leaf.block_id,
                                         leaf.extraction_proof.to_owned(),
                                         leaf.rows_proof.to_owned(),
                                     )?
                                 },
                                 DbBlockType::Parent(parent) => {
-                                    self.prover.prove_block_parent(
+                                    self.prove_block_parent(
                                         parent.block_id,
                                         parent.old_block_number,
                                         parent.old_min,
@@ -260,7 +252,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                                     )?
                                 },
                                 DbBlockType::Membership(membership) => {
-                                    self.prover.prove_membership(
+                                    self.prove_membership(
                                         membership.block_id,
                                         membership.index_value,
                                         membership.old_min,
@@ -275,7 +267,7 @@ impl<P: StorageExtractionProver + StorageDatabaseProver> Preprocessing<P> {
                         last_proof.take().unwrap()
                     },
                     DatabaseType::IVC(ivc) => {
-                        self.prover.prove_ivc(
+                        self.prove_ivc(
                             ivc.index_proof.to_owned(),
                             ivc.previous_ivc_proof.to_owned(),
                         )?
