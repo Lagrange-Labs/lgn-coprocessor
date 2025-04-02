@@ -231,19 +231,6 @@ pub enum TaskDifficulty {
     Large,
 }
 
-impl TaskDifficulty {
-    /// Returns the minimal worker class required to process a task of the given queue
-    pub fn from_queue(domain: &str) -> Self {
-        let domain = domain.split('_').next().expect("invalid routing key");
-        match domain {
-            v1::preprocessing::ROUTING_DOMAIN => TaskDifficulty::Medium,
-            v1::query::ROUTING_DOMAIN => TaskDifficulty::Small,
-            v1::groth16::ROUTING_DOMAIN => TaskDifficulty::Large,
-            _ => panic!("unknown routing domain"),
-        }
-    }
-}
-
 impl Display for TaskDifficulty {
     fn fmt(
         &self,
