@@ -5,7 +5,6 @@ use groth16_framework_v1::Groth16Prover as InnerProver;
 use tracing::debug;
 
 use crate::params;
-use crate::provers::v1::groth16::prover::Prover;
 
 #[derive(Debug)]
 pub struct Groth16Prover {
@@ -36,10 +35,8 @@ impl Groth16Prover {
         debug!("Groth16 prover created");
         Ok(Self { inner })
     }
-}
 
-impl Prover for Groth16Prover {
-    fn prove(
+    pub(super) fn prove(
         &self,
         revelation: &[u8],
     ) -> Result<Vec<u8>> {

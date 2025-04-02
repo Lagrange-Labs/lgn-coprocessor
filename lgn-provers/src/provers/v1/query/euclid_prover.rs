@@ -18,7 +18,6 @@ use verifiable_db::query::universal_circuit::universal_circuit_inputs::Placehold
 use verifiable_db::revelation;
 use verifiable_db::revelation::api::MatchingRow;
 
-use super::prover::StorageQueryProver;
 use super::INDEX_TREE_MAX_DEPTH;
 use super::MAX_NUM_COLUMNS;
 use super::MAX_NUM_ITEMS_PER_OUTPUT;
@@ -75,10 +74,8 @@ impl EuclidQueryProver {
         let params = bincode::deserialize_from(reader)?;
         Ok(Self { params })
     }
-}
 
-impl StorageQueryProver for EuclidQueryProver {
-    fn prove_universal_circuit(
+    pub(super) fn prove_universal_circuit(
         &self,
         input: MatchingRowInput,
         pis: &DynamicCircuitPis,
@@ -118,7 +115,7 @@ impl StorageQueryProver for EuclidQueryProver {
         Ok(proof)
     }
 
-    fn prove_row_chunks(
+    pub(super) fn prove_row_chunks(
         &self,
         input: RowsChunkInput,
         pis: &DynamicCircuitPis,
@@ -160,7 +157,7 @@ impl StorageQueryProver for EuclidQueryProver {
         Ok(proof)
     }
 
-    fn prove_chunk_aggregation(
+    pub(super) fn prove_chunk_aggregation(
         &self,
         chunks_proofs: &[Vec<u8>],
     ) -> anyhow::Result<Vec<u8>> {
@@ -193,7 +190,7 @@ impl StorageQueryProver for EuclidQueryProver {
         Ok(proof)
     }
 
-    fn prove_non_existence(
+    pub(super) fn prove_non_existence(
         &self,
         input: NonExistenceInput,
         pis: &DynamicCircuitPis,
@@ -236,7 +233,7 @@ impl StorageQueryProver for EuclidQueryProver {
         Ok(proof)
     }
 
-    fn prove_aggregated_revelation(
+    pub(super) fn prove_aggregated_revelation(
         &self,
         pis: &DynamicCircuitPis,
         placeholders: Placeholders,
@@ -278,7 +275,8 @@ impl StorageQueryProver for EuclidQueryProver {
         Ok(proof)
     }
 
-    fn prove_tabular_revelation(
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn prove_tabular_revelation(
         &self,
         pis: &DynamicCircuitPis,
         placeholders: Placeholders,

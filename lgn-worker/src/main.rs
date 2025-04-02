@@ -201,14 +201,13 @@ async fn run_worker(
         Default::default()
     };
 
-    let mut provers_manager =
-        tokio::task::block_in_place(move || -> Result<ProversManager<TaskType, ReplyType>> {
-            let mut provers_manager = ProversManager::<TaskType, ReplyType>::new();
-            register_v1_provers(config, &mut provers_manager, &checksums)
-                .context("while registering provers")?;
-            Ok(provers_manager)
-        })
-        .context("creating prover managers")?;
+    let mut provers_manager = tokio::task::block_in_place(move || -> Result<ProversManager> {
+        let mut provers_manager = ProversManager::new();
+        register_v1_provers(config, &mut provers_manager, &checksums)
+            .context("while registering provers")?;
+        Ok(provers_manager)
+    })
+    .context("creating prover managers")?;
 
     // Connecting to the GW
     let wallet = get_wallet(config).context("fetching wallet")?;
@@ -323,7 +322,7 @@ async fn run_worker(
 }
 
 fn process_downstream_payload(
-    provers_manager: &ProversManager<TaskType, ReplyType>,
+    provers_manager: &ProversManager,
     envelope: MessageEnvelope<TaskType>,
     mp2_requirement: &semver::VersionReq,
 ) -> Result<MessageReplyEnvelope<ReplyType>, String> {
@@ -390,7 +389,7 @@ fn process_downstream_payload(
 }
 
 async fn process_message_from_gateway(
-    provers_manager: &mut ProversManager<TaskType, ReplyType>,
+    provers_manager: &mut ProversManager,
     message: &WorkerToGwResponse,
     outbound: &mut tokio::sync::mpsc::Sender<WorkerToGwRequest>,
     mp2_requirement: &semver::VersionReq,
