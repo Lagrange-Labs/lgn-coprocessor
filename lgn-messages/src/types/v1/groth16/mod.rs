@@ -7,9 +7,6 @@ use crate::types::v1::query;
 
 pub mod keys;
 
-/// Groth16 routing domain
-pub const ROUTING_DOMAIN: &str = "sg";
-
 #[derive(Clone, Serialize, Deserialize, Dbg)]
 pub struct WorkerTask {
     /// Chain ID

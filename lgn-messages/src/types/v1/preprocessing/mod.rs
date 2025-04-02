@@ -34,7 +34,6 @@ pub mod ext_keys;
 pub mod ext_tasks;
 
 const KEYS_PREPROCESSING_PREFIX: &str = "V1_PREPROCESSING";
-pub const ROUTING_DOMAIN: &str = "sp";
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct WorkerTask {
