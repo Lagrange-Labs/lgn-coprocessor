@@ -1,11 +1,11 @@
 //! This module contains logic of generating the Groth16 proofs which could be verified on-chain.
 use std::collections::HashMap;
 
-use prover::Prover;
 use tracing::debug;
 use tracing::info;
 
 use crate::provers::v1::groth16::task::Groth16;
+use crate::provers::LgnProver;
 
 mod prover;
 mod task;
@@ -25,7 +25,7 @@ pub fn create_prover(
     checksums: &HashMap<String, blake3::Hash>,
     pk_file: &str,
     vk_file: &str,
-) -> anyhow::Result<Groth16<impl Prover>> {
+) -> anyhow::Result<impl LgnProver> {
     let prover = {
         #[cfg(feature = "dummy-prover")]
         let prover = {

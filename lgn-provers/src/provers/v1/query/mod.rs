@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use tracing::debug;
 use tracing::info;
 
-use crate::provers::v1::query::prover::StorageQueryProver;
 use crate::provers::v1::query::task::Querying;
+use crate::provers::LgnProver;
 
 pub(crate) mod prover;
 pub mod task;
@@ -31,7 +31,7 @@ pub fn create_prover(
     dir: &str,
     file: &str,
     checksums: &HashMap<String, blake3::Hash>,
-) -> anyhow::Result<Querying<impl StorageQueryProver>> {
+) -> anyhow::Result<impl LgnProver> {
     let prover = {
         #[cfg(feature = "dummy-prover")]
         let prover = {
