@@ -4,7 +4,7 @@ use serde_derive::Serialize;
 
 /// The routing domain for a message.
 ///
-/// NOTE: This is no longer unused, maintained for backwards compatibility.
+/// NOTE: This is no longer used, maintained for backwards compatibility.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct RoutingKey {
     domain: String,
