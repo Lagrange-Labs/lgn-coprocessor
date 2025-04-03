@@ -189,7 +189,7 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
     })?;
 
     // Connect to the GW
-    let (mut inbound, mut outbound) = connect_to_gateway(&config, &version, &mp2_version).await?;
+    let (mut inbound, mut outbound) = connect_to_gateway(&config, version, &mp2_version).await?;
 
     let liveness_check_interval = config.worker.liveness_check_interval;
     let last_task_processed =
@@ -302,8 +302,8 @@ async fn connect_to_gateway(
 )> {
     // Drop the wallet as soon as possible
     let token = {
-        let wallet = get_wallet(&config)?;
-        let claims = get_claims(&config)?;
+        let wallet = get_wallet(config)?;
+        let claims = get_claims(config)?;
         JWTAuth::new(claims, &wallet)?.encode()?
     };
 
