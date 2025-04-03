@@ -26,8 +26,10 @@ use lagrange::WorkerToGwResponse;
 use lgn_auth::jwt::JWTAuth;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
+use lgn_messages::types::ProverType;
 use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
+use metrics::histogram;
 use mimalloc::MiMalloc;
 use semver::Version;
 use tokio::sync::mpsc;
@@ -215,6 +217,32 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         warp::serve(routes).run(([0, 0, 0, 0], 8080)).await;
     });
 
+    // Initialise the metrics early on for better dashboards
+    counter!("zkmr_worker_messages_total").increment(0);
+    counter!("zkmr_worker_messages_successful_total").increment(0);
+    counter!("zkmr_worker_messages_error_total").increment(0);
+    for prover_type in [
+        ProverType::V1Preprocessing,
+        ProverType::V1Query,
+        ProverType::V1Groth16,
+    ] {
+        counter!(
+            "zkmr_worker_tasks_received_total",
+            "prover_type" => prover_type.to_string(),
+        )
+        .increment(0);
+        counter!(
+            "zkmr_worker_tasks_successful_total",
+            "prover_type" => prover_type.to_string(),
+        )
+        .increment(0);
+        counter!(
+            "zkmr_worker_tasks_error_total",
+            "prover_type" => prover_type.to_string(),
+        )
+        .increment(0);
+    }
+
     loop {
         debug!("Waiting for message");
 
@@ -367,6 +395,7 @@ async fn process_message_from_gateway(
     let span = span!(
         Level::INFO,
         "msg",
+        uuid = uuid,
         task_id = envelope.task_id,
         query_id = envelope.query_id,
         db_id = ?envelope.db_task_id,
@@ -380,22 +409,46 @@ async fn process_message_from_gateway(
         envelope_version,
     );
 
-    info!(
-        "Received Task. id: {} task_id: {} query_id: {}",
-        envelope.id(),
-        envelope.task_id,
-        envelope.query_id
-    );
-    counter!("zkmr_worker_tasks_received_total").increment(1);
+    let prover_type = envelope.inner.to_prover_type();
+    let task_id = envelope.task_id().to_string();
+    let query_id = envelope.query_id().to_string();
 
+    info!(
+        "Received Task. uuid: {} task_id: {} query_id: {}",
+        uuid, task_id, query_id
+    );
+
+    counter!(
+        "zkmr_worker_tasks_received_total",
+        "prover_type" => prover_type.to_string(),
+    )
+    .increment(1);
+
+    let start_time = std::time::Instant::now();
     let reply = tokio::task::block_in_place(move || -> anyhow::Result<MessageReplyEnvelope> {
         provers_manager.delegate_proving(envelope)
     });
+    histogram!(
+        "zkmr_worker_task_processing_duration_seconds",
+        "prover_type" => prover_type.to_string(),
+    )
+    .record(start_time.elapsed().as_secs_f64());
 
     let outbound_msg = match reply {
         Ok(reply) => {
-            counter!("zkmr_worker_tasks_successful_total").increment(1);
+            counter!(
+                "zkmr_worker_tasks_successful_total",
+                "prover_type" => prover_type.to_string(),
+            )
+            .increment(1);
 
+            info!(
+                "Processed task. uuid: {} task_id: {} query_id: {} time: {:?}",
+                uuid,
+                task_id,
+                query_id,
+                start_time.elapsed(),
+            );
             WorkerToGwRequest {
                 request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
                     WorkerDone {
@@ -406,9 +459,16 @@ async fn process_message_from_gateway(
             }
         },
         Err(err) => {
-            counter!("zkmr_worker_tasks_error_total").increment(1);
+            counter!(
+                "zkmr_worker_tasks_error_total",
+                "prover_type" => prover_type.to_string(),
+            )
+            .increment(1);
 
-            error!("failed to process task. uuid: {} err: {:?}", uuid, err);
+            error!(
+                "Failed to process task. uuid: {} task_id: {} query_id: {} err: {:?}",
+                uuid, task_id, query_id, err,
+            );
             WorkerToGwRequest {
                 request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
                     WorkerDone {
