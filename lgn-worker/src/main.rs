@@ -28,10 +28,13 @@ use lgn_messages::types::MessageReplyEnvelope;
 use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
 use mimalloc::MiMalloc;
+use semver::Version;
+use tokio::sync::mpsc;
 use tokio_stream::StreamExt;
 use tonic::metadata::MetadataValue;
 use tonic::transport::ClientTlsConfig;
 use tonic::Request;
+use tonic::Streaming;
 use tracing::debug;
 use tracing::error;
 use tracing::info;
@@ -183,69 +186,8 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         ProversManager::new(&config, &checksums)
     })?;
 
-    // Connecting to the GW
-    let wallet = get_wallet(&config)?;
-    let claims = get_claims(&config)?;
-    let token = JWTAuth::new(claims, &wallet)?.encode()?;
-
-    let grpc_url = &config.avs.gateway_url;
-    let max_message_size = config
-        .avs
-        .max_grpc_message_size_mb
-        .unwrap_or(MAX_GRPC_MESSAGE_SIZE_MB)
-        * 1024
-        * 1024;
-
-    let uri = grpc_url
-        .parse::<tonic::transport::Uri>()
-        .context("parsing gateway URL")?;
-
-    rustls::crypto::ring::default_provider()
-        .install_default()
-        .expect("Failed to install rustls crypto provider");
-
-    info!(
-        "Connecting to the gateway. grpc_url: {}, max_message_size: {}MB",
-        grpc_url,
-        max_message_size / (1024 * 1024)
-    );
-
-    let channel = tonic::transport::Channel::builder(uri.clone())
-        .tls_config(ClientTlsConfig::new().with_enabled_roots())?
-        .connect()
-        .await
-        .with_context(|| format!("creating transport channel builder for {uri}"))?;
-    let token: MetadataValue<_> = format!("Bearer {token}").parse()?;
-    let mut client = lagrange::workers_service_client::WorkersServiceClient::with_interceptor(
-        channel,
-        move |mut req: Request<()>| {
-            req.metadata_mut().insert("authorization", token.clone());
-            Ok(req)
-        },
-    )
-    .max_encoding_message_size(max_message_size)
-    .max_decoding_message_size(max_message_size);
-
-    let (mut outbound, outbound_rx) = tokio::sync::mpsc::channel(50);
-    let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
-    outbound
-        .send(WorkerToGwRequest {
-            request: Some(lagrange::worker_to_gw_request::Request::WorkerReady(
-                lagrange::WorkerReady {
-                    version: version.to_string(),
-                    worker_class: format!("{}-{}", config.worker.instance_type, mp2_version.major),
-                },
-            )),
-        })
-        .await?;
-
-    let response = client
-        .worker_to_gw(tonic::Request::new(outbound_rx))
-        .await
-        .context("connecting worker_to_gw")?;
-
-    info!("Bidirectional stream with GW opened");
-    let mut inbound = response.into_inner();
+    // Connect to the GW
+    let (mut inbound, mut outbound) = connect_to_gateway(&config, &version, &mp2_version).await?;
 
     let liveness_check_interval = config.worker.liveness_check_interval;
     let last_task_processed =
@@ -311,6 +253,91 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
             },
         }
     }
+}
+
+/// Connects to the gateway and returns the communication streams.
+///
+/// The returned tuple has two streams. The first stream is for the gateway's responses, which in
+/// this situation are tasks sent from the GW to the worker to be processed. The second stream is
+/// the worker requests, which contains the results of the tasks (either a proof or an error).
+///
+/// The nomeclature is inverted because it is written from the perspective of the gateway, and the
+/// client is automatically generated via tonic.
+async fn connect_to_gateway(
+    config: &Config,
+    version: &str,
+    mp2_version: &Version,
+) -> anyhow::Result<(
+    Streaming<WorkerToGwResponse>,
+    mpsc::Sender<WorkerToGwRequest>,
+)> {
+    // Drop the wallet as soon as possible
+    let token = {
+        let wallet = get_wallet(&config)?;
+        let claims = get_claims(&config)?;
+        JWTAuth::new(claims, &wallet)?.encode()?
+    };
+
+    let grpc_url = &config.avs.gateway_url;
+    let max_message_size = config
+        .avs
+        .max_grpc_message_size_mb
+        .unwrap_or(MAX_GRPC_MESSAGE_SIZE_MB)
+        * 1024
+        * 1024;
+
+    let uri = grpc_url
+        .parse::<tonic::transport::Uri>()
+        .context("parsing gateway URL")?;
+
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("Failed to install rustls crypto provider");
+
+    info!(
+        "Connecting to the gateway. grpc_url: {}, max_message_size: {}MB",
+        grpc_url,
+        max_message_size / (1024 * 1024)
+    );
+
+    let channel = tonic::transport::Channel::builder(uri.clone())
+        .tls_config(ClientTlsConfig::new().with_enabled_roots())?
+        .connect()
+        .await
+        .with_context(|| format!("creating transport channel builder for {uri}"))?;
+    let token: MetadataValue<_> = format!("Bearer {token}").parse()?;
+    let mut client = lagrange::workers_service_client::WorkersServiceClient::with_interceptor(
+        channel,
+        move |mut req: Request<()>| {
+            req.metadata_mut().insert("authorization", token.clone());
+            Ok(req)
+        },
+    )
+    .max_encoding_message_size(max_message_size)
+    .max_decoding_message_size(max_message_size);
+
+    let (outbound, outbound_rx) = mpsc::channel(50);
+    let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
+    outbound
+        .send(WorkerToGwRequest {
+            request: Some(lagrange::worker_to_gw_request::Request::WorkerReady(
+                lagrange::WorkerReady {
+                    version: version.to_string(),
+                    worker_class: format!("{}-{}", config.worker.instance_type, mp2_version.major),
+                },
+            )),
+        })
+        .await?;
+
+    let response = client
+        .worker_to_gw(tonic::Request::new(outbound_rx))
+        .await
+        .context("connecting worker_to_gw")?;
+
+    info!("Bidirectional stream with GW opened");
+    let inbound = response.into_inner();
+
+    Ok((inbound, outbound))
 }
 
 #[tracing::instrument(
