@@ -301,7 +301,7 @@ async fn run_worker(
         tokio::select! {
             Some(inbound_message) = inbound.next() => {
                 let msg = match inbound_message {
-                    Ok(ref msg) => msg,
+                    Ok(msg) => msg,
                     Err(e) => {
                         bail!("connection to the gateway ended with status: {e}");
                     }
@@ -348,7 +348,8 @@ fn process_downstream_payload(
         ));
     }
 
-    match std::panic::catch_unwind(|| provers_manager.delegate_proving(&envelope)) {
+    let id = envelope.id();
+    match std::panic::catch_unwind(|| provers_manager.delegate_proving(envelope)) {
         Ok(result) => {
             match result {
                 Ok(reply) => {
@@ -382,15 +383,15 @@ fn process_downstream_payload(
                 },
             };
 
-            error!("panic encountered while proving {} : {msg}", envelope.id());
-            Err(format!("{}: {msg}", envelope.id()))
+            error!("panic encountered while proving {} : {}", id, msg);
+            Err(format!("{}: {}", id, msg))
         },
     }
 }
 
 async fn process_message_from_gateway(
     provers_manager: &mut ProversManager,
-    message: &WorkerToGwResponse,
+    message: WorkerToGwResponse,
     outbound: &mut tokio::sync::mpsc::Sender<WorkerToGwRequest>,
     mp2_requirement: &semver::VersionReq,
 ) -> Result<()> {

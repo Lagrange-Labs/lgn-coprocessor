@@ -18,7 +18,7 @@ pub struct DummyProver;
 impl LgnProver for DummyProver {
     fn run(
         &self,
-        envelope: &MessageEnvelope<TaskType>,
+        envelope: MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
