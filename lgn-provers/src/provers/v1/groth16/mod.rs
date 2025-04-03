@@ -28,7 +28,7 @@ pub fn create_prover(
     #[cfg(feature = "dummy-prover")]
     let prover = {
         info!("Creating dummy groth16 prover");
-        dummy_prover::DummyProver
+        dummy_prover::Groth16DummyProver
     };
 
     #[cfg(not(feature = "dummy-prover"))]

@@ -34,7 +34,7 @@ impl LgnProver for DummyProver {
             ));
             Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
         } else {
-            bail!("Received unexpected task: {:?}", envelope);
+            bail!("Unexpected task: {:?}", envelope);
         }
     }
 }

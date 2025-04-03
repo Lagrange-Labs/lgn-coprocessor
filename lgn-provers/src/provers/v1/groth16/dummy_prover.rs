@@ -13,9 +13,9 @@ use crate::provers::LgnProver;
 const PROOF_SIZE: usize = 32;
 
 /// Prover implementation which performs no proving and returns random data as a proof.
-pub struct DummyProver;
+pub struct Groth16DummyProver;
 
-impl LgnProver for DummyProver {
+impl LgnProver for Groth16DummyProver {
     fn run(
         &self,
         envelope: MessageEnvelope,
@@ -31,7 +31,7 @@ impl LgnProver for DummyProver {
             let reply_envelope = MessageReplyEnvelope::new(query_id, task_id, reply_type);
             Ok(reply_envelope)
         } else {
-            bail!("Unexpected task type: {:?}", envelope.inner());
+            bail!("Unexpected task: {:?}", envelope);
         }
     }
 }

@@ -1,3 +1,4 @@
+use anyhow::bail;
 use lgn_messages::types::v1::preprocessing::db_keys;
 use lgn_messages::types::v1::preprocessing::ext_keys;
 use lgn_messages::types::v1::preprocessing::WorkerTask;
@@ -43,7 +44,7 @@ impl LgnProver for DummyProver {
             ));
             Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
         } else {
-            anyhow::bail!("Received unexpected task: {:?}", envelope);
+            bail!("Unexpected task: {:?}", envelope);
         }
     }
 }

@@ -2,7 +2,6 @@ use anyhow::*;
 use checksum::fetch_checksums;
 use clap::Parser;
 use lgn_messages::types::MessageEnvelope;
-use manager::v1::register_v1_provers;
 use manager::ProversManager;
 use tracing::error;
 use tracing::level_filters::LevelFilter;
@@ -75,10 +74,7 @@ async fn main() -> Result<()> {
     let checksums = fetch_checksums(config.public_params.checksum_file_url()).await?;
 
     let provers_manager = tokio::task::block_in_place(move || -> Result<ProversManager> {
-        let mut provers_manager = ProversManager::new();
-        register_v1_provers(&config, &mut provers_manager, &checksums)
-            .context("while registering provers")?;
-        Ok(provers_manager)
+        ProversManager::new(&config, &checksums).context("while registering provers")
     })
     .context("creating prover managers")?;
 
