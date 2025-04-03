@@ -91,7 +91,7 @@ async fn main() -> Result<()> {
         })?;
 
     provers_manager
-        .delegate_proving(&envelope)
+        .delegate_proving(envelope)
         .context("proof failed")?;
 
     Ok(())

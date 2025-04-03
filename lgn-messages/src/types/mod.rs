@@ -7,11 +7,9 @@ use serde_derive::Serialize;
 use thiserror::Error;
 
 use crate::routing::RoutingKey;
+use crate::KeyedPayload;
 
 pub mod v1;
-
-/// A keyed payload contains a bunch of bytes accompanied by a storage index
-pub type KeyedPayload = (String, Vec<u8>);
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum TaskType {
@@ -231,19 +229,6 @@ pub enum TaskDifficulty {
     Large,
 }
 
-impl TaskDifficulty {
-    /// Returns the minimal worker class required to process a task of the given queue
-    pub fn from_queue(domain: &str) -> Self {
-        let domain = domain.split('_').next().expect("invalid routing key");
-        match domain {
-            v1::preprocessing::ROUTING_DOMAIN => TaskDifficulty::Medium,
-            v1::query::ROUTING_DOMAIN => TaskDifficulty::Small,
-            v1::groth16::ROUTING_DOMAIN => TaskDifficulty::Large,
-            _ => panic!("unknown routing domain"),
-        }
-    }
-}
-
 impl Display for TaskDifficulty {
     fn fmt(
         &self,
@@ -292,12 +277,11 @@ impl Display for ProverType {
     }
 }
 
-pub trait ToProverType {
-    fn to_prover_type(&self) -> ProverType;
-}
-
-impl ToProverType for TaskType {
-    fn to_prover_type(&self) -> ProverType {
+impl TaskType {
+    /// Returns [ProverType] which supports proving this [TaskType].
+    ///
+    /// This is used to dispatch the message to the correct underlying prover.
+    pub fn to_prover_type(&self) -> ProverType {
         match self {
             TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
             TaskType::V1Query(_) => ProverType::V1Query,

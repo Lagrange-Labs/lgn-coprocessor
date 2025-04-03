@@ -6,10 +6,10 @@ use serde_derive::Serialize;
 
 use crate::types::v1::preprocessing::db_keys;
 use crate::types::v1::preprocessing::ext_keys;
-use crate::types::v1::preprocessing::ext_tasks::Identifier;
 use crate::types::v1::preprocessing::WorkerTask;
 use crate::types::v1::preprocessing::WorkerTaskType;
 use crate::BlockNr;
+use crate::Identifier;
 use crate::TableId;
 
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]

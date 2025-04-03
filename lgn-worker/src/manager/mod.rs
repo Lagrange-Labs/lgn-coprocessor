@@ -10,7 +10,6 @@ use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProverType;
 use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
-use lgn_messages::types::ToProverType;
 use lgn_provers::provers::LgnProver;
 use metrics::counter;
 use metrics::histogram;
@@ -55,7 +54,7 @@ impl ProversManager {
     /// A message reply envelope containing the result of the proving task
     pub(crate) fn delegate_proving(
         &self,
-        envelope: &MessageEnvelope<TaskType>,
+        envelope: MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let prover_type: ProverType = envelope.inner.to_prover_type();
 

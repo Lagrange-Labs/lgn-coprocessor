@@ -23,24 +23,24 @@ use crate::provers::LgnProver;
 impl LgnProver for EuclidProver {
     fn run(
         &self,
-        envelope: &MessageEnvelope<TaskType>,
+        envelope: MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
-        if let TaskType::V1Preprocessing(task @ WorkerTask { chain_id, .. }) = &envelope.inner {
+        if let TaskType::V1Preprocessing(task @ WorkerTask { chain_id, .. }) = envelope.inner {
             let key = match &task.task_type {
                 WorkerTaskType::Extraction(_) => {
-                    let key: ext_keys::ProofKey = task.into();
+                    let key: ext_keys::ProofKey = (&task).into();
                     key.to_string()
                 },
                 WorkerTaskType::Database(_) => {
-                    let key: db_keys::ProofKey = task.into();
+                    let key: db_keys::ProofKey = (&task).into();
                     key.to_string()
                 },
             };
-            let result = self.run_inner(task.clone())?;
+            let result = self.run_inner(task)?;
             let reply_type = ReplyType::V1Preprocessing(WorkerReply::new(
-                *chain_id,
+                chain_id,
                 Some((key, result)),
                 ProofCategory::Querying,
             ));

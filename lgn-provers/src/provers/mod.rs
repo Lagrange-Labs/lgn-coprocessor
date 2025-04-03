@@ -12,6 +12,6 @@ pub mod v1;
 pub trait LgnProver {
     fn run(
         &self,
-        envelope: &MessageEnvelope<TaskType>,
+        envelope: MessageEnvelope<TaskType>,
     ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>>;
 }
