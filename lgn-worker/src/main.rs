@@ -24,8 +24,6 @@ use lagrange::WorkerToGwResponse;
 use lgn_auth::jwt::JWTAuth;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
-use lgn_messages::types::ReplyType;
-use lgn_messages::types::TaskType;
 use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
 use mimalloc::MiMalloc;
@@ -331,9 +329,9 @@ async fn run_worker(
 )]
 fn process_downstream_payload(
     provers_manager: &ProversManager,
-    envelope: MessageEnvelope<TaskType>,
+    envelope: MessageEnvelope,
     mp2_requirement: &semver::VersionReq,
-) -> Result<MessageReplyEnvelope<ReplyType>, String> {
+) -> Result<MessageReplyEnvelope, String> {
     info!("Received Task. task_id: {}", envelope.task_id);
 
     counter!("zkmr_worker_tasks_received_total").increment(1);
@@ -403,8 +401,8 @@ async fn process_message_from_gateway(
 
     let reply = {
         let uuid = uuid.clone();
-        tokio::task::block_in_place(move || -> Result<MessageReplyEnvelope<ReplyType>, String> {
-            serde_json::from_slice::<MessageEnvelope<TaskType>>(&message.task)
+        tokio::task::block_in_place(move || -> Result<MessageReplyEnvelope, String> {
+            serde_json::from_slice::<MessageEnvelope>(&message.task)
                 .map_err(|e| {
                     format!(
                         "failed to deserialize envelope for task {} ({}B): {e}",

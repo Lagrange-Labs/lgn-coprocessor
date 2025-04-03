@@ -25,8 +25,8 @@ pub enum ReplyType {
     V1Groth16(WorkerReply),
 }
 
-#[derive(Clone, PartialEq, Deserialize, Serialize)]
-pub struct MessageEnvelope<T> {
+#[derive(Clone, Deserialize, Serialize)]
+pub struct MessageEnvelope {
     /// Query id is unique for each query and shared between all its tasks
     pub query_id: String,
 
@@ -50,12 +50,13 @@ pub struct MessageEnvelope<T> {
     pub routing_key: RoutingKey,
 
     /// Details of the task to be executed.
-    pub inner: T,
+    pub inner: TaskType,
 
     /// The proving system version
     pub version: String,
 }
-impl<T> std::fmt::Debug for MessageEnvelope<T> {
+
+impl std::fmt::Debug for MessageEnvelope {
     fn fmt(
         &self,
         f: &mut Formatter<'_>,
@@ -70,11 +71,11 @@ impl<T> std::fmt::Debug for MessageEnvelope<T> {
     }
 }
 
-impl<T> MessageEnvelope<T> {
+impl MessageEnvelope {
     pub fn new(
         query_id: String,
         task_id: String,
-        inner: T,
+        inner: TaskType,
         routing_key: RoutingKey,
         version: String,
     ) -> Self {
@@ -102,28 +103,29 @@ impl<T> MessageEnvelope<T> {
         format!("{}-{}", self.query_id, self.task_id)
     }
 
-    pub fn inner(&self) -> &T {
+    pub fn inner(&self) -> &TaskType {
         &self.inner
     }
 
-    pub fn inner_mut(&mut self) -> &mut T {
+    pub fn inner_mut(&mut self) -> &mut TaskType {
         &mut self.inner
     }
 }
 
 #[derive(Clone, PartialEq, Deserialize, Serialize)]
-pub struct MessageReplyEnvelope<T> {
+pub struct MessageReplyEnvelope {
     /// Query id is unique for each query and shared between all its tasks
     pub query_id: String,
 
     /// Task id is unique for each task and helps to map replies to tasks
     pub task_id: String,
 
-    inner: T,
+    inner: ReplyType,
 
     error: Option<WorkerError>,
 }
-impl<T> std::fmt::Debug for MessageReplyEnvelope<T> {
+
+impl std::fmt::Debug for MessageReplyEnvelope {
     fn fmt(
         &self,
         f: &mut Formatter<'_>,
@@ -132,11 +134,11 @@ impl<T> std::fmt::Debug for MessageReplyEnvelope<T> {
     }
 }
 
-impl<T> MessageReplyEnvelope<T> {
+impl MessageReplyEnvelope {
     pub fn new(
         query_id: String,
         task_id: String,
-        inner: T,
+        inner: ReplyType,
     ) -> Self {
         Self {
             query_id,
@@ -152,7 +154,7 @@ impl<T> MessageReplyEnvelope<T> {
 
     /// Flatten `inner`, returning either Ok(successful_proof) or
     /// Err(WorkerError)
-    pub fn inner(&self) -> Result<&T, &WorkerError> {
+    pub fn inner(&self) -> Result<&ReplyType, &WorkerError> {
         match self.error.as_ref() {
             None => Ok(&self.inner),
             Some(t) => Err(t),
@@ -160,7 +162,7 @@ impl<T> MessageReplyEnvelope<T> {
     }
 
     /// Return the proof in this envelope, be it successful or not.
-    pub fn content(&self) -> &T {
+    pub fn content(&self) -> &ReplyType {
         &self.inner
     }
 

@@ -1,7 +1,5 @@
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
-use lgn_messages::types::ReplyType;
-use lgn_messages::types::TaskType;
 
 pub mod v1;
 
@@ -12,6 +10,6 @@ pub mod v1;
 pub trait LgnProver {
     fn run(
         &self,
-        envelope: MessageEnvelope<TaskType>,
-    ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>>;
+        envelope: MessageEnvelope,
+    ) -> anyhow::Result<MessageReplyEnvelope>;
 }

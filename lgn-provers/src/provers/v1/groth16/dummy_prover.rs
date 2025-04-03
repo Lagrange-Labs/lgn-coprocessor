@@ -18,8 +18,8 @@ pub struct DummyProver;
 impl LgnProver for DummyProver {
     fn run(
         &self,
-        envelope: MessageEnvelope<TaskType>,
-    ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
+        envelope: MessageEnvelope,
+    ) -> anyhow::Result<MessageReplyEnvelope> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
         if let TaskType::V1Groth16(task) = envelope.inner() {
