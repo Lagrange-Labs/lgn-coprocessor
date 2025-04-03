@@ -3,7 +3,7 @@ resolver = "2"
 members = ["lgn-auth", "lgn-messages", "lgn-provers", "lgn-worker"]
 
 [workspace.dependencies]
-groth16_framework_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "main", package = "groth16_framework" }
+groth16_framework = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "main" }
 mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "main" }
 mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "main" }
 parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "main" }
@@ -82,7 +82,7 @@ ignored = ["prost"]
 # parsil = { path = "../mapreduce-plonky2/main/parsil/" }
 # verifiable-db = { path = "../mapreduce-plonky2/main/verifiable-db/" }
 # ryhope = { path = "../mapreduce-plonky2/main/ryhope/" }
-# groth16_framework_v1 = { package = "groth16_framework", path = "../mapreduce-plonky2/main/groth16-framework/" }
+# groth16_framework = { package = "groth16_framework", path = "../mapreduce-plonky2/main/groth16-framework/" }
 
 [workspace.metadata.release]
 publish = false
