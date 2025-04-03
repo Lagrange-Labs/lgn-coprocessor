@@ -10,6 +10,7 @@ use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
 use anyhow::bail;
+use anyhow::ensure;
 use anyhow::Context;
 use backtrace::Backtrace;
 use checksum::fetch_checksums;
@@ -40,7 +41,6 @@ use tracing::error;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing::span;
-use tracing::trace;
 use tracing::Level;
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::EnvFilter;
@@ -216,7 +216,8 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
     });
 
     loop {
-        debug!("Waiting for message...");
+        debug!("Waiting for message");
+
         match inbound.next().await {
             Some(Ok(msg)) => {
                 counter!("zkmr_worker_messages_total").increment(1);
@@ -340,69 +341,6 @@ async fn connect_to_gateway(
     Ok((inbound, outbound))
 }
 
-#[tracing::instrument(
-    skip(provers_manager, envelope),
-    fields(
-        query_id = envelope.query_id,
-        task_id = envelope.task_id,
-        db_id = ?envelope.db_task_id,
-    )
-)]
-fn process_downstream_payload(
-    provers_manager: &ProversManager,
-    envelope: MessageEnvelope,
-    mp2_requirement: &semver::VersionReq,
-) -> Result<MessageReplyEnvelope, String> {
-    info!("Received Task. task_id: {}", envelope.task_id);
-
-    counter!("zkmr_worker_tasks_received_total").increment(1);
-
-    let envelope_version = semver::Version::parse(&envelope.version)
-        .context("parsing message version")
-        .map_err(|e| e.to_string())?;
-
-    if !mp2_requirement.matches(&envelope_version) {
-        return Err(format!(
-            "version mismatch: worker requires {mp2_requirement}, task = {envelope_version}"
-        ));
-    }
-
-    let id = envelope.id();
-    match std::panic::catch_unwind(|| provers_manager.delegate_proving(envelope)) {
-        Ok(result) => {
-            match result {
-                Ok(reply) => {
-                    trace!("Sending reply: {:?}", reply);
-                    counter!("zkmr_worker_tasks_processed_total").increment(1);
-                    Ok(reply)
-                },
-                Err(e) => {
-                    error!("Error processing task: {:?}", e);
-                    counter!("zkmr_worker_error_count").increment(1);
-
-                    Err(format!("{e:?}"))
-                },
-            }
-        },
-        Err(panic) => {
-            counter!("zkmr_worker_error_count").increment(1);
-
-            let msg = match panic.downcast_ref::<&'static str>() {
-                Some(s) => *s,
-                None => {
-                    match panic.downcast_ref::<String>() {
-                        Some(s) => &s[..],
-                        None => "Box<dyn Any>",
-                    }
-                },
-            };
-
-            error!("panic encountered while proving {} : {}", id, msg);
-            Err(format!("{}: {}", id, msg))
-        },
-    }
-}
-
 async fn process_message_from_gateway(
     provers_manager: &mut ProversManager,
     message: WorkerToGwResponse,
@@ -415,26 +353,49 @@ async fn process_message_from_gateway(
         .map(|id| uuid::Uuid::from_bytes_le(id.id.clone().try_into().unwrap()).to_string())
         .unwrap_or_else(|| "UNKNOWN".to_string());
 
-    let reply = {
-        let uuid = uuid.clone();
-        tokio::task::block_in_place(move || -> Result<MessageReplyEnvelope, String> {
-            serde_json::from_slice::<MessageEnvelope>(&message.task)
-                .map_err(|e| {
-                    format!(
-                        "failed to deserialize envelope for task {} ({}B): {e}",
-                        uuid,
-                        message.task.len(),
-                    )
-                })
-                .and_then(|message_envelope| {
-                    info!("processing task {}", message_envelope.id());
-                    process_downstream_payload(provers_manager, message_envelope, mp2_requirement)
-                })
-        })
-    };
+    let envelope = serde_json::from_slice::<MessageEnvelope>(&message.task).with_context(|| {
+        format!(
+            "Failed to deserialize envelope for task. uuid: {} length: {}B",
+            uuid,
+            message.task.len(),
+        )
+    })?;
+
+    let envelope_version =
+        semver::Version::parse(&envelope.version).context("parsing message version")?;
+
+    let span = span!(
+        Level::INFO,
+        "msg",
+        task_id = envelope.task_id,
+        query_id = envelope.query_id,
+        db_id = ?envelope.db_task_id,
+    );
+    let _guard = span.enter();
+
+    ensure!(
+        mp2_requirement.matches(&envelope_version),
+        "Version mismatch. mp2_requirement: {} envelope_version: {}",
+        mp2_requirement,
+        envelope_version,
+    );
+
+    info!(
+        "Received Task. id: {} task_id: {} query_id: {}",
+        envelope.id(),
+        envelope.task_id,
+        envelope.query_id
+    );
+    counter!("zkmr_worker_tasks_received_total").increment(1);
+
+    let reply = tokio::task::block_in_place(move || -> anyhow::Result<MessageReplyEnvelope> {
+        provers_manager.delegate_proving(envelope)
+    });
 
     let outbound_msg = match reply {
         Ok(reply) => {
+            counter!("zkmr_worker_tasks_successful_total").increment(1);
+
             WorkerToGwRequest {
                 request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
                     WorkerDone {
@@ -444,13 +405,15 @@ async fn process_message_from_gateway(
                 )),
             }
         },
-        Err(error_str) => {
-            tracing::error!("failed to process task {uuid}: {error_str}");
+        Err(err) => {
+            counter!("zkmr_worker_tasks_error_total").increment(1);
+
+            error!("failed to process task. uuid: {} err: {:?}", uuid, err);
             WorkerToGwRequest {
                 request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
                     WorkerDone {
                         task_id: message.task_id.clone(),
-                        reply: Some(Reply::WorkerError(error_str)),
+                        reply: Some(Reply::WorkerError(format!("{:?}", err))),
                     },
                 )),
             }
@@ -458,7 +421,6 @@ async fn process_message_from_gateway(
     };
     outbound.send(outbound_msg).await?;
 
-    counter!("zkmr_worker_grpc_messages_sent_total").increment(1);
     Ok(())
 }
 
