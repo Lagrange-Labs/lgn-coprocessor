@@ -241,7 +241,7 @@ impl Display for TaskDifficulty {
                 TaskDifficulty::Small => "small",
                 TaskDifficulty::Medium => "medium",
                 TaskDifficulty::Large => "large",
-                TaskDifficulty::Disabled => "disbaled",
+                TaskDifficulty::Disabled => "disabled",
             }
         )
     }
