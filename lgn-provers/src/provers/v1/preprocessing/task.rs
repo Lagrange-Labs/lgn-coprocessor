@@ -23,8 +23,8 @@ use crate::provers::LgnProver;
 impl LgnProver for EuclidProver {
     fn run(
         &self,
-        envelope: MessageEnvelope<TaskType>,
-    ) -> anyhow::Result<MessageReplyEnvelope<ReplyType>> {
+        envelope: MessageEnvelope,
+    ) -> anyhow::Result<MessageReplyEnvelope> {
         let query_id = envelope.query_id.clone();
         let task_id = envelope.task_id.clone();
         if let TaskType::V1Preprocessing(task @ WorkerTask { chain_id, .. }) = envelope.inner {
