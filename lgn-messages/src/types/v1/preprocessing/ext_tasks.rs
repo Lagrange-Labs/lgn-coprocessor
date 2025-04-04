@@ -2,7 +2,7 @@ use alloy_primitives::Address;
 use derive_debug_plus::Dbg;
 use ethers::types::H256;
 use ethers::utils::rlp;
-use mp2_common::digest::TableDimension;
+use mp2_v1::values_extraction::gadgets::column_info::ColumnInfo;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
@@ -77,7 +77,8 @@ pub struct MappingLeafInput {
     pub node: Vec<u8>,
     pub slot: u8,
     pub key_id: u64,
-    pub value_id: u64,
+    pub evm_word: u32,
+    pub table_info: Vec<ColumnInfo>,
 }
 
 impl MappingLeafInput {
@@ -86,14 +87,16 @@ impl MappingLeafInput {
         node: Vec<u8>,
         slot: u8,
         key_id: u64,
-        value_id: u64,
+        evm_word: u32,
+        table_info: Vec<ColumnInfo>,
     ) -> Self {
         Self {
             key,
             node,
             slot,
             key_id,
-            value_id,
+            evm_word,
+            table_info,
         }
     }
 }
@@ -125,19 +128,22 @@ impl MappingBranchInput {
 pub struct VariableLeafInput {
     pub node: Vec<u8>,
     pub slot: u8,
-    pub column_id: u64,
+    pub evm_word: u32,
+    pub table_info: Vec<ColumnInfo>,
 }
 
 impl VariableLeafInput {
     pub fn new(
         node: Vec<u8>,
         slot: u8,
-        column_id: u64,
+        evm_word: u32,
+        table_info: Vec<ColumnInfo>,
     ) -> Self {
         Self {
             node,
             slot,
-            column_id,
+            evm_word,
+            table_info,
         }
     }
 }
@@ -273,7 +279,7 @@ impl FinalExtraction {
         table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
-        compound: Option<TableDimension>,
+        extraction_type: FinalExtractionType,
         value_proof_version: MptNodeVersion,
     ) -> Self {
         Self::Single(SingleTableExtraction::new(
@@ -281,7 +287,7 @@ impl FinalExtraction {
             table_hash,
             block_nr,
             contract,
-            compound,
+            extraction_type,
             value_proof_version,
         ))
     }
@@ -339,14 +345,9 @@ impl SingleTableExtraction {
         table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
-        compound: Option<TableDimension>,
+        extraction_type: FinalExtractionType,
         value_proof_version: MptNodeVersion,
     ) -> Self {
-        let extraction_type = match compound {
-            Some(compound) => FinalExtractionType::Simple(compound),
-            None => FinalExtractionType::Lengthed,
-        };
-
         Self {
             table_id,
             table_hash,
@@ -422,7 +423,7 @@ impl MergeTableExtraction {
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum FinalExtractionType {
-    Simple(TableDimension),
+    Simple,
     Lengthed,
 }
 
