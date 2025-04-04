@@ -28,7 +28,7 @@ use super::MAX_NUM_RESULT_OPS;
 use super::ROW_TREE_MAX_DEPTH;
 use crate::params;
 
-pub(crate) struct EuclidQueryProver {
+pub(crate) struct QueryEuclidProver {
     params: QueryParameters<
         NUM_CHUNKS,
         NUM_ROWS,
@@ -43,7 +43,7 @@ pub(crate) struct EuclidQueryProver {
     >,
 }
 
-impl EuclidQueryProver {
+impl QueryEuclidProver {
     #[allow(dead_code)]
     pub fn new(
         params: QueryParameters<

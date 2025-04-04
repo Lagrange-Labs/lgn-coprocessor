@@ -1,17 +1,17 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use groth16_framework::Groth16Prover as InnerProver;
+use groth16_framework::Groth16Prover;
 use tracing::debug;
 
 use crate::params;
 
 #[derive(Debug)]
-pub struct Groth16Prover {
-    inner: InnerProver,
+pub struct Groth16EuclidProver {
+    inner: Groth16Prover,
 }
 
-impl Groth16Prover {
+impl Groth16EuclidProver {
     #[allow(clippy::too_many_arguments)]
     pub fn init(
         url: &str,
@@ -26,7 +26,7 @@ impl Groth16Prover {
         let pk_bytes = params::prepare_raw(url, dir, pk_file, checksums)?;
 
         debug!("Creating Groth16 prover");
-        let inner = InnerProver::from_bytes(
+        let inner = Groth16Prover::from_bytes(
             r1cs_bytes.to_vec(),
             pk_bytes.to_vec(),
             circuit_bytes.to_vec(),

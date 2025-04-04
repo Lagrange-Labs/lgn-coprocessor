@@ -22,15 +22,14 @@ pub fn create_prover(
 ) -> anyhow::Result<impl LgnProver> {
     #[cfg(feature = "dummy-prover")]
     let prover = {
-        use dummy_prover::DummyProver;
-        info!("Creating dummy preprocessing prover");
-        DummyProver
+        info!("Creating PreprocessingDummyProver");
+        dummy_prover::PreprocessingDummyProver
     };
 
     #[cfg(not(feature = "dummy-prover"))]
     let prover = {
-        info!("Creating preprocessing prover");
-        euclid_prover::EuclidProver::init(url, dir, file, checksums)?
+        info!("Creating PreprocessingEuclidProver");
+        euclid_prover::PreprocessingEuclidProver::init(url, dir, file, checksums)?
     };
 
     info!("Preprocessing prover created");

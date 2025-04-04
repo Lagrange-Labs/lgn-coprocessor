@@ -18,10 +18,10 @@ use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::WorkerReply;
 
-use super::euclid_prover::EuclidProver;
+use super::euclid_prover::PreprocessingEuclidProver;
 use crate::provers::LgnProver;
 
-impl LgnProver for EuclidProver {
+impl LgnProver for PreprocessingEuclidProver {
     fn run(
         &self,
         envelope: MessageEnvelope,
@@ -52,7 +52,7 @@ impl LgnProver for EuclidProver {
     }
 }
 
-impl EuclidProver {
+impl PreprocessingEuclidProver {
     pub fn run_inner(
         &self,
         task: WorkerTask,

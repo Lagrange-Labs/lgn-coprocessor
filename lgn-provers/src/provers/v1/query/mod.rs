@@ -32,15 +32,14 @@ pub fn create_prover(
 ) -> anyhow::Result<impl LgnProver> {
     #[cfg(feature = "dummy-prover")]
     let prover = {
-        use dummy_prover::DummyProver;
-        info!("Creating dummy query prover");
-        DummyProver
+        info!("Creating QueryDummyProver");
+        dummy_prover::QueryDummyProver
     };
 
     #[cfg(not(feature = "dummy-prover"))]
     let prover = {
-        info!("Creating query prover");
-        euclid_prover::EuclidQueryProver::init(url, dir, file, checksums)?
+        info!("Creating QueryEuclidProver");
+        euclid_prover::QueryEuclidProver::init(url, dir, file, checksums)?
     };
 
     debug!("Query prover created");

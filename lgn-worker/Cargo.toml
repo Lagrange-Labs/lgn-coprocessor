@@ -41,6 +41,7 @@ semver = { workspace = true }
 serde = { workspace = true }
 serde_derive = { workspace = true }
 serde_json = { workspace = true }
+thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"]  }
 tokio-stream = { workspace = true }
 tonic = { workspace = true }

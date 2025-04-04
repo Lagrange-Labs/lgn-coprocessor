@@ -27,14 +27,21 @@ pub fn create_prover(
 ) -> anyhow::Result<impl LgnProver> {
     #[cfg(feature = "dummy-prover")]
     let prover = {
-        info!("Creating dummy groth16 prover");
+        info!("Creating Groth16DummyProver");
         dummy_prover::Groth16DummyProver
     };
 
     #[cfg(not(feature = "dummy-prover"))]
     let prover = {
         info!("Creating groth16 prover");
-        euclid_prover::Groth16Prover::init(url, dir, circuit_file, pk_file, vk_file, checksums)?
+        euclid_prover::Groth16EuclidProver::init(
+            url,
+            dir,
+            circuit_file,
+            pk_file,
+            vk_file,
+            checksums,
+        )?
     };
 
     debug!("Groth16 prover created");

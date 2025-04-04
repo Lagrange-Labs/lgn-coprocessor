@@ -15,10 +15,10 @@ use lgn_messages::types::TaskType;
 use lgn_messages::types::WorkerReply;
 use parsil::assembler::DynamicCircuitPis;
 
-use super::euclid_prover::EuclidQueryProver;
+use super::euclid_prover::QueryEuclidProver;
 use crate::provers::LgnProver;
 
-impl LgnProver for EuclidQueryProver {
+impl LgnProver for QueryEuclidProver {
     fn run(
         &self,
         envelope: MessageEnvelope,
@@ -41,7 +41,7 @@ impl LgnProver for EuclidQueryProver {
     }
 }
 
-impl EuclidQueryProver {
+impl QueryEuclidProver {
     pub fn run_inner(
         &self,
         task: &WorkerTask,

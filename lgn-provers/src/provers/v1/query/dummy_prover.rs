@@ -14,9 +14,9 @@ use crate::provers::LgnProver;
 const PROOF_SIZE: usize = 120;
 
 /// Prover implementation which performs no proving and returns random data as a proof.
-pub struct DummyProver;
+pub struct QueryDummyProver;
 
-impl LgnProver for DummyProver {
+impl LgnProver for QueryDummyProver {
     fn run(
         &self,
         envelope: MessageEnvelope,

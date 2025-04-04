@@ -1,3 +1,4 @@
+#![feature(result_flattening)]
 use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::panic;
@@ -10,7 +11,6 @@ use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
 use anyhow::bail;
-use anyhow::ensure;
 use anyhow::Context;
 use backtrace::Backtrace;
 use checksum::fetch_checksums;
@@ -32,6 +32,7 @@ use metrics::counter;
 use metrics::histogram;
 use mimalloc::MiMalloc;
 use semver::Version;
+use thiserror::Error;
 use tokio::sync::mpsc;
 use tokio_stream::StreamExt;
 use tonic::metadata::MetadataValue;
@@ -73,6 +74,82 @@ struct Cli {
     /// If set, output logs in JSON format.
     #[clap(short, long, action)]
     json: bool,
+}
+
+#[derive(Error, Debug)]
+enum Error {
+    /// The UUID is required.
+    #[error("Protobuf message missing required UUID field")]
+    UUIDMissing,
+
+    /// The UUID is invalid.
+    #[error("Protobuf message UUID is invalid. uuid: {:?}", .uuid)]
+    UUIDInvalid { uuid: Vec<u8> },
+
+    /// Failed to parse the incoming envelope.
+    #[error("Worker envelope parsing failed. uuid: {} err: {:?}", .uuid, .err)]
+    EnvelopeParseFailed {
+        uuid: uuid::Uuid,
+        err: serde_json::Error,
+    },
+
+    /// Invalid mp2 version in the incoming envelope.
+    #[error("Worker envelope parsing mp2 version failed. uuid: {} err: {:?}", .uuid, .err)]
+    EnvelopeInvalidMP2Version {
+        uuid: uuid::Uuid,
+        err: semver::Error,
+    },
+
+    /// Incompatible version required in the incoming envelope.
+    #[error("Worker envelope unsupported mp2 version. uuid: {} got: {} requirement: {}", .uuid, .got, .requirement)]
+    EnvelopeIncompatibleMP2Version {
+        uuid: uuid::Uuid,
+        got: semver::Version,
+        requirement: semver::VersionReq,
+    },
+
+    /// Proof generation returned an error.
+    #[error("Worker proof generation failed. uuid: {} err: {:?}", .uuid, .err)]
+    ProofFailed {
+        uuid: uuid::Uuid,
+        err: anyhow::Error,
+    },
+
+    /// Proof generation paniced.
+    #[error("Worker proof generation paniced. uuid: {} panic: {}", .uuid, .panic_msg)]
+    ProofPanic { uuid: uuid::Uuid, panic_msg: String },
+
+    /// Failed to serialise outgoing envelope.
+    #[error("Worker reply envelope serialisation failed. uuid: {} err: {:?}", .uuid, .err)]
+    ReplySerializationFailed {
+        uuid: uuid::Uuid,
+        err: serde_json::Error,
+    },
+}
+
+const ERROR_UUID_MISSING: &str = "uuid_missing";
+const ERROR_UUID_INVALID: &str = "uuid_invalid";
+const ERROR_ENVELOPE_PARSE_FAILED: &str = "envelope_parse_invalid";
+const ERROR_ENVELOPE_INVALID_MP2_VERSION: &str = "envelope_invalid_mp2_version";
+const ERROR_ENVELOPE_INCOMPATIBLE_MP2_VERSION: &str = "envelope_incompatbile_mp2_version";
+const ERROR_PROOF_INVALID: &str = "proof_invalid";
+const ERROR_PROOF_PANIC: &str = "proof_panic";
+const ERROR_REPLY_SERIALIZATION_INVALID: &str = "reply_serialization_invalid";
+
+impl Error {
+    /// Returns an error tag, suitable to be used for metrics.
+    fn to_error_tag(&self) -> &'static str {
+        match self {
+            Error::UUIDMissing => ERROR_UUID_MISSING,
+            Error::UUIDInvalid { .. } => ERROR_UUID_INVALID,
+            Error::EnvelopeParseFailed { .. } => ERROR_ENVELOPE_PARSE_FAILED,
+            Error::EnvelopeInvalidMP2Version { .. } => ERROR_ENVELOPE_INVALID_MP2_VERSION,
+            Error::EnvelopeIncompatibleMP2Version { .. } => ERROR_ENVELOPE_INCOMPATIBLE_MP2_VERSION,
+            Error::ProofFailed { .. } => ERROR_PROOF_INVALID,
+            Error::ProofPanic { .. } => ERROR_PROOF_PANIC,
+            Error::ReplySerializationFailed { .. } => ERROR_REPLY_SERIALIZATION_INVALID,
+        }
+    }
 }
 
 fn setup_logging(json: bool) {
@@ -189,7 +266,7 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
     })?;
 
     // Connect to the GW
-    let (mut inbound, mut outbound) = connect_to_gateway(&config, version, &mp2_version).await?;
+    let (mut inbound, outbound) = connect_to_gateway(&config, version, &mp2_version).await?;
 
     let liveness_check_interval = config.worker.liveness_check_interval;
     let last_task_processed =
@@ -220,7 +297,19 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
     // Initialise the metrics early on for better dashboards
     counter!("zkmr_worker_messages_total").increment(0);
     counter!("zkmr_worker_messages_successful_total").increment(0);
-    counter!("zkmr_worker_messages_error_total").increment(0);
+    for error_tag in [
+        ERROR_UUID_MISSING,
+        ERROR_UUID_INVALID,
+        ERROR_ENVELOPE_PARSE_FAILED,
+        ERROR_ENVELOPE_INVALID_MP2_VERSION,
+        ERROR_ENVELOPE_INCOMPATIBLE_MP2_VERSION,
+        ERROR_PROOF_INVALID,
+        ERROR_PROOF_PANIC,
+        ERROR_REPLY_SERIALIZATION_INVALID,
+    ] {
+        counter!("zkmr_worker_messages_error_total", "type" => error_tag).increment(0);
+    }
+
     for prover_type in [
         ProverType::V1Preprocessing,
         ProverType::V1Query,
@@ -249,24 +338,41 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         match inbound.next().await {
             Some(Ok(msg)) => {
                 counter!("zkmr_worker_messages_total").increment(1);
+                let task_id = msg.task_id.clone();
 
-                let result = process_message_from_gateway(
+                let outbound_msg = match process_message_from_gateway(
                     &mut provers_manager,
                     msg,
-                    &mut outbound,
                     &mp2_requirement,
                 )
-                .await;
-
-                match result {
-                    Ok(()) => {
+                .await
+                {
+                    Ok(serialised_reply) => {
                         counter!("zkmr_worker_messages_successful_total").increment(1);
+                        WorkerToGwRequest {
+                            request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
+                                WorkerDone {
+                                    task_id,
+                                    reply: Some(Reply::TaskOutput(serialised_reply)),
+                                },
+                            )),
+                        }
                     },
                     Err(err) => {
-                        counter!("zkmr_worker_messages_error_total").increment(1);
-                        error!("task processing failed. err: {:?}", err);
+                        counter!("zkmr_worker_messages_error_total", "type" => err.to_error_tag())
+                            .increment(1);
+                        WorkerToGwRequest {
+                            request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
+                                WorkerDone {
+                                    task_id,
+                                    reply: Some(Reply::WorkerError(format!("{:?}", err))),
+                                },
+                            )),
+                        }
                     },
-                }
+                };
+
+                outbound.send(outbound_msg).await?;
 
                 last_task_processed.store(
                     SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
@@ -369,45 +475,52 @@ async fn connect_to_gateway(
     Ok((inbound, outbound))
 }
 
+/// Parses, validated, and proves a task.
+///
+/// # Errors
+///
+/// - When the message is invalid or unsupported
+/// - When the proof inputs are invalid and the prover panics
+/// - When the message contents are inconsistent
+///
+/// See [Error] for details.
 async fn process_message_from_gateway(
     provers_manager: &mut ProversManager,
     message: WorkerToGwResponse,
-    outbound: &mut tokio::sync::mpsc::Sender<WorkerToGwRequest>,
     mp2_requirement: &semver::VersionReq,
-) -> anyhow::Result<()> {
-    let uuid = message
-        .task_id
-        .as_ref()
-        .map(|id| uuid::Uuid::from_bytes_le(id.id.clone().try_into().unwrap()).to_string())
-        .unwrap_or_else(|| "UNKNOWN".to_string());
+) -> Result<Vec<u8>, Error> {
+    let uuid = message.task_id.as_ref().ok_or(Error::UUIDMissing)?;
 
-    let envelope = serde_json::from_slice::<MessageEnvelope>(&message.task).with_context(|| {
-        format!(
-            "Failed to deserialize envelope for task. uuid: {} length: {}B",
-            uuid,
-            message.task.len(),
-        )
-    })?;
+    let uuid = uuid
+        .id
+        .clone()
+        .try_into()
+        .map_err(|uuid| Error::UUIDInvalid { uuid })?;
+    let uuid = uuid::Uuid::from_bytes_le(uuid);
 
-    let envelope_version =
-        semver::Version::parse(&envelope.version).context("parsing message version")?;
+    let envelope = serde_json::from_slice::<MessageEnvelope>(&message.task)
+        .map_err(|err| Error::EnvelopeParseFailed { uuid, err })?;
+
+    let envelope_version = semver::Version::parse(&envelope.version)
+        .map_err(|err| Error::EnvelopeInvalidMP2Version { uuid, err })?;
 
     let span = span!(
         Level::INFO,
         "msg",
-        uuid = uuid,
+        %uuid,
         task_id = envelope.task_id,
         query_id = envelope.query_id,
         db_id = ?envelope.db_task_id,
     );
     let _guard = span.enter();
 
-    ensure!(
-        mp2_requirement.matches(&envelope_version),
-        "Version mismatch. mp2_requirement: {} envelope_version: {}",
-        mp2_requirement,
-        envelope_version,
-    );
+    if !mp2_requirement.matches(&envelope_version) {
+        return Err(Error::EnvelopeIncompatibleMP2Version {
+            uuid,
+            got: envelope_version,
+            requirement: mp2_requirement.clone(),
+        });
+    };
 
     let prover_type = envelope.inner.to_prover_type();
     let task_id = envelope.task_id().to_string();
@@ -425,22 +538,53 @@ async fn process_message_from_gateway(
     .increment(1);
 
     let start_time = std::time::Instant::now();
-    let reply = tokio::task::block_in_place(move || -> anyhow::Result<MessageReplyEnvelope> {
-        provers_manager.delegate_proving(envelope)
-    });
-    histogram!(
-        "zkmr_worker_task_processing_duration_seconds",
-        "prover_type" => prover_type.to_string(),
-    )
-    .record(start_time.elapsed().as_secs_f64());
+    let result = tokio::task::block_in_place(move || -> Result<MessageReplyEnvelope, Error> {
+        // Plonky2 circuits will panic on invalid inputs. Catch these errors and report it to the
+        // gateway.
+        std::panic::catch_unwind(|| {
+            provers_manager
+                .delegate_proving(envelope)
+                .map_err(|err| Error::ProofFailed { uuid, err })
+        })
+        .map_err(|panic| {
+            if let Some(str) = panic.downcast_ref::<&'static str>() {
+                let panic_msg = (*str).to_owned();
+                return Error::ProofPanic { uuid, panic_msg };
+            }
 
-    let outbound_msg = match reply {
+            match panic.downcast::<String>() {
+                Ok(panic_msg) => {
+                    return Error::ProofPanic {
+                        uuid,
+                        panic_msg: *panic_msg,
+                    };
+                },
+                Err(panic) => {
+                    Error::ProofPanic {
+                        uuid,
+                        panic_msg: format!("{:?}", panic),
+                    }
+                },
+            }
+        })
+        .flatten()
+    });
+
+    match result {
         Ok(reply) => {
             counter!(
                 "zkmr_worker_tasks_successful_total",
                 "prover_type" => prover_type.to_string(),
             )
             .increment(1);
+            histogram!(
+                "zkmr_worker_task_sucessful_processing_duration_seconds",
+                "prover_type" => prover_type.to_string(),
+            )
+            .record(start_time.elapsed().as_secs_f64());
+
+            let serialised = serde_json::to_vec(&reply)
+                .map_err(|err| Error::ReplySerializationFailed { uuid, err })?;
 
             info!(
                 "Processed task. uuid: {} task_id: {} query_id: {} time: {:?}",
@@ -449,14 +593,7 @@ async fn process_message_from_gateway(
                 query_id,
                 start_time.elapsed(),
             );
-            WorkerToGwRequest {
-                request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
-                    WorkerDone {
-                        task_id: message.task_id.clone(),
-                        reply: Some(Reply::TaskOutput(serde_json::to_vec(&reply)?)),
-                    },
-                )),
-            }
+            Ok(serialised)
         },
         Err(err) => {
             counter!(
@@ -464,24 +601,20 @@ async fn process_message_from_gateway(
                 "prover_type" => prover_type.to_string(),
             )
             .increment(1);
+            histogram!(
+                "zkmr_worker_task_failed_processing_duration_seconds",
+                "prover_type" => prover_type.to_string(),
+            )
+            .record(start_time.elapsed().as_secs_f64());
 
             error!(
                 "Failed to process task. uuid: {} task_id: {} query_id: {} err: {:?}",
                 uuid, task_id, query_id, err,
             );
-            WorkerToGwRequest {
-                request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
-                    WorkerDone {
-                        task_id: message.task_id.clone(),
-                        reply: Some(Reply::WorkerError(format!("{:?}", err))),
-                    },
-                )),
-            }
-        },
-    };
-    outbound.send(outbound_msg).await?;
 
-    Ok(())
+            Err(err)
+        },
+    }
 }
 
 /// Build the node's wallet from the configuration file.
