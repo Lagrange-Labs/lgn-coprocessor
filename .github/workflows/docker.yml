@@ -95,7 +95,7 @@ jobs:
 
       - name: clippy
         run: |
-            docker run --rm base:${{ github.sha }} cargo clippy --all-targets --all -- -D warnings -A incomplete-features -A clippy::needless_return -A unused
+            docker run --rm base:${{ github.sha }} cargo clippy --all-targets --all -- -D warnings -A incomplete-features -A unused
       - name: fmt
         run: |
             docker run --rm base:${{ github.sha }} cargo fmt --all -- --check
