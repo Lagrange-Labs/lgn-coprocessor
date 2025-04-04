@@ -31,11 +31,11 @@ use tracing::debug;
 
 use crate::params;
 
-pub struct EuclidProver {
+pub struct PreprocessingEuclidProver {
     params: PublicParameters,
 }
 
-impl EuclidProver {
+impl PreprocessingEuclidProver {
     pub fn new(params: PublicParameters) -> Self {
         Self { params }
     }

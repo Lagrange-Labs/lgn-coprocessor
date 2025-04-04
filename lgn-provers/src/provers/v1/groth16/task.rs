@@ -12,10 +12,10 @@ use lgn_messages::types::WorkerReply;
 use tracing::debug;
 use tracing::info;
 
-use super::euclid_prover::Groth16Prover;
+use super::euclid_prover::Groth16EuclidProver;
 use crate::provers::LgnProver;
 
-impl LgnProver for Groth16Prover {
+impl LgnProver for Groth16EuclidProver {
     fn run(
         &self,
         envelope: MessageEnvelope,
@@ -38,7 +38,7 @@ impl LgnProver for Groth16Prover {
     }
 }
 
-impl Groth16Prover {
+impl Groth16EuclidProver {
     /// Generate the Groth proof.
     fn generate_proof(
         &self,
