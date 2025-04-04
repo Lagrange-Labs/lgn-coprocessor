@@ -3134,7 +3134,7 @@ dependencies = [
 [[package]]
 name = "gnark-utils"
 version = "1.2.3"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#95c537f5c90209833210a02d00eab318d3ba60bd"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fnew_extraction_features#0d3f1d438dd586186b5b151ad298e7e66ffcc895"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3154,7 +3154,7 @@ dependencies = [
 [[package]]
 name = "groth16_framework"
 version = "1.2.3"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#95c537f5c90209833210a02d00eab318d3ba60bd"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fnew_extraction_features#0d3f1d438dd586186b5b151ad298e7e66ffcc895"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -4460,7 +4460,7 @@ dependencies = [
 [[package]]
 name = "mp2_common"
 version = "1.2.3"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#95c537f5c90209833210a02d00eab318d3ba60bd"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fnew_extraction_features#0d3f1d438dd586186b5b151ad298e7e66ffcc895"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -4488,7 +4488,7 @@ dependencies = [
 [[package]]
 name = "mp2_test"
 version = "1.2.3"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#95c537f5c90209833210a02d00eab318d3ba60bd"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fnew_extraction_features#0d3f1d438dd586186b5b151ad298e7e66ffcc895"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -4507,7 +4507,7 @@ dependencies = [
 [[package]]
 name = "mp2_v1"
 version = "1.2.3"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#95c537f5c90209833210a02d00eab318d3ba60bd"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fnew_extraction_features#0d3f1d438dd586186b5b151ad298e7e66ffcc895"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -4526,6 +4526,7 @@ dependencies = [
  "paste",
  "plonky2",
  "plonky2_crypto",
+ "plonky2_ecdsa",
  "plonky2_ecgfp5",
  "rand 0.8.5",
  "recursion_framework",
@@ -4900,7 +4901,7 @@ dependencies = [
 [[package]]
 name = "parsil"
 version = "1.2.3"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#95c537f5c90209833210a02d00eab318d3ba60bd"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fnew_extraction_features#0d3f1d438dd586186b5b151ad298e7e66ffcc895"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -5705,7 +5706,7 @@ dependencies = [
 [[package]]
 name = "recursion_framework"
 version = "1.2.3"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#95c537f5c90209833210a02d00eab318d3ba60bd"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fnew_extraction_features#0d3f1d438dd586186b5b151ad298e7e66ffcc895"
 dependencies = [
  "anyhow",
  "log",
@@ -6256,7 +6257,7 @@ dependencies = [
 [[package]]
 name = "ryhope"
 version = "1.2.3"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#95c537f5c90209833210a02d00eab318d3ba60bd"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fnew_extraction_features#0d3f1d438dd586186b5b151ad298e7e66ffcc895"
 dependencies = [
  "anyhow",
  "bb8",
@@ -7795,7 +7796,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "verifiable-db"
 version = "1.2.3"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#95c537f5c90209833210a02d00eab318d3ba60bd"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=feat%2Fnew_extraction_features#0d3f1d438dd586186b5b151ad298e7e66ffcc895"
 dependencies = [
  "alloy 0.6.4",
  "anyhow",
@@ -7805,6 +7806,7 @@ dependencies = [
  "log",
  "mp2_common",
  "mp2_test",
+ "num",
  "plonky2",
  "plonky2_crypto",
  "plonky2_ecdsa",
