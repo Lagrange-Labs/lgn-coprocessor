@@ -88,7 +88,7 @@ enum Error {
 
     /// Failed to parse the incoming envelope.
     #[error("Worker envelope parsing failed. uuid: {} err: {:?}", .uuid, .err)]
-    EnvelopeParseError {
+    EnvelopeParseFailed {
         uuid: uuid::Uuid,
         err: serde_json::Error,
     },
@@ -110,7 +110,7 @@ enum Error {
 
     /// Proof generation returned an error.
     #[error("Worker proof generation failed. uuid: {} err: {:?}", .uuid, .err)]
-    ProofError {
+    ProofFailed {
         uuid: uuid::Uuid,
         err: anyhow::Error,
     },
@@ -121,33 +121,33 @@ enum Error {
 
     /// Failed to serialise outgoing envelope.
     #[error("Worker reply envelope serialisation failed. uuid: {} err: {:?}", .uuid, .err)]
-    ReplySerializationError {
+    ReplySerializationFailed {
         uuid: uuid::Uuid,
         err: serde_json::Error,
     },
 }
 
-const ERROR_UUIDMISSING: &str = "uuid_missing";
-const ERROR_UUIDINVALID: &str = "uuid_invalid";
-const ERROR_ENVELOPEPARSEERROR: &str = "envelope_parse_error";
-const ERROR_ENVELOPEINVALIDMP2VERSION: &str = "envelope_invalid_mp2_version";
-const ERROR_ENVELOPEINCOMPATIBLEMP2VERSION: &str = "envelope_incompatbile_mp2_version";
-const ERROR_PROOFERROR: &str = "proof_error";
-const ERROR_PROOFPANIC: &str = "proof_panic";
-const ERROR_REPLYSERIALIZATIONERROR: &str = "reply_serialization_error";
+const ERROR_UUID_MISSING: &str = "uuid_missing";
+const ERROR_UUID_INVALID: &str = "uuid_invalid";
+const ERROR_ENVELOPE_PARSE_FAILED: &str = "envelope_parse_invalid";
+const ERROR_ENVELOPE_INVALID_MP2_VERSION: &str = "envelope_invalid_mp2_version";
+const ERROR_ENVELOPE_INCOMPATIBLE_MP2_VERSION: &str = "envelope_incompatbile_mp2_version";
+const ERROR_PROOF_INVALID: &str = "proof_invalid";
+const ERROR_PROOF_PANIC: &str = "proof_panic";
+const ERROR_REPLY_SERIALIZATION_INVALID: &str = "reply_serialization_invalid";
 
 impl Error {
     /// Returns an error tag, suitable to be used for metrics.
     fn to_error_tag(&self) -> &'static str {
         match self {
-            Error::UUIDMissing => ERROR_UUIDMISSING,
-            Error::UUIDInvalid { .. } => ERROR_UUIDINVALID,
-            Error::EnvelopeParseError { .. } => ERROR_ENVELOPEPARSEERROR,
-            Error::EnvelopeInvalidMP2Version { .. } => ERROR_ENVELOPEINVALIDMP2VERSION,
-            Error::EnvelopeIncompatibleMP2Version { .. } => ERROR_ENVELOPEINCOMPATIBLEMP2VERSION,
-            Error::ProofError { .. } => ERROR_PROOFERROR,
-            Error::ProofPanic { .. } => ERROR_PROOFPANIC,
-            Error::ReplySerializationError { .. } => ERROR_REPLYSERIALIZATIONERROR,
+            Error::UUIDMissing => ERROR_UUID_MISSING,
+            Error::UUIDInvalid { .. } => ERROR_UUID_INVALID,
+            Error::EnvelopeParseFailed { .. } => ERROR_ENVELOPE_PARSE_FAILED,
+            Error::EnvelopeInvalidMP2Version { .. } => ERROR_ENVELOPE_INVALID_MP2_VERSION,
+            Error::EnvelopeIncompatibleMP2Version { .. } => ERROR_ENVELOPE_INCOMPATIBLE_MP2_VERSION,
+            Error::ProofFailed { .. } => ERROR_PROOF_INVALID,
+            Error::ProofPanic { .. } => ERROR_PROOF_PANIC,
+            Error::ReplySerializationFailed { .. } => ERROR_REPLY_SERIALIZATION_INVALID,
         }
     }
 }
@@ -298,14 +298,14 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
     counter!("zkmr_worker_messages_total").increment(0);
     counter!("zkmr_worker_messages_successful_total").increment(0);
     for error_tag in [
-        ERROR_UUIDMISSING,
-        ERROR_UUIDINVALID,
-        ERROR_ENVELOPEPARSEERROR,
-        ERROR_ENVELOPEINVALIDMP2VERSION,
-        ERROR_ENVELOPEINCOMPATIBLEMP2VERSION,
-        ERROR_PROOFERROR,
-        ERROR_PROOFPANIC,
-        ERROR_REPLYSERIALIZATIONERROR,
+        ERROR_UUID_MISSING,
+        ERROR_UUID_INVALID,
+        ERROR_ENVELOPE_PARSE_FAILED,
+        ERROR_ENVELOPE_INVALID_MP2_VERSION,
+        ERROR_ENVELOPE_INCOMPATIBLE_MP2_VERSION,
+        ERROR_PROOF_INVALID,
+        ERROR_PROOF_PANIC,
+        ERROR_REPLY_SERIALIZATION_INVALID,
     ] {
         counter!("zkmr_worker_messages_error_total", "type" => error_tag).increment(0);
     }
@@ -499,7 +499,7 @@ async fn process_message_from_gateway(
     let uuid = uuid::Uuid::from_bytes_le(uuid);
 
     let envelope = serde_json::from_slice::<MessageEnvelope>(&message.task)
-        .map_err(|err| Error::EnvelopeParseError { uuid, err })?;
+        .map_err(|err| Error::EnvelopeParseFailed { uuid, err })?;
 
     let envelope_version = semver::Version::parse(&envelope.version)
         .map_err(|err| Error::EnvelopeInvalidMP2Version { uuid, err })?;
@@ -544,7 +544,7 @@ async fn process_message_from_gateway(
         std::panic::catch_unwind(|| {
             provers_manager
                 .delegate_proving(envelope)
-                .map_err(|err| Error::ProofError { uuid, err })
+                .map_err(|err| Error::ProofFailed { uuid, err })
         })
         .map_err(|panic| {
             if let Some(str) = panic.downcast_ref::<&'static str>() {
@@ -584,7 +584,7 @@ async fn process_message_from_gateway(
             .record(start_time.elapsed().as_secs_f64());
 
             let serialised = serde_json::to_vec(&reply)
-                .map_err(|err| Error::ReplySerializationError { uuid, err })?;
+                .map_err(|err| Error::ReplySerializationFailed { uuid, err })?;
 
             info!(
                 "Processed task. uuid: {} task_id: {} query_id: {} time: {:?}",
