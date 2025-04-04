@@ -5,7 +5,6 @@ use alloy::primitives::U256;
 use anyhow::bail;
 use ethers::utils::rlp::Prototype;
 use ethers::utils::rlp::Rlp;
-use mp2_common::digest::TableDimension;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::generate_proof;
@@ -27,16 +26,18 @@ use mp2_v1::contract_extraction;
 use mp2_v1::final_extraction;
 use mp2_v1::length_extraction::LengthCircuitInput;
 use mp2_v1::values_extraction;
+use mp2_v1::values_extraction::gadgets::column_info::ColumnInfo;
 use tracing::debug;
 
 use crate::params;
+use crate::provers::v1::query::MAX_NUM_COLUMNS;
 
 pub struct PreprocessingEuclidProver {
-    params: PublicParameters,
+    params: PublicParameters<MAX_NUM_COLUMNS>,
 }
 
 impl PreprocessingEuclidProver {
-    pub fn new(params: PublicParameters) -> Self {
+    pub fn new(params: PublicParameters<MAX_NUM_COLUMNS>) -> Self {
         Self { params }
     }
 
@@ -54,7 +55,7 @@ impl PreprocessingEuclidProver {
 
     fn prove(
         &self,
-        input: CircuitInput,
+        input: CircuitInput<MAX_NUM_COLUMNS>,
         name: &str,
     ) -> anyhow::Result<Vec<u8>> {
         debug!("Proving {}", name);
@@ -83,10 +84,11 @@ impl PreprocessingEuclidProver {
         &self,
         node: Vec<u8>,
         slot: u8,
-        column_id: u64,
+        evm_word: u32,
+        table_info: Vec<ColumnInfo>,
     ) -> anyhow::Result<Vec<u8>> {
         let input = ValuesExtraction(values_extraction::CircuitInput::new_single_variable_leaf(
-            node, slot, column_id,
+            node, slot, evm_word, table_info,
         ));
         self.prove(input, "single variable leaf")
     }
@@ -97,7 +99,7 @@ impl PreprocessingEuclidProver {
         child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
         self.prove(
-            ValuesExtraction(values_extraction::CircuitInput::new_single_variable_branch(
+            ValuesExtraction(values_extraction::CircuitInput::new_branch(
                 node,
                 child_proofs,
             )),
@@ -111,10 +113,11 @@ impl PreprocessingEuclidProver {
         node: Vec<u8>,
         slot: u8,
         key_id: u64,
-        value_id: u64,
+        evm_word: u32,
+        table_info: Vec<ColumnInfo>,
     ) -> anyhow::Result<Vec<u8>> {
         let input = ValuesExtraction(values_extraction::CircuitInput::new_mapping_variable_leaf(
-            node, slot, key, key_id, value_id,
+            node, slot, key, key_id, evm_word, table_info,
         ));
         self.prove(input, "mapping variable leaf")
     }
@@ -134,12 +137,10 @@ impl PreprocessingEuclidProver {
                 self.prove(input, "mapping variable extension")
             },
             Prototype::List(17) => {
-                let input = ValuesExtraction(
-                    values_extraction::CircuitInput::new_mapping_variable_branch(
-                        node,
-                        child_proofs,
-                    ),
-                );
+                let input = ValuesExtraction(values_extraction::CircuitInput::new_branch(
+                    node,
+                    child_proofs,
+                ));
                 self.prove(input, "mapping variable branch")
             },
             _ => bail!("Invalid RLP item count"),
@@ -210,13 +211,11 @@ impl PreprocessingEuclidProver {
         block_proof: Vec<u8>,
         contract_proof: Vec<u8>,
         value_proof: Vec<u8>,
-        dimension: TableDimension,
     ) -> anyhow::Result<Vec<u8>> {
         let input = FinalExtraction(final_extraction::CircuitInput::new_simple_input(
             block_proof,
             contract_proof,
             value_proof,
-            dimension,
         )?);
         self.prove(input, "final extraction simple")
     }
@@ -307,6 +306,7 @@ impl PreprocessingEuclidProver {
         identifier: u64,
         value: U256,
         is_multiplier: bool,
+        row_unique_data: HashOutput,
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         let cells_proof = if !cells_proof.is_empty() {
@@ -319,6 +319,7 @@ impl PreprocessingEuclidProver {
             identifier,
             value,
             is_multiplier,
+            row_unique_data,
             cells_proof,
         )?);
         self.prove(input, "row leaf")
@@ -330,6 +331,7 @@ impl PreprocessingEuclidProver {
         value: U256,
         is_multiplier: bool,
         is_child_left: bool,
+        row_unique_data: HashOutput,
         child_proof: Vec<u8>,
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
@@ -343,6 +345,7 @@ impl PreprocessingEuclidProver {
             value,
             is_multiplier,
             is_child_left,
+            row_unique_data,
             child_proof,
             cells_proof,
         )?);
@@ -354,6 +357,7 @@ impl PreprocessingEuclidProver {
         identifier: u64,
         value: U256,
         is_multiplier: bool,
+        row_unique_data: HashOutput,
         child_proofs: Vec<Vec<u8>>,
         cells_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
@@ -366,6 +370,7 @@ impl PreprocessingEuclidProver {
             identifier,
             value,
             is_multiplier,
+            row_unique_data,
             child_proofs[0].to_owned(),
             child_proofs[1].to_owned(),
             cells_proof,
