@@ -61,71 +61,68 @@ impl PreprocessingEuclidProver {
             WorkerTaskType::Extraction(extraction) => {
                 match extraction {
                     ExtractionType::MptExtraction(mpt) => {
-                        match &mpt.mpt_type {
+                        match mpt.mpt_type {
                             MptType::VariableLeaf(variable_leaf) => {
                                 self.prove_single_variable_leaf(
-                                    variable_leaf.node.clone(),
+                                    variable_leaf.node,
                                     variable_leaf.slot,
-                                    variable_leaf.column_id,
+                                    variable_leaf.evm_word,
+                                    variable_leaf.table_info,
                                 )?
                             },
                             MptType::MappingLeaf(mapping_leaf) => {
                                 self.prove_mapping_variable_leaf(
-                                    mapping_leaf.key.clone(),
-                                    mapping_leaf.node.clone(),
+                                    mapping_leaf.key,
+                                    mapping_leaf.node,
                                     mapping_leaf.slot,
                                     mapping_leaf.key_id,
-                                    mapping_leaf.value_id,
+                                    mapping_leaf.evm_word,
+                                    mapping_leaf.table_info,
                                 )?
                             },
                             MptType::MappingBranch(mapping_branch) => {
                                 self.prove_mapping_variable_branch(
-                                    mapping_branch.node.clone(),
+                                    mapping_branch.node,
                                     mapping_branch.children_proofs.to_owned(),
                                 )?
                             },
                             MptType::VariableBranch(variable_branch) => {
                                 self.prove_single_variable_branch(
-                                    variable_branch.node.clone(),
-                                    variable_branch.children_proofs.clone(),
+                                    variable_branch.node,
+                                    variable_branch.children_proofs,
                                 )?
                             },
                         }
                     },
                     ExtractionType::LengthExtraction(length) => {
                         let mut proofs = vec![];
-                        for (i, node) in length.nodes.iter().enumerate() {
+                        for (i, node) in length.nodes.into_iter().enumerate() {
                             if i == 0 {
                                 let proof = self.prove_length_leaf(
-                                    node.clone(),
+                                    node,
                                     length.length_slot,
                                     length.variable_slot,
                                 )?;
                                 proofs.push(proof);
                             } else {
-                                self.prove_length_branch(
-                                    node.clone(),
-                                    proofs.last().unwrap().clone(),
-                                )?;
+                                self.prove_length_branch(node, proofs.last().unwrap().clone())?;
                             }
                         }
                         proofs.last().unwrap().clone()
                     },
                     ExtractionType::ContractExtraction(contract) => {
                         let mut proofs = vec![];
-                        for (i, node) in contract.nodes.iter().enumerate() {
+                        for (i, node) in contract.nodes.into_iter().enumerate() {
                             if i == 0 {
                                 let proof = self.prove_contract_leaf(
-                                    node.clone(),
+                                    node,
                                     contract.storage_root.clone(),
                                     contract.contract,
                                 )?;
                                 proofs.push(proof);
                             } else {
-                                let proof = self.prove_contract_branch(
-                                    node.clone(),
-                                    proofs.last().unwrap().clone(),
-                                )?;
+                                let proof = self
+                                    .prove_contract_branch(node, proofs.last().unwrap().clone())?;
                                 proofs.push(proof);
                             }
                         }
@@ -138,30 +135,29 @@ impl PreprocessingEuclidProver {
                         match *final_extraction {
                             FinalExtraction::Single(single_table_extraction) => {
                                 match single_table_extraction.extraction_type {
-                                    FinalExtractionType::Simple(compound) => {
+                                    FinalExtractionType::Simple => {
                                         self.prove_final_extraction_simple(
-                                            single_table_extraction.block_proof.clone(),
-                                            single_table_extraction.contract_proof.clone(),
-                                            single_table_extraction.value_proof.clone(),
-                                            compound,
+                                            single_table_extraction.block_proof,
+                                            single_table_extraction.contract_proof,
+                                            single_table_extraction.value_proof,
                                         )?
                                     },
                                     FinalExtractionType::Lengthed => {
                                         self.prove_final_extraction_lengthed(
-                                            single_table_extraction.block_proof.clone(),
-                                            single_table_extraction.contract_proof.clone(),
-                                            single_table_extraction.value_proof.clone(),
-                                            single_table_extraction.length_proof.clone(),
+                                            single_table_extraction.block_proof,
+                                            single_table_extraction.contract_proof,
+                                            single_table_extraction.value_proof,
+                                            single_table_extraction.length_proof,
                                         )?
                                     },
                                 }
                             },
                             FinalExtraction::Merge(mapping_table_extraction) => {
                                 self.prove_final_extraction_merge(
-                                    mapping_table_extraction.block_proof.clone(),
-                                    mapping_table_extraction.contract_proof.clone(),
-                                    mapping_table_extraction.simple_table_proof.clone(),
-                                    mapping_table_extraction.mapping_table_proof.clone(),
+                                    mapping_table_extraction.block_proof,
+                                    mapping_table_extraction.contract_proof,
+                                    mapping_table_extraction.simple_table_proof,
+                                    mapping_table_extraction.mapping_table_proof,
                                 )?
                             },
                         }
@@ -204,6 +200,7 @@ impl PreprocessingEuclidProver {
                                     leaf.identifier,
                                     leaf.value,
                                     leaf.is_multiplier,
+                                    leaf.row_unique_data,
                                     leaf.cells_proof,
                                 )?
                             },
@@ -213,6 +210,7 @@ impl PreprocessingEuclidProver {
                                     partial.value,
                                     partial.is_multiplier,
                                     partial.is_child_left,
+                                    partial.row_unique_data,
                                     partial.child_proof.to_owned(),
                                     partial.cells_proof.to_owned(),
                                 )?
@@ -222,6 +220,7 @@ impl PreprocessingEuclidProver {
                                     full.identifier,
                                     full.value,
                                     full.is_multiplier,
+                                    full.row_unique_data,
                                     full.child_proofs,
                                     full.cells_proof,
                                 )?
