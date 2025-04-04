@@ -82,7 +82,7 @@ enum Error {
     #[error("Protobuf message missing required UUID field")]
     UUIDMissing,
 
-    /// The UUDI is invalid.
+    /// The UUID is invalid.
     #[error("Protobuf message UUID is invalid. uuid: {:?}", .uuid)]
     UUIDInvalid { uuid: Vec<u8> },
 
