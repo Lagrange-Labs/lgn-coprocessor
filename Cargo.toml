@@ -9,46 +9,51 @@ mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branc
 parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "main" }
 verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "main" }
 
-anyhow = { version = "1.0" }
-bincode = { version = "1.0" }
-blake3 = { version = "1", features = ["rayon"] }
-ethers = { version = "2.0" }
-hex = { version = "0.4" }
-object_store = { version = "0.11" }
-rand = { version = "0.8", default-features = false }
-reqwest = { version = "0.12", features = ["blocking"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0" }
-thiserror = { version = "2" }
-tokio = { version = "1.0" }
-tracing = { version = "0.1" }
-tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 alloy = { version = "0.11", default-features = false }
-alloy-primitives = "0.8"
-backtrace = "0.3"
-base64 = "0.22"
-bytes = "1.0"
-clap = { version = "4.4", default-features = false }
+alloy-primitives = { version = "0.8" }
+anyhow = { version = "1.0" }
+backtrace = { version = "0.3" }
+base64 = { version = "0.22" }
+bincode = { version = "1.3" }
+blake3 = { version = "1", features = ["rayon"] }
+bytes = { version = "1.10" }
+clap = { version = "4.5", default-features = false }
 config = { version = "0.15", default-features = false }
-derive-debug-plus = "0.5"
+derive-debug-plus = { version = "0.5" }
 elliptic-curve = { version = "0.13", default-features = false }
+ethers = { version = "2.0" }
 ethers-core = { git = "https://github.com/Lagrange-Labs/ethers-rs", branch = "get-proof-0x", default-features = false }
 generic-array = { version = "0.14", default-features = false }
-jwt = "0.16"
+hex = { version = "0.4" }
+jwt = { version = "0.16" }
 k256 = { version = "0.13", default-features = false }
-lazy-static-include = "3.2.1"
-metrics = "0.24"
-metrics-exporter-prometheus = "0.16"
-miette = "7.2.0"
+lazy-static-include = { version = "3.2.1" }
+metrics = { version = "0.24" }
+metrics-exporter-prometheus = { version = "0.16" }
+miette = { version = "7.5.0" }
 mimalloc = { version = "0.1", default-features = false }
-prost = "0.13"
-protox = "0.7.1"
-redact = "0.1"
-rpassword = "7.0"
-serde_derive = "1.0"
-tokio-stream = "0.1"
+object_store = { version = "0.11" }
+prost = { version = "0.13" }
+prost-types = { version = "0.13" }
+protox = { version = "0.7.2" }
+rand = { version = "0.8", default-features = false }
+redact = { version = "0.1" }
+reqwest = { version = "0.12", features = ["blocking"] }
+rpassword = { version = "7.3" }
+rustls = { version = "0.23.25" }
+semver = { version = "1.0.26" }
+serde = { version = "1.0", features = ["derive"] }
+serde_derive = { version = "1.0" }
+serde_json = { version = "1.0" }
+thiserror = { version = "2" }
+tokio = { version = "1.44" }
+tokio-stream = { version = "0.1" }
 tonic = { version = "0.12", features = [ "transport", "tls", "tls-roots", "tls-webpki-roots" ] }
-tonic-build = "0.12.3"
+tonic-build = { version = "0.12.3" }
+tracing = { version = "0.1" }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+uuid = { version = "1.16.0" }
+warp = { version = "0.3.7" }
 
 [patch.crates-io]
 plonky2 = { git = "https://github.com/Lagrange-Labs/plonky2", branch = "upstream" }
