@@ -127,6 +127,31 @@ enum Error {
     },
 }
 
+const ERROR_UUIDMISSING: &str = "uuid_missing";
+const ERROR_UUIDINVALID: &str = "uuid_invalid";
+const ERROR_ENVELOPEPARSEERROR: &str = "envelope_parse_error";
+const ERROR_ENVELOPEINVALIDMP2VERSION: &str = "envelope_invalid_mp2_version";
+const ERROR_ENVELOPEINCOMPATIBLEMP2VERSION: &str = "envelope_incompatbile_mp2_version";
+const ERROR_PROOFERROR: &str = "proof_error";
+const ERROR_PROOFPANIC: &str = "proof_panic";
+const ERROR_REPLYSERIALIZATIONERROR: &str = "reply_serialization_error";
+
+impl Error {
+    /// Returns an error tag, suitable to be used for metrics.
+    fn to_error_tag(&self) -> &'static str {
+        match self {
+            Error::UUIDMissing => ERROR_UUIDMISSING,
+            Error::UUIDInvalid { .. } => ERROR_UUIDINVALID,
+            Error::EnvelopeParseError { .. } => ERROR_ENVELOPEPARSEERROR,
+            Error::EnvelopeInvalidMP2Version { .. } => ERROR_ENVELOPEINVALIDMP2VERSION,
+            Error::EnvelopeIncompatibleMP2Version { .. } => ERROR_ENVELOPEINCOMPATIBLEMP2VERSION,
+            Error::ProofError { .. } => ERROR_PROOFERROR,
+            Error::ProofPanic { .. } => ERROR_PROOFPANIC,
+            Error::ReplySerializationError { .. } => ERROR_REPLYSERIALIZATIONERROR,
+        }
+    }
+}
+
 fn setup_logging(json: bool) {
     if json {
         let subscriber = tracing_subscriber::fmt()
@@ -272,7 +297,19 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
     // Initialise the metrics early on for better dashboards
     counter!("zkmr_worker_messages_total").increment(0);
     counter!("zkmr_worker_messages_successful_total").increment(0);
-    counter!("zkmr_worker_messages_error_total").increment(0);
+    for error_tag in [
+        ERROR_UUIDMISSING,
+        ERROR_UUIDINVALID,
+        ERROR_ENVELOPEPARSEERROR,
+        ERROR_ENVELOPEINVALIDMP2VERSION,
+        ERROR_ENVELOPEINCOMPATIBLEMP2VERSION,
+        ERROR_PROOFERROR,
+        ERROR_PROOFPANIC,
+        ERROR_REPLYSERIALIZATIONERROR,
+    ] {
+        counter!("zkmr_worker_messages_error_total", "type" => error_tag).increment(0);
+    }
+
     for prover_type in [
         ProverType::V1Preprocessing,
         ProverType::V1Query,
@@ -303,33 +340,37 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
                 counter!("zkmr_worker_messages_total").increment(1);
                 let task_id = msg.task_id.clone();
 
-                let outbound_msg =
-                    match process_message_from_gateway(&mut provers_manager, msg, &mp2_requirement)
-                        .await
-                    {
-                        Ok(serialised_reply) => {
-                            counter!("zkmr_worker_messages_successful_total").increment(1);
-                            WorkerToGwRequest {
-                                request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
-                                    WorkerDone {
-                                        task_id,
-                                        reply: Some(Reply::TaskOutput(serialised_reply)),
-                                    },
-                                )),
-                            }
-                        },
-                        Err(err) => {
-                            counter!("zkmr_worker_messages_error_total").increment(1);
-                            WorkerToGwRequest {
-                                request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
-                                    WorkerDone {
-                                        task_id,
-                                        reply: Some(Reply::WorkerError(format!("{:?}", err))),
-                                    },
-                                )),
-                            }
-                        },
-                    };
+                let outbound_msg = match process_message_from_gateway(
+                    &mut provers_manager,
+                    msg,
+                    &mp2_requirement,
+                )
+                .await
+                {
+                    Ok(serialised_reply) => {
+                        counter!("zkmr_worker_messages_successful_total").increment(1);
+                        WorkerToGwRequest {
+                            request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
+                                WorkerDone {
+                                    task_id,
+                                    reply: Some(Reply::TaskOutput(serialised_reply)),
+                                },
+                            )),
+                        }
+                    },
+                    Err(err) => {
+                        counter!("zkmr_worker_messages_error_total", "type" => err.to_error_tag())
+                            .increment(1);
+                        WorkerToGwRequest {
+                            request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
+                                WorkerDone {
+                                    task_id,
+                                    reply: Some(Reply::WorkerError(format!("{:?}", err))),
+                                },
+                            )),
+                        }
+                    },
+                };
 
                 outbound.send(outbound_msg).await?;
 
