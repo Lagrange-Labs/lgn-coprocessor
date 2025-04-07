@@ -223,13 +223,17 @@ async fn resume_download(
 
     let found_checksum = hasher.finalize();
     if found_checksum != *expected_checksum {
-        file.set_len(0).await?;
         error!(
             "Checksum failed, restarting download. checksum: {} expected: {} filepath: {}",
             found_checksum.to_hex(),
             expected_checksum.to_hex(),
             filepath.display(),
         );
+
+        hasher.reset();
+        buf.clear();
+        file.set_len(0).await?;
+
         bail!(
             "Checksum failed, restarting download. checksum: {} expected: {} filepath: {}",
             found_checksum.to_hex(),
