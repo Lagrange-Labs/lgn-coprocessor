@@ -48,14 +48,14 @@ pub async fn download_and_checksum(
 ) -> anyhow::Result<Bytes> {
     let mut local_param_filename = PathBuf::from(param_dir);
     local_param_filename.push(file_name);
-    // The parameter filename may be relative, thus it may be required to create a directory
-    // deeper than just `param_dir`.
-    let current_param_dir = local_param_filename.parent().ok_or_else(|| {
-        anyhow!(
+
+    let current_param_dir = local_param_filename.parent().with_context(|| {
+        format!(
             "Parameter file has no parent directory. local_param_filename: {}",
             local_param_filename.display()
         )
     })?;
+
     std::fs::create_dir_all(current_param_dir).with_context(|| {
         format!(
             "Failed to create directory for parameter files. current_param_dir: {}",
