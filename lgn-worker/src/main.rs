@@ -1,3 +1,4 @@
+#![feature(generic_const_exprs)]
 #![feature(result_flattening)]
 use std::collections::BTreeMap;
 use std::fmt::Debug;
@@ -261,9 +262,7 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         Default::default()
     };
 
-    let mut provers_manager = tokio::task::block_in_place(|| -> anyhow::Result<ProversManager> {
-        ProversManager::new(&config, &checksums)
-    })?;
+    let mut provers_manager = ProversManager::new(&config, &checksums).await?;
 
     // Connect to the GW
     let (mut inbound, outbound) = connect_to_gateway(&config, version, &mp2_version).await?;

@@ -24,7 +24,7 @@ pub const MAX_NUM_COLUMNS: usize = 20;
 pub const MAX_NUM_PREDICATE_OPS: usize = 20;
 
 #[allow(unused_variables)]
-pub fn create_prover(
+pub async fn create_prover(
     url: &str,
     dir: &str,
     file: &str,
@@ -39,7 +39,7 @@ pub fn create_prover(
     #[cfg(not(feature = "dummy-prover"))]
     let prover = {
         info!("Creating QueryEuclidProver");
-        euclid_prover::QueryEuclidProver::init(url, dir, file, checksums)?
+        euclid_prover::QueryEuclidProver::init(url, dir, file, checksums).await?
     };
 
     debug!("Query prover created");

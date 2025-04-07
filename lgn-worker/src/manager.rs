@@ -24,7 +24,12 @@ impl RefUnwindSafe for ProversManager {
 }
 
 impl ProversManager {
-    pub(crate) fn new(
+    /// Initialise the proves.
+    ///
+    /// This will:
+    /// - Download the public parameters if necessary
+    /// - Create the corresponding workers, as determined by the worker's configuration
+    pub(crate) async fn new(
         config: &Config,
         checksums: &HashMap<String, blake3::Hash>,
     ) -> anyhow::Result<Self> {
@@ -39,6 +44,7 @@ impl ProversManager {
                 &config.public_params.query_params.file,
                 checksums,
             )
+            .await
             .context("initializing Small prover")?;
 
             provers.insert(ProverType::V1Query, Box::new(query_prover));
@@ -51,6 +57,7 @@ impl ProversManager {
                 &config.public_params.preprocessing_params.file,
                 checksums,
             )
+            .await
             .context("initializing Medium prover")?;
 
             provers.insert(ProverType::V1Preprocessing, Box::new(preprocessing_prover));
@@ -65,6 +72,7 @@ impl ProversManager {
                 &config.public_params.groth16_assets.r1cs_file,
                 &config.public_params.groth16_assets.pk_file,
             )
+            .await
             .context("initializing Large prover")?;
 
             provers.insert(ProverType::V1Groth16, Box::new(groth16_prover));

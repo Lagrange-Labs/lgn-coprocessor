@@ -73,10 +73,7 @@ async fn main() -> Result<()> {
     config.validate();
     let checksums = fetch_checksums(config.public_params.checksum_file_url()).await?;
 
-    let provers_manager = tokio::task::block_in_place(move || -> Result<ProversManager> {
-        ProversManager::new(&config, &checksums).context("while registering provers")
-    })
-    .context("creating prover managers")?;
+    let provers_manager = ProversManager::new(&config, &checksums).await?;
 
     let envelope = std::fs::read_to_string(&cli.input)
         .with_context(|| format!("failed to open `{}`", cli.input))

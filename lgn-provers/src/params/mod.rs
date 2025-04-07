@@ -28,7 +28,7 @@ fn read_file_and_checksum(f: &Path) -> anyhow::Result<(Bytes, blake3::Hash)> {
     Ok((bytes.into(), hash))
 }
 
-pub fn prepare_raw(
+pub async fn prepare_raw(
     base_url: &str,
     param_dir: &str,
     file_name: &str,
@@ -84,7 +84,7 @@ pub fn prepare_raw(
         let min = std::time::Duration::from_millis(100);
         let max = std::time::Duration::from_secs(10);
         for duration in exponential_backoff::Backoff::new(DOWNLOAD_MAX_RETRIES.into(), min, max) {
-            match download_file(base_url, file_name, expected_checksum) {
+            match download_file(base_url, file_name, expected_checksum).await {
                 Ok(content) => {
                     info!("writing content to `{}`", local_param_filename.display());
                     std::fs::File::create(&local_param_filename)
@@ -121,7 +121,7 @@ pub fn prepare_raw(
 
 /// Download the content from `file_name` under `base_url`, ensuring that its checksum matches
 /// the provided `expected_checksum`.
-fn download_file(
+async fn download_file(
     base_url: &str,
     file_name: &str,
     expected_checksum: &blake3::Hash,
@@ -129,7 +129,7 @@ fn download_file(
     let file_url = format!("{base_url}/{file_name}");
     info!("downloading params from {}", file_url);
 
-    let client = reqwest::blocking::Client::builder()
+    let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(HTTP_TIMEOUT))
         .build()
         .context("building reqwest client")?;
@@ -137,6 +137,7 @@ fn download_file(
     let response = client
         .get(file_url)
         .send()
+        .await
         .context("downloading params from remote")?;
 
     if !response.status().is_success() {
@@ -146,7 +147,7 @@ fn download_file(
         );
     }
 
-    let bytes = response.bytes().context("fetching params bytes")?;
+    let bytes = response.bytes().await.context("fetching params bytes")?;
     let mut hasher = blake3::Hasher::new();
     hasher.update_rayon(&bytes);
     let found_checksum = hasher.finalize();
