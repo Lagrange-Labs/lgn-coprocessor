@@ -16,7 +16,7 @@ mp2_common = { workspace = true }
 mp2_v1 = { workspace = true }
 parsil = { workspace = true }
 rand = { workspace = true }
-reqwest = { workspace = true, features = ["blocking"] }
+reqwest = { workspace = true, features = ["stream"] }
 serde_json = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

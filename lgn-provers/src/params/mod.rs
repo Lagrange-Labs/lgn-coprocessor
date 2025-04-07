@@ -1,13 +1,15 @@
 use std::collections::HashMap;
+use std::io::SeekFrom;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use anyhow::anyhow;
-use anyhow::bail;
 use anyhow::ensure;
 use anyhow::Context;
 use bytes::Bytes;
+use ethers::providers::StreamExt;
 use tokio::fs::File;
+use tokio::io::AsyncReadExt;
+use tokio::io::AsyncSeekExt;
 use tokio::io::AsyncWriteExt;
 use tracing::info;
 use tracing::warn;
@@ -66,11 +68,11 @@ pub async fn download_and_checksum(
 
     let expected_checksum = checksums
         .get(file_name)
-        .with_context(|| anyhow!("Missing checksum. file_name: {}", file_name))?;
+        .with_context(|| format!("Missing checksum. file_name: {}", file_name))?;
 
     let local_file_bytes = if filepath.exists() {
         let bytes = std::fs::read(&filepath)
-            .with_context(|| anyhow!("Reading file failed. filepath: {}", filepath.display()))?;
+            .with_context(|| format!("Reading file failed. filepath: {}", filepath.display()))?;
         let mut hasher = blake3::Hasher::new();
         hasher.update_rayon(&bytes);
         let checksum = hasher.finalize();
@@ -112,6 +114,7 @@ pub async fn download_and_checksum(
                 );
 
                 let mut file = File::options()
+                    .read(true)
                     .write(true)
                     .truncate(true)
                     .create(true)
@@ -132,7 +135,7 @@ pub async fn download_and_checksum(
                             Some(duration) => tokio::time::sleep(duration).await,
                             None => {
                                 return err.with_context(|| {
-                                    anyhow!(
+                                    format!(
                                         "Download failed after retries. filepath: {} retries: {}",
                                         filepath.display(),
                                         retry
@@ -171,18 +174,28 @@ async fn download_file(
         .connect_timeout(Duration::from_secs(CONNECT_TIMEOUT_MILLIS))
         .build()?;
 
-    let response = client.get(file_url).send().await?;
+    let metadata = file.metadata().await?;
+    let response = client
+        .get(file_url)
+        .header("Range", format!("bytes={}-", metadata.len()))
+        .send()
+        .await?;
 
-    if !response.status().is_success() {
-        bail!(
-            "downloading params from remote: status = {}",
-            response.status()
-        );
+    ensure!(
+        response.status().is_success(),
+        "downloading params from remote: status = {}",
+        response.status()
+    );
+
+    let mut hasher = blake3::Hasher::new();
+
+    let mut stream = response.bytes_stream();
+    while let Some(data) = stream.next().await {
+        let data = data?;
+        file.write_all(&data).await?;
+        hasher.update_rayon(&data);
     }
 
-    let bytes = response.bytes().await?;
-    let mut hasher = blake3::Hasher::new();
-    hasher.update_rayon(&bytes);
     let found_checksum = hasher.finalize();
     ensure!(
         found_checksum == *expected_checksum,
@@ -191,7 +204,9 @@ async fn download_file(
         expected_checksum.to_hex()
     );
 
-    file.write_all(&bytes).await?;
+    let mut buffer = Vec::new();
+    file.seek(SeekFrom::Start(0)).await?;
+    file.read_to_end(&mut buffer).await?;
 
-    Ok(bytes)
+    Ok(buffer.into())
 }
