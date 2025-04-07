@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::PathBuf;
+use std::time::Duration;
 
 use anyhow::anyhow;
 use anyhow::bail;
@@ -13,8 +14,15 @@ use tracing::warn;
 /// The filename of params checksum hashes
 pub const PARAMS_CHECKSUM_FILENAME: &str = "public_params.hash";
 
-/// Could make configurable but 3600 should be enough
-const HTTP_TIMEOUT: u64 = 3600;
+/// The timeout is applied from when the request starts connecting until the response body has
+/// finished.
+const HTTP_TIMEOUT_MILLIS: u64 = 3_600_000;
+
+/// The timeout applies to each read operation, and resets after a successful read.
+const READ_TIMEOUT_MILLIS: u64 = 30_000;
+
+/// Connection timeout.
+const CONNECT_TIMEOUT_MILLIS: u64 = 5_000;
 
 /// How many times param download should be retried.
 const DOWNLOAD_MAX_RETRIES: u8 = 3;
@@ -153,7 +161,10 @@ async fn download_file(
     let file_url = format!("{base_url}/{file_name}");
 
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(HTTP_TIMEOUT))
+        .referer(false)
+        .timeout(Duration::from_secs(HTTP_TIMEOUT_MILLIS))
+        .read_timeout(Duration::from_secs(READ_TIMEOUT_MILLIS))
+        .connect_timeout(Duration::from_secs(CONNECT_TIMEOUT_MILLIS))
         .build()
         .context("building reqwest client")?;
 
