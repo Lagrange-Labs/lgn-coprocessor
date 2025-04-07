@@ -21,9 +21,10 @@ impl Groth16EuclidProver {
         pk_file: &str,
         checksums: &HashMap<String, blake3::Hash>,
     ) -> Result<Self> {
-        let circuit_bytes = params::prepare_raw(url, dir, circuit_file, checksums).await?;
-        let r1cs_bytes = params::prepare_raw(url, dir, r1cs_file, checksums).await?;
-        let pk_bytes = params::prepare_raw(url, dir, pk_file, checksums).await?;
+        let circuit_bytes =
+            params::download_and_checksum(url, dir, circuit_file, checksums).await?;
+        let r1cs_bytes = params::download_and_checksum(url, dir, r1cs_file, checksums).await?;
+        let pk_bytes = params::download_and_checksum(url, dir, pk_file, checksums).await?;
 
         debug!("Creating Groth16 prover");
         let inner = Groth16Prover::from_bytes(

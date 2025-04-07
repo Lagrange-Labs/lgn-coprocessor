@@ -27,7 +27,7 @@ const DOWNLOAD_MAX_RETRIES: u8 = 3;
 /// not guarantee the file is the correct one. That is to say, the file's content
 /// can pass the checksum check, but the binary content may be incorrect and represent
 /// data for a different version.
-pub async fn prepare_raw(
+pub async fn download_and_checksum(
     base_url: &str,
     param_dir: &str,
     file_name: &str,

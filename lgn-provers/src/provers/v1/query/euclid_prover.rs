@@ -68,7 +68,7 @@ impl QueryEuclidProver {
         file: &str,
         checksums: &HashMap<String, blake3::Hash>,
     ) -> anyhow::Result<Self> {
-        let params = params::prepare_raw(url, dir, file, checksums).await?;
+        let params = params::download_and_checksum(url, dir, file, checksums).await?;
         let reader = std::io::BufReader::new(params.as_ref());
         let params = bincode::deserialize_from(reader)?;
         Ok(Self { params })
