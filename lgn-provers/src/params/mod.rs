@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::io::Write;
-use std::path::Path;
 use std::path::PathBuf;
 
 use anyhow::anyhow;
@@ -9,6 +8,7 @@ use anyhow::ensure;
 use anyhow::Context;
 use bytes::Bytes;
 use tracing::info;
+use tracing::warn;
 
 /// The filename of params checksum hashes
 pub const PARAMS_CHECKSUM_FILENAME: &str = "public_params.hash";
@@ -19,15 +19,14 @@ const HTTP_TIMEOUT: u64 = 3600;
 /// How many times param download should be retried.
 const DOWNLOAD_MAX_RETRIES: u8 = 3;
 
-/// Read the given file `f`, and returns its content as well as its Blake3 checksum.
-fn read_file_and_checksum(f: &Path) -> anyhow::Result<(Bytes, blake3::Hash)> {
-    let bytes = std::fs::read(f).with_context(|| anyhow!("reading `{}`", f.display()))?;
-    let mut hasher = blake3::Hasher::new();
-    hasher.update_rayon(&bytes);
-    let hash = hasher.finalize();
-    Ok((bytes.into(), hash))
-}
-
+/// Download and verify `file_name`.
+///
+/// This function will download `file_name` if necessary and checksum its contents.
+///
+/// Note: The checksum only checks the integrity of the file's content, it does
+/// not guarantee the file is the correct one. That is to say, the file's content
+/// can pass the checksum check, but the binary content may be incorrect and represent
+/// data for a different version.
 pub async fn prepare_raw(
     base_url: &str,
     param_dir: &str,
@@ -40,81 +39,106 @@ pub async fn prepare_raw(
     // deeper than just `param_dir`.
     let current_param_dir = local_param_filename.parent().ok_or_else(|| {
         anyhow!(
-            "parameter file `{}` has no parent directory",
+            "Parameter file has no parent directory. local_param_filename: {}",
             local_param_filename.display()
         )
     })?;
     std::fs::create_dir_all(current_param_dir).with_context(|| {
         format!(
-            "failed to create directory `{}`",
+            "Failed to create directory for parameter files. current_param_dir: {}",
             current_param_dir.display()
         )
     })?;
 
     let expected_checksum = checksums
         .get(file_name)
-        .with_context(|| anyhow!("no expected checksum for `{file_name}`"))?;
+        .with_context(|| anyhow!("Missing checksum. file_name: {}", file_name))?;
 
-    // A file must be re-downloaded if the local file does not exist or if its checksum
-    // mismatches.
-    let mut local_file_bytes = None;
-    let need_download =
-        if !local_param_filename.exists() {
-            info!("`{}` does not exist", local_param_filename.display());
-            true
-        } else {
-            false
-        } || read_file_and_checksum(&local_param_filename).map(|(bytes, found)| {
-            local_file_bytes = Some(bytes);
-            if *expected_checksum != found {
-                info!(
-                    "local file `{}` hash is {} ≠ {}",
-                    local_param_filename.display(),
-                    expected_checksum.to_hex(),
-                    found.to_hex()
-                );
-            }
-            *expected_checksum != found
+    let local_file_bytes = if local_param_filename.exists() {
+        let bytes = std::fs::read(&local_param_filename).with_context(|| {
+            anyhow!(
+                "Reading file failed. local_param_filename: {}",
+                local_param_filename.display()
+            )
         })?;
-
-    let bytes = if need_download {
-        let mut bytes = Bytes::default();
-
-        // Attempt to download the params upd to DOWNLOAD_MAX_RETRIES, with exponential backoff.
-        let min = std::time::Duration::from_millis(100);
-        let max = std::time::Duration::from_secs(10);
-        for duration in exponential_backoff::Backoff::new(DOWNLOAD_MAX_RETRIES.into(), min, max) {
-            match download_file(base_url, file_name, expected_checksum).await {
-                Ok(content) => {
-                    info!("writing content to `{}`", local_param_filename.display());
-                    std::fs::File::create(&local_param_filename)
-                        .context("creating param file")?
-                        .write_all(&content)
-                        .context("writing file content")?;
-                    bytes = content;
-                    break;
-                },
-                err @ Err(_) => {
-                    match duration {
-                        Some(duration) => std::thread::sleep(duration),
-                        None => return err.with_context(|| anyhow!("downloading `{}`", file_name)),
-                    }
-                },
-            }
+        let mut hasher = blake3::Hasher::new();
+        hasher.update_rayon(&bytes);
+        let checksum = hasher.finalize();
+        if *expected_checksum != checksum {
+            warn!(
+                "Checksum mismatch. local_param_filename: {} expected_checksum: {} checksum: {}",
+                local_param_filename.display(),
+                expected_checksum.to_hex(),
+                checksum.to_hex()
+            );
+            None
+        } else {
+            info!(
+                "Found file with valid checksum, skipping download. local_param_filename: {}",
+                local_param_filename.display()
+            );
+            Some(Bytes::from(bytes))
         }
-        bytes
     } else {
-        // Here, we already know that the checksum match.
-        info!(
-            "loading `{}` from `{}`",
-            file_name,
-            local_param_filename.display()
-        );
-
-        local_file_bytes.unwrap()
+        None
     };
 
-    info!("params loaded, size = {}MiB", bytes.len() / (1024 * 1024));
+    let bytes = match local_file_bytes {
+        None => {
+            let mut bytes = Bytes::default();
+
+            // Attempt to download the params up to DOWNLOAD_MAX_RETRIES, with exponential backoff.
+            let min = std::time::Duration::from_millis(100);
+            let max = std::time::Duration::from_secs(10);
+            for (retry, duration) in
+                exponential_backoff::Backoff::new(DOWNLOAD_MAX_RETRIES.into(), min, max)
+                    .iter()
+                    .enumerate()
+            {
+                info!(
+                    "Downloading params. base_url: {} file_name: {} retry: {}",
+                    base_url, file_name, retry,
+                );
+
+                match download_file(base_url, file_name, expected_checksum).await {
+                    Ok(content) => {
+                        info!(
+                            "Downloaded file. local_param_filename: {}",
+                            local_param_filename.display()
+                        );
+                        std::fs::File::create(&local_param_filename)
+                            .context("creating param file")?
+                            .write_all(&content)
+                            .context("writing file content")?;
+                        bytes = content;
+                        break;
+                    },
+                    err @ Err(_) => {
+                        match duration {
+                            Some(duration) => std::thread::sleep(duration),
+                            None => {
+                                return err.with_context(|| {
+                                    anyhow!(
+                                        "Download failed after retries. file_name: {} retries: {}",
+                                        file_name,
+                                        retry
+                                    )
+                                })
+                            },
+                        }
+                    },
+                }
+            }
+            bytes
+        },
+        Some(bytes) => bytes,
+    };
+
+    info!(
+        "Params loaded. file_name: {} size: {}MiB",
+        file_name,
+        bytes.len() / (1024 * 1024),
+    );
 
     Ok(bytes)
 }
@@ -127,7 +151,6 @@ async fn download_file(
     expected_checksum: &blake3::Hash,
 ) -> anyhow::Result<Bytes> {
     let file_url = format!("{base_url}/{file_name}");
-    info!("downloading params from {}", file_url);
 
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(HTTP_TIMEOUT))
