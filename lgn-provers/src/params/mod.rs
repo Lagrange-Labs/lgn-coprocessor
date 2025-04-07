@@ -124,7 +124,7 @@ pub async fn download_and_checksum(
                     },
                     err @ Err(_) => {
                         match duration {
-                            Some(duration) => std::thread::sleep(duration),
+                            Some(duration) => tokio::time::sleep(duration).await,
                             None => {
                                 return err.with_context(|| {
                                     anyhow!(
