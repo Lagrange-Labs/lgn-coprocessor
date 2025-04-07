@@ -169,14 +169,9 @@ async fn download_file(
         .timeout(Duration::from_secs(HTTP_TIMEOUT_MILLIS))
         .read_timeout(Duration::from_secs(READ_TIMEOUT_MILLIS))
         .connect_timeout(Duration::from_secs(CONNECT_TIMEOUT_MILLIS))
-        .build()
-        .context("building reqwest client")?;
+        .build()?;
 
-    let response = client
-        .get(file_url)
-        .send()
-        .await
-        .context("downloading params from remote")?;
+    let response = client.get(file_url).send().await?;
 
     if !response.status().is_success() {
         bail!(
@@ -185,7 +180,7 @@ async fn download_file(
         );
     }
 
-    let bytes = response.bytes().await.context("fetching params bytes")?;
+    let bytes = response.bytes().await?;
     let mut hasher = blake3::Hasher::new();
     hasher.update_rayon(&bytes);
     let found_checksum = hasher.finalize();
