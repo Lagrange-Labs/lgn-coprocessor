@@ -94,6 +94,7 @@ pub async fn download_and_checksum(
     let bytes = match local_file_bytes {
         None => {
             let mut bytes = Bytes::default();
+            let file_url = format!("{base_url}/{file_name}");
 
             // Attempt to download the params up to DOWNLOAD_MAX_RETRIES, with exponential backoff.
             let min = std::time::Duration::from_millis(100);
@@ -108,7 +109,7 @@ pub async fn download_and_checksum(
                     base_url, file_name, retry,
                 );
 
-                match download_file(base_url, file_name, expected_checksum).await {
+                match download_file(&file_url, expected_checksum).await {
                     Ok(content) => {
                         info!(
                             "Downloaded file. local_param_filename: {}",
@@ -154,12 +155,9 @@ pub async fn download_and_checksum(
 /// Download the content from `file_name` under `base_url`, ensuring that its checksum matches
 /// the provided `expected_checksum`.
 async fn download_file(
-    base_url: &str,
-    file_name: &str,
+    file_url: &str,
     expected_checksum: &blake3::Hash,
 ) -> anyhow::Result<Bytes> {
-    let file_url = format!("{base_url}/{file_name}");
-
     let client = reqwest::Client::builder()
         .referer(false)
         .timeout(Duration::from_secs(HTTP_TIMEOUT_MILLIS))
