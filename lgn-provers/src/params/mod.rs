@@ -1,16 +1,18 @@
 use std::collections::HashMap;
-use std::io::SeekFrom;
+use std::path::Path;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::time::Duration;
 
+use anyhow::bail;
 use anyhow::ensure;
 use anyhow::Context;
 use bytes::Bytes;
 use ethers::providers::StreamExt;
+use reqwest::StatusCode;
 use tokio::fs::File;
-use tokio::io::AsyncReadExt;
-use tokio::io::AsyncSeekExt;
 use tokio::io::AsyncWriteExt;
+use tracing::error;
 use tracing::info;
 use tracing::warn;
 
@@ -35,6 +37,11 @@ const DOWNLOAD_BACKOFF_MIN_MILLIS: u64 = 100;
 
 /// Maximum wait time for the exponential backoff.
 const DOWNLOAD_BACKOFF_MAX_MILLIS: u64 = 10_000;
+
+/// Ratio to convert byte to megabytes.
+const BYTES_TO_MEGABYTES_USIZE: usize = 1024 * 1024;
+const BYTES_TO_MEGABYTES_U64: u64 = 1024 * 1024;
+
 /// Download and verify `file_name`.
 ///
 /// This function will download `file_name` if necessary and checksum its contents.
@@ -52,17 +59,14 @@ pub async fn download_and_checksum(
     let mut filepath = PathBuf::from(param_dir);
     filepath.push(file_name);
 
-    let current_param_dir = filepath.parent().with_context(|| {
-        format!(
-            "Parameter file has no parent directory. filepath: {}",
-            filepath.display()
-        )
-    })?;
+    let param_dir = filepath
+        .parent()
+        .with_context(|| format!("Param directory can not be empty. param_dir: {}", param_dir))?;
 
-    std::fs::create_dir_all(current_param_dir).with_context(|| {
+    std::fs::create_dir_all(param_dir).with_context(|| {
         format!(
-            "Failed to create directory for parameter files. current_param_dir: {}",
-            current_param_dir.display()
+            "Failed to create directory for parameter files. param_dir: {}",
+            param_dir.display(),
         )
     })?;
 
@@ -70,103 +74,34 @@ pub async fn download_and_checksum(
         .get(file_name)
         .with_context(|| format!("Missing checksum. file_name: {}", file_name))?;
 
-    let local_file_bytes = if filepath.exists() {
-        let bytes = std::fs::read(&filepath)
-            .with_context(|| format!("Reading file failed. filepath: {}", filepath.display()))?;
-        let mut hasher = blake3::Hasher::new();
-        hasher.update_rayon(&bytes);
-        let checksum = hasher.finalize();
-        if *expected_checksum != checksum {
-            warn!(
-                "Checksum mismatch. filepath: {} expected_checksum: {} checksum: {}",
-                filepath.display(),
-                expected_checksum.to_hex(),
-                checksum.to_hex()
-            );
-            None
-        } else {
-            info!(
-                "Found file with valid checksum, skipping download. filepath: {}",
-                filepath.display()
-            );
-            Some(Bytes::from(bytes))
-        }
-    } else {
-        None
-    };
+    let mut file = File::options()
+        .read(true)
+        .append(true)
+        .truncate(false)
+        .create(true)
+        .open(&filepath)
+        .await
+        .with_context(|| format!("Failed to create file. filepath: {}", filepath.display()))?;
 
-    let bytes = match local_file_bytes {
-        None => {
-            let mut bytes = Bytes::default();
-            let file_url = format!("{base_url}/{file_name}");
+    let mut hasher = blake3::Hasher::new();
+    let mut buf = std::fs::read(&filepath)
+        .with_context(|| format!("Reading file failed. filepath: {}", filepath.display()))?;
+    hasher.update_rayon(&buf);
 
-            let min = std::time::Duration::from_millis(DOWNLOAD_BACKOFF_MIN_MILLIS);
-            let max = std::time::Duration::from_millis(DOWNLOAD_BACKOFF_MAX_MILLIS);
-            let backoff =
-                exponential_backoff::Backoff::new(DOWNLOAD_BACKOFF_RETRIES.into(), min, max);
+    if *expected_checksum == hasher.finalize() {
+        info!(
+            "Found file matching checksum, skipping download. filepath: {}",
+            filepath.display()
+        );
+        return Ok(Bytes::from(buf));
+    }
 
-            for (retry, duration) in backoff.iter().enumerate() {
-                info!(
-                    "Downloading params. base_url: {} filepath: {} retry: {}",
-                    base_url,
-                    filepath.display(),
-                    retry,
-                );
+    let fileurl = format!("{base_url}/{file_name}");
 
-                let mut file = File::options()
-                    .read(true)
-                    .write(true)
-                    .truncate(true)
-                    .create(true)
-                    .open(&filepath)
-                    .await
-                    .with_context(|| {
-                        format!("Failed to create file. filepath: {}", filepath.display())
-                    })?;
+    let min = std::time::Duration::from_millis(DOWNLOAD_BACKOFF_MIN_MILLIS);
+    let max = std::time::Duration::from_millis(DOWNLOAD_BACKOFF_MAX_MILLIS);
+    let backoff = exponential_backoff::Backoff::new(DOWNLOAD_BACKOFF_RETRIES.into(), min, max);
 
-                match download_file(&file_url, expected_checksum, &mut file).await {
-                    Ok(content) => {
-                        info!("Downloaded file. filepath: {}", filepath.display());
-                        bytes = content;
-                        break;
-                    },
-                    err @ Err(_) => {
-                        match duration {
-                            Some(duration) => tokio::time::sleep(duration).await,
-                            None => {
-                                return err.with_context(|| {
-                                    format!(
-                                        "Download failed after retries. filepath: {} retries: {}",
-                                        filepath.display(),
-                                        retry
-                                    )
-                                })
-                            },
-                        }
-                    },
-                }
-            }
-            bytes
-        },
-        Some(bytes) => bytes,
-    };
-
-    info!(
-        "Params loaded. filepath: {} size: {}MiB",
-        filepath.display(),
-        bytes.len() / (1024 * 1024),
-    );
-
-    Ok(bytes)
-}
-
-/// Download the content from `file_name` under `base_url`, ensuring that its checksum matches
-/// the provided `expected_checksum`.
-async fn download_file(
-    file_url: &str,
-    expected_checksum: &blake3::Hash,
-    file: &mut File,
-) -> anyhow::Result<Bytes> {
     let client = reqwest::Client::builder()
         .referer(false)
         .timeout(Duration::from_secs(HTTP_TIMEOUT_MILLIS))
@@ -174,39 +109,135 @@ async fn download_file(
         .connect_timeout(Duration::from_secs(CONNECT_TIMEOUT_MILLIS))
         .build()?;
 
+    for (retry, duration) in backoff.iter().enumerate() {
+        let result = resume_download(
+            &mut buf,
+            base_url,
+            &mut file,
+            &filepath,
+            &fileurl,
+            retry,
+            &client,
+            &mut hasher,
+            expected_checksum,
+        )
+        .await;
+
+        match result {
+            Ok(()) => {
+                info!(
+                    "Params loaded. filepath: {} size: {}MiB",
+                    filepath.display(),
+                    buf.len() / BYTES_TO_MEGABYTES_USIZE,
+                );
+                return Ok(Bytes::from(buf));
+            },
+            Err(err) => {
+                match duration {
+                    Some(duration) => {
+                        warn!(
+                            "Params download failed, retrying. filepath: {} err: {:?}",
+                            filepath.display(),
+                            err,
+                        );
+                        tokio::time::sleep(duration).await;
+                    },
+                    None => {},
+                }
+            },
+        };
+    }
+
+    bail!(
+        "Download failed after retries. filepath: {} retries: {}",
+        filepath.display(),
+        DOWNLOAD_BACKOFF_RETRIES,
+    );
+}
+
+async fn resume_download(
+    buf: &mut Vec<u8>,
+    base_url: &str,
+    file: &mut File,
+    filepath: &Path,
+    fileurl: &str,
+    retry: usize,
+    client: &reqwest::Client,
+    hasher: &mut blake3::Hasher,
+    expected_checksum: &blake3::Hash,
+) -> anyhow::Result<()> {
     let metadata = file.metadata().await?;
+
+    info!(
+        "Downloading params. base_url: {} filepath: {} size: {}MiB retry: {}",
+        base_url,
+        filepath.display(),
+        metadata.len() / BYTES_TO_MEGABYTES_U64,
+        retry,
+    );
+
     let response = client
-        .get(file_url)
+        .get(fileurl)
         .header("Range", format!("bytes={}-", metadata.len()))
         .send()
         .await?;
 
-    ensure!(
-        response.status().is_success(),
-        "downloading params from remote: status = {}",
-        response.status()
-    );
+    if response.status() == StatusCode::RANGE_NOT_SATISFIABLE {
+        warn!(
+            "Local file is bigger than remote, resetting length and checking checksum. filepath: {}",
+            filepath.display(),
+        );
+        let response = client.head(fileurl).send().await?;
+        let length = response.headers().get("Content-Length").map_or(
+            Ok(0u64),
+            |v| -> anyhow::Result<u64> {
+                let as_ascii = v.to_str()?;
+                let parsed = u64::from_str(as_ascii)?;
+                Ok(parsed)
+            },
+        )?;
 
-    let mut hasher = blake3::Hasher::new();
+        hasher.reset();
+        buf.resize(
+            length.try_into().expect("File size should fit in a usize"),
+            0,
+        );
+        file.set_len(length).await?;
+        hasher.update_rayon(&buf);
+    } else {
+        ensure!(
+            response.status().is_success(),
+            "Requesting params failed. status: {} filepath: {}",
+            response.status(),
+            filepath.display(),
+        );
 
-    let mut stream = response.bytes_stream();
-    while let Some(data) = stream.next().await {
-        let data = data?;
-        file.write_all(&data).await?;
-        hasher.update_rayon(&data);
+        let mut stream = response.bytes_stream();
+        while let Some(data) = stream.next().await {
+            let data = data?;
+            file.write_all(&data).await?;
+            hasher.update_rayon(&data);
+            buf.extend(data);
+        }
     }
 
     let found_checksum = hasher.finalize();
-    ensure!(
-        found_checksum == *expected_checksum,
-        "param checksum mismatch: {} ≠ {}",
-        found_checksum.to_hex(),
-        expected_checksum.to_hex()
-    );
-
-    let mut buffer = Vec::new();
-    file.seek(SeekFrom::Start(0)).await?;
-    file.read_to_end(&mut buffer).await?;
-
-    Ok(buffer.into())
+    if found_checksum != *expected_checksum {
+        file.set_len(0).await?;
+        error!(
+            "Checksum failed, restarting download. checksum: {} expected: {} filepath: {}",
+            found_checksum.to_hex(),
+            expected_checksum.to_hex(),
+            filepath.display(),
+        );
+        bail!(
+            "Checksum failed, restarting download. checksum: {} expected: {} filepath: {}",
+            found_checksum.to_hex(),
+            expected_checksum.to_hex(),
+            filepath.display(),
+        );
+    } else {
+        info!("Downloaded file. filepath: {}", filepath.display());
+        return Ok(());
+    }
 }
