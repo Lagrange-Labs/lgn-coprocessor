@@ -168,34 +168,36 @@ async fn resume_download(
 ) -> anyhow::Result<()> {
     let metadata = file.metadata().await?;
 
-    info!(
-        "Downloading params. base_url: {} filepath: {} size: {}MiB retry: {}",
-        base_url,
-        filepath.display(),
-        metadata.len() / BYTES_TO_MEGABYTES_U64,
-        retry,
-    );
-
     let response = client
         .get(fileurl)
         .header("Range", format!("bytes={}-", metadata.len()))
         .send()
         .await?;
 
+    let length =
+        response
+            .headers()
+            .get("Content-Length")
+            .map_or(Ok(0u64), |v| -> anyhow::Result<u64> {
+                let as_ascii = v.to_str()?;
+                let parsed = u64::from_str(as_ascii)?;
+                Ok(parsed)
+            })?;
+
+    info!(
+        "Downloading params. base_url: {} filepath: {} present: {}MiB download: {}MiB retry: {}",
+        base_url,
+        filepath.display(),
+        metadata.len() / BYTES_TO_MEGABYTES_U64,
+        length / BYTES_TO_MEGABYTES_U64,
+        retry,
+    );
+
     if response.status() == StatusCode::RANGE_NOT_SATISFIABLE {
         warn!(
             "Local file is bigger than remote, resetting length and checking checksum. filepath: {}",
             filepath.display(),
         );
-        let response = client.head(fileurl).send().await?;
-        let length = response.headers().get("Content-Length").map_or(
-            Ok(0u64),
-            |v| -> anyhow::Result<u64> {
-                let as_ascii = v.to_str()?;
-                let parsed = u64::from_str(as_ascii)?;
-                Ok(parsed)
-            },
-        )?;
 
         hasher.reset();
         buf.resize(
