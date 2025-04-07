@@ -46,13 +46,13 @@ pub async fn download_and_checksum(
     file_name: &str,
     checksums: &HashMap<String, blake3::Hash>,
 ) -> anyhow::Result<Bytes> {
-    let mut local_param_filename = PathBuf::from(param_dir);
-    local_param_filename.push(file_name);
+    let mut filepath = PathBuf::from(param_dir);
+    filepath.push(file_name);
 
-    let current_param_dir = local_param_filename.parent().with_context(|| {
+    let current_param_dir = filepath.parent().with_context(|| {
         format!(
-            "Parameter file has no parent directory. local_param_filename: {}",
-            local_param_filename.display()
+            "Parameter file has no parent directory. filepath: {}",
+            filepath.display()
         )
     })?;
 
@@ -67,28 +67,24 @@ pub async fn download_and_checksum(
         .get(file_name)
         .with_context(|| anyhow!("Missing checksum. file_name: {}", file_name))?;
 
-    let local_file_bytes = if local_param_filename.exists() {
-        let bytes = std::fs::read(&local_param_filename).with_context(|| {
-            anyhow!(
-                "Reading file failed. local_param_filename: {}",
-                local_param_filename.display()
-            )
-        })?;
+    let local_file_bytes = if filepath.exists() {
+        let bytes = std::fs::read(&filepath)
+            .with_context(|| anyhow!("Reading file failed. filepath: {}", filepath.display()))?;
         let mut hasher = blake3::Hasher::new();
         hasher.update_rayon(&bytes);
         let checksum = hasher.finalize();
         if *expected_checksum != checksum {
             warn!(
-                "Checksum mismatch. local_param_filename: {} expected_checksum: {} checksum: {}",
-                local_param_filename.display(),
+                "Checksum mismatch. filepath: {} expected_checksum: {} checksum: {}",
+                filepath.display(),
                 expected_checksum.to_hex(),
                 checksum.to_hex()
             );
             None
         } else {
             info!(
-                "Found file with valid checksum, skipping download. local_param_filename: {}",
-                local_param_filename.display()
+                "Found file with valid checksum, skipping download. filepath: {}",
+                filepath.display()
             );
             Some(Bytes::from(bytes))
         }
@@ -108,17 +104,16 @@ pub async fn download_and_checksum(
 
             for (retry, duration) in backoff.iter().enumerate() {
                 info!(
-                    "Downloading params. base_url: {} file_name: {} retry: {}",
-                    base_url, file_name, retry,
+                    "Downloading params. base_url: {} filepath: {} retry: {}",
+                    base_url,
+                    filepath.display(),
+                    retry,
                 );
 
                 match download_file(&file_url, expected_checksum).await {
                     Ok(content) => {
-                        info!(
-                            "Downloaded file. local_param_filename: {}",
-                            local_param_filename.display()
-                        );
-                        std::fs::File::create(&local_param_filename)
+                        info!("Downloaded file. filepath: {}", filepath.display());
+                        std::fs::File::create(&filepath)
                             .context("creating param file")?
                             .write_all(&content)
                             .context("writing file content")?;
@@ -131,8 +126,8 @@ pub async fn download_and_checksum(
                             None => {
                                 return err.with_context(|| {
                                     anyhow!(
-                                        "Download failed after retries. file_name: {} retries: {}",
-                                        file_name,
+                                        "Download failed after retries. filepath: {} retries: {}",
+                                        filepath.display(),
                                         retry
                                     )
                                 })
@@ -147,8 +142,8 @@ pub async fn download_and_checksum(
     };
 
     info!(
-        "Params loaded. file_name: {} size: {}MiB",
-        file_name,
+        "Params loaded. filepath: {} size: {}MiB",
+        filepath.display(),
         bytes.len() / (1024 * 1024),
     );
 
