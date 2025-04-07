@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::io::Write;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -8,6 +7,8 @@ use anyhow::bail;
 use anyhow::ensure;
 use anyhow::Context;
 use bytes::Bytes;
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
 use tracing::info;
 use tracing::warn;
 
@@ -110,13 +111,19 @@ pub async fn download_and_checksum(
                     retry,
                 );
 
-                match download_file(&file_url, expected_checksum).await {
+                let mut file = File::options()
+                    .write(true)
+                    .truncate(true)
+                    .create(true)
+                    .open(&filepath)
+                    .await
+                    .with_context(|| {
+                        format!("Failed to create file. filepath: {}", filepath.display())
+                    })?;
+
+                match download_file(&file_url, expected_checksum, &mut file).await {
                     Ok(content) => {
                         info!("Downloaded file. filepath: {}", filepath.display());
-                        std::fs::File::create(&filepath)
-                            .context("creating param file")?
-                            .write_all(&content)
-                            .context("writing file content")?;
                         bytes = content;
                         break;
                     },
@@ -155,6 +162,7 @@ pub async fn download_and_checksum(
 async fn download_file(
     file_url: &str,
     expected_checksum: &blake3::Hash,
+    file: &mut File,
 ) -> anyhow::Result<Bytes> {
     let client = reqwest::Client::builder()
         .referer(false)
@@ -187,5 +195,8 @@ async fn download_file(
         found_checksum.to_hex(),
         expected_checksum.to_hex()
     );
+
+    file.write_all(&bytes).await?;
+
     Ok(bytes)
 }
