@@ -25,8 +25,13 @@ const READ_TIMEOUT_MILLIS: u64 = 30_000;
 const CONNECT_TIMEOUT_MILLIS: u64 = 5_000;
 
 /// How many times param download should be retried.
-const DOWNLOAD_MAX_RETRIES: u8 = 3;
+const DOWNLOAD_BACKOFF_RETRIES: u8 = 3;
 
+/// Minimum wait time for the exponential backoff.
+const DOWNLOAD_BACKOFF_MIN_MILLIS: u64 = 100;
+
+/// Maximum wait time for the exponential backoff.
+const DOWNLOAD_BACKOFF_MAX_MILLIS: u64 = 10_000;
 /// Download and verify `file_name`.
 ///
 /// This function will download `file_name` if necessary and checksum its contents.
@@ -96,14 +101,12 @@ pub async fn download_and_checksum(
             let mut bytes = Bytes::default();
             let file_url = format!("{base_url}/{file_name}");
 
-            // Attempt to download the params up to DOWNLOAD_MAX_RETRIES, with exponential backoff.
-            let min = std::time::Duration::from_millis(100);
-            let max = std::time::Duration::from_secs(10);
-            for (retry, duration) in
-                exponential_backoff::Backoff::new(DOWNLOAD_MAX_RETRIES.into(), min, max)
-                    .iter()
-                    .enumerate()
-            {
+            let min = std::time::Duration::from_millis(DOWNLOAD_BACKOFF_MIN_MILLIS);
+            let max = std::time::Duration::from_millis(DOWNLOAD_BACKOFF_MAX_MILLIS);
+            let backoff =
+                exponential_backoff::Backoff::new(DOWNLOAD_BACKOFF_RETRIES.into(), min, max);
+
+            for (retry, duration) in backoff.iter().enumerate() {
                 info!(
                     "Downloading params. base_url: {} file_name: {} retry: {}",
                     base_url, file_name, retry,
