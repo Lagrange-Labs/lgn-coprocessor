@@ -14,7 +14,7 @@ pub mod euclid_prover;
 pub mod task;
 
 #[allow(unused_variables)]
-pub fn create_prover(
+pub async fn create_prover(
     url: &str,
     dir: &str,
     file: &str,
@@ -29,7 +29,7 @@ pub fn create_prover(
     #[cfg(not(feature = "dummy-prover"))]
     let prover = {
         info!("Creating PreprocessingEuclidProver");
-        euclid_prover::PreprocessingEuclidProver::init(url, dir, file, checksums)?
+        euclid_prover::PreprocessingEuclidProver::init(url, dir, file, checksums).await?
     };
 
     info!("Preprocessing prover created");

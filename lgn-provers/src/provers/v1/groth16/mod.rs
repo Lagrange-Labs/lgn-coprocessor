@@ -17,7 +17,7 @@ mod task;
 
 #[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
-pub fn create_prover(
+pub async fn create_prover(
     url: &str,
     dir: &str,
     circuit_file: &str,
@@ -41,7 +41,8 @@ pub fn create_prover(
             pk_file,
             vk_file,
             checksums,
-        )?
+        )
+        .await?
     };
 
     debug!("Groth16 prover created");
