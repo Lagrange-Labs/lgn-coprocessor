@@ -294,6 +294,7 @@ impl PreprocessingEuclidProver {
         generate_proof(&self.params, input)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn prove_row_partial(
         &self,
         identifier: u64,
