@@ -357,6 +357,7 @@ impl WorkerTaskType {
         )))
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn db_row_full(
         table_id: TableId,
         row_id: String,

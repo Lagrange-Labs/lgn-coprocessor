@@ -325,6 +325,7 @@ impl PreprocessingEuclidProver {
         self.prove(input, "row leaf")
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn prove_row_partial(
         &self,
         identifier: u64,
