@@ -133,16 +133,13 @@ pub async fn download_and_checksum(
                 return Ok(Bytes::from(buf));
             },
             Err(err) => {
-                match duration {
-                    Some(duration) => {
-                        warn!(
-                            "Params download failed, retrying. filepath: {} err: {:?}",
-                            filepath.display(),
-                            err,
-                        );
-                        tokio::time::sleep(duration).await;
-                    },
-                    None => {},
+                if let Some(duration) = duration {
+                    warn!(
+                        "Params download failed, retrying. filepath: {} err: {:?}",
+                        filepath.display(),
+                        err,
+                    );
+                    tokio::time::sleep(duration).await;
                 }
             },
         };
@@ -155,6 +152,7 @@ pub async fn download_and_checksum(
     );
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn resume_download(
     buf: &mut Vec<u8>,
     base_url: &str,
@@ -205,7 +203,7 @@ async fn resume_download(
             0,
         );
         file.set_len(length).await?;
-        hasher.update_rayon(&buf);
+        hasher.update_rayon(buf);
     } else {
         ensure!(
             response.status().is_success(),
