@@ -3,11 +3,11 @@ resolver = "2"
 members = ["lgn-auth", "lgn-messages", "lgn-provers", "lgn-worker"]
 
 [workspace.dependencies]
-groth16_framework = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "hack-fix-send" }
-mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "hack-fix-send" }
-mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "hack-fix-send" }
-parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "hack-fix-send" }
-verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "hack-fix-send" }
+groth16_framework = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "feat/new_extraction_features" }
+mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "feat/new_extraction_features" }
+mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "feat/new_extraction_features" }
+parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "feat/new_extraction_features" }
+verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "feat/new_extraction_features" }
 
 alloy = { version = "0.11", default-features = false }
 alloy-primitives = { version = "0.8" }
