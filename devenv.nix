@@ -22,6 +22,7 @@ let
     public_params = {
       params_root_url = meta.params-url;
       dir = "./runtime/zkmr_params";
+      # pps_override = "some-git-hash";
     };
   };
 
