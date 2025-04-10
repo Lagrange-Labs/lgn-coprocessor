@@ -35,6 +35,9 @@ pub(crate) struct PublicParamsConfig {
     pub(crate) query_params: QueryParams,
     /// The files required to build the Groth16 public parameters.
     pub(crate) groth16_assets: Groth16Assets,
+    /// If set, fetch the specified PPs version instead of the one linked to MP2
+    /// major version.
+    pub(crate) pps_override: Option<String>,
 }
 
 impl PublicParamsConfig {
@@ -48,7 +51,7 @@ impl PublicParamsConfig {
 
     /// Build the base URL with path of mp2 version for downloading param files.
     pub fn params_base_url(&self) -> String {
-        add_mp2_version_path_to_url(&self.params_root_url)
+        add_mp2_version_path_to_url(&self.params_root_url, self.pps_override.as_ref())
     }
 
     /// Build the URL for downloading the checksum file.
@@ -172,8 +175,19 @@ impl Config {
 
 /// Add mp2 version as a path to the base URL.
 /// e.g. https://base.com/MP2_VERSION
-fn add_mp2_version_path_to_url(url: &str) -> String {
-    let mp2_version_str = verifiable_db::version();
-    let mp2_version = semver::Version::parse(mp2_version_str).unwrap();
-    format!("{url}/{}", mp2_version.major)
+fn add_mp2_version_path_to_url(
+    url: &str,
+    pps_override: Option<&String>,
+) -> String {
+    let tag = match pps_override {
+        Some(tag) => tag.to_owned(),
+        None => {
+            let mp2_version_str = verifiable_db::version();
+            semver::Version::parse(mp2_version_str)
+                .unwrap()
+                .major
+                .to_string()
+        },
+    };
+    format!("{url}/{}", tag)
 }
