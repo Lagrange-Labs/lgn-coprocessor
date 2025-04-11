@@ -14,6 +14,7 @@ let
     };
 
     avs = {
+      issuer = "Local Devenv"
       gateway_url = meta.gateway-url;
       lagr_keystore = meta.keystore-file;
       lagr_pwd = meta.keystore-password;
