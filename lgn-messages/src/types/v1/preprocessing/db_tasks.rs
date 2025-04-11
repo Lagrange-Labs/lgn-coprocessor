@@ -95,6 +95,7 @@ pub struct RowLeafInput {
     pub identifier: Identifier,
     pub value: U256,
     pub is_multiplier: bool,
+    pub row_unique_data: HashOutput,
     pub cells_proof_location: Option<db_keys::ProofKey>,
 
     #[dbg(placeholder = "...")]
@@ -109,6 +110,7 @@ pub struct RowPartialInput {
     pub value: U256,
     pub is_multiplier: bool,
     pub is_child_left: bool,
+    pub row_unique_data: HashOutput,
     pub child_proof_location: db_keys::ProofKey,
     pub cells_proof_location: Option<db_keys::ProofKey>,
 
@@ -126,6 +128,7 @@ pub struct RowFullInput {
     pub identifier: Identifier,
     pub value: U256,
     pub is_multiplier: bool,
+    pub row_unique_data: HashOutput,
     pub child_proofs_locations: Vec<db_keys::ProofKey>,
     pub cells_proof_location: Option<db_keys::ProofKey>,
 
