@@ -8,7 +8,7 @@
 
 # Configuration File
 
- ```
+```toml
 [worker]
 # The worker type, small, medium or large
 instance_type = "medium"
