@@ -5,6 +5,16 @@ use derive_debug_plus::Dbg;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use thiserror::Error;
+use v1::preprocessing::db_tasks::DatabaseType;
+use v1::preprocessing::db_tasks::DbCellType;
+use v1::preprocessing::db_tasks::DbRowType;
+use v1::preprocessing::ext_tasks::ExtractionType;
+use v1::preprocessing::ext_tasks::FinalExtraction;
+use v1::preprocessing::ext_tasks::FinalExtractionType;
+use v1::preprocessing::ext_tasks::MptType;
+use v1::query::tasks::ProofInputKind;
+use v1::query::tasks::QueryStep;
+use v1::query::tasks::RevelationInput;
 
 use crate::routing::RoutingKey;
 use crate::KeyedPayload;
@@ -109,6 +119,96 @@ impl MessageEnvelope {
 
     pub fn inner_mut(&mut self) -> &mut TaskType {
         &mut self.inner
+    }
+
+    /// Returns [ProverType] which supports proving this [TaskType].
+    ///
+    /// This is used to dispatch the message to the correct underlying prover.
+    pub fn to_prover_type(&self) -> ProverType {
+        self.inner.to_prover_type()
+    }
+
+    /// Returns the task's type name.
+    ///
+    /// This is used to classify the tasks for metrics.
+    pub fn to_task_type(&self) -> &str {
+        match &self.inner {
+            TaskType::V1Preprocessing(worker_task) => {
+                match &worker_task.task_type {
+                    v1::preprocessing::WorkerTaskType::Extraction(extraction_type) => {
+                        match extraction_type {
+                            ExtractionType::MptExtraction(mpt) => {
+                                match mpt.mpt_type {
+                                    MptType::MappingLeaf(..) => "mapping_leaf",
+                                    MptType::MappingBranch(..) => "mapping_branch",
+                                    MptType::VariableLeaf(..) => "multi_var_leaf",
+                                    MptType::VariableBranch(..) => "multi_var_branch",
+                                }
+                            },
+                            ExtractionType::LengthExtraction(..) => "length",
+                            ExtractionType::ContractExtraction(..) => "contract",
+                            ExtractionType::BlockExtraction(..) => "block",
+                            ExtractionType::FinalExtraction(final_extraction) => {
+                                match &**final_extraction {
+                                    FinalExtraction::Single(single_table_extraction) => {
+                                        match single_table_extraction.extraction_type {
+                                            FinalExtractionType::Simple(..) => "final_extraction",
+                                            FinalExtractionType::Lengthed => {
+                                                "final_extraction_lengthed"
+                                            },
+                                        }
+                                    },
+                                    FinalExtraction::Merge(..) => "final_extraction_merge",
+                                }
+                            },
+                        }
+                    },
+                    v1::preprocessing::WorkerTaskType::Database(database_type) => {
+                        match database_type {
+                            DatabaseType::Cell(db_cell_type) => {
+                                match db_cell_type {
+                                    DbCellType::Leaf(..) => "cell_leaf",
+                                    DbCellType::Partial(..) => "cell_partial",
+                                    DbCellType::Full(..) => "cell_full",
+                                }
+                            },
+                            DatabaseType::Row(db_row_type) => {
+                                match db_row_type {
+                                    DbRowType::Leaf(..) => "row_leaf",
+                                    DbRowType::Partial(..) => "row_partial",
+                                    DbRowType::Full(..) => "row_full",
+                                }
+                            },
+                            DatabaseType::Index(..) => "index",
+                            DatabaseType::IVC(..) => "ivc",
+                        }
+                    },
+                }
+            },
+            TaskType::V1Query(worker_task) => {
+                match &worker_task.task_type {
+                    v1::query::WorkerTaskType::Query(query_input) => {
+                        match &query_input.query_step {
+                            QueryStep::Tabular(..) => "tabular",
+                            QueryStep::Aggregation(aggregation_input) => {
+                                match aggregation_input.input_kind {
+                                    ProofInputKind::RowsChunk(..) => "rows_chunk",
+                                    ProofInputKind::ChunkAggregation(..) => "chunk_aggregation",
+                                    ProofInputKind::NonExistence(..) => "non_existence",
+                                }
+                            },
+                            QueryStep::Revelation(revelation_input) => {
+                                match revelation_input {
+                                    RevelationInput::Aggregated { .. } => "revelation_aggregated",
+                                    RevelationInput::Tabular { .. } => "revelation_tabular",
+                                }
+                            },
+                        }
+                    },
+                }
+            },
+            TaskType::V1Groth16(..) => "groth16",
+        }
     }
 }
 

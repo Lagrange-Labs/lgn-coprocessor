@@ -18,16 +18,12 @@ use mp2_v1::api::CircuitInput::LengthExtraction;
 use mp2_v1::api::CircuitInput::RowsTree;
 use mp2_v1::api::CircuitInput::ValuesExtraction;
 use mp2_v1::api::CircuitInput::IVC;
-use mp2_v1::api::CircuitInput::{
-    self,
-};
 use mp2_v1::api::PublicParameters;
 use mp2_v1::block_extraction;
 use mp2_v1::contract_extraction;
 use mp2_v1::final_extraction;
 use mp2_v1::length_extraction::LengthCircuitInput;
 use mp2_v1::values_extraction;
-use tracing::debug;
 
 use crate::params;
 
@@ -52,33 +48,6 @@ impl PreprocessingEuclidProver {
         Ok(Self { params })
     }
 
-    fn prove(
-        &self,
-        input: CircuitInput,
-        name: &str,
-    ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving {}", name);
-
-        let now = std::time::Instant::now();
-
-        match generate_proof(&self.params, input) {
-            Ok(proof) => {
-                debug!(
-                    time = now.elapsed().as_secs_f32(),
-                    proof_type = name,
-                    "proof generation time: {:?}",
-                    now.elapsed()
-                );
-                debug!("{name} size in kB: {}", proof.len() / 1024);
-                Ok(proof)
-            },
-            Err(err) => {
-                debug!("Proof generation failed in {:?}", now.elapsed());
-                Err(err)
-            },
-        }
-    }
-
     pub(super) fn prove_single_variable_leaf(
         &self,
         node: Vec<u8>,
@@ -88,7 +57,7 @@ impl PreprocessingEuclidProver {
         let input = ValuesExtraction(values_extraction::CircuitInput::new_single_variable_leaf(
             node, slot, column_id,
         ));
-        self.prove(input, "single variable leaf")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_single_variable_branch(
@@ -96,12 +65,12 @@ impl PreprocessingEuclidProver {
         node: Vec<u8>,
         child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
-        self.prove(
+        generate_proof(
+            &self.params,
             ValuesExtraction(values_extraction::CircuitInput::new_single_variable_branch(
                 node,
                 child_proofs,
             )),
-            "single variable branch",
         )
     }
 
@@ -116,7 +85,7 @@ impl PreprocessingEuclidProver {
         let input = ValuesExtraction(values_extraction::CircuitInput::new_mapping_variable_leaf(
             node, slot, key, key_id, value_id,
         ));
-        self.prove(input, "mapping variable leaf")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_mapping_variable_branch(
@@ -131,7 +100,7 @@ impl PreprocessingEuclidProver {
                     node,
                     child_proofs[0].to_owned(),
                 ));
-                self.prove(input, "mapping variable extension")
+                generate_proof(&self.params, input)
             },
             Prototype::List(17) => {
                 let input = ValuesExtraction(
@@ -140,7 +109,7 @@ impl PreprocessingEuclidProver {
                         child_proofs,
                     ),
                 );
-                self.prove(input, "mapping variable branch")
+                generate_proof(&self.params, input)
             },
             _ => bail!("Invalid RLP item count"),
         }
@@ -157,7 +126,7 @@ impl PreprocessingEuclidProver {
             node,
             variable_slot as u8,
         ));
-        self.prove(input, "length leaf")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_length_branch(
@@ -166,7 +135,7 @@ impl PreprocessingEuclidProver {
         child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         let input = LengthExtraction(LengthCircuitInput::new_branch(node, child_proof));
-        self.prove(input, "length branch")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_contract_leaf(
@@ -180,7 +149,7 @@ impl PreprocessingEuclidProver {
             &storage_root,
             contract_address,
         ));
-        self.prove(input, "contract leaf")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_contract_branch(
@@ -192,7 +161,7 @@ impl PreprocessingEuclidProver {
             node,
             child_proof,
         ));
-        self.prove(input, "contract branch")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_block(
@@ -202,7 +171,7 @@ impl PreprocessingEuclidProver {
         let input = BlockExtraction(block_extraction::CircuitInput::from_block_header(
             rlp_header,
         ));
-        self.prove(input, "block")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_final_extraction_simple(
@@ -218,7 +187,7 @@ impl PreprocessingEuclidProver {
             value_proof,
             dimension,
         )?);
-        self.prove(input, "final extraction simple")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_final_extraction_lengthed(
@@ -234,7 +203,7 @@ impl PreprocessingEuclidProver {
             value_proof,
             length_proof,
         )?);
-        self.prove(input, "final extraction lengthed")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_final_extraction_merge(
@@ -252,7 +221,7 @@ impl PreprocessingEuclidProver {
                 mapping_table_proof,
             )?,
         );
-        self.prove(input, "final extraction merge")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_cell_leaf(
@@ -266,7 +235,7 @@ impl PreprocessingEuclidProver {
             value,
             is_multiplier,
         ));
-        self.prove(input, "cell leaf")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_cell_partial(
@@ -282,7 +251,7 @@ impl PreprocessingEuclidProver {
             is_multiplier,
             child_proof,
         ));
-        self.prove(input, "cell partial")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_cell_full(
@@ -299,7 +268,7 @@ impl PreprocessingEuclidProver {
             is_multiplier,
             child_proofs,
         ));
-        self.prove(input, "cell full")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_row_leaf(
@@ -321,7 +290,7 @@ impl PreprocessingEuclidProver {
             is_multiplier,
             cells_proof,
         )?);
-        self.prove(input, "row leaf")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_row_partial(
@@ -346,7 +315,7 @@ impl PreprocessingEuclidProver {
             child_proof,
             cells_proof,
         )?);
-        self.prove(input, "row partial")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_row_full(
@@ -370,7 +339,7 @@ impl PreprocessingEuclidProver {
             child_proofs[1].to_owned(),
             cells_proof,
         )?);
-        self.prove(input, "row full")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_block_leaf(
@@ -385,7 +354,7 @@ impl PreprocessingEuclidProver {
             extraction_proof,
             rows_tree_proof,
         ));
-        self.prove(input, "block tree leaf")
+        generate_proof(&self.params, input)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -416,7 +385,7 @@ impl PreprocessingEuclidProver {
             extraction_proof,
             rows_tree_proof,
         ));
-        self.prove(input, "block tree parent")
+        generate_proof(&self.params, input)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -439,7 +408,7 @@ impl PreprocessingEuclidProver {
             &(rows_tree_hash),
             right_child_proof,
         ));
-        self.prove(input, "membership")
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_ivc(
@@ -461,6 +430,6 @@ impl PreprocessingEuclidProver {
             },
         };
 
-        self.prove(input, "ivc")
+        generate_proof(&self.params, input)
     }
 }
