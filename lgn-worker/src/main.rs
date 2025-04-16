@@ -521,7 +521,7 @@ async fn process_message_from_gateway(
         });
     };
 
-    let prover_type = envelope.inner.to_prover_type();
+    let task_type = envelope.to_task_type().to_owned();
     let task_id = envelope.task_id().to_string();
     let query_id = envelope.query_id().to_string();
 
@@ -532,7 +532,7 @@ async fn process_message_from_gateway(
 
     counter!(
         "zkmr_worker_tasks_received_total",
-        "prover_type" => prover_type.to_string(),
+        "task_type" => task_type.clone(),
     )
     .increment(1);
 
@@ -573,17 +573,22 @@ async fn process_message_from_gateway(
         Ok(reply) => {
             counter!(
                 "zkmr_worker_tasks_successful_total",
-                "prover_type" => prover_type.to_string(),
+                "task_type" => task_type.clone(),
             )
             .increment(1);
             histogram!(
                 "zkmr_worker_task_sucessful_processing_duration_seconds",
-                "prover_type" => prover_type.to_string(),
+                "task_type" => task_type.clone(),
             )
             .record(start_time.elapsed().as_secs_f64());
 
             let serialised = serde_json::to_vec(&reply)
                 .map_err(|err| Error::ReplySerializationFailed { uuid, err })?;
+            histogram!(
+                "zkmr_worker_reply_size_bytes",
+                "task_type" => task_type.clone(),
+            )
+            .record(serialised.len() as f64);
 
             info!(
                 "Processed task. uuid: {} task_id: {} query_id: {} time: {:?}",
@@ -597,18 +602,22 @@ async fn process_message_from_gateway(
         Err(err) => {
             counter!(
                 "zkmr_worker_tasks_error_total",
-                "prover_type" => prover_type.to_string(),
+                "task_type" => task_type.clone(),
             )
             .increment(1);
             histogram!(
                 "zkmr_worker_task_failed_processing_duration_seconds",
-                "prover_type" => prover_type.to_string(),
+                "task_type" => task_type.clone(),
             )
             .record(start_time.elapsed().as_secs_f64());
 
             error!(
-                "Failed to process task. uuid: {} task_id: {} query_id: {} err: {:?}",
-                uuid, task_id, query_id, err,
+                "Failed to process task. uuid: {} task_id: {} query_id: {} time: {:?} err: {:?}",
+                uuid,
+                task_id,
+                query_id,
+                start_time.elapsed(),
+                err,
             );
 
             Err(err)

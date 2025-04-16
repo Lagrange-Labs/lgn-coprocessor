@@ -6,10 +6,7 @@ use lgn_messages::types::v1::query::tasks::NonExistenceInput;
 use lgn_messages::types::v1::query::tasks::RowsChunkInput;
 use lgn_messages::types::v1::query::NUM_CHUNKS;
 use lgn_messages::types::v1::query::NUM_ROWS;
-use metrics::histogram;
 use parsil::assembler::DynamicCircuitPis;
-use tracing::debug;
-use tracing::info;
 use verifiable_db::api::QueryCircuitInput;
 use verifiable_db::api::QueryParameters;
 use verifiable_db::query::api::CircuitInput;
@@ -79,10 +76,6 @@ impl QueryEuclidProver {
         input: MatchingRowInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving universal circuit");
-
-        let now = std::time::Instant::now();
-
         let circuit_input = CircuitInput::new_universal_circuit(
             &input.column_cells,
             &pis.predication_operations,
@@ -99,18 +92,6 @@ impl QueryEuclidProver {
             .generate_proof(input)
             .context("while generating proof for the universal circuit")?;
 
-        let proof_type = "universal_circuit";
-        let time = now.elapsed().as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!("universal circuit size in kB: {}", proof.len() / 1024);
-
         Ok(proof)
     }
 
@@ -119,10 +100,6 @@ impl QueryEuclidProver {
         input: RowsChunkInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving row-chunks");
-
-        let now = std::time::Instant::now();
-
         let placeholders = input.placeholders.into();
 
         let input = CircuitInput::new_row_chunks_input(
@@ -141,18 +118,6 @@ impl QueryEuclidProver {
             .generate_proof(input)
             .context("while generating proof for the rows-chunk circuit")?;
 
-        let proof_type = "rows_chunk";
-        let time = now.elapsed().as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!("rows-chunk size in kB: {}", proof.len() / 1024);
-
         Ok(proof)
     }
 
@@ -160,10 +125,6 @@ impl QueryEuclidProver {
         &self,
         chunks_proofs: &[Vec<u8>],
     ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving row-chunks");
-
-        let now = std::time::Instant::now();
-
         let input = CircuitInput::new_chunk_aggregation_input(chunks_proofs)
             .context("while initializing the chunk-aggregation circuit")?;
 
@@ -174,18 +135,6 @@ impl QueryEuclidProver {
             .generate_proof(input)
             .context("while generating proof for the chunk-aggregation circuit")?;
 
-        let proof_type = "chunk_aggregation";
-        let time = now.elapsed().as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!("chunk-aggregation size in kB: {}", proof.len() / 1024);
-
         Ok(proof)
     }
 
@@ -194,10 +143,6 @@ impl QueryEuclidProver {
         input: NonExistenceInput,
         pis: &DynamicCircuitPis,
     ) -> anyhow::Result<Vec<u8>> {
-        debug!("Proving non-existence");
-
-        let now = std::time::Instant::now();
-
         let placeholders = input.placeholders.into();
 
         let input = CircuitInput::new_non_existence_input(
@@ -217,18 +162,6 @@ impl QueryEuclidProver {
             .generate_proof(input)
             .context("while generating proof for the non-existence circuit")?;
 
-        let proof_type = "non_existence";
-        let time = now.elapsed().as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!("non-existence size in kB: {}", proof.len() / 1024);
-
         Ok(proof)
     }
 
@@ -239,9 +172,6 @@ impl QueryEuclidProver {
         query_proof: Vec<u8>,
         indexing_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
-        debug!("proving aggregated revelation");
-        let now = std::time::Instant::now();
-
         let circuit_input = revelation::api::CircuitInput::new_revelation_aggregated(
             query_proof,
             indexing_proof,
@@ -259,18 +189,6 @@ impl QueryEuclidProver {
             .generate_proof(input)
             .context("while generating proof for the (empty) revelation circuit")?;
 
-        let proof_type = "revelation";
-        let time = now.elapsed().as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!("revelation size in kB: {}", proof.len() / 1024);
-
         Ok(proof)
     }
 
@@ -285,9 +203,6 @@ impl QueryEuclidProver {
         limit: u32,
         offset: u32,
     ) -> anyhow::Result<Vec<u8>> {
-        debug!("proving tabular revelation");
-        let now = std::time::Instant::now();
-
         let circuit_input = revelation::api::CircuitInput::new_revelation_tabular(
             indexing_proof,
             matching_rows,
@@ -307,18 +222,6 @@ impl QueryEuclidProver {
             .params
             .generate_proof(input)
             .context("while generating proof for the (empty) revelation circuit")?;
-
-        let proof_type = "revelation";
-        let time = now.elapsed().as_secs_f32();
-        info!(
-            time,
-            proof_type,
-            "proof generation time: {:?}",
-            now.elapsed()
-        );
-        histogram!("zkmr_worker_proving_latency", "proof_type" => proof_type).record(time);
-
-        debug!("revelation size in kB: {}", proof.len() / 1024);
 
         Ok(proof)
     }
