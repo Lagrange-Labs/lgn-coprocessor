@@ -1,5 +1,5 @@
-use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
+use lgn_messages::types::RequestVersioned;
 
 pub mod v1;
 
@@ -10,6 +10,6 @@ pub mod v1;
 pub trait LgnProver {
     fn run(
         &self,
-        envelope: MessageEnvelope,
+        envelope: RequestVersioned,
     ) -> anyhow::Result<MessageReplyEnvelope>;
 }
