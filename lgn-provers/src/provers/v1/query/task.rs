@@ -7,10 +7,10 @@ use lgn_messages::types::v1::query::tasks::QueryStep;
 use lgn_messages::types::v1::query::tasks::RevelationInput;
 use lgn_messages::types::v1::query::WorkerTask;
 use lgn_messages::types::v1::query::WorkerTaskType;
-use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProofCategory;
 use lgn_messages::types::ReplyType;
+use lgn_messages::types::RequestVersioned;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::WorkerReply;
 use parsil::assembler::DynamicCircuitPis;
@@ -21,20 +21,24 @@ use crate::provers::LgnProver;
 impl LgnProver for QueryEuclidProver {
     fn run(
         &self,
-        envelope: MessageEnvelope,
+        envelope: RequestVersioned,
     ) -> anyhow::Result<MessageReplyEnvelope> {
-        let query_id = envelope.query_id.clone();
-        let task_id = envelope.task_id.clone();
+        let query_id = envelope.query_id().clone();
+        let task_id = envelope.task_id().clone();
 
-        if let TaskType::V1Query(ref task @ WorkerTask { chain_id, .. }) = envelope.inner {
+        if let TaskType::V1Query(ref task @ WorkerTask { chain_id, .. }) = envelope.inner() {
             let key: ProofKey = task.into();
             let result = self.run_inner(task)?;
             let reply_type = ReplyType::V1Query(WorkerReply::new(
-                chain_id,
+                *chain_id,
                 Some((key.to_string(), result)),
                 ProofCategory::Querying,
             ));
-            Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
+            Ok(MessageReplyEnvelope::new(
+                query_id.to_owned(),
+                task_id.to_owned(),
+                reply_type,
+            ))
         } else {
             bail!("Unexpected task: {:?}", envelope);
         }

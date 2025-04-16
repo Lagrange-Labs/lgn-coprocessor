@@ -4,9 +4,9 @@ use std::panic::UnwindSafe;
 
 use anyhow::bail;
 use anyhow::Context;
-use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProverType;
+use lgn_messages::types::RequestVersioned;
 use lgn_messages::types::TaskDifficulty;
 use lgn_provers::provers::LgnProver;
 use tracing::info;
@@ -92,9 +92,9 @@ impl ProversManager {
     /// A message reply envelope containing the result of the proving task
     pub(crate) fn delegate_proving(
         &self,
-        envelope: MessageEnvelope,
+        envelope: RequestVersioned,
     ) -> anyhow::Result<MessageReplyEnvelope> {
-        let prover_type: ProverType = envelope.inner.to_prover_type();
+        let prover_type: ProverType = envelope.to_prover_type();
 
         match self.provers.get(&prover_type) {
             Some(prover) => prover.run(envelope),
