@@ -23,8 +23,8 @@ impl LgnProver for QueryEuclidProver {
         &self,
         envelope: RequestVersioned,
     ) -> anyhow::Result<MessageReplyEnvelope> {
-        let query_id = envelope.query_id().clone();
-        let task_id = envelope.task_id().clone();
+        let query_id = envelope.query_id();
+        let task_id = envelope.task_id();
 
         if let TaskType::V1Query(ref task @ WorkerTask { chain_id, .. }) = envelope.inner() {
             let key: ProofKey = task.into();
