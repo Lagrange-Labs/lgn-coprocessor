@@ -1,7 +1,9 @@
 use alloy_primitives::Address;
 use alloy_primitives::U256;
 use ethers::prelude::H256;
-use mp2_common::digest::TableDimension;
+use ext_tasks::FinalExtractionType;
+use mp2_common::types::HashOutput;
+use mp2_v1::values_extraction::gadgets::column_info::ColumnInfo;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
@@ -79,13 +81,16 @@ impl WorkerTaskType {
         node_hash: H256,
         node: Vec<u8>,
         slot: u8,
-        column_id: u64,
+        evm_word: u32,
+        table_info: Vec<ColumnInfo>,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
             table_hash,
             block_nr,
             node_hash,
-            mpt_type: MptType::VariableLeaf(VariableLeafInput::new(node, slot, column_id)),
+            mpt_type: MptType::VariableLeaf(VariableLeafInput::new(
+                node, slot, evm_word, table_info,
+            )),
         }))
     }
 
@@ -113,14 +118,15 @@ impl WorkerTaskType {
         node: Vec<u8>,
         slot: u8,
         key_id: u64,
-        value_id: u64,
+        evm_word: u32,
+        table_info: Vec<ColumnInfo>,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::MptExtraction(Mpt {
             table_hash,
             block_nr,
             node_hash,
             mpt_type: MptType::MappingLeaf(MappingLeafInput::new(
-                key, node, slot, key_id, value_id,
+                key, node, slot, key_id, evm_word, table_info,
             )),
         }))
     }
@@ -181,7 +187,7 @@ impl WorkerTaskType {
         table_hash: TableHash,
         block_nr: BlockNr,
         contract: Address,
-        compound: TableDimension,
+        extraction_type: FinalExtractionType,
         value_proof_version: MptNodeVersion,
     ) -> WorkerTaskType {
         WorkerTaskType::Extraction(ExtractionType::FinalExtraction(Box::new(
@@ -190,7 +196,7 @@ impl WorkerTaskType {
                 table_hash,
                 block_nr,
                 contract,
-                Some(compound),
+                extraction_type,
                 value_proof_version,
             ),
         )))
@@ -209,7 +215,7 @@ impl WorkerTaskType {
                 table_hash,
                 block_nr,
                 contract,
-                None,
+                FinalExtractionType::Lengthed,
                 value_proof_version,
             ),
         )))
@@ -307,6 +313,7 @@ impl WorkerTaskType {
         identifier: Identifier,
         value: U256,
         is_multiplier: bool,
+        row_unique_data: HashOutput,
         cells_proof_location: Option<db_keys::ProofKey>,
     ) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::Row(db_tasks::DbRowType::Leaf(RowLeafInput {
@@ -315,6 +322,7 @@ impl WorkerTaskType {
             identifier,
             value,
             is_multiplier,
+            row_unique_data,
             cells_proof_location,
             cells_proof: vec![],
         })))
@@ -328,6 +336,7 @@ impl WorkerTaskType {
         value: U256,
         is_multiplier: bool,
         is_child_left: bool,
+        row_unique_data: HashOutput,
         cells_proof_location: Option<db_keys::ProofKey>,
         child_proof_location: db_keys::ProofKey,
     ) -> WorkerTaskType {
@@ -339,6 +348,7 @@ impl WorkerTaskType {
                 value,
                 is_multiplier,
                 is_child_left,
+                row_unique_data,
                 child_proof_location,
                 cells_proof_location,
                 child_proof: vec![],
@@ -347,12 +357,14 @@ impl WorkerTaskType {
         )))
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn db_row_full(
         table_id: TableId,
         row_id: String,
         identifier: Identifier,
         value: U256,
         is_multiplier: bool,
+        row_unique_data: HashOutput,
         cells_proof_location: Option<db_keys::ProofKey>,
         child_proofs_locations: Vec<db_keys::ProofKey>,
     ) -> WorkerTaskType {
@@ -363,6 +375,7 @@ impl WorkerTaskType {
                 identifier,
                 value,
                 is_multiplier,
+                row_unique_data,
                 child_proofs_locations,
                 cells_proof_location,
                 child_proofs: vec![],
