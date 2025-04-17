@@ -425,12 +425,14 @@ impl PreprocessingEuclidProver {
         let input = match previous_proof {
             Some(previous_proof) => {
                 IVC(verifiable_db::ivc::CircuitInput::new_subsequent_input(
+                    false,
                     index_proof,
                     previous_proof,
                 )?)
             },
             None => {
                 IVC(verifiable_db::ivc::CircuitInput::new_first_input(
+                    false,
                     index_proof,
                 )?)
             },
