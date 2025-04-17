@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::panic;
+use std::process::ExitCode;
 use std::result::Result::Ok;
 use std::str::FromStr;
 use std::sync::atomic::AtomicU64;
@@ -189,7 +190,7 @@ fn setup_logging(json: bool) {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> ExitCode {
     let cli = Cli::parse();
     setup_logging(cli.json);
 
@@ -219,9 +220,10 @@ async fn main() -> anyhow::Result<()> {
     }));
 
     if let Err(err) = run(cli).await {
-        panic!("Worker exited due to an error: {err:?}")
+        error!("Worker exited due to an error. err: {:?}", err);
+        ExitCode::FAILURE
     } else {
-        Ok(())
+        ExitCode::SUCCESS
     }
 }
 
