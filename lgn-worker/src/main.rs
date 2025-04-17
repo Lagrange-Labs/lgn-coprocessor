@@ -300,10 +300,10 @@ async fn run(config: &Config) -> anyhow::Result<()> {
         Default::default()
     };
 
-    let mut provers_manager = ProversManager::new(&config, &checksums).await?;
+    let mut provers_manager = ProversManager::new(config, &checksums).await?;
 
     // Connect to the GW
-    let (mut inbound, outbound) = connect_to_gateway(&config, version, &mp2_version).await?;
+    let (mut inbound, outbound) = connect_to_gateway(config, version, &mp2_version).await?;
 
     let liveness_check_interval = config.worker.liveness_check_interval;
     let last_task_processed =
