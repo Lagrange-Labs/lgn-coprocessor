@@ -43,8 +43,11 @@ impl PreprocessingEuclidProver {
         checksums: &HashMap<String, blake3::Hash>,
     ) -> anyhow::Result<Self> {
         let params = params::download_and_checksum(url, dir, file, checksums).await?;
-        let reader = std::io::BufReader::new(params.as_ref());
-        let params = bincode::deserialize_from(reader)?;
+        let params = tokio::task::spawn_blocking(move || {
+            let reader = std::io::BufReader::new(params.as_ref());
+            bincode::deserialize_from(reader)
+        })
+        .await??;
         Ok(Self { params })
     }
 
