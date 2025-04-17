@@ -2,7 +2,10 @@
 #![feature(result_flattening)]
 use std::collections::BTreeMap;
 use std::fmt::Debug;
+use std::fs;
+use std::io::Write;
 use std::panic;
+use std::path::Path;
 use std::process::ExitCode;
 use std::result::Result::Ok;
 use std::str::FromStr;
@@ -219,7 +222,17 @@ async fn main() -> ExitCode {
         );
     }));
 
-    if let Err(err) = run(cli).await {
+    let config = Config::load(cli.config);
+    config.validate();
+    debug!("Loaded configuration: {:?}", config);
+
+    if let Err(err) = run(&config).await {
+        if let Some(path) = config.exit_reason_path {
+            exit_reason(
+                &path,
+                format!("Worker exited due to an error. err: {:?}", err),
+            )
+        }
         error!("Worker exited due to an error. err: {:?}", err);
         ExitCode::FAILURE
     } else {
@@ -227,14 +240,37 @@ async fn main() -> ExitCode {
     }
 }
 
-async fn run(cli: Cli) -> anyhow::Result<()> {
+/// Saves `reason` to `path`.
+///
+/// This function is called on termination to report failures, it will ignore
+/// all errors since it may not be possible to recover, used to report errors
+/// on kubernetes, e.g. `/dev/termination-log` [1].
+///
+/// [1]: https://kubernetes.io/docs/tasks/debug/debug-application/determine-reason-pod-failure/
+pub fn exit_reason(
+    path: &str,
+    reason: impl AsRef<str>,
+) {
+    if let Some(parent) = Path::new(path).parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+
+    // create a new file, or open it if it already exists truncating its contents.
+    if let Ok(mut file) = fs::OpenOptions::new()
+        .create(true)
+        .truncate(true)
+        .write(true)
+        .open(path)
+    {
+        let _ = file.write_all(reason.as_ref().as_bytes());
+        let _ = file.sync_data();
+    }
+}
+
+async fn run(config: &Config) -> anyhow::Result<()> {
     let mp2_version = semver::Version::parse(verifiable_db::version())?;
     let mp2_requirement = semver::VersionReq::parse(&format!("^{mp2_version}"))?;
     let version = env!("CARGO_PKG_VERSION");
-
-    let config = Config::load(cli.config);
-    config.validate();
-    debug!("Loaded configuration: {:?}", config);
 
     let span = span!(
         Level::INFO,
