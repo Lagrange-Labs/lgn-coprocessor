@@ -2,7 +2,11 @@
 #![feature(result_flattening)]
 use std::collections::BTreeMap;
 use std::fmt::Debug;
+use std::fs;
+use std::io::Write;
 use std::panic;
+use std::path::Path;
+use std::process::ExitCode;
 use std::result::Result::Ok;
 use std::str::FromStr;
 use std::sync::atomic::AtomicU64;
@@ -189,7 +193,7 @@ fn setup_logging(json: bool) {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> ExitCode {
     let cli = Cli::parse();
     setup_logging(cli.json);
 
@@ -218,21 +222,55 @@ async fn main() -> anyhow::Result<()> {
         );
     }));
 
-    if let Err(err) = run(cli).await {
-        panic!("Worker exited due to an error: {err:?}")
-    } else {
-        Ok(())
-    }
-}
-
-async fn run(cli: Cli) -> anyhow::Result<()> {
-    let mp2_version = semver::Version::parse(verifiable_db::version())?;
-    let mp2_requirement = semver::VersionReq::parse(&format!("^{mp2_version}"))?;
-    let version = env!("CARGO_PKG_VERSION");
-
     let config = Config::load(cli.config);
     config.validate();
     debug!("Loaded configuration: {:?}", config);
+
+    if let Err(err) = run(&config).await {
+        if let Some(path) = config.exit_reason_path {
+            exit_reason(
+                &path,
+                format!("Worker exited due to an error. err: {:?}", err),
+            )
+        }
+        error!("Worker exited due to an error. err: {:?}", err);
+        ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
+    }
+}
+
+/// Saves `reason` to `path`.
+///
+/// This function is called on termination to report failures, it will ignore
+/// all errors since it may not be possible to recover, used to report errors
+/// on kubernetes, e.g. `/dev/termination-log` [1].
+///
+/// [1]: https://kubernetes.io/docs/tasks/debug/debug-application/determine-reason-pod-failure/
+pub fn exit_reason(
+    path: &str,
+    reason: impl AsRef<str>,
+) {
+    if let Some(parent) = Path::new(path).parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+
+    // create a new file, or open it if it already exists truncating its contents.
+    if let Ok(mut file) = fs::OpenOptions::new()
+        .create(true)
+        .truncate(true)
+        .write(true)
+        .open(path)
+    {
+        let _ = file.write_all(reason.as_ref().as_bytes());
+        let _ = file.sync_data();
+    }
+}
+
+async fn run(config: &Config) -> anyhow::Result<()> {
+    let mp2_version = semver::Version::parse(verifiable_db::version())?;
+    let mp2_requirement = semver::VersionReq::parse(&format!("^{mp2_version}"))?;
+    let version = env!("CARGO_PKG_VERSION");
 
     let span = span!(
         Level::INFO,
@@ -262,10 +300,10 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         Default::default()
     };
 
-    let mut provers_manager = ProversManager::new(&config, &checksums).await?;
+    let mut provers_manager = ProversManager::new(config, &checksums).await?;
 
     // Connect to the GW
-    let (mut inbound, outbound) = connect_to_gateway(&config, version, &mp2_version).await?;
+    let (mut inbound, outbound) = connect_to_gateway(config, version, &mp2_version).await?;
 
     let liveness_check_interval = config.worker.liveness_check_interval;
     let last_task_processed =

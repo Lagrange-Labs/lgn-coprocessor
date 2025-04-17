@@ -20,6 +20,8 @@ pub(crate) struct Config {
     pub(crate) public_params: PublicParamsConfig,
     /// Prometheus-specific settings.
     pub(crate) prometheus: PrometheusConfig,
+    /// If present, name of the file path used to write the exit reason.
+    pub(crate) exit_reason_path: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
