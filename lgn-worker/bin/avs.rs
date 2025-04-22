@@ -211,6 +211,7 @@ impl DeRegister {
         )?;
         let main_wallet = main_wallet.with_chain_id(self.network.chain_id());
         let operator = main_wallet.address();
+        info!("deregistering operator at address {}", operator);
         let provider = Arc::new(Provider::<Http>::try_from(&self.rpc_url)?);
         let client = Arc::new(Client::new(provider.clone(), main_wallet.clone()));
 
@@ -219,9 +220,8 @@ impl DeRegister {
             bail!("Address {} does not belong to a known operator", operator);
         }
 
-        deregister_operator(&self.network, client, operator).await?;
-
-        info!("Succeeded to register the operator");
+        deregister_operator(&self.network, client).await?;
+        info!("Successfully de-registered operator {}", operator);
 
         Ok(())
     }

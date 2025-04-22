@@ -11,6 +11,7 @@ use ethers::prelude::Wallet;
 use ethers::prelude::U256;
 use k256::ecdsa::SigningKey;
 use serde::Serialize;
+use tracing::info;
 
 pub use super::public_key::PublicKey;
 
@@ -194,9 +195,7 @@ pub async fn register_operator(
         );
     }
 
-    println!(
-        "Operator is whitelisted on Lagrange Network AVS contract. Moving on to registration."
-    );
+    info!("Operator is whitelisted on Lagrange Network AVS contract. Moving on to registration.");
 
     let receipt = contract
         .register_operator(public_key, signature)
@@ -204,7 +203,7 @@ pub async fn register_operator(
         .await?
         .await?;
 
-    println!(
+    info!(
         "Successfully registered on Lagrange AVS. Tx hash {:?}",
         receipt
             .expect("sucessful transaction but no receipt?")
@@ -218,35 +217,13 @@ pub async fn register_operator(
 pub async fn deregister_operator(
     network: &Network,
     client: Arc<Client>,
-    operator_address: Address,
 ) -> Result<()> {
     let contract_address: Address = network.lagrange_registry_address();
     let contract = ZKMRStakeRegistry::new(contract_address, client);
+    let receipt = contract.deregister_operator().send().await?.await?;
 
-    // we first check if we are whitelist
-    let is_whitelisted = contract.whitelist(operator_address).call().await?;
-    if !is_whitelisted {
-        bail!("operator address {operator_address} is not whitelisted on the Lagrange contract. Contact Lagrange admin.");
-    }
-    let is_registered = contract.is_registered(operator_address).call().await?;
-    if is_registered {
-        bail!(
-            "operator address {operator_address} is already registered on our contract! Exiting."
-        );
-    }
-
-    println!(
-        "Operator is whitelisted on Lagrange Network AVS contract. Moving on to registration."
-    );
-
-    let receipt = contract
-        .evict_operator(operator_address)
-        .send()
-        .await?
-        .await?;
-
-    println!(
-        "Successfully registered on Lagrange AVS. Tx hash {:?}",
+    info!(
+        "Successfully de-registered from Lagrange AVS. Tx hash {:?}",
         receipt
             .expect("sucessful transaction but no receipt?")
             .transaction_hash
