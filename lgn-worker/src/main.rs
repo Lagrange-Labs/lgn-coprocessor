@@ -29,9 +29,9 @@ use lagrange::WorkerDone;
 use lagrange::WorkerToGwRequest;
 use lagrange::WorkerToGwResponse;
 use lgn_auth::jwt::JWTAuth;
-use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProverType;
+use lgn_messages::types::RequestVersioned;
 use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
 use metrics::histogram;
@@ -535,19 +535,18 @@ async fn process_message_from_gateway(
         .map_err(|uuid| Error::UUIDInvalid { uuid })?;
     let uuid = uuid::Uuid::from_bytes_le(uuid);
 
-    let envelope = serde_json::from_slice::<MessageEnvelope>(&message.task)
+    let request = serde_json::from_slice::<RequestVersioned>(&message.task)
         .map_err(|err| Error::EnvelopeParseFailed { uuid, err })?;
 
-    let envelope_version = semver::Version::parse(&envelope.version)
+    let envelope_version = semver::Version::parse(request.mp2_version())
         .map_err(|err| Error::EnvelopeInvalidMP2Version { uuid, err })?;
 
+    let task_id = request.id();
     let span = span!(
         Level::INFO,
         "msg",
         %uuid,
-        task_id = envelope.task_id,
-        query_id = envelope.query_id,
-        db_id = ?envelope.db_task_id,
+        task_id,
     );
     let _guard = span.enter();
 
@@ -559,14 +558,10 @@ async fn process_message_from_gateway(
         });
     };
 
-    let task_type = envelope.to_task_type().to_owned();
-    let task_id = envelope.task_id().to_string();
-    let query_id = envelope.query_id().to_string();
+    let task_type = request.to_task_type().to_owned();
+    let task_id = request.id().to_string();
 
-    info!(
-        "Received Task. uuid: {} task_id: {} query_id: {}",
-        uuid, task_id, query_id
-    );
+    info!("Received Task. uuid: {} task_id: {}", uuid, task_id);
 
     counter!(
         "zkmr_worker_tasks_received_total",
@@ -580,7 +575,7 @@ async fn process_message_from_gateway(
         // gateway.
         std::panic::catch_unwind(|| {
             provers_manager
-                .delegate_proving(envelope)
+                .delegate_proving(request)
                 .map_err(|err| Error::ProofFailed { uuid, err })
         })
         .map_err(|panic| {
@@ -629,10 +624,9 @@ async fn process_message_from_gateway(
             .record(serialised.len() as f64);
 
             info!(
-                "Processed task. uuid: {} task_id: {} query_id: {} time: {:?}",
+                "Processed task. uuid: {} task_id: {} time: {:?}",
                 uuid,
                 task_id,
-                query_id,
                 start_time.elapsed(),
             );
             Ok(serialised)
@@ -650,10 +644,9 @@ async fn process_message_from_gateway(
             .record(start_time.elapsed().as_secs_f64());
 
             error!(
-                "Failed to process task. uuid: {} task_id: {} query_id: {} time: {:?} err: {:?}",
+                "Failed to process task. uuid: {} task_id: {} time: {:?} err: {:?}",
                 uuid,
                 task_id,
-                query_id,
                 start_time.elapsed(),
                 err,
             );
