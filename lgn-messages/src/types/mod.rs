@@ -152,7 +152,7 @@ impl MessageEnvelope {
                                 match &**final_extraction {
                                     FinalExtraction::Single(single_table_extraction) => {
                                         match single_table_extraction.extraction_type {
-                                            FinalExtractionType::Simple(..) => "final_extraction",
+                                            FinalExtractionType::Simple => "final_extraction",
                                             FinalExtractionType::Lengthed => {
                                                 "final_extraction_lengthed"
                                             },
