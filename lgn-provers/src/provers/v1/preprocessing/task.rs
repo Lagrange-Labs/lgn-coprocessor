@@ -277,6 +277,7 @@ impl PreprocessingEuclidProver {
                     },
                     DatabaseType::IVC(ivc) => {
                         self.prove_ivc(
+                            ivc.provable_data_commitment,
                             ivc.index_proof.to_owned(),
                             ivc.previous_ivc_proof.to_owned(),
                         )?

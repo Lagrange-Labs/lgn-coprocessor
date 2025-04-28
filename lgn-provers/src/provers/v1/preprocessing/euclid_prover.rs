@@ -440,20 +440,21 @@ impl PreprocessingEuclidProver {
 
     pub(super) fn prove_ivc(
         &self,
+        provable_data_commitment: bool,
         index_proof: Vec<u8>,
         previous_proof: Option<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
         let input = match previous_proof {
             Some(previous_proof) => {
                 IVC(verifiable_db::ivc::CircuitInput::new_subsequent_input(
-                    false,
+                    provable_data_commitment,
                     index_proof,
                     previous_proof,
                 )?)
             },
             None => {
                 IVC(verifiable_db::ivc::CircuitInput::new_first_input(
-                    false,
+                    provable_data_commitment,
                     index_proof,
                 )?)
             },

@@ -296,11 +296,19 @@ impl BlockMembershipInput {
     }
 }
 
+/// Default value for backwards compatibility.
+fn default_provable_data_commitment() -> bool {
+    false
+}
+
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct IvcInput {
     pub table_id: TableId,
     pub block_nr: BlockNr,
     pub is_first_block: bool,
+
+    #[serde(default = "default_provable_data_commitment")]
+    pub provable_data_commitment: bool,
 
     #[dbg(placeholder = "...")]
     pub index_proof: Vec<u8>,
@@ -316,6 +324,23 @@ impl IvcInput {
         is_first_block: bool,
     ) -> Self {
         Self {
+            provable_data_commitment: false,
+            table_id,
+            block_nr,
+            is_first_block,
+            index_proof: vec![],
+            previous_ivc_proof: None,
+        }
+    }
+
+    pub fn new_with_provable_data_commitment(
+        provable_data_commitment: bool,
+        table_id: TableId,
+        block_nr: BlockNr,
+        is_first_block: bool,
+    ) -> Self {
+        Self {
+            provable_data_commitment,
             table_id,
             block_nr,
             is_first_block,
