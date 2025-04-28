@@ -159,6 +159,7 @@ impl MessageEnvelope {
                                         }
                                     },
                                     FinalExtraction::Merge(..) => "final_extraction_merge",
+                                    FinalExtraction::Offchain(..) => "offchain",
                                 }
                             },
                         }

@@ -18,9 +18,12 @@ use mp2_v1::api::CircuitInput::RowsTree;
 use mp2_v1::api::CircuitInput::ValuesExtraction;
 use mp2_v1::api::CircuitInput::IVC;
 use mp2_v1::api::PublicParameters;
+use mp2_v1::api::TableRow;
 use mp2_v1::block_extraction;
 use mp2_v1::contract_extraction;
 use mp2_v1::final_extraction;
+use mp2_v1::final_extraction::OffChainRootOfTrust;
+use mp2_v1::indexing::ColumnID;
 use mp2_v1::length_extraction::LengthCircuitInput;
 use mp2_v1::values_extraction;
 use mp2_v1::values_extraction::gadgets::column_info::ColumnInfo;
@@ -220,6 +223,24 @@ impl PreprocessingEuclidProver {
                 mapping_table_proof,
             )?,
         );
+        generate_proof(&self.params, input)
+    }
+
+    pub(super) fn prove_offchain_extraction_merge(
+        &self,
+        primary_index: U256,
+        root_of_trust: OffChainRootOfTrust,
+        prev_epoch_proof: Option<Vec<u8>>,
+        table_rows: &[TableRow],
+        row_unique_columns: &[ColumnID],
+    ) -> anyhow::Result<Vec<u8>> {
+        let input = FinalExtraction(final_extraction::CircuitInput::new_no_provable_input(
+            primary_index,
+            root_of_trust,
+            prev_epoch_proof,
+            table_rows,
+            row_unique_columns,
+        )?);
         generate_proof(&self.params, input)
     }
 

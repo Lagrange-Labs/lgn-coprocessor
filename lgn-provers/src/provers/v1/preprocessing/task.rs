@@ -160,6 +160,15 @@ impl PreprocessingEuclidProver {
                                     mapping_table_extraction.mapping_table_proof,
                                 )?
                             },
+                            FinalExtraction::Offchain(offchain_extraction) => {
+                                self.prove_offchain_extraction_merge(
+                                    offchain_extraction.primary_index,
+                                    offchain_extraction.root_of_trust,
+                                    offchain_extraction.prev_epoch_proof,
+                                    &offchain_extraction.table_rows,
+                                    &offchain_extraction.row_unique_columns,
+                                )?
+                            },
                         }
                     },
                 }
