@@ -1,7 +1,11 @@
 use alloy_primitives::Address;
+use alloy_primitives::U256;
 use derive_debug_plus::Dbg;
 use ethers::types::H256;
 use ethers::utils::rlp;
+use mp2_v1::api::TableRow;
+use mp2_v1::final_extraction::OffChainRootOfTrust;
+use mp2_v1::indexing::ColumnID;
 use mp2_v1::values_extraction::gadgets::column_info::ColumnInfo;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
@@ -257,6 +261,7 @@ impl BlockExtractionInput {
 pub enum FinalExtraction {
     Single(SingleTableExtraction),
     Merge(MergeTableExtraction),
+    Offchain(OffchainExtraction),
 }
 
 impl FinalExtraction {
@@ -264,6 +269,7 @@ impl FinalExtraction {
         match self {
             FinalExtraction::Single(single_table_extraction) => single_table_extraction.table_id,
             FinalExtraction::Merge(merge_table_extraction) => merge_table_extraction.table_id,
+            FinalExtraction::Offchain(offchain_extraction) => offchain_extraction.table_id,
         }
     }
 
@@ -271,6 +277,13 @@ impl FinalExtraction {
         match self {
             FinalExtraction::Single(single_table_extraction) => single_table_extraction.block_nr,
             FinalExtraction::Merge(merge_table_extraction) => merge_table_extraction.block_nr,
+            FinalExtraction::Offchain(offchain_extraction) => {
+                offchain_extraction
+                    .primary_index
+                    .try_into()
+                    // Should not happen, a u64 should be more than sufficient to represent the primary indexes
+                    .unwrap_or_default()
+            },
         }
     }
 
@@ -425,6 +438,17 @@ impl MergeTableExtraction {
 pub enum FinalExtractionType {
     Simple,
     Lengthed,
+}
+
+/// Inputs for an off-chain extraction.
+#[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
+pub struct OffchainExtraction {
+    pub table_id: TableId,
+    pub primary_index: U256,
+    pub root_of_trust: OffChainRootOfTrust,
+    pub prev_epoch_proof: Option<Vec<u8>>,
+    pub table_rows: Vec<TableRow>,
+    pub row_unique_columns: Vec<ColumnID>,
 }
 
 impl From<&WorkerTask> for ProofKey {
