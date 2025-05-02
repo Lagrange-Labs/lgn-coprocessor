@@ -11,6 +11,7 @@ use ethers::prelude::Wallet;
 use ethers::prelude::U256;
 use k256::ecdsa::SigningKey;
 use serde::Serialize;
+use tracing::info;
 
 pub use super::public_key::PublicKey;
 
@@ -53,6 +54,7 @@ pub enum Network {
     #[default]
     Mainnet,
     Holesky,
+    Hoodi,
 }
 
 impl Network {
@@ -60,6 +62,7 @@ impl Network {
         match self {
             Network::Mainnet => "mainnet",
             Network::Holesky => "holesky",
+            Network::Hoodi => "hoodi",
         }
         .to_string()
     }
@@ -67,7 +70,8 @@ impl Network {
     pub fn chain_id(&self) -> u64 {
         match self {
             Network::Mainnet => 1,
-            Network::Holesky => 17000u64,
+            Network::Holesky => 17000,
+            Network::Hoodi => 560048,
         }
     }
 
@@ -77,6 +81,7 @@ impl Network {
         match self {
             Network::Mainnet => MAINNET_ZKMR_STAKE_REGISTRY_ADDR,
             Network::Holesky => HOLESKY_ZKMR_STAKE_REGISTRY_ADDR,
+            Network::Hoodi => todo!(),
         }
         .to_string()
         .parse()
@@ -89,6 +94,7 @@ impl Network {
         match self {
             Network::Mainnet => MAINNET_ZKMR_SERVICE_MANAGER_ADDR,
             Network::Holesky => HOLESKY_ZKMR_SERVICE_MANAGER_ADDR,
+            Network::Hoodi => todo!(),
         }
         .to_string()
         .parse()
@@ -102,6 +108,7 @@ impl Network {
         match self {
             Network::Mainnet => MAINNET_DELEGATION_MANAGER_ADDR.to_string(),
             Network::Holesky => HOLESKY_DELEGATION_MANAGER_ADDR.to_string(),
+            Network::Hoodi => todo!(),
         }
         .parse()
         .expect("invalid delegation manager address")
@@ -113,6 +120,7 @@ impl Network {
         match self {
             Network::Mainnet => MAINNET_AVS_DIRECTORY_ADDR.to_string(),
             Network::Holesky => HOLESKY_AVS_DIRECTORY_ADDR.to_string(),
+            Network::Hoodi => todo!(),
         }
         .parse()
         .expect("invalid contract avs directory address")
@@ -187,9 +195,7 @@ pub async fn register_operator(
         );
     }
 
-    println!(
-        "Operator is whitelisted on Lagrange Network AVS contract. Moving on to registration."
-    );
+    info!("Operator is whitelisted on Lagrange Network AVS contract. Moving on to registration.");
 
     let receipt = contract
         .register_operator(public_key, signature)
@@ -197,8 +203,27 @@ pub async fn register_operator(
         .await?
         .await?;
 
-    println!(
+    info!(
         "Successfully registered on Lagrange AVS. Tx hash {:?}",
+        receipt
+            .expect("sucessful transaction but no receipt?")
+            .transaction_hash
+    );
+
+    Ok(())
+}
+
+/// Call ZKMRStakeRegistry contract function `evictOperator`
+pub async fn deregister_operator(
+    network: &Network,
+    client: Arc<Client>,
+) -> Result<()> {
+    let contract_address: Address = network.lagrange_registry_address();
+    let contract = ZKMRStakeRegistry::new(contract_address, client);
+    let receipt = contract.deregister_operator().send().await?.await?;
+
+    info!(
+        "Successfully de-registered from Lagrange AVS. Tx hash {:?}",
         receipt
             .expect("sucessful transaction but no receipt?")
             .transaction_hash
