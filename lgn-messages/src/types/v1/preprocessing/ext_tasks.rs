@@ -444,6 +444,8 @@ pub enum FinalExtractionType {
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct OffchainExtraction {
     pub table_id: TableId,
+    pub block_nr: BlockNr,
+    pub is_first_block: bool,
     pub primary_index: U256,
     pub root_of_trust: OffChainRootOfTrust,
     pub prev_epoch_proof: Option<Vec<u8>>,
