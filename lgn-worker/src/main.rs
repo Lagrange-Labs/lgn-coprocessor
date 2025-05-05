@@ -269,7 +269,7 @@ pub fn exit_reason(
 
 async fn run(config: &Config) -> anyhow::Result<()> {
     let mp2_version = semver::Version::parse(verifiable_db::version())?;
-    let mp2_requirement = semver::VersionReq::parse(&format!("^{mp2_version}"))?;
+    let mp2_requirement = semver::VersionReq::parse(&format!("^{}", mp2_version.major))?;
     let version = env!("CARGO_PKG_VERSION");
 
     let span = span!(
