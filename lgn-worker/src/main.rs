@@ -92,10 +92,11 @@ enum Error {
     UUIDInvalid { uuid: Vec<u8> },
 
     /// Failed to parse the incoming envelope.
-    #[error("Worker envelope parsing failed. uuid: {} err: {:?}", .uuid, .err)]
+    #[error("Worker envelope parsing failed. uuid: {} err: {:?} envelope: {:?}", .uuid, .err, .message)]
     EnvelopeParseFailed {
         uuid: uuid::Uuid,
         err: serde_json::Error,
+        message: WorkerToGwResponse,
     },
 
     /// Invalid mp2 version in the incoming envelope.
@@ -396,6 +397,7 @@ async fn run(config: &Config) -> anyhow::Result<()> {
                         }
                     },
                     Err(err) => {
+                        error!("Processing message failed. err: {:?}", err);
                         counter!("zkmr_worker_messages_error_total", "type" => err.to_error_tag())
                             .increment(1);
                         WorkerToGwRequest {
@@ -536,7 +538,7 @@ async fn process_message_from_gateway(
     let uuid = uuid::Uuid::from_bytes_le(uuid);
 
     let envelope = serde_json::from_slice::<MessageEnvelope>(&message.task)
-        .map_err(|err| Error::EnvelopeParseFailed { uuid, err })?;
+        .map_err(|err| Error::EnvelopeParseFailed { uuid, err, message })?;
 
     let envelope_version = semver::Version::parse(&envelope.version)
         .map_err(|err| Error::EnvelopeInvalidMP2Version { uuid, err })?;
