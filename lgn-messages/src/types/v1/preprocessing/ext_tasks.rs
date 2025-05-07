@@ -5,6 +5,7 @@ use ethers::types::H256;
 use ethers::utils::rlp;
 use mp2_v1::api::TableRow;
 use mp2_v1::final_extraction::OffChainRootOfTrust;
+use mp2_v1::indexing::cell::Cell;
 use mp2_v1::indexing::ColumnID;
 use mp2_v1::values_extraction::gadgets::column_info::ColumnInfo;
 use serde_derive::Deserialize;
@@ -440,6 +441,27 @@ pub enum FinalExtractionType {
     Lengthed,
 }
 
+/// Wrapper structure used to change the serialisation format.
+///
+/// The `TableRow` data type uses a map indexed by u64, this normally
+/// works with serde_json, except if a parent container uses a tagged
+/// union, this is an unresolved bug in serde.
+///
+/// This struct exists to change the map to a vec, to circunvent the above.
+///
+/// issue: https://github.com/serde-rs/serde/issues/1183
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub struct ExtractionRow {
+    pub primary_index_column: Cell,
+    pub other_columns: Vec<Cell>,
+}
+
+impl From<ExtractionRow> for TableRow {
+    fn from(value: ExtractionRow) -> Self {
+        TableRow::new(value.primary_index_column, value.other_columns)
+    }
+}
+
 /// Inputs for an off-chain extraction.
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct OffchainExtraction {
@@ -449,7 +471,7 @@ pub struct OffchainExtraction {
     pub primary_index: U256,
     pub root_of_trust: OffChainRootOfTrust,
     pub prev_epoch_proof: Option<Vec<u8>>,
-    pub table_rows: Vec<TableRow>,
+    pub table_rows: Vec<ExtractionRow>,
     pub row_unique_columns: Vec<ColumnID>,
 }
 

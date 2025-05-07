@@ -17,6 +17,7 @@ use lgn_messages::types::ProofCategory;
 use lgn_messages::types::ReplyType;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::WorkerReply;
+use mp2_v1::api::TableRow;
 
 use super::euclid_prover::PreprocessingEuclidProver;
 use crate::provers::LgnProver;
@@ -161,11 +162,16 @@ impl PreprocessingEuclidProver {
                                 )?
                             },
                             FinalExtraction::Offchain(offchain_extraction) => {
+                                let table_rows: Vec<_> = offchain_extraction
+                                    .table_rows
+                                    .into_iter()
+                                    .map(TableRow::from)
+                                    .collect();
                                 self.prove_offchain_extraction_merge(
                                     offchain_extraction.primary_index,
                                     offchain_extraction.root_of_trust,
                                     offchain_extraction.prev_epoch_proof,
-                                    &offchain_extraction.table_rows,
+                                    &table_rows,
                                     &offchain_extraction.row_unique_columns,
                                 )?
                             },
