@@ -14,8 +14,8 @@ alloy-primitives = { version = "0.8" }
 anyhow = { version = "1.0" }
 backtrace = { version = "0.3" }
 base64 = { version = "0.22" }
-bincode = { version = "1.3" }
-blake3 = { version = "1", features = ["rayon"] }
+bincode = { version = "1" }
+blake3 = { version = "1", features = ["mmap", "rayon"] }
 bytes = { version = "1.10" }
 clap = { version = "4.5", default-features = false }
 config = { version = "0.15", default-features = false }
