@@ -4,7 +4,7 @@ version = "1.1.8"
 edition = "2021"
 
 [dependencies]
-alloy-primitives = { workspace = true }
+alloy.workspace = true
 derive-debug-plus = { workspace = true }
 ethers = { workspace = true }
 mp2_common = { workspace = true }
