@@ -242,6 +242,6 @@ async fn resume_download(
         );
     } else {
         info!("Downloaded file. filepath: {}", filepath.display());
-        return Ok(());
+        Ok(())
     }
 }

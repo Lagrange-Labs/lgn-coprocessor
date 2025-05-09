@@ -593,10 +593,10 @@ async fn process_message_from_gateway(
 
             match panic.downcast::<String>() {
                 Ok(panic_msg) => {
-                    return Error::ProofPanic {
+                    Error::ProofPanic {
                         uuid,
                         panic_msg: *panic_msg,
-                    };
+                    }
                 },
                 Err(panic) => {
                     Error::ProofPanic {
