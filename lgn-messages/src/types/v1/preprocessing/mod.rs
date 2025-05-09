@@ -1,5 +1,5 @@
-use alloy_primitives::Address;
-use alloy_primitives::U256;
+use alloy::primitives::Address;
+use alloy::primitives::U256;
 use ethers::prelude::H256;
 use ext_tasks::FinalExtractionType;
 use mp2_common::types::HashOutput;
