@@ -17,6 +17,8 @@ jobs:
     environment: CI
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: Generate PPs
         shell: devenv shell bash -- -e {0}
         run: |
@@ -31,7 +33,7 @@ jobs:
           AWS_DEFAULT_REGION: eeur
       - name: Upload PPs to S3
         shell: devenv shell bash -- -e {0}
-        run: tools/upload-s3.pl zkmr_params https://6947101809337eb271c6f69060934681.r2.cloudflarestorage.com
+        run: lgn-worker/bin/upload-s3.pl zkmr_params https://6947101809337eb271c6f69060934681.r2.cloudflarestorage.com
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.CF_AWS_ACCESS_KEY_ID_MAIN }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_AWS_SECRET_ACCESS_KEY_MAIN }}

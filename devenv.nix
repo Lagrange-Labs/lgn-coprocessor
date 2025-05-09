@@ -43,7 +43,7 @@ in
     pull = [];
   };
 
-  packages = [ pkgs.git pkgs.openssl pkgs.pkg-config pkgs.protobuf ]
+  packages = [ pkgs.perl pkgs.git pkgs.openssl pkgs.pkg-config pkgs.protobuf ]
              ++ lib.optionals pkgs.stdenv.targetPlatform.isDarwin [
                pkgs.libiconv
                pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
@@ -53,6 +53,9 @@ in
     LAGRANGE_PRIVATE_KEY="779ff5fe168de6560e95dff8c91d3af4c45ad1b261d03d22e2e1558fb27ea450";
 
     OPENSSL_DEV = pkgs.openssl.dev;
+
+    # Make Go dependencies RW
+    GOFLAGS = "-modcacherw";
   };
 
   scripts = let
