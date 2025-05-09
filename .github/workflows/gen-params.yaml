@@ -17,6 +17,8 @@ jobs:
     environment: CI
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: Generate PPs
         shell: devenv shell bash -- -e {0}
         run: |
