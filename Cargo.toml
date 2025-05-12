@@ -3,11 +3,11 @@ resolver = "2"
 members = ["lgn-auth", "lgn-messages", "lgn-provers", "lgn-worker"]
 
 [workspace.dependencies]
-groth16_framework = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "2.1.1" }
-mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "2.1.1" }
-mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "2.1.1" }
-parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "2.1.1" }
-verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "2.1.1" }
+groth16_framework = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.1" }
+mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.1" }
+mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.1" }
+parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.1" }
+verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.1" }
 
 alloy = { version = "0.15", features = [ "serde" ] }
 anyhow = { version = "1.0" }
