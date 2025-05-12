@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use std::fmt::Formatter;
 
-use alloy_primitives::Address;
+use alloy::primitives::Address;
 use object_store::path::Path;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
