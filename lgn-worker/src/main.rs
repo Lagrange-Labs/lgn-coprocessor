@@ -1,5 +1,7 @@
 #![feature(generic_const_exprs)]
 #![feature(result_flattening)]
+#![allow(incomplete_features)]
+
 use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::fs;
@@ -31,7 +33,6 @@ use lagrange::WorkerToGwResponse;
 use lgn_auth::jwt::JWTAuth;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
-use lgn_messages::types::ProverType;
 use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
 use metrics::histogram;

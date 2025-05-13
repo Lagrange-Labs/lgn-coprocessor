@@ -95,10 +95,18 @@ jobs:
 
       - name: clippy
         run: |
-            docker run --rm base:${{ github.sha }} cargo clippy --all-targets --all -- -D warnings -A incomplete-features -A unused
+            docker run --rm base:${{ github.sha }} cargo clippy --all-targets --all -- -D warnings
       - name: fmt
         run: |
             docker run --rm base:${{ github.sha }} cargo fmt --all -- --check
+
+  bbuild:
+    needs: base
+    runs-on: ${{needs.base.outputs.RUNNER}}
+    steps:
+      - name: bbuild
+        run: |
+            docker run --rm base:${{ github.sha }} cargo build --all
 
   test:
     needs: base
