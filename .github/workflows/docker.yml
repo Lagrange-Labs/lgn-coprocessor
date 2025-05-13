@@ -106,7 +106,7 @@ jobs:
     steps:
       - name: bbuild
         run: |
-            docker run --rm base:${{ github.sha }} cargo build
+            docker run --rm base:${{ github.sha }} cargo build --all
 
   test:
     needs: base
