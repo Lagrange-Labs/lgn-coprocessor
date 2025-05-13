@@ -1,4 +1,6 @@
 #![feature(generic_const_exprs)]
+#![allow(incomplete_features)]
+
 use std::fs::File;
 use std::io::Read;
 use std::io::Write;
