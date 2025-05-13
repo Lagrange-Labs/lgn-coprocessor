@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use alloy::primitives::Address;
 use alloy::primitives::U256;
 use anyhow::bail;
-use ethers::utils::rlp::Prototype;
-use ethers::utils::rlp::Rlp;
+use alloy::rlp::PayloadView;
+use alloy::rlp::Rlp;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::generate_proof;
@@ -99,16 +99,17 @@ impl PreprocessingEuclidProver {
         node: Vec<u8>,
         child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
-        let rlp = Rlp::new(&node);
-        match rlp.prototype()? {
-            Prototype::List(2) => {
+        todo!()/*
+        let rlp = alloy::rlp::Header::decode_raw(&node)?;
+        match rlp.get_next()?.ok_or(anyhow::anyhow!("Invalid RLP variant"))? {
+            PayloadView::List(list) if list.len() == 2 => {
                 let input = ValuesExtraction(values_extraction::CircuitInput::new_extension(
                     node,
                     child_proofs[0].to_owned(),
                 ));
                 generate_proof(&self.params, input)
             },
-            Prototype::List(17) => {
+            PayloadView::List(list) if list.len() == 17 => {
                 let input = ValuesExtraction(values_extraction::CircuitInput::new_branch(
                     node,
                     child_proofs,
@@ -117,6 +118,7 @@ impl PreprocessingEuclidProver {
             },
             _ => bail!("Invalid RLP item count"),
         }
+               */
     }
 
     pub(super) fn prove_length_leaf(

@@ -1,8 +1,8 @@
 use alloy::primitives::Address;
+use alloy::primitives::FixedBytes;
 use alloy::primitives::U256;
+use alloy::rlp;
 use derive_debug_plus::Dbg;
-use ethers::types::H256;
-use ethers::utils::rlp;
 use mp2_v1::api::TableRow;
 use mp2_v1::final_extraction::OffChainRootOfTrust;
 use mp2_v1::indexing::cell::Cell;
@@ -41,7 +41,7 @@ pub enum ExtractionType {
 pub struct Mpt {
     pub table_hash: TableHash,
     pub block_nr: BlockNr,
-    pub node_hash: H256,
+    pub node_hash: FixedBytes<32>,
     pub mpt_type: MptType,
 }
 
@@ -49,7 +49,7 @@ impl Mpt {
     pub fn new(
         table_hash: TableId,
         block_nr: BlockNr,
-        node_hash: H256,
+        node_hash: FixedBytes<32>,
         mpt_type: MptType,
     ) -> Self {
         Self {
@@ -204,7 +204,7 @@ impl MPTExtractionType {
         node: &[u8],
         i: usize,
     ) -> Self {
-        let list: Vec<Vec<_>> = rlp::decode_list(node);
+        let list: Vec<Vec<u8>> = rlp::decode_exact(node).unwrap();
         match list.len() {
             // assuming the first node in the path is the leaf
             2 if i == 0 => MPTExtractionType::Leaf,
