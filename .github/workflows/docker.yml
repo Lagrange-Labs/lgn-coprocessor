@@ -100,6 +100,14 @@ jobs:
         run: |
             docker run --rm base:${{ github.sha }} cargo fmt --all -- --check
 
+  build:
+    needs: base
+    runs-on: ${{needs.base.outputs.RUNNER}}
+    steps:
+      - name: test
+        run: |
+            docker run --rm base:${{ github.sha }} cargo build
+
   test:
     needs: base
     runs-on: ${{needs.base.outputs.RUNNER}}
