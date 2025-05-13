@@ -348,24 +348,40 @@ async fn run(config: &Config) -> anyhow::Result<()> {
         counter!("zkmr_worker_messages_error_total", "type" => error_tag).increment(0);
     }
 
-    for prover_type in [
-        ProverType::V1Preprocessing,
-        ProverType::V1Query,
-        ProverType::V1Groth16,
+    for task_type in [
+        "mapping_leaf",
+        "mapping_branch",
+        "multi_var_leaf",
+        "multi_var_branch",
+        "length",
+        "contract",
+        "block",
+        "final_extraction",
+        "final_extraction_lengthed",
+        "final_extraction_merge",
+        "offchain",
+        "cell_leaf",
+        "cell_partial",
+        "cell_full",
+        "row_leaf",
+        "row_partial",
+        "row_full",
+        "index",
+        "ivc",
     ] {
         counter!(
             "zkmr_worker_tasks_received_total",
-            "prover_type" => prover_type.to_string(),
+            "task_type" => task_type.to_string(),
         )
         .increment(0);
         counter!(
             "zkmr_worker_tasks_successful_total",
-            "prover_type" => prover_type.to_string(),
+            "task_type" => task_type.to_string(),
         )
         .increment(0);
         counter!(
             "zkmr_worker_tasks_error_total",
-            "prover_type" => prover_type.to_string(),
+            "task_type" => task_type.to_string(),
         )
         .increment(0);
     }
