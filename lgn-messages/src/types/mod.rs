@@ -16,8 +16,8 @@ use v1::query::tasks::ProofInputKind;
 use v1::query::tasks::QueryStep;
 use v1::query::tasks::RevelationInput;
 
-use crate::routing::RoutingKey;
 use crate::KeyedPayload;
+use crate::routing::RoutingKey;
 
 pub mod v1;
 
@@ -33,6 +33,148 @@ pub enum ReplyType {
     V1Preprocessing(WorkerReply),
     V1Query(WorkerReply),
     V1Groth16(WorkerReply),
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(tag = "version")]
+pub enum RequestVersioned {
+    /// Version 1 of the request.
+    #[serde(rename = "1")]
+    V1(V1),
+
+    /// Variant for backwards compatibility.
+    ///
+    /// TODO: Remove this once phased out.
+    #[serde(untagged)]
+    Legacy(MessageEnvelope),
+}
+
+impl RequestVersioned {
+    /// Returns a reference to the requested mp2 library version.
+    pub fn mp2_version(&self) -> &str {
+        match self {
+            RequestVersioned::V1(v1) => v1.mp2_version(),
+            RequestVersioned::Legacy(message_envelope) => message_envelope.mp2_version(),
+        }
+    }
+
+    /// Returns a unique identifier for this task.
+    ///
+    /// Note: For legacy messages, the unique identifier is created by adjoining the task and query
+    /// ids.
+    pub fn id(&self) -> String {
+        match self {
+            RequestVersioned::V1(v1) => v1.id(),
+            RequestVersioned::Legacy(message_envelope) => message_envelope.id(),
+        }
+    }
+
+    /// Returns a reference to this task's id.
+    pub fn task_id(&self) -> &str {
+        match self {
+            RequestVersioned::V1(v1) => v1.task_id(),
+            RequestVersioned::Legacy(message_envelope) => message_envelope.task_id(),
+        }
+    }
+
+    /// Returns [ProverType] which supports proving this [TaskType].
+    ///
+    /// This is used to dispatch the message to the correct underlying prover.
+    pub fn to_prover_type(&self) -> ProverType {
+        match self {
+            RequestVersioned::V1(v1) => v1.to_prover_type(),
+            RequestVersioned::Legacy(message_envelope) => message_envelope.to_prover_type(),
+        }
+    }
+
+    /// Returns the task's type name.
+    ///
+    /// This is used to classify the tasks for metrics.
+    pub fn to_task_type(&self) -> &str {
+        match self {
+            RequestVersioned::V1(v1) => v1.to_task_type(),
+            RequestVersioned::Legacy(message_envelope) => message_envelope.to_task_type(),
+        }
+    }
+
+    /// Returns the inner [TaskType].
+    pub fn inner(&self) -> &TaskType {
+        match self {
+            RequestVersioned::V1(v1) => v1.inner(),
+            RequestVersioned::Legacy(message_envelope) => message_envelope.inner(),
+        }
+    }
+
+    /// Consumes self and returns the inner [TaskType].
+    pub fn into_inner(self) -> TaskType {
+        match self {
+            RequestVersioned::V1(v1) => v1.into_inner(),
+            RequestVersioned::Legacy(message_envelope) => message_envelope.into_inner(),
+        }
+    }
+
+    /// Returns the `query_id` part of the message.
+    ///
+    /// Note: This is only available for legacy messages.
+    pub fn query_id(&self) -> &str {
+        match self {
+            RequestVersioned::V1(_v1) => "",
+            RequestVersioned::Legacy(message_envelope) => message_envelope.query_id(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct V1 {
+    /// Task id is unique for each task and helps to map replies to tasks.
+    pub task_id: String,
+
+    /// Details of the task to be executed.
+    pub inner: TaskType,
+
+    /// The proving system version.
+    pub mp2_version: String,
+}
+
+impl V1 {
+    /// Returns a reference to the requested mp2 library version.
+    pub fn mp2_version(&self) -> &str {
+        &self.mp2_version
+    }
+
+    /// Returns a copy of this task's id.
+    pub fn id(&self) -> String {
+        self.task_id.to_owned()
+    }
+
+    /// Returns a reference to this task's id.
+    pub fn task_id(&self) -> &str {
+        &self.task_id
+    }
+
+    /// Returns [ProverType] which supports proving this [TaskType].
+    ///
+    /// This is used to dispatch the message to the correct underlying prover.
+    pub fn to_prover_type(&self) -> ProverType {
+        self.inner.to_prover_type()
+    }
+
+    /// Returns the task's type name.
+    ///
+    /// This is used to classify the tasks for metrics.
+    pub fn to_task_type(&self) -> &str {
+        self.inner.to_task_type()
+    }
+
+    /// Returns the inner [TaskType].
+    pub fn inner(&self) -> &TaskType {
+        &self.inner
+    }
+
+    /// Consumes self and returns the inner [TaskType].
+    fn into_inner(self) -> TaskType {
+        self.inner
+    }
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -113,6 +255,7 @@ impl MessageEnvelope {
         format!("{}-{}", self.query_id, self.task_id)
     }
 
+    /// Returns the inner [TaskType].
     pub fn inner(&self) -> &TaskType {
         &self.inner
     }
@@ -126,6 +269,11 @@ impl MessageEnvelope {
     /// This is used to dispatch the message to the correct underlying prover.
     pub fn to_prover_type(&self) -> ProverType {
         self.inner.to_prover_type()
+    }
+
+    /// Returns a reference to the requested mp2 library version.
+    pub fn mp2_version(&self) -> &str {
+        &self.version
     }
 
     /// Returns the task's type name.
@@ -210,6 +358,12 @@ impl MessageEnvelope {
             },
             TaskType::V1Groth16(..) => "groth16",
         }
+        self.inner.to_task_type()
+    }
+
+    /// Consumes self and returns the inner [TaskType].
+    fn into_inner(self) -> TaskType {
+        self.inner
     }
 }
 
@@ -389,6 +543,89 @@ impl TaskType {
             TaskType::V1Preprocessing(_) => ProverType::V1Preprocessing,
             TaskType::V1Query(_) => ProverType::V1Query,
             TaskType::V1Groth16(_) => ProverType::V1Groth16,
+        }
+    }
+
+    /// Returns the task's type name.
+    ///
+    /// This is used to classify the tasks for metrics.
+    fn to_task_type(&self) -> &str {
+        match self {
+            TaskType::V1Preprocessing(worker_task) => {
+                match &worker_task.task_type {
+                    v1::preprocessing::WorkerTaskType::Extraction(extraction_type) => {
+                        match extraction_type {
+                            ExtractionType::MptExtraction(mpt) => {
+                                match mpt.mpt_type {
+                                    MptType::MappingLeaf(..) => "mapping_leaf",
+                                    MptType::MappingBranch(..) => "mapping_branch",
+                                    MptType::VariableLeaf(..) => "multi_var_leaf",
+                                    MptType::VariableBranch(..) => "multi_var_branch",
+                                }
+                            },
+                            ExtractionType::LengthExtraction(..) => "length",
+                            ExtractionType::ContractExtraction(..) => "contract",
+                            ExtractionType::BlockExtraction(..) => "block",
+                            ExtractionType::FinalExtraction(final_extraction) => {
+                                match &**final_extraction {
+                                    FinalExtraction::Single(single_table_extraction) => {
+                                        match single_table_extraction.extraction_type {
+                                            FinalExtractionType::Simple(..) => "final_extraction",
+                                            FinalExtractionType::Lengthed => {
+                                                "final_extraction_lengthed"
+                                            },
+                                        }
+                                    },
+                                    FinalExtraction::Merge(..) => "final_extraction_merge",
+                                }
+                            },
+                        }
+                    },
+                    v1::preprocessing::WorkerTaskType::Database(database_type) => {
+                        match database_type {
+                            DatabaseType::Cell(db_cell_type) => {
+                                match db_cell_type {
+                                    DbCellType::Leaf(..) => "cell_leaf",
+                                    DbCellType::Partial(..) => "cell_partial",
+                                    DbCellType::Full(..) => "cell_full",
+                                }
+                            },
+                            DatabaseType::Row(db_row_type) => {
+                                match db_row_type {
+                                    DbRowType::Leaf(..) => "row_leaf",
+                                    DbRowType::Partial(..) => "row_partial",
+                                    DbRowType::Full(..) => "row_full",
+                                }
+                            },
+                            DatabaseType::Index(..) => "index",
+                            DatabaseType::IVC(..) => "ivc",
+                        }
+                    },
+                }
+            },
+            TaskType::V1Query(worker_task) => {
+                match &worker_task.task_type {
+                    v1::query::WorkerTaskType::Query(query_input) => {
+                        match &query_input.query_step {
+                            QueryStep::Tabular(..) => "tabular",
+                            QueryStep::Aggregation(aggregation_input) => {
+                                match aggregation_input.input_kind {
+                                    ProofInputKind::RowsChunk(..) => "rows_chunk",
+                                    ProofInputKind::ChunkAggregation(..) => "chunk_aggregation",
+                                    ProofInputKind::NonExistence(..) => "non_existence",
+                                }
+                            },
+                            QueryStep::Revelation(revelation_input) => {
+                                match revelation_input {
+                                    RevelationInput::Aggregated { .. } => "revelation_aggregated",
+                                    RevelationInput::Tabular { .. } => "revelation_tabular",
+                                }
+                            },
+                        }
+                    },
+                }
+            },
+            TaskType::V1Groth16(..) => "groth16",
         }
     }
 }

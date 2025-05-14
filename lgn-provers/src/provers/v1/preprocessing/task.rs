@@ -11,10 +11,10 @@ use lgn_messages::types::v1::preprocessing::ext_tasks::FinalExtractionType;
 use lgn_messages::types::v1::preprocessing::ext_tasks::MptType;
 use lgn_messages::types::v1::preprocessing::WorkerTask;
 use lgn_messages::types::v1::preprocessing::WorkerTaskType;
-use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProofCategory;
 use lgn_messages::types::ReplyType;
+use lgn_messages::types::RequestVersioned;
 use lgn_messages::types::TaskType;
 use lgn_messages::types::WorkerReply;
 use mp2_v1::api::TableRow;
@@ -25,11 +25,13 @@ use crate::provers::LgnProver;
 impl LgnProver for PreprocessingEuclidProver {
     fn run(
         &self,
-        envelope: MessageEnvelope,
+        envelope: RequestVersioned,
     ) -> anyhow::Result<MessageReplyEnvelope> {
-        let query_id = envelope.query_id.clone();
-        let task_id = envelope.task_id.clone();
-        if let TaskType::V1Preprocessing(task @ WorkerTask { chain_id, .. }) = envelope.inner {
+        let query_id = envelope.query_id().to_owned();
+        let task_id = envelope.task_id().to_owned();
+
+        if let TaskType::V1Preprocessing(task @ WorkerTask { chain_id, .. }) = envelope.into_inner()
+        {
             let key = match &task.task_type {
                 WorkerTaskType::Extraction(_) => {
                     let key: ext_keys::ProofKey = (&task).into();
@@ -46,9 +48,13 @@ impl LgnProver for PreprocessingEuclidProver {
                 Some((key, result)),
                 ProofCategory::Querying,
             ));
-            Ok(MessageReplyEnvelope::new(query_id, task_id, reply_type))
+            Ok(MessageReplyEnvelope::new(
+                query_id.to_owned(),
+                task_id.to_owned(),
+                reply_type,
+            ))
         } else {
-            bail!("Unexpected task: {:?}", envelope);
+            bail!("Unexpected task. task_id: {}", task_id);
         }
     }
 }
