@@ -20,10 +20,14 @@ use jwt::Claims;
 use jwt::ToBase64;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_with::serde_as;
+use serde_with::DisplayFromStr;
 
+#[serde_as]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct JWTAuth {
     claims: Claims,
+    #[serde_as(as = "DisplayFromStr")]
     signature: Signature,
 }
 
