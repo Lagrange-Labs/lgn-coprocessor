@@ -1,8 +1,9 @@
 use alloy::primitives::Address;
 use alloy::primitives::FixedBytes;
 use alloy::primitives::U256;
-use alloy::rlp;
 use derive_debug_plus::Dbg;
+use mp2_common::eth::node_type;
+use mp2_common::eth::NodeType;
 use mp2_v1::api::TableRow;
 use mp2_v1::final_extraction::OffChainRootOfTrust;
 use mp2_v1::indexing::cell::Cell;
@@ -202,15 +203,14 @@ pub enum MPTExtractionType {
 impl MPTExtractionType {
     pub fn from_rlp_node(
         node: &[u8],
-        i: usize,
+        _i: usize,
     ) -> Self {
-        let list: Vec<Vec<u8>> = rlp::decode_exact(node).unwrap();
-        match list.len() {
+        match node_type(node).unwrap() {
             // assuming the first node in the path is the leaf
-            2 if i == 0 => MPTExtractionType::Leaf,
-            2 => MPTExtractionType::Extension,
+            NodeType::Leaf => MPTExtractionType::Leaf,
+            NodeType::Extension => MPTExtractionType::Extension,
             // assuming all nodes are valid so branch is the only choice left
-            _ => MPTExtractionType::Branch,
+            NodeType::Branch => MPTExtractionType::Branch,
         }
     }
 }
