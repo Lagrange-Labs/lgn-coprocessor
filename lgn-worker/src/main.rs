@@ -468,6 +468,8 @@ async fn connect_to_gateway(
         JWTAuth::new(claims, &wallet)?.encode()?
     };
 
+    tracing::info!("TOKEN {token}");
+
     let grpc_url = &config.avs.gateway_url;
     let max_message_size = config
         .avs
