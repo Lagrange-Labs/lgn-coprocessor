@@ -35,8 +35,9 @@ impl JWTAuth {
     ) -> Result<Self> {
         let msg = claims.to_base64()?;
 
-        let message_hash = eip191_hash_message(msg.as_bytes());
-        let signature = wallet.sign_hash_sync(&message_hash)?;
+        let signature = wallet.sign_message_sync(msg.as_bytes())?;
+
+        tracing::warn!("claims msg signature {claims:?} {msg} {signature}");
 
         Ok(Self { claims, signature })
     }
