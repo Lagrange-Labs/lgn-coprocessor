@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use alloy::primitives::Address;
 use alloy::primitives::U256;
-use anyhow::bail;
 use alloy::rlp::PayloadView;
+use anyhow::bail;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::generate_proof;

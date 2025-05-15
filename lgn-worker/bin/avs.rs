@@ -147,7 +147,11 @@ impl Register {
         debug!("digest_hash = 0x{}", hex::encode(digest_hash));
 
         // Sign the hash.
-        let client = Arc::new(ProviderBuilder::new().wallet(main_wallet.clone()).connect_http(self.rpc_url.clone()));
+        let client = Arc::new(
+            ProviderBuilder::new()
+                .wallet(main_wallet.clone())
+                .connect_http(self.rpc_url.clone()),
+        );
         let signature = sign_hash(&lagrange_wallet, digest_hash)?;
 
         let public_key = lagrange_wallet.credential().verifying_key().into();
@@ -167,7 +171,16 @@ https://docs.eigenlayer.xyz/eigenlayer/operator-guides/operator-installation#ope
         }
 
         // Call the ZKMRStakeRegistry contract to register the operator.
-        register_operator(&self.network, client.root().clone(), main_wallet, public_key, salt, expiry, signature).await?;
+        register_operator(
+            &self.network,
+            client.root().clone(),
+            main_wallet,
+            public_key,
+            salt,
+            expiry,
+            signature,
+        )
+        .await?;
 
         info!("Operator {} successfully registered", operator);
 

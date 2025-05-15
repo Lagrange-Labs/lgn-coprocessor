@@ -11,7 +11,6 @@ use alloy::signers::SignerSync;
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
-
 use rand::thread_rng;
 use rand::Rng;
 
@@ -23,12 +22,17 @@ const DEFAULT_EXPIRY_SECONDS: u64 = 300;
 /// Get the expiry seconds.
 /// <https://github.com/Lagrange-Labs/client-cli/blob/develop/utils/chainops.go#L85-L89>
 pub async fn expiry_timestamp(provider: &RootProvider) -> Result<U256> {
-    Ok(U256::from_be_slice(&(provider
-        .get_block(BlockNumberOrTag::Latest.into())
-        .await?
-        .ok_or(anyhow!("Failed to get latest block"))?
-        .header.inner.timestamp 
-        + DEFAULT_EXPIRY_SECONDS).to_be_bytes()))
+    Ok(U256::from_be_slice(
+        &(provider
+            .get_block(BlockNumberOrTag::Latest.into())
+            .await?
+            .ok_or(anyhow!("Failed to get latest block"))?
+            .header
+            .inner
+            .timestamp
+            + DEFAULT_EXPIRY_SECONDS)
+            .to_be_bytes(),
+    ))
 }
 
 /// Read the password from input.

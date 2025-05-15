@@ -8,13 +8,13 @@ use anyhow::bail;
 use anyhow::ensure;
 use anyhow::Context;
 use bytes::Bytes;
+use futures::StreamExt;
 use reqwest::StatusCode;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 use tracing::error;
 use tracing::info;
 use tracing::warn;
-use futures::StreamExt;
 
 /// The filename of params checksum hashes
 pub const PARAMS_CHECKSUM_FILENAME: &str = "public_params.hash";
