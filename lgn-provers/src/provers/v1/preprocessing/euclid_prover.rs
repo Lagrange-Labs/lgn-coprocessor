@@ -4,7 +4,6 @@ use alloy::primitives::Address;
 use alloy::primitives::U256;
 use anyhow::bail;
 use alloy::rlp::PayloadView;
-use alloy::rlp::Rlp;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::generate_proof;
@@ -99,9 +98,9 @@ impl PreprocessingEuclidProver {
         node: Vec<u8>,
         child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
-        todo!()/*
-        let rlp = alloy::rlp::Header::decode_raw(&node)?;
-        match rlp.get_next()?.ok_or(anyhow::anyhow!("Invalid RLP variant"))? {
+        let rlp = alloy::rlp::Header::decode_raw(&mut node.as_slice())?;
+
+        match rlp {
             PayloadView::List(list) if list.len() == 2 => {
                 let input = ValuesExtraction(values_extraction::CircuitInput::new_extension(
                     node,
@@ -118,7 +117,6 @@ impl PreprocessingEuclidProver {
             },
             _ => bail!("Invalid RLP item count"),
         }
-               */
     }
 
     pub(super) fn prove_length_leaf(

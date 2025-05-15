@@ -2,7 +2,6 @@ use std::env;
 use std::path::Path;
 
 use alloy::eips::BlockNumberOrTag;
-use alloy::primitives::BlockNumber;
 use alloy::primitives::U256;
 use alloy::providers::Provider;
 use alloy::providers::RootProvider;
@@ -13,8 +12,6 @@ use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 
-use k256::ecdsa::SigningKey;
-use k256::Secp256k1;
 use rand::thread_rng;
 use rand::Rng;
 

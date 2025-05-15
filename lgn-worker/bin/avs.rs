@@ -215,7 +215,6 @@ impl DeRegister {
         info!("deregistering operator at address {}", operator);
         let provider = Arc::new(ProviderBuilder::new().connect_http(self.rpc_url.clone()));
         let rprovider = Arc::new(provider.root().clone());
-        let client = Arc::new(ProviderBuilder::new().wallet(main_wallet.clone()).connect_http(self.rpc_url.clone()));
 
         let is_operator = is_operator(&self.network, rprovider, operator).await?;
         if !is_operator {

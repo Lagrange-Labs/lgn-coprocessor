@@ -29,9 +29,8 @@ impl From<&VerifyingKey> for PublicKey {
             _ => unreachable!(),
         };
 
-        // let [x, y] = [x, y].map(|s| U256::from_be_bytes(s));
-        //
-        // Self { x, y }
-        todo!()
+        let [x, y] = [x, y].map(|s| U256::from_be_slice(s.as_slice()));
+
+        Self { x, y }
     }
 }
