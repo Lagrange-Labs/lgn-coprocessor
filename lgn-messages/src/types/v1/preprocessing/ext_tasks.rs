@@ -203,12 +203,12 @@ pub enum MPTExtractionType {
 impl MPTExtractionType {
     pub fn from_rlp_node(
         node: &[u8],
-        _i: usize,
+        i: usize,
     ) -> Self {
         match node_type(node).unwrap() {
             // assuming the first node in the path is the leaf
-            NodeType::Leaf => MPTExtractionType::Leaf,
-            NodeType::Extension => MPTExtractionType::Extension,
+            NodeType::Leaf if i == 0 => MPTExtractionType::Leaf,
+            NodeType::Leaf | NodeType::Extension => MPTExtractionType::Extension,
             // assuming all nodes are valid so branch is the only choice left
             NodeType::Branch => MPTExtractionType::Branch,
         }

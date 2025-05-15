@@ -41,8 +41,6 @@ impl JWTAuth {
 
         let signature = wallet.sign_message_sync(msg.as_bytes())?;
 
-        tracing::warn!("claims msg signature {claims:?} {msg} {signature}");
-
         Ok(Self { claims, signature })
     }
 
