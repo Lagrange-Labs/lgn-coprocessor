@@ -465,13 +465,30 @@ impl From<ExtractionRow> for TableRow {
 /// Inputs for an off-chain extraction.
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct OffchainExtraction {
+    /// Determines which table this extraction corresponds to.
     pub table_id: TableId,
-    pub block_nr: BlockNr,
-    pub is_first_block: bool,
+
+    /// The "revision" of this extraction, also called `block_nr`.
+    pub revision: BlockNr,
+
+    /// Determines the previous extraction block_nr/revision.
+    ///
+    /// Determines the proof that should go to `prev_epoch_proof`.
+    pub previous_epoch: Option<BlockNr>,
+
+    /// The value of the primary index, akin to the block_nr value.
     pub primary_index: U256,
+
+    /// Determines if the data should have its commitment computed/verified.
     pub root_of_trust: OffChainRootOfTrust,
+
+    /// The previous proof.
     pub prev_epoch_proof: Option<Vec<u8>>,
+
+    /// The data to be extracted.
     pub table_rows: Vec<ExtractionRow>,
+
+    /// Determines the shape of the data.
     pub row_unique_columns: Vec<ColumnID>,
 }
 
