@@ -1,4 +1,4 @@
-use ethers::types::H256;
+use alloy::primitives::FixedBytes;
 
 pub mod routing;
 pub mod types;
@@ -18,4 +18,4 @@ pub type KeyedPayload = (String, Vec<u8>);
 ///
 /// This type is versioned by the block number, since a node that stores data for
 /// a slot `X` can be modified through out the contract's lifetime.
-pub type MptNodeVersion = (BlockNr, H256);
+pub type MptNodeVersion = (BlockNr, FixedBytes<32>);
