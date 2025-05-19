@@ -387,12 +387,12 @@ impl WorkerTaskType {
     pub fn ivc(
         table_id: TableId,
         block_nr: BlockNr,
-        is_first_block: bool,
+        previous_epoch: Option<BlockNr>,
     ) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::IVC(IvcInput::new(
             table_id,
             block_nr,
-            is_first_block,
+            previous_epoch,
         )))
     }
 }
