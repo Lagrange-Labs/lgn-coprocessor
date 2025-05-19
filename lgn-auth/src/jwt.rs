@@ -1,33 +1,27 @@
 //! JWT authorization logic used in both worker and gateway
 
-use alloy::primitives::eip191_hash_message;
-use alloy::primitives::Signature;
-use alloy::signers::k256::ecdsa::RecoveryId;
-use alloy::signers::k256::ecdsa::Signature as RecoverableSignature;
-use alloy::signers::k256::ecdsa::Signature as K256Signature;
-use alloy::signers::k256::ecdsa::SigningKey;
-use alloy::signers::k256::ecdsa::VerifyingKey;
-use alloy::signers::k256::PublicKey;
-use alloy::signers::local::LocalSigner;
-use alloy::signers::SignerSync;
 use anyhow::Result;
 use base64::prelude::BASE64_URL_SAFE_NO_PAD;
 use base64::Engine;
 use elliptic_curve::consts::U32;
 use elliptic_curve::sec1::ToEncodedPoint;
+use ethers::prelude::LocalWallet;
+use ethers::prelude::Signature;
+use ethers_core::k256::ecdsa::RecoveryId;
+use ethers_core::k256::ecdsa::Signature as RecoverableSignature;
+use ethers_core::k256::ecdsa::Signature as K256Signature;
+use ethers_core::k256::ecdsa::VerifyingKey;
+use ethers_core::k256::PublicKey;
+use ethers_core::utils::hash_message;
 use generic_array::GenericArray;
 use jwt::Claims;
 use jwt::ToBase64;
 use serde::Deserialize;
 use serde::Serialize;
-use serde_with::serde_as;
-use serde_with::DisplayFromStr;
 
-#[serde_as]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct JWTAuth {
     claims: Claims,
-    #[serde_as(as = "DisplayFromStr")]
     signature: Signature,
 }
 
@@ -35,11 +29,15 @@ impl JWTAuth {
     /// Create a new instance and sign with the wallet.
     pub fn new(
         claims: Claims,
-        wallet: &LocalSigner<SigningKey>,
+        wallet: &LocalWallet,
     ) -> Result<Self> {
         let msg = claims.to_base64()?;
 
-        let signature = wallet.sign_message_sync(msg.as_bytes())?;
+        // `sign_message` is an async function:
+        // <https://github.com/gakonst/ethers-rs/blob/master/ethers-signers/src/wallet/mod.rs#L85>
+        // Seems not make sense, so copy the code here.
+        let message_hash = hash_message(msg.as_bytes());
+        let signature = wallet.sign_hash(message_hash)?;
 
         Ok(Self { claims, signature })
     }
@@ -68,7 +66,7 @@ impl JWTAuth {
     /// Recovers the Lagrange public key which was used to sign the claims.
     pub fn recover_public_key(&self) -> Result<String> {
         let msg = self.claims.to_base64()?;
-        let message_hash = eip191_hash_message(msg.as_bytes());
+        let message_hash = hash_message(msg.as_bytes());
 
         let (recoverable_sig, recovery_id) = self.as_signature()?;
         let verifying_key = VerifyingKey::recover_from_prehash(
@@ -96,10 +94,12 @@ impl JWTAuth {
     /// Copied from ethers-rs since it's private:
     /// <https://github.com/gakonst/ethers-rs/blob/master/ethers-core/src/types/signature.rs#L129>
     fn as_signature(&self) -> Result<(RecoverableSignature, RecoveryId)> {
-        let mut recovery_id = self.signature.recid();
+        let mut recovery_id = self.signature.recovery_id()?;
         let mut signature = {
-            let r_bytes: [_; 32] = self.signature.r().to_be_bytes();
-            let s_bytes: [_; 32] = self.signature.s().to_be_bytes();
+            let mut r_bytes = [0u8; 32];
+            let mut s_bytes = [0u8; 32];
+            self.signature.r.to_big_endian(&mut r_bytes);
+            self.signature.s.to_big_endian(&mut s_bytes);
             let gar: &GenericArray<u8, U32> = GenericArray::from_slice(&r_bytes);
             let gas: &GenericArray<u8, U32> = GenericArray::from_slice(&s_bytes);
             K256Signature::from_scalars(*gar, *gas)?
@@ -125,6 +125,7 @@ mod tests {
 
     use elliptic_curve::sec1::Coordinates;
     use jwt::RegisteredClaims;
+    use rand::thread_rng;
 
     use super::*;
 
@@ -132,7 +133,7 @@ mod tests {
     #[test]
     fn test_middleware_jwt_auth_process() -> Result<()> {
         // Create a random wallet.
-        let wallet = LocalSigner::random();
+        let wallet = LocalWallet::new(&mut thread_rng());
         let expected_public_key = get_public_key_by_wallet(&wallet);
 
         // Encode the JWT auth.
@@ -149,8 +150,8 @@ mod tests {
     }
 
     /// Get the public key from wallet.
-    fn get_public_key_by_wallet(wallet: &LocalSigner<SigningKey>) -> String {
-        let public_key = wallet.credential().verifying_key().to_encoded_point(false);
+    fn get_public_key_by_wallet(wallet: &LocalWallet) -> String {
+        let public_key = wallet.signer().verifying_key().to_encoded_point(false);
 
         // We use another method (different with `recover_public_key`) to get
         // the coordinates of public key, then combine the big-endian bytes.
