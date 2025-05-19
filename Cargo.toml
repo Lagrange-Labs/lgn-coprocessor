@@ -3,13 +3,14 @@ resolver = "2"
 members = ["lgn-auth", "lgn-messages", "lgn-provers", "lgn-worker"]
 
 [workspace.dependencies]
-groth16_framework = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.1" }
-mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.1" }
-mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.1" }
-parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.1" }
-verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.1" }
+groth16_framework = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.0" }
+mp2_common = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.0" }
+mp2_v1 = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.0" }
+parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.0" }
+verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", rev = "2.1.0" }
 
-alloy = { version = "0.15", features = [ "serde" ] }
+alloy = { version = "0.11", default-features = false }
+alloy-primitives = { version = "0.8" }
 anyhow = { version = "1.0" }
 backtrace = { version = "0.3" }
 base64 = { version = "0.22" }
@@ -28,13 +29,13 @@ jwt = { version = "0.16" }
 k256 = { version = "0.13", default-features = false }
 lazy-static-include = { version = "3.2.1" }
 metrics = { version = "0.24" }
-metrics-exporter-prometheus = { version = "0.17" }
+metrics-exporter-prometheus = { version = "0.16" }
 miette = { version = "7.5.0" }
 mimalloc = { version = "0.1", default-features = false }
-object_store = { version = "0.12" }
+object_store = { version = "0.11" }
 prost = { version = "0.13" }
 prost-types = { version = "0.13" }
-protox = { version = "0.8" }
+protox = { version = "0.7.2" }
 rand = { version = "0.8", default-features = false }
 redact = { version = "0.1" }
 reqwest = { version = "0.12", features = ["blocking"] }
@@ -47,8 +48,8 @@ serde_json = { version = "1.0" }
 thiserror = { version = "2" }
 tokio = { version = "1.44" }
 tokio-stream = { version = "0.1" }
-tonic = { version = "0.13", features = [ "transport", "tls-webpki-roots" ] }
-tonic-build = { version = "0.13" }
+tonic = { version = "0.12", features = [ "transport", "tls", "tls-roots", "tls-webpki-roots" ] }
+tonic-build = { version = "0.12.3" }
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 uuid = { version = "1.16.0" }
@@ -67,6 +68,7 @@ opt-level = 3
 # Reference: https://doc.rust-lang.org/cargo/reference/profiles.html#release
 # Proving is a bottleneck, enable agressive optimizations.
 # Reference: https://nnethercote.github.io/perf-book/build-configuration.html#codegen-units
+codegen-units = 1
 lto = "fat"
 
 [profile.release-with-debug]
@@ -80,12 +82,12 @@ ignored = ["serde", "prost"]
 ignored = ["prost"]
 
 # [patch."https://github.com/Lagrange-Labs/mapreduce-plonky2.git"]
-# mp2_common = { path = "../mapreduce-plonky2/main/mp2-common/" }
-# mp2_v1 = { path = "../mapreduce-plonky2/main/mp2-v1/" }
-# parsil = { path = "../mapreduce-plonky2/main/parsil/" }
-# verifiable-db = { path = "../mapreduce-plonky2/main/verifiable-db/" }
-# ryhope = { path = "../mapreduce-plonky2/main/ryhope/" }
-# groth16_framework = { path = "../mapreduce-plonky2/main/groth16-framework/" }
+# mp2_common = { path = "../mapreduce-plonky2/mp2-common/" }
+# mp2_v1 = { path = "../mapreduce-plonky2/mp2-v1/" }
+# parsil = { path = "../mapreduce-plonky2/parsil/" }
+# verifiable-db = { path = "../mapreduce-plonky2/verifiable-db/" }
+# ryhope = { path = "../mapreduce-plonky2/ryhope/" }
+# groth16_framework = { package = "groth16_framework", path = "../mapreduce-plonky2/groth16-framework/" }
 
 [workspace.metadata.release]
 publish = false
