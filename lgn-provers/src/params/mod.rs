@@ -8,7 +8,7 @@ use anyhow::bail;
 use anyhow::ensure;
 use anyhow::Context;
 use bytes::Bytes;
-use futures::StreamExt;
+use ethers::providers::StreamExt;
 use reqwest::StatusCode;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;

@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use alloy::primitives::Address;
 use alloy::primitives::U256;
 use anyhow::bail;
-use mp2_common::eth::node_type;
-use mp2_common::eth::NodeType;
+use ethers::utils::rlp::Prototype;
+use ethers::utils::rlp::Rlp;
 use mp2_common::poseidon::empty_poseidon_hash_as_vec;
 use mp2_common::types::HashOutput;
 use mp2_v1::api::generate_proof;
@@ -99,24 +99,23 @@ impl PreprocessingEuclidProver {
         node: Vec<u8>,
         child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
-        let node_type = node_type(&node)?;
-
-        match node_type {
-            NodeType::Extension => {
+        let rlp = Rlp::new(&node);
+        match rlp.prototype()? {
+            Prototype::List(2) => {
                 let input = ValuesExtraction(values_extraction::CircuitInput::new_extension(
                     node,
                     child_proofs[0].to_owned(),
                 ));
                 generate_proof(&self.params, input)
             },
-            NodeType::Branch => {
+            Prototype::List(17) => {
                 let input = ValuesExtraction(values_extraction::CircuitInput::new_branch(
                     node,
                     child_proofs,
                 ));
                 generate_proof(&self.params, input)
             },
-            NodeType::Leaf => bail!("unexpected NodeType::Leaf"),
+            _ => bail!("Invalid RLP item count"),
         }
     }
 
