@@ -305,7 +305,11 @@ fn default_provable_data_commitment() -> bool {
 pub struct IvcInput {
     pub table_id: TableId,
     pub block_nr: BlockNr,
-    pub is_first_block: bool,
+
+    /// Determines the previous extraction block_nr/revision.
+    ///
+    /// Determines the proof that should go to `prev_epoch_proof`.
+    pub previous_epoch: Option<BlockNr>,
 
     #[serde(default = "default_provable_data_commitment")]
     pub provable_data_commitment: bool,
@@ -321,13 +325,13 @@ impl IvcInput {
     pub fn new(
         table_id: TableId,
         block_nr: BlockNr,
-        is_first_block: bool,
+        previous_epoch: Option<BlockNr>,
     ) -> Self {
         Self {
             provable_data_commitment: false,
             table_id,
             block_nr,
-            is_first_block,
+            previous_epoch,
             index_proof: vec![],
             previous_ivc_proof: None,
         }
@@ -337,13 +341,13 @@ impl IvcInput {
         provable_data_commitment: bool,
         table_id: TableId,
         block_nr: BlockNr,
-        is_first_block: bool,
+        previous_epoch: Option<BlockNr>,
     ) -> Self {
         Self {
             provable_data_commitment,
             table_id,
             block_nr,
-            is_first_block,
+            previous_epoch,
             index_proof: vec![],
             previous_ivc_proof: None,
         }
