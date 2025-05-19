@@ -1,4 +1,4 @@
-use alloy::primitives::U256;
+use alloy_primitives::U256;
 use derive_debug_plus::Dbg;
 use mp2_common::types::HashOutput;
 use serde_derive::Deserialize;
