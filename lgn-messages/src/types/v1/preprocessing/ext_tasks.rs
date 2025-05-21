@@ -1,5 +1,5 @@
-use alloy_primitives::Address;
-use alloy_primitives::U256;
+use alloy::primitives::Address;
+use alloy::primitives::U256;
 use derive_debug_plus::Dbg;
 use ethers::types::H256;
 use ethers::utils::rlp;
