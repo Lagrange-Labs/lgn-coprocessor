@@ -16,6 +16,7 @@ name = "one-shot"
 path = "src/one-shot.rs"
 
 [dependencies]
+alloy = { workspace = true, features = ["signers", "signer-local", "signer-keystore"] }
 anyhow = { workspace = true }
 backtrace = { workspace = true }
 bincode.workspace = true
@@ -23,8 +24,6 @@ blake3 = { workspace = true }
 clap = { workspace = true, features = ["derive", "env", "help", "std", "suggestions"] }
 config = { workspace = true, features = ["toml"] }
 elliptic-curve = { workspace = true }
-# The ethers macro `abigen` needs to import ethers as a crate.
-ethers = { git = "https://github.com/Lagrange-Labs/ethers-rs", default-features = false, features = [ "rustls" ], branch = "get-proof-0x" }
 groth16_framework.workspace = true
 hex = { workspace = true }
 jwt = { workspace = true }

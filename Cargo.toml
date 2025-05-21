@@ -10,6 +10,7 @@ parsil = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branc
 verifiable-db = { git = "https://github.com/Lagrange-Labs/mapreduce-plonky2.git", branch = "fvs-bump-alloy-1" }
 
 alloy = { version = "1.0", features = [ "serde" ] }
+futures = { version = "0.3" }
 anyhow = { version = "1.0" }
 backtrace = { version = "0.3" }
 base64 = { version = "0.22" }
@@ -20,8 +21,6 @@ clap = { version = "4.5", default-features = false }
 config = { version = "0.15", default-features = false }
 derive-debug-plus = { version = "0.5" }
 elliptic-curve = { version = "0.13", default-features = false }
-ethers = { version = "2.0" }
-ethers-core = { git = "https://github.com/Lagrange-Labs/ethers-rs", branch = "get-proof-0x", default-features = false }
 generic-array = { version = "0.14", default-features = false }
 hex = { version = "0.4" }
 jwt = { version = "0.16" }
@@ -44,6 +43,7 @@ semver = { version = "1.0.26" }
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = { version = "1.0" }
 serde_json = { version = "1.0" }
+serde_with = { version = "3.12" }
 thiserror = { version = "2" }
 tokio = { version = "1.44" }
 tokio-stream = { version = "0.1" }
