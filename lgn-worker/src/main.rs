@@ -11,24 +11,24 @@ use std::path::Path;
 use std::process::ExitCode;
 use std::result::Result::Ok;
 use std::str::FromStr;
+use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use std::sync::Arc;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
 use alloy::signers::local::PrivateKeySigner;
-use anyhow::bail;
 use anyhow::Context;
+use anyhow::bail;
 use backtrace::Backtrace;
 use checksum::fetch_checksums;
 use clap::Parser;
 use jwt::Claims;
 use jwt::RegisteredClaims;
-use lagrange::worker_done::Reply;
 use lagrange::WorkerDone;
 use lagrange::WorkerToGwRequest;
 use lagrange::WorkerToGwResponse;
+use lagrange::worker_done::Reply;
 use lgn_auth::jwt::JWTAuth;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
@@ -40,18 +40,18 @@ use semver::Version;
 use thiserror::Error;
 use tokio::sync::mpsc;
 use tokio_stream::StreamExt;
-use tonic::metadata::MetadataValue;
-use tonic::transport::ClientTlsConfig;
 use tonic::Request;
 use tonic::Streaming;
+use tonic::metadata::MetadataValue;
+use tonic::transport::ClientTlsConfig;
+use tracing::Level;
 use tracing::debug;
 use tracing::error;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing::span;
-use tracing::Level;
-use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::EnvFilter;
+use tracing_subscriber::fmt::format::FmtSpan;
 use warp::Filter;
 
 use crate::config::Config;
@@ -231,10 +231,10 @@ async fn main() -> ExitCode {
         if let Some(path) = config.exit_reason_path {
             exit_reason(
                 &path,
-                format!("Worker exited due to an error. err: {:?}", err),
+                format!("Worker exited due to an error. err: {err:?}"),
             )
         }
-        error!("Worker exited due to an error. err: {:?}", err);
+        error!("Worker exited due to an error. err: {err:?}");
         ExitCode::FAILURE
     } else {
         ExitCode::SUCCESS
@@ -420,7 +420,7 @@ async fn run(config: &Config) -> anyhow::Result<()> {
                             request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
                                 WorkerDone {
                                     task_id,
-                                    reply: Some(Reply::WorkerError(format!("{:?}", err))),
+                                    reply: Some(Reply::WorkerError(format!("{err:?}"))),
                                 },
                             )),
                         }
@@ -617,7 +617,7 @@ async fn process_message_from_gateway(
                 Err(panic) => {
                     Error::ProofPanic {
                         uuid,
-                        panic_msg: format!("{:?}", panic),
+                        panic_msg: format!("{panic:?}"),
                     }
                 },
             }

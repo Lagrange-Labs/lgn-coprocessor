@@ -22,8 +22,8 @@ use lgn_provers::provers::v1::query::MAX_NUM_PLACEHOLDERS;
 use lgn_provers::provers::v1::query::MAX_NUM_PREDICATE_OPS;
 use lgn_provers::provers::v1::query::MAX_NUM_RESULT_OPS;
 use lgn_provers::provers::v1::query::ROW_TREE_MAX_DEPTH;
-use mp2_v1::api::build_circuits_params;
 use mp2_v1::api::PublicParameters;
+use mp2_v1::api::build_circuits_params;
 use verifiable_db::api::QueryParameters;
 
 const GROTH16_ASSETS_PREFIX: &str = "groth16_assets";
@@ -259,7 +259,7 @@ fn generate_groth16_assets(
     // Get the final circuit data of the query parameters.
     let circuit_data = query_params.final_proof_circuit_data();
     let circuit_data = clone_circuit_data(circuit_data)
-        .unwrap_or_else(|err| panic!("Failed to clone the circuit data: {}", err));
+        .unwrap_or_else(|err| panic!("Failed to clone the circuit data: {err}"));
 
     // Compile and generate the Groth16 asset files.
     let assets_dir = format!("{}/{GROTH16_ASSETS_PREFIX}", param_settings.params_dir());
