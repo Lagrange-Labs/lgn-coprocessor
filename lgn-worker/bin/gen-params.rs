@@ -22,8 +22,8 @@ use lgn_provers::provers::v1::query::MAX_NUM_PLACEHOLDERS;
 use lgn_provers::provers::v1::query::MAX_NUM_PREDICATE_OPS;
 use lgn_provers::provers::v1::query::MAX_NUM_RESULT_OPS;
 use lgn_provers::provers::v1::query::ROW_TREE_MAX_DEPTH;
-use mp2_v1::api::PublicParameters;
 use mp2_v1::api::build_circuits_params;
+use mp2_v1::api::PublicParameters;
 use verifiable_db::api::QueryParameters;
 
 const GROTH16_ASSETS_PREFIX: &str = "groth16_assets";

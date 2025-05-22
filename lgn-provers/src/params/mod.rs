@@ -4,9 +4,9 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
 
-use anyhow::Context;
 use anyhow::bail;
 use anyhow::ensure;
+use anyhow::Context;
 use bytes::Bytes;
 use futures::StreamExt;
 use reqwest::StatusCode;

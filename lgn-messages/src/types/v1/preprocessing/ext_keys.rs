@@ -6,11 +6,11 @@ use object_store::path::Path;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
+use crate::types::v1::preprocessing::KEYS_PREPROCESSING_PREFIX;
 use crate::BlockNr;
 use crate::MptNodeVersion;
 use crate::TableHash;
 use crate::TableId;
-use crate::types::v1::preprocessing::KEYS_PREPROCESSING_PREFIX;
 
 const BLOCK_PREFIX: &str = "EXT_BLOCK";
 const CONTRACT_PREFIX: &str = "CONTRACT";
