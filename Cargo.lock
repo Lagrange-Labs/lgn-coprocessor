@@ -354,9 +354,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-node-bindings"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6df1cbb080e0f41874a2f492939444852f4bcad754a4bfa7dc8368f4abb79640"
+checksum = "4aa8b9e0aa91bfbd45a0c32490981ab7dfd523f8e075acdc8a3902eb24a7a5a3"
 dependencies = [
  "alloy-genesis",
  "alloy-hardforks",
@@ -468,9 +468,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-pubsub"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbeb2dd970e7d70d2d408bc6fba391ad66406d766312399a42d6f93a9586f818"
+checksum = "fc3cbf02fdedbec7aadc7a77080b6b143752fa792c7fd49b86fd854257688bd4"
 dependencies = [
  "alloy-json-rpc",
  "alloy-primitives 1.1.0",
@@ -555,9 +555,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-rpc-types-anvil"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6895febd23a9fd75a58d2fb8fa27e6ed84f4aaada309c6905e156af37afbb6e6"
+checksum = "51e15bd6456742d6dcadacf3cd238a90a8a7aa9f00bc7cc641ae272f5d3f5d4f"
 dependencies = [
  "alloy-primitives 1.1.0",
  "alloy-rpc-types-eth",
@@ -578,9 +578,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-rpc-types-debug"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e393e02f83d17384a7595d5288d1217cab0863ad5f10b0824325d814e7bf21c5"
+checksum = "fe8bc37b23e788c0f8081a7eec34fd439cfa8d4f137f6e987803fb2a733866ca"
 dependencies = [
  "alloy-primitives 1.1.0",
  "serde",
@@ -588,9 +588,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-rpc-types-engine"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8298431d08611686fb021210b12fb229657490e3bd0658acdd709a19886b6cdf"
+checksum = "2bcf49fe91b3d621440dcc5bb067afaeba5ca4b07f59e42fb7af42944146a8c0"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
@@ -625,9 +625,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-rpc-types-trace"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d4c2404b7ee0bd81900d63c61adef877992f430d7c932d4f3ce2a79e3f3f822"
+checksum = "7f68f020452c0d570b4eee22d4ffda9e4eda68ebcf67e1199d6dff48097f442b"
 dependencies = [
  "alloy-primitives 1.1.0",
  "alloy-rpc-types-eth",
@@ -639,9 +639,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-rpc-types-txpool"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff9f501c596cc75a973f0f9dd3dce796d18a9454426807f30c6d28f3141540f6"
+checksum = "62a82f15f296c2c83c55519d21ca07801fb58b118878b0f4777250968e49f4fe"
 dependencies = [
  "alloy-primitives 1.1.0",
  "alloy-rpc-types-eth",
@@ -806,9 +806,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-transport-ipc"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c8d9fcdeeaeb9bfa08bc70031c9518f0d9d31766c0fa71500737b4a4a215249"
+checksum = "ff95f0b3a3bd2b80a53a52f7649ea6ef3e7e91ff4bd439871199ec68b1b69038"
 dependencies = [
  "alloy-json-rpc",
  "alloy-pubsub",
@@ -826,9 +826,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-transport-ws"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7d39c87d5b9f3dd8e8efdc95bd3aaeef947e7938dbf45cffda9bd5689cd9517"
+checksum = "f7c838e7562d16110fba3590a20c7765281c1a302cf567e1806d0c3ce1352b58"
 dependencies = [
  "alloy-pubsub",
  "alloy-transport",
@@ -3169,8 +3169,8 @@ dependencies = [
 
 [[package]]
 name = "gnark-utils"
-version = "2.1.1"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#42c98af9675b4a4d45614ed7e22581776e4f96c2"
+version = "3.0.0"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=3.0.0#b572f95cee4ea43ef7d5d9c1aab014b0f65ce5ee"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3189,8 +3189,8 @@ dependencies = [
 
 [[package]]
 name = "groth16_framework"
-version = "2.1.1"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#42c98af9675b4a4d45614ed7e22581776e4f96c2"
+version = "3.0.0"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=3.0.0#b572f95cee4ea43ef7d5d9c1aab014b0f65ce5ee"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4493,8 +4493,8 @@ dependencies = [
 
 [[package]]
 name = "mp2_common"
-version = "2.1.1"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#42c98af9675b4a4d45614ed7e22581776e4f96c2"
+version = "3.0.0"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=3.0.0#b572f95cee4ea43ef7d5d9c1aab014b0f65ce5ee"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4520,8 +4520,8 @@ dependencies = [
 
 [[package]]
 name = "mp2_test"
-version = "2.1.1"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#42c98af9675b4a4d45614ed7e22581776e4f96c2"
+version = "3.0.0"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=3.0.0#b572f95cee4ea43ef7d5d9c1aab014b0f65ce5ee"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4539,8 +4539,8 @@ dependencies = [
 
 [[package]]
 name = "mp2_v1"
-version = "2.1.1"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#42c98af9675b4a4d45614ed7e22581776e4f96c2"
+version = "3.0.0"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=3.0.0#b572f95cee4ea43ef7d5d9c1aab014b0f65ce5ee"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4948,8 +4948,8 @@ dependencies = [
 
 [[package]]
 name = "parsil"
-version = "2.1.1"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#42c98af9675b4a4d45614ed7e22581776e4f96c2"
+version = "3.0.0"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=3.0.0#b572f95cee4ea43ef7d5d9c1aab014b0f65ce5ee"
 dependencies = [
  "alloy",
  "anyhow",
@@ -5762,8 +5762,8 @@ dependencies = [
 
 [[package]]
 name = "recursion_framework"
-version = "2.1.1"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#42c98af9675b4a4d45614ed7e22581776e4f96c2"
+version = "3.0.0"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=3.0.0#b572f95cee4ea43ef7d5d9c1aab014b0f65ce5ee"
 dependencies = [
  "anyhow",
  "log",
@@ -6333,8 +6333,8 @@ dependencies = [
 
 [[package]]
 name = "ryhope"
-version = "2.1.1"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#42c98af9675b4a4d45614ed7e22581776e4f96c2"
+version = "3.0.0"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=3.0.0#b572f95cee4ea43ef7d5d9c1aab014b0f65ce5ee"
 dependencies = [
  "anyhow",
  "bb8",
@@ -7894,8 +7894,8 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "verifiable-db"
-version = "2.1.1"
-source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?branch=main#42c98af9675b4a4d45614ed7e22581776e4f96c2"
+version = "3.0.0"
+source = "git+https://github.com/Lagrange-Labs/mapreduce-plonky2.git?rev=3.0.0#b572f95cee4ea43ef7d5d9c1aab014b0f65ce5ee"
 dependencies = [
  "alloy",
  "anyhow",
