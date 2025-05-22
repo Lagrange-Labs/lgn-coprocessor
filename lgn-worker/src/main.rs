@@ -231,10 +231,10 @@ async fn main() -> ExitCode {
         if let Some(path) = config.exit_reason_path {
             exit_reason(
                 &path,
-                format!("Worker exited due to an error. err: {:?}", err),
+                format!("Worker exited due to an error. err: {err:?}"),
             )
         }
-        error!("Worker exited due to an error. err: {:?}", err);
+        error!("Worker exited due to an error. err: {err:?}");
         ExitCode::FAILURE
     } else {
         ExitCode::SUCCESS
@@ -420,7 +420,7 @@ async fn run(config: &Config) -> anyhow::Result<()> {
                             request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
                                 WorkerDone {
                                     task_id,
-                                    reply: Some(Reply::WorkerError(format!("{:?}", err))),
+                                    reply: Some(Reply::WorkerError(format!("{err:?}"))),
                                 },
                             )),
                         }
@@ -617,7 +617,7 @@ async fn process_message_from_gateway(
                 Err(panic) => {
                     Error::ProofPanic {
                         uuid,
-                        panic_msg: format!("{:?}", panic),
+                        panic_msg: format!("{panic:?}"),
                     }
                 },
             }

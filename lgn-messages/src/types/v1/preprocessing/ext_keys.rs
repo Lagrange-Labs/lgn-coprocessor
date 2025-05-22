@@ -66,13 +66,9 @@ impl Display for ProofKey {
                 let node_hash = mpt_node_version.1;
                 write!(
                     f,
-                    "{}/{}/{}/{}/{:?}",
-                    KEYS_PREPROCESSING_PREFIX,
-                    table_hash,
-                    MPT_VARIABLE_PREFIX,
-                    block_nr,
-                    node_hash, /* The `Display` format will shorten the hash with an ellipses,
-                                * using `Debug` instead to keep the whole hash. */
+                    // The `Display` format will shorten the hash with an ellipses,
+                    // using `Debug` instead to keep the whole hash.
+                    "{KEYS_PREPROCESSING_PREFIX}/{table_hash}/{MPT_VARIABLE_PREFIX}/{block_nr}/{node_hash:?}"
                 )
             },
             ProofKey::MptLength {
@@ -82,32 +78,25 @@ impl Display for ProofKey {
                 // Example: V1_PREPROCESSING/1/MPT_LENGTH/1
                 write!(
                     f,
-                    "{}/{}/{}/{}",
-                    KEYS_PREPROCESSING_PREFIX, table_hash, MPT_LENGTH_PREFIX, block_nr
+                    "{KEYS_PREPROCESSING_PREFIX}/{table_hash}/{MPT_LENGTH_PREFIX}/{block_nr}"
                 )
             },
             ProofKey::Contract { address, block_nr } => {
                 // Example: V1_PREPROCESSING/CONTRACT/0x1234/1
                 write!(
                     f,
-                    "{}/{}/{}/{}",
-                    KEYS_PREPROCESSING_PREFIX, CONTRACT_PREFIX, address, block_nr
+                    "{KEYS_PREPROCESSING_PREFIX}/{CONTRACT_PREFIX}/{address}/{block_nr}"
                 )
             },
             ProofKey::Block { block_nr } => {
                 // Example: V1_PREPROCESSING/EXT_BLOCK/1
-                write!(
-                    f,
-                    "{}/{}/{}",
-                    KEYS_PREPROCESSING_PREFIX, BLOCK_PREFIX, block_nr
-                )
+                write!(f, "{KEYS_PREPROCESSING_PREFIX}/{BLOCK_PREFIX}/{block_nr}")
             },
             ProofKey::FinalExtraction { table_id, block_nr } => {
                 // Example: V1_PREPROCESSING/1/FINAL_EXTRACTION/1
                 write!(
                     f,
-                    "{}/{}/{}/{}",
-                    KEYS_PREPROCESSING_PREFIX, table_id, FINAL_EXTRACTION_PREFIX, block_nr
+                    "{KEYS_PREPROCESSING_PREFIX}/{table_id}/{FINAL_EXTRACTION_PREFIX}/{block_nr}"
                 )
             },
         }

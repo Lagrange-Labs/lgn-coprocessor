@@ -259,7 +259,7 @@ fn generate_groth16_assets(
     // Get the final circuit data of the query parameters.
     let circuit_data = query_params.final_proof_circuit_data();
     let circuit_data = clone_circuit_data(circuit_data)
-        .unwrap_or_else(|err| panic!("Failed to clone the circuit data: {}", err));
+        .unwrap_or_else(|err| panic!("Failed to clone the circuit data: {err}"));
 
     // Compile and generate the Groth16 asset files.
     let assets_dir = format!("{}/{GROTH16_ASSETS_PREFIX}", param_settings.params_dir());
