@@ -83,9 +83,5 @@ in
 
   languages = {
     go.enable = true;
-    rust = {
-      enable = false;
-      channel = "nightly";
-    };
   };
 }
