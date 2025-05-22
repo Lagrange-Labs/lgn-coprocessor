@@ -1,5 +1,5 @@
+use alloy::primitives::U256;
 use elliptic_curve::sec1::Coordinates;
-use ethers::types::U256;
 use k256::ecdsa::VerifyingKey;
 
 #[derive(Debug)]
@@ -10,10 +10,8 @@ pub struct PublicKey {
 
 impl PublicKey {
     pub fn to_hex(&self) -> String {
-        let mut xb = [0u8; 32];
-        self.x.to_big_endian(&mut xb[..]);
-        let mut yb = [0u8; 32];
-        self.y.to_big_endian(&mut yb[..]);
+        let xb: [_; 32] = self.x.to_be_bytes();
+        let yb: [_; 32] = self.y.to_be_bytes();
         let mut s1 = hex::encode(xb);
         let s2 = hex::encode(yb);
         s1.push_str(&s2);
@@ -31,7 +29,7 @@ impl From<&VerifyingKey> for PublicKey {
             _ => unreachable!(),
         };
 
-        let [x, y] = [x, y].map(|s| U256::from_big_endian(s));
+        let [x, y] = [x, y].map(|s| U256::from_be_slice(s.as_slice()));
 
         Self { x, y }
     }

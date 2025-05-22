@@ -17,15 +17,14 @@ use std::sync::Arc;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
+use alloy::signers::local::PrivateKeySigner;
 use anyhow::bail;
 use anyhow::Context;
 use backtrace::Backtrace;
 use checksum::fetch_checksums;
 use clap::Parser;
-use ethers::signers::Wallet;
 use jwt::Claims;
 use jwt::RegisteredClaims;
-use k256::ecdsa::SigningKey;
 use lagrange::worker_done::Reply;
 use lagrange::WorkerDone;
 use lagrange::WorkerToGwRequest;
@@ -683,7 +682,7 @@ async fn process_message_from_gateway(
 }
 
 /// Build the node's wallet from the configuration file.
-fn get_wallet(config: &Config) -> anyhow::Result<Wallet<SigningKey>> {
+fn get_wallet(config: &Config) -> anyhow::Result<PrivateKeySigner> {
     let res = match (
         &config.avs.lagr_keystore,
         &config.avs.lagr_pwd,
@@ -693,7 +692,7 @@ fn get_wallet(config: &Config) -> anyhow::Result<Wallet<SigningKey>> {
             read_keystore(keystore_path, password.expose_secret())?
         },
         (Some(_), None, Some(pkey)) => {
-            Wallet::from_str(pkey.expose_secret()).context("Failed to create wallet")?
+            PrivateKeySigner::from_str(pkey.expose_secret()).context("Failed to create wallet")?
         },
         _ => bail!("Must specify either keystore path w/ password OR private key"),
     };

@@ -6,7 +6,6 @@ edition = "2021"
 [dependencies]
 alloy.workspace = true
 derive-debug-plus = { workspace = true }
-ethers = { workspace = true }
 mp2_common = { workspace = true }
 mp2_v1 = { workspace = true }
 object_store = { workspace = true }

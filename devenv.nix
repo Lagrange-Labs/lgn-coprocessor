@@ -43,7 +43,7 @@ in
     pull = [];
   };
 
-  packages = [ pkgs.perl pkgs.git pkgs.openssl pkgs.pkg-config pkgs.protobuf ]
+  packages = [ pkgs.perl pkgs.git pkgs.openssl pkgs.pkg-config pkgs.protobuf pkgs.rustup ]
              ++ lib.optionals pkgs.stdenv.targetPlatform.isDarwin [
                pkgs.libiconv
                pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
@@ -84,7 +84,7 @@ in
   languages = {
     go.enable = true;
     rust = {
-      enable = true;
+      enable = false;
       channel = "nightly";
     };
   };
