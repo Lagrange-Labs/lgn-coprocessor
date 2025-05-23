@@ -27,7 +27,7 @@ chdir $current_dir;
 
 # Recursively upload the PPs to S3
 say "Uploading the PPs from $current_dir/$pps_directory to S3...";
-system("aws s3 cp --no-progress --recursive $pps_directory s3://lagrange-public-parameters --endpoint-url=https://428e47101872e479a0c311b576430fac.r2.cloudflarestorage.com");
+system("aws s3 cp --no-progress --recursive $pps_directory s3://lagrange-public-parameters --endpoint-url=https://428e47101872e479a0c311b576430fac.r2.cloudflarestorage.com") == 0  or die "AWS call failed";
 say "Done.";
 
 
