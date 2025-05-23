@@ -13,8 +13,8 @@ lagr_keystore = "lagr_keystore.json"
 port = 9090
 
 [public_params]
-# PPs common directory
-params_root_url = "https://pub-a894572689a54c008859f232868fc67d.r2.dev"
+# PPs root URL
+params_root_url = "https://public-parameters.distributed-query.io"
 # Where to store PPs
 dir = "./zkmr_params"
 
