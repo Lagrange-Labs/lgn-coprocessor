@@ -43,7 +43,7 @@ in
     pull = [];
   };
 
-  packages = [ pkgs.perl pkgs.git pkgs.openssl pkgs.pkg-config pkgs.protobuf pkgs.rustup ]
+  packages = [ pkgs.perl pkgs.git pkgs.openssl pkgs.pkg-config pkgs.protobuf pkgs.rustup pkgs.awscli2 ]
              ++ lib.optionals pkgs.stdenv.targetPlatform.isDarwin [
                pkgs.libiconv
                pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
