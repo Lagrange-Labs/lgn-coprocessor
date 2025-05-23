@@ -5,7 +5,7 @@ let
     keystore-file = "./runtime/lagr-keystore.json";
     keystore-password = "canihazsecurityplz";
     gateway-url = "http://localhost:10000";
-    params-url = "https://pub-d7c7f0d6979a41f2b25137eaecf12d7b.r2.dev";
+    params-url = "https://public-parameters.distributed-query.io";
   };
 
   avsWorkerConfig = {
