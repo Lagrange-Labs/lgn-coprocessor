@@ -31,5 +31,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.CF_AWS_ACCESS_KEY_ID_MAIN }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_AWS_SECRET_ACCESS_KEY_MAIN }}
           AWS_DEFAULT_REGION: eeur
+          # R2 does not really behaves exactly like S3
+          AWS_REQUEST_CHECKSUM_CALCULATION: WHEN_REQUIRED
       - name: Removing the PPs
         run: rm -rf zkmr_params
