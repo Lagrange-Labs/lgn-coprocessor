@@ -47,7 +47,7 @@ serde_with = { version = "3.12" }
 thiserror = { version = "2" }
 tokio = { version = "1.44" }
 tokio-stream = { version = "0.1" }
-tonic = { version = "0.13", features = [ "transport", "tls-webpki-roots" ] }
+tonic = { version = "0.13", features = [ "transport", "tls-webpki-roots", "gzip" ] }
 tonic-build = { version = "0.13" }
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
