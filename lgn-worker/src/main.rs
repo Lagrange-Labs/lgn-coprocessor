@@ -40,6 +40,7 @@ use semver::Version;
 use thiserror::Error;
 use tokio::sync::mpsc;
 use tokio_stream::StreamExt;
+use tonic::codec::CompressionEncoding;
 use tonic::metadata::MetadataValue;
 use tonic::transport::ClientTlsConfig;
 use tonic::Request;
@@ -504,7 +505,9 @@ async fn connect_to_gateway(
         },
     )
     .max_encoding_message_size(max_message_size)
-    .max_decoding_message_size(max_message_size);
+    .max_decoding_message_size(max_message_size)
+    .accept_compressed(CompressionEncoding::Gzip)
+    .send_compressed(CompressionEncoding::Gzip);
 
     let (outbound, outbound_rx) = mpsc::channel(50);
     let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
