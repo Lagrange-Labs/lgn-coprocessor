@@ -59,7 +59,7 @@ pub enum QueryStep {
 pub struct MatchingRowInput {
     /// Proof key of this row proof
     pub proof_key: ProofKey,
-    /// Collumn cells info
+    /// Column cells info
     pub column_cells: RowCells,
     /// The placeholders
     pub placeholders: PlaceHolderLgn,
