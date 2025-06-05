@@ -10,7 +10,7 @@ let
 
   avsWorkerConfig = {
     worker = {
-      instance_type = "medium";
+      instance_type = "large";
     };
 
     avs = {
