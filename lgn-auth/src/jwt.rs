@@ -43,16 +43,15 @@ where
         // Case 1: JSON value is a string → treat it as hex.
         Value::String(hex_str) => {
             if let Ok(signature) = Signature::from_str(&hex_str) {
-                return Ok(signature);
+                Ok(signature)
             } else {
-                return Err(D::Error::custom(format!("Invalid hex signature")));
+                Err(D::Error::custom("Invalid hex signature".to_string()))
             }
         },
         other_value => {
             Signature::deserialize(other_value).map_err(|e| {
                 D::Error::custom(format!(
-                    "Failed to deserialize signature from JSON object: {}",
-                    e
+                    "Failed to deserialize signature from JSON object: {e}"
                 ))
             })
         },
