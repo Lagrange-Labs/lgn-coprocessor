@@ -1,6 +1,7 @@
+#![allow(unused_variables)]
 use std::sync::Arc;
 
-use alloy_primitives::U256;
+use alloy::primitives::U256;
 use derive_debug_plus::Dbg;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;

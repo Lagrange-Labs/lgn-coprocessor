@@ -8,7 +8,7 @@ use anyhow::bail;
 use anyhow::ensure;
 use anyhow::Context;
 use bytes::Bytes;
-use ethers::providers::StreamExt;
+use futures::StreamExt;
 use reqwest::StatusCode;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
@@ -61,7 +61,7 @@ pub async fn download_and_checksum(
 
     let param_dir = filepath
         .parent()
-        .with_context(|| format!("Param directory can not be empty. param_dir: {}", param_dir))?;
+        .with_context(|| format!("Param directory can not be empty. param_dir: {param_dir}"))?;
 
     std::fs::create_dir_all(param_dir).with_context(|| {
         format!(
@@ -72,7 +72,7 @@ pub async fn download_and_checksum(
 
     let expected_checksum = checksums
         .get(file_name)
-        .with_context(|| format!("Missing checksum. file_name: {}", file_name))?;
+        .with_context(|| format!("Missing checksum. file_name: {file_name}"))?;
 
     let mut file = File::options()
         .read(true)
@@ -242,6 +242,6 @@ async fn resume_download(
         );
     } else {
         info!("Downloaded file. filepath: {}", filepath.display());
-        return Ok(());
+        Ok(())
     }
 }

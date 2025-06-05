@@ -1,6 +1,6 @@
 [package]
 name = "lgn-provers"
-version = "1.1.8"
+version = "1.1.10"
 edition = "2021"
 
 [dependencies]
@@ -9,9 +9,8 @@ anyhow = { workspace = true }
 bincode = { workspace = true }
 blake3.workspace = true
 bytes = { workspace = true }
-ethers = { workspace = true }
+futures = { workspace = true }
 groth16_framework = { workspace = true }
-metrics = { workspace = true }
 mp2_common = { workspace = true }
 mp2_v1 = { workspace = true }
 parsil = { workspace = true }

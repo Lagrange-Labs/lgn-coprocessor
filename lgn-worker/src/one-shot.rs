@@ -1,3 +1,6 @@
+#![feature(generic_const_exprs)]
+#![allow(incomplete_features)]
+
 use anyhow::*;
 use checksum::fetch_checksums;
 use clap::Parser;

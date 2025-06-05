@@ -1,12 +1,11 @@
 [package]
 name = "lgn-messages"
-version = "1.1.8"
+version = "1.1.10"
 edition = "2021"
 
 [dependencies]
-alloy-primitives = { workspace = true }
+alloy.workspace = true
 derive-debug-plus = { workspace = true }
-ethers = { workspace = true }
 mp2_common = { workspace = true }
 mp2_v1 = { workspace = true }
 object_store = { workspace = true }

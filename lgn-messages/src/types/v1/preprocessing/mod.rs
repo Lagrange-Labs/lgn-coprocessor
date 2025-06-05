@@ -1,6 +1,6 @@
-use alloy_primitives::Address;
-use alloy_primitives::U256;
-use ethers::prelude::H256;
+use alloy::primitives::Address;
+use alloy::primitives::FixedBytes;
+use alloy::primitives::U256;
 use ext_tasks::FinalExtractionType;
 use mp2_common::types::HashOutput;
 use mp2_v1::values_extraction::gadgets::column_info::ColumnInfo;
@@ -78,7 +78,7 @@ impl WorkerTaskType {
     pub fn ext_variable_leaf(
         table_hash: TableHash,
         block_nr: BlockNr,
-        node_hash: H256,
+        node_hash: FixedBytes<32>,
         node: Vec<u8>,
         slot: u8,
         evm_word: u32,
@@ -97,7 +97,7 @@ impl WorkerTaskType {
     pub fn ext_variable_branch(
         table_hash: TableHash,
         block_nr: BlockNr,
-        node_hash: H256,
+        node_hash: FixedBytes<32>,
         node: Vec<u8>,
         children: Vec<MptNodeVersion>,
     ) -> WorkerTaskType {
@@ -113,7 +113,7 @@ impl WorkerTaskType {
     pub fn ext_mapping_leaf(
         table_hash: TableHash,
         block_nr: BlockNr,
-        node_hash: H256,
+        node_hash: FixedBytes<32>,
         key: Vec<u8>,
         node: Vec<u8>,
         slot: u8,
@@ -134,7 +134,7 @@ impl WorkerTaskType {
     pub fn ext_mapping_branch(
         table_hash: TableHash,
         block_nr: BlockNr,
-        node_hash: H256,
+        node_hash: FixedBytes<32>,
         node: Vec<u8>,
         children: Vec<MptNodeVersion>,
     ) -> WorkerTaskType {
@@ -387,12 +387,12 @@ impl WorkerTaskType {
     pub fn ivc(
         table_id: TableId,
         block_nr: BlockNr,
-        is_first_block: bool,
+        previous_epoch: Option<BlockNr>,
     ) -> WorkerTaskType {
         WorkerTaskType::Database(DatabaseType::IVC(IvcInput::new(
             table_id,
             block_nr,
-            is_first_block,
+            previous_epoch,
         )))
     }
 }

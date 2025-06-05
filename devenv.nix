@@ -5,12 +5,12 @@ let
     keystore-file = "./runtime/lagr-keystore.json";
     keystore-password = "canihazsecurityplz";
     gateway-url = "http://localhost:10000";
-    params-url = "https://pub-d7c7f0d6979a41f2b25137eaecf12d7b.r2.dev";
+    params-url = "https://public-parameters.distributed-query.io";
   };
 
   avsWorkerConfig = {
     worker = {
-      instance_type = "medium";
+      instance_type = "large";
     };
 
     avs = {
@@ -43,7 +43,7 @@ in
     pull = [];
   };
 
-  packages = [ pkgs.git pkgs.openssl pkgs.pkg-config pkgs.protobuf ]
+  packages = [ pkgs.perl pkgs.git pkgs.openssl pkgs.pkg-config pkgs.protobuf pkgs.rustup pkgs.awscli2 ]
              ++ lib.optionals pkgs.stdenv.targetPlatform.isDarwin [
                pkgs.libiconv
                pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
@@ -53,6 +53,9 @@ in
     LAGRANGE_PRIVATE_KEY="779ff5fe168de6560e95dff8c91d3af4c45ad1b261d03d22e2e1558fb27ea450";
 
     OPENSSL_DEV = pkgs.openssl.dev;
+
+    # Make Go dependencies RW
+    GOFLAGS = "-modcacherw";
   };
 
   scripts = let
@@ -80,9 +83,5 @@ in
 
   languages = {
     go.enable = true;
-    rust = {
-      enable = true;
-      channel = "nightly";
-    };
   };
 }

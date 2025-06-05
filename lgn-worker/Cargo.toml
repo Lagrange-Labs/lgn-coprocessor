@@ -1,6 +1,6 @@
 [package]
 name = "lgn-worker"
-version = "1.1.8"
+version = "1.1.10"
 edition = "2021"
 
 [[bin]]
@@ -8,18 +8,23 @@ name = "lgn-avs"
 path = "bin/avs.rs"
 
 [[bin]]
+name = "gen-params"
+path = "bin/gen-params.rs"
+
+[[bin]]
 name = "one-shot"
 path = "src/one-shot.rs"
 
 [dependencies]
+alloy = { workspace = true, features = ["signers", "signer-local", "signer-keystore"] }
 anyhow = { workspace = true }
 backtrace = { workspace = true }
+bincode.workspace = true
 blake3 = { workspace = true }
 clap = { workspace = true, features = ["derive", "env", "help", "std", "suggestions"] }
 config = { workspace = true, features = ["toml"] }
 elliptic-curve = { workspace = true }
-# The ethers macro `abigen` needs to import ethers as a crate.
-ethers = { git = "https://github.com/Lagrange-Labs/ethers-rs", default-features = false, features = [ "rustls" ], branch = "get-proof-0x" }
+groth16_framework.workspace = true
 hex = { workspace = true }
 jwt = { workspace = true }
 k256 = { workspace = true, features = ["ecdsa", "std"] }
@@ -30,6 +35,7 @@ lgn-provers = { path = "../lgn-provers" }
 metrics = { workspace = true }
 metrics-exporter-prometheus = { workspace = true }
 mimalloc = { workspace = true }
+mp2_v1.workspace = true
 prost = { workspace = true }
 prost-types = { workspace = true }
 rand = { workspace = true, default-features = false, features = [ "std", "std_rng", "getrandom", "min_const_gen" ]  }
@@ -49,6 +55,7 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "json"] }
 uuid = { workspace = true }
 verifiable-db.workspace = true
+walkdir = "2.5.0"
 warp = { workspace = true }
 
 [build-dependencies]

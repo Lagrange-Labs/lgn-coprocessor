@@ -1,5 +1,7 @@
 #![feature(generic_const_exprs)]
 #![feature(result_flattening)]
+#![allow(incomplete_features)]
+
 use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::fs;
@@ -15,15 +17,14 @@ use std::sync::Arc;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
+use alloy::signers::local::PrivateKeySigner;
 use anyhow::bail;
 use anyhow::Context;
 use backtrace::Backtrace;
 use checksum::fetch_checksums;
 use clap::Parser;
-use ethers::signers::Wallet;
 use jwt::Claims;
 use jwt::RegisteredClaims;
-use k256::ecdsa::SigningKey;
 use lagrange::worker_done::Reply;
 use lagrange::WorkerDone;
 use lagrange::WorkerToGwRequest;
@@ -31,7 +32,6 @@ use lagrange::WorkerToGwResponse;
 use lgn_auth::jwt::JWTAuth;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
-use lgn_messages::types::ProverType;
 use lgn_worker::avs::utils::read_keystore;
 use metrics::counter;
 use metrics::histogram;
@@ -40,6 +40,7 @@ use semver::Version;
 use thiserror::Error;
 use tokio::sync::mpsc;
 use tokio_stream::StreamExt;
+use tonic::codec::CompressionEncoding;
 use tonic::metadata::MetadataValue;
 use tonic::transport::ClientTlsConfig;
 use tonic::Request;
@@ -231,10 +232,10 @@ async fn main() -> ExitCode {
         if let Some(path) = config.exit_reason_path {
             exit_reason(
                 &path,
-                format!("Worker exited due to an error. err: {:?}", err),
+                format!("Worker exited due to an error. err: {err:?}"),
             )
         }
-        error!("Worker exited due to an error. err: {:?}", err);
+        error!("Worker exited due to an error. err: {err:?}");
         ExitCode::FAILURE
     } else {
         ExitCode::SUCCESS
@@ -348,24 +349,40 @@ async fn run(config: &Config) -> anyhow::Result<()> {
         counter!("zkmr_worker_messages_error_total", "type" => error_tag).increment(0);
     }
 
-    for prover_type in [
-        ProverType::V1Preprocessing,
-        ProverType::V1Query,
-        ProverType::V1Groth16,
+    for task_type in [
+        "mapping_leaf",
+        "mapping_branch",
+        "multi_var_leaf",
+        "multi_var_branch",
+        "length",
+        "contract",
+        "block",
+        "final_extraction",
+        "final_extraction_lengthed",
+        "final_extraction_merge",
+        "offchain",
+        "cell_leaf",
+        "cell_partial",
+        "cell_full",
+        "row_leaf",
+        "row_partial",
+        "row_full",
+        "index",
+        "ivc",
     ] {
         counter!(
             "zkmr_worker_tasks_received_total",
-            "prover_type" => prover_type.to_string(),
+            "task_type" => task_type.to_string(),
         )
         .increment(0);
         counter!(
             "zkmr_worker_tasks_successful_total",
-            "prover_type" => prover_type.to_string(),
+            "task_type" => task_type.to_string(),
         )
         .increment(0);
         counter!(
             "zkmr_worker_tasks_error_total",
-            "prover_type" => prover_type.to_string(),
+            "task_type" => task_type.to_string(),
         )
         .increment(0);
     }
@@ -404,7 +421,7 @@ async fn run(config: &Config) -> anyhow::Result<()> {
                             request: Some(lagrange::worker_to_gw_request::Request::WorkerDone(
                                 WorkerDone {
                                     task_id,
-                                    reply: Some(Reply::WorkerError(format!("{:?}", err))),
+                                    reply: Some(Reply::WorkerError(format!("{err:?}"))),
                                 },
                             )),
                         }
@@ -488,7 +505,9 @@ async fn connect_to_gateway(
         },
     )
     .max_encoding_message_size(max_message_size)
-    .max_decoding_message_size(max_message_size);
+    .max_decoding_message_size(max_message_size)
+    .accept_compressed(CompressionEncoding::Gzip)
+    .send_compressed(CompressionEncoding::Gzip);
 
     let (outbound, outbound_rx) = mpsc::channel(50);
     let outbound_rx = tokio_stream::wrappers::ReceiverStream::new(outbound_rx);
@@ -593,15 +612,15 @@ async fn process_message_from_gateway(
 
             match panic.downcast::<String>() {
                 Ok(panic_msg) => {
-                    return Error::ProofPanic {
+                    Error::ProofPanic {
                         uuid,
                         panic_msg: *panic_msg,
-                    };
+                    }
                 },
                 Err(panic) => {
                     Error::ProofPanic {
                         uuid,
-                        panic_msg: format!("{:?}", panic),
+                        panic_msg: format!("{panic:?}"),
                     }
                 },
             }
@@ -666,7 +685,7 @@ async fn process_message_from_gateway(
 }
 
 /// Build the node's wallet from the configuration file.
-fn get_wallet(config: &Config) -> anyhow::Result<Wallet<SigningKey>> {
+fn get_wallet(config: &Config) -> anyhow::Result<PrivateKeySigner> {
     let res = match (
         &config.avs.lagr_keystore,
         &config.avs.lagr_pwd,
@@ -676,7 +695,7 @@ fn get_wallet(config: &Config) -> anyhow::Result<Wallet<SigningKey>> {
             read_keystore(keystore_path, password.expose_secret())?
         },
         (Some(_), None, Some(pkey)) => {
-            Wallet::from_str(pkey.expose_secret()).context("Failed to create wallet")?
+            PrivateKeySigner::from_str(pkey.expose_secret()).context("Failed to create wallet")?
         },
         _ => bail!("Must specify either keystore path w/ password OR private key"),
     };

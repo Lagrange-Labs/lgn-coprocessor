@@ -191,5 +191,5 @@ fn add_mp2_version_path_to_url(
                 .to_string()
         },
     };
-    format!("{url}/{}", tag)
+    format!("{url}/{tag}")
 }

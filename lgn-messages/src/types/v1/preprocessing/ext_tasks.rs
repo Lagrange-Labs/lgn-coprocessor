@@ -1,8 +1,9 @@
-use alloy_primitives::Address;
-use alloy_primitives::U256;
+use alloy::primitives::Address;
+use alloy::primitives::FixedBytes;
+use alloy::primitives::U256;
 use derive_debug_plus::Dbg;
-use ethers::types::H256;
-use ethers::utils::rlp;
+use mp2_common::eth::node_type;
+use mp2_common::eth::NodeType;
 use mp2_v1::api::TableRow;
 use mp2_v1::final_extraction::OffChainRootOfTrust;
 use mp2_v1::indexing::cell::Cell;
@@ -41,7 +42,7 @@ pub enum ExtractionType {
 pub struct Mpt {
     pub table_hash: TableHash,
     pub block_nr: BlockNr,
-    pub node_hash: H256,
+    pub node_hash: FixedBytes<32>,
     pub mpt_type: MptType,
 }
 
@@ -49,7 +50,7 @@ impl Mpt {
     pub fn new(
         table_hash: TableId,
         block_nr: BlockNr,
-        node_hash: H256,
+        node_hash: FixedBytes<32>,
         mpt_type: MptType,
     ) -> Self {
         Self {
@@ -204,13 +205,12 @@ impl MPTExtractionType {
         node: &[u8],
         i: usize,
     ) -> Self {
-        let list: Vec<Vec<_>> = rlp::decode_list(node);
-        match list.len() {
+        match node_type(node).unwrap() {
             // assuming the first node in the path is the leaf
-            2 if i == 0 => MPTExtractionType::Leaf,
-            2 => MPTExtractionType::Extension,
+            NodeType::Leaf if i == 0 => MPTExtractionType::Leaf,
+            NodeType::Leaf | NodeType::Extension => MPTExtractionType::Extension,
             // assuming all nodes are valid so branch is the only choice left
-            _ => MPTExtractionType::Branch,
+            NodeType::Branch => MPTExtractionType::Branch,
         }
     }
 }
@@ -465,13 +465,30 @@ impl From<ExtractionRow> for TableRow {
 /// Inputs for an off-chain extraction.
 #[derive(Clone, Dbg, PartialEq, Deserialize, Serialize)]
 pub struct OffchainExtraction {
+    /// Determines which table this extraction corresponds to.
     pub table_id: TableId,
-    pub block_nr: BlockNr,
-    pub is_first_block: bool,
+
+    /// The "revision" of this extraction, also called `block_nr`.
+    pub revision: BlockNr,
+
+    /// Determines the previous extraction block_nr/revision.
+    ///
+    /// Determines the proof that should go to `prev_epoch_proof`.
+    pub previous_epoch: Option<BlockNr>,
+
+    /// The value of the primary index, akin to the block_nr value.
     pub primary_index: U256,
+
+    /// Determines if the data should have its commitment computed/verified.
     pub root_of_trust: OffChainRootOfTrust,
+
+    /// The previous proof.
     pub prev_epoch_proof: Option<Vec<u8>>,
+
+    /// The data to be extracted.
     pub table_rows: Vec<ExtractionRow>,
+
+    /// Determines the shape of the data.
     pub row_unique_columns: Vec<ColumnID>,
 }
 
