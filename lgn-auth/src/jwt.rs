@@ -1,5 +1,6 @@
 //! JWT authorization logic used in both worker and gateway
 
+use std::fmt::Display;
 use std::str::FromStr;
 
 use alloy::primitives::eip191_hash_message;
@@ -23,13 +24,26 @@ use jwt::ToBase64;
 use serde::Deserialize;
 use serde::Deserializer;
 use serde::Serialize;
+use serde::Serializer;
 use serde_json::Value;
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct JWTAuth {
     claims: Claims,
     #[serde(deserialize_with = "deserialize_signature")]
+    #[serde(serialize_with = "use_display")]
     signature: Signature,
+}
+
+fn use_display<T, S>(
+    value: &T,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    T: Display,
+    S: Serializer,
+{
+    serializer.collect_str(value)
 }
 
 fn deserialize_signature<'de, D>(deserializer: D) -> Result<Signature, D::Error>
@@ -179,7 +193,7 @@ mod tests {
     fn test_signature_compatibility() {
         const OLD_JWT_AUTH_STRING: &str = r#"{"claims":{"iss":"Lagrange","sub":"lagrange-medium","iat":1749130584,"worker_class":"medium"},"signature":{"r":"0x9322f14c9f5ffa385a248ea78d755f8b3f2ed49f06cbd0f27f3453bcdff2e56b","s":"0x236471338608b80a7bcf35b7b72755e9479618cb0a7ffcd29f58ae1c81e2b52b","v":28}}"#;
 
-        const NEW_JWT_AUTH_STRING: &str = r#"{"claims":{"iss":"Lagrange","sub":"lagrange-medium","iat":1749130584,"worker_class":"medium"},"signature":{"r":"0x9322f14c9f5ffa385a248ea78d755f8b3f2ed49f06cbd0f27f3453bcdff2e56b","s":"0x236471338608b80a7bcf35b7b72755e9479618cb0a7ffcd29f58ae1c81e2b52b","yParity":"0x1","v":"0x1"}}"#;
+        const NEW_JWT_AUTH_STRING: &str = r#"{"claims":{"iss":"Lagrange","sub":"lagrange-medium","iat":1749130584,"worker_class":"medium"},"signature":"0x9322f14c9f5ffa385a248ea78d755f8b3f2ed49f06cbd0f27f3453bcdff2e56b236471338608b80a7bcf35b7b72755e9479618cb0a7ffcd29f58ae1c81e2b52b1c"}"#;
 
         let new_jwt_auth =
             JWTAuth::decode(&BASE64_URL_SAFE_NO_PAD.encode(NEW_JWT_AUTH_STRING)).unwrap();
