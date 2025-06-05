@@ -1,5 +1,8 @@
 //! JWT authorization logic used in both worker and gateway
 
+use std::fmt::Display;
+use std::str::FromStr;
+
 use alloy::primitives::eip191_hash_message;
 use alloy::primitives::Signature;
 use alloy::signers::k256::ecdsa::RecoveryId;
@@ -19,16 +22,54 @@ use generic_array::GenericArray;
 use jwt::Claims;
 use jwt::ToBase64;
 use serde::Deserialize;
+use serde::Deserializer;
 use serde::Serialize;
-use serde_with::serde_as;
-use serde_with::DisplayFromStr;
+use serde::Serializer;
+use serde_json::Value;
 
-#[serde_as]
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct JWTAuth {
     claims: Claims,
-    #[serde_as(as = "DisplayFromStr")]
+    #[serde(deserialize_with = "deserialize_signature")]
+    #[serde(serialize_with = "use_display")]
     signature: Signature,
+}
+
+fn use_display<T, S>(
+    value: &T,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    T: Display,
+    S: Serializer,
+{
+    serializer.collect_str(value)
+}
+
+fn deserialize_signature<'de, D>(deserializer: D) -> Result<Signature, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let v = Value::deserialize(deserializer).unwrap();
+    use serde::de::Error as DeError;
+
+    match v {
+        // Case 1: JSON value is a string → treat it as hex.
+        Value::String(hex_str) => {
+            if let Ok(signature) = Signature::from_str(&hex_str) {
+                Ok(signature)
+            } else {
+                Err(D::Error::custom("Invalid hex signature".to_string()))
+            }
+        },
+        other_value => {
+            Signature::deserialize(other_value).map_err(|e| {
+                D::Error::custom(format!(
+                    "Failed to deserialize signature from JSON object: {e}"
+                ))
+            })
+        },
+    }
 }
 
 impl JWTAuth {
@@ -146,6 +187,20 @@ mod tests {
         assert_eq!(public_key, expected_public_key);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_signature_compatibility() {
+        const OLD_JWT_AUTH_STRING: &str = r#"{"claims":{"iss":"Lagrange","sub":"lagrange-medium","iat":1749130584,"worker_class":"medium"},"signature":{"r":"0x9322f14c9f5ffa385a248ea78d755f8b3f2ed49f06cbd0f27f3453bcdff2e56b","s":"0x236471338608b80a7bcf35b7b72755e9479618cb0a7ffcd29f58ae1c81e2b52b","v":28}}"#;
+
+        const NEW_JWT_AUTH_STRING: &str = r#"{"claims":{"iss":"Lagrange","sub":"lagrange-medium","iat":1749130584,"worker_class":"medium"},"signature":"0x9322f14c9f5ffa385a248ea78d755f8b3f2ed49f06cbd0f27f3453bcdff2e56b236471338608b80a7bcf35b7b72755e9479618cb0a7ffcd29f58ae1c81e2b52b1c"}"#;
+
+        let new_jwt_auth =
+            JWTAuth::decode(&BASE64_URL_SAFE_NO_PAD.encode(NEW_JWT_AUTH_STRING)).unwrap();
+        let old_jwt_auth =
+            JWTAuth::decode(&BASE64_URL_SAFE_NO_PAD.encode(OLD_JWT_AUTH_STRING)).unwrap();
+
+        assert_eq!(old_jwt_auth, new_jwt_auth);
     }
 
     /// Get the public key from wallet.
