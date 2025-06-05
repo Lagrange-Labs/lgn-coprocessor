@@ -79,3 +79,21 @@ The worker exposes liveness and readiness endpoints on port 8080:
 
 #### Dashboard
 Starting from worker version `v0.2.1`, you can import this [grafana dashboard ](https://grafana.com/grafana/dashboards/21302-worker/)
+
+## 📦 Versioning Strategy
+
+We follow [Semantic Versioning](https://semver.org/) with slight modifications tailored to operational workflows.
+
+- **Major (`X.0.0`)**  
+  Requires **ZK Public Parameters** changes OR changes in **protobuf** between the worker and the gateway.
+
+- **Minor (`0.X.0`)**  
+  Backward-compatible changes. The older version of the gateway can still support this new version.
+
+- **Patch (`0.0.X`)**  
+  Urgent hotfixes applied on a deployed branch.
+
+### Examples:
+- `2.0.0`: Upgrading the dependency of plonky2.
+- `1.3.0`: New metrics for the performance of tasks.
+- `1.3.2`: Hotfix on top of `1.3.0`.
