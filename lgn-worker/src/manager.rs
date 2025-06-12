@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::panic::RefUnwindSafe;
 use std::panic::UnwindSafe;
 
-use anyhow::Context;
 use anyhow::bail;
+use anyhow::Context;
 use lgn_messages::types::MessageEnvelope;
 use lgn_messages::types::MessageReplyEnvelope;
 use lgn_messages::types::ProverType;

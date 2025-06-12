@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use anyhow::Context;
-use lgn_messages::types::v1::query::NUM_CHUNKS;
-use lgn_messages::types::v1::query::NUM_ROWS;
 use lgn_messages::types::v1::query::tasks::MatchingRowInput;
 use lgn_messages::types::v1::query::tasks::NonExistenceInput;
 use lgn_messages::types::v1::query::tasks::RowsChunkInput;
+use lgn_messages::types::v1::query::NUM_CHUNKS;
+use lgn_messages::types::v1::query::NUM_ROWS;
 use parsil::assembler::DynamicCircuitPis;
 use verifiable_db::api::QueryCircuitInput;
 use verifiable_db::api::QueryParameters;
