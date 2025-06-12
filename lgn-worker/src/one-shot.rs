@@ -76,7 +76,7 @@ async fn main() -> Result<()> {
     config.validate();
     let checksums = fetch_checksums(config.public_params.checksum_file_url()).await?;
 
-    let provers_manager = ProversManager::new(&config, &checksums).await?;
+    let provers_manager = ProversManager::new(&config, &checksums, true).await?;
 
     let envelope = std::fs::read_to_string(&cli.input)
         .with_context(|| format!("failed to open `{}`", cli.input))
