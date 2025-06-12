@@ -30,26 +30,29 @@ use mp2_v1::values_extraction::gadgets::column_info::ColumnInfo;
 
 use crate::params;
 use crate::provers::v1::query::MAX_NUM_COLUMNS;
+use crate::provers::write_to_tmp;
 
 pub struct PreprocessingEuclidProver {
     params: PublicParameters<MAX_NUM_COLUMNS>,
+    /// If set, dump the encountered circuit inputs in temporary files.
+    with_tracing: bool,
 }
 
 impl PreprocessingEuclidProver {
-    pub fn new(params: PublicParameters<MAX_NUM_COLUMNS>) -> Self {
-        Self { params }
-    }
-
     pub(crate) async fn init(
         url: &str,
         dir: &str,
         file: &str,
         checksums: &HashMap<String, blake3::Hash>,
+        with_tracing: bool,
     ) -> anyhow::Result<Self> {
         let params = params::download_and_checksum(url, dir, file, checksums).await?;
         let reader = std::io::BufReader::new(params.as_ref());
         let params = bincode::deserialize_from(reader)?;
-        Ok(Self { params })
+        Ok(Self {
+            params,
+            with_tracing,
+        })
     }
 
     pub(super) fn prove_single_variable_leaf(
@@ -62,6 +65,9 @@ impl PreprocessingEuclidProver {
         let input = ValuesExtraction(values_extraction::CircuitInput::new_single_variable_leaf(
             node, slot, evm_word, table_info,
         ));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -70,13 +76,15 @@ impl PreprocessingEuclidProver {
         node: Vec<u8>,
         child_proofs: Vec<Vec<u8>>,
     ) -> anyhow::Result<Vec<u8>> {
-        generate_proof(
-            &self.params,
-            ValuesExtraction(values_extraction::CircuitInput::new_branch(
-                node,
-                child_proofs,
-            )),
-        )
+        let input = ValuesExtraction(values_extraction::CircuitInput::new_branch(
+            node,
+            child_proofs,
+        ));
+
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_mapping_variable_leaf(
@@ -91,6 +99,9 @@ impl PreprocessingEuclidProver {
         let input = ValuesExtraction(values_extraction::CircuitInput::new_mapping_variable_leaf(
             node, slot, key, key_id, evm_word, table_info,
         ));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -101,23 +112,25 @@ impl PreprocessingEuclidProver {
     ) -> anyhow::Result<Vec<u8>> {
         let node_type = node_type(&node)?;
 
-        match node_type {
+        let input = match node_type {
             NodeType::Extension => {
-                let input = ValuesExtraction(values_extraction::CircuitInput::new_extension(
+                ValuesExtraction(values_extraction::CircuitInput::new_extension(
                     node,
                     child_proofs[0].to_owned(),
-                ));
-                generate_proof(&self.params, input)
+                ))
             },
             NodeType::Branch => {
-                let input = ValuesExtraction(values_extraction::CircuitInput::new_branch(
+                ValuesExtraction(values_extraction::CircuitInput::new_branch(
                     node,
                     child_proofs,
-                ));
-                generate_proof(&self.params, input)
+                ))
             },
             NodeType::Leaf => bail!("unexpected NodeType::Leaf"),
+        };
+        if self.with_tracing {
+            write_to_tmp(&input)?;
         }
+        generate_proof(&self.params, input)
     }
 
     pub(super) fn prove_length_leaf(
@@ -131,6 +144,9 @@ impl PreprocessingEuclidProver {
             node,
             variable_slot as u8,
         ));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -140,6 +156,9 @@ impl PreprocessingEuclidProver {
         child_proof: Vec<u8>,
     ) -> anyhow::Result<Vec<u8>> {
         let input = LengthExtraction(LengthCircuitInput::new_branch(node, child_proof));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -154,6 +173,9 @@ impl PreprocessingEuclidProver {
             &storage_root,
             contract_address,
         ));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -166,6 +188,9 @@ impl PreprocessingEuclidProver {
             node,
             child_proof,
         ));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -176,6 +201,9 @@ impl PreprocessingEuclidProver {
         let input = BlockExtraction(block_extraction::CircuitInput::from_block_header(
             rlp_header,
         ));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -190,6 +218,9 @@ impl PreprocessingEuclidProver {
             contract_proof,
             value_proof,
         )?);
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -206,6 +237,9 @@ impl PreprocessingEuclidProver {
             value_proof,
             length_proof,
         )?);
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -224,6 +258,9 @@ impl PreprocessingEuclidProver {
                 mapping_table_proof,
             )?,
         );
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -242,6 +279,9 @@ impl PreprocessingEuclidProver {
             table_rows,
             row_unique_columns,
         )?);
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -256,6 +296,9 @@ impl PreprocessingEuclidProver {
             value,
             is_multiplier,
         ));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -272,6 +315,9 @@ impl PreprocessingEuclidProver {
             is_multiplier,
             child_proof,
         ));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -289,6 +335,9 @@ impl PreprocessingEuclidProver {
             is_multiplier,
             child_proofs,
         ));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -313,6 +362,9 @@ impl PreprocessingEuclidProver {
             row_unique_data,
             cells_proof,
         )?);
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -341,6 +393,9 @@ impl PreprocessingEuclidProver {
             child_proof,
             cells_proof,
         )?);
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -367,6 +422,9 @@ impl PreprocessingEuclidProver {
             child_proofs[1].to_owned(),
             cells_proof,
         )?);
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -382,6 +440,9 @@ impl PreprocessingEuclidProver {
             extraction_proof,
             rows_tree_proof,
         ));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -413,6 +474,9 @@ impl PreprocessingEuclidProver {
             extraction_proof,
             rows_tree_proof,
         ));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -436,6 +500,9 @@ impl PreprocessingEuclidProver {
             &(rows_tree_hash),
             right_child_proof,
         ));
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 
@@ -461,6 +528,9 @@ impl PreprocessingEuclidProver {
             },
         };
 
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
         generate_proof(&self.params, input)
     }
 }

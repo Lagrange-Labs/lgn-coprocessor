@@ -32,6 +32,7 @@ impl ProversManager {
     pub(crate) async fn new(
         config: &Config,
         checksums: &HashMap<String, blake3::Hash>,
+        with_tracing: bool,
     ) -> anyhow::Result<Self> {
         info!("Registering the provers");
 
@@ -43,6 +44,7 @@ impl ProversManager {
                 &config.public_params.dir,
                 &config.public_params.query_params.file,
                 checksums,
+                with_tracing,
             )
             .await
             .context("initializing Small prover")?;
@@ -56,6 +58,7 @@ impl ProversManager {
                 &config.public_params.dir,
                 &config.public_params.preprocessing_params.file,
                 checksums,
+                with_tracing,
             )
             .await
             .context("initializing Medium prover")?;

@@ -24,6 +24,7 @@ use super::MAX_NUM_PREDICATE_OPS;
 use super::MAX_NUM_RESULT_OPS;
 use super::ROW_TREE_MAX_DEPTH;
 use crate::params;
+use crate::provers::write_to_tmp;
 
 pub(crate) struct QueryEuclidProver {
     params: QueryParameters<
@@ -38,37 +39,25 @@ pub(crate) struct QueryEuclidProver {
         MAX_NUM_ITEMS_PER_OUTPUT,
         MAX_NUM_PLACEHOLDERS,
     >,
+    /// If set, dump the encountered circuit inputs in temporary files.
+    with_tracing: bool,
 }
 
 impl QueryEuclidProver {
-    #[allow(dead_code)]
-    pub fn new(
-        params: QueryParameters<
-            NUM_CHUNKS,
-            NUM_ROWS,
-            ROW_TREE_MAX_DEPTH,
-            INDEX_TREE_MAX_DEPTH,
-            MAX_NUM_COLUMNS,
-            MAX_NUM_PREDICATE_OPS,
-            MAX_NUM_RESULT_OPS,
-            MAX_NUM_OUTPUTS,
-            MAX_NUM_ITEMS_PER_OUTPUT,
-            MAX_NUM_PLACEHOLDERS,
-        >
-    ) -> Self {
-        Self { params }
-    }
-
     pub(crate) async fn init(
         url: &str,
         dir: &str,
         file: &str,
         checksums: &HashMap<String, blake3::Hash>,
+        with_tracing: bool,
     ) -> anyhow::Result<Self> {
         let params = params::download_and_checksum(url, dir, file, checksums).await?;
         let reader = std::io::BufReader::new(params.as_ref());
         let params = bincode::deserialize_from(reader)?;
-        Ok(Self { params })
+        Ok(Self {
+            params,
+            with_tracing,
+        })
     }
 
     pub(super) fn prove_universal_circuit(
@@ -85,6 +74,9 @@ impl QueryEuclidProver {
             &pis.bounds,
         )
         .context("while initializing the universal circuit")?;
+        if self.with_tracing {
+            write_to_tmp(&circuit_input)?;
+        }
 
         let input = QueryCircuitInput::Query(circuit_input);
         let proof = self
@@ -112,6 +104,9 @@ impl QueryEuclidProver {
         .context("while initializing the rows-chunk circuit")?;
 
         let input = QueryCircuitInput::Query(input);
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
 
         let proof = self
             .params
@@ -129,6 +124,9 @@ impl QueryEuclidProver {
             .context("while initializing the chunk-aggregation circuit")?;
 
         let input = QueryCircuitInput::Query(input);
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
 
         let proof = self
             .params
@@ -156,6 +154,9 @@ impl QueryEuclidProver {
         .context("while initializing the non-existence circuit")?;
 
         let input = QueryCircuitInput::Query(input);
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
 
         let proof = self
             .params
@@ -183,6 +184,9 @@ impl QueryEuclidProver {
         .context("while initializing the (empty) revelation circuit")?;
 
         let input = QueryCircuitInput::Revelation(circuit_input);
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
 
         let proof = self
             .params
@@ -217,6 +221,9 @@ impl QueryEuclidProver {
         .context("while initializing the (empty) revelation circuit")?;
 
         let input = QueryCircuitInput::Revelation(circuit_input);
+        if self.with_tracing {
+            write_to_tmp(&input)?;
+        }
 
         let proof = self
             .params

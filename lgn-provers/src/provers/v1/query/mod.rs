@@ -29,6 +29,7 @@ pub async fn create_prover(
     dir: &str,
     file: &str,
     checksums: &HashMap<String, blake3::Hash>,
+    with_tracing: bool,
 ) -> anyhow::Result<impl LgnProver> {
     #[cfg(feature = "dummy-prover")]
     let prover = {
@@ -39,7 +40,7 @@ pub async fn create_prover(
     #[cfg(not(feature = "dummy-prover"))]
     let prover = {
         info!("Creating QueryEuclidProver");
-        euclid_prover::QueryEuclidProver::init(url, dir, file, checksums).await?
+        euclid_prover::QueryEuclidProver::init(url, dir, file, checksums, with_tracing).await?
     };
 
     debug!("Query prover created");

@@ -302,7 +302,7 @@ async fn run(config: &Config) -> anyhow::Result<()> {
         Default::default()
     };
 
-    let mut provers_manager = ProversManager::new(config, &checksums).await?;
+    let mut provers_manager = ProversManager::new(config, &checksums, false).await?;
 
     // Connect to the GW
     let (mut inbound, outbound) = connect_to_gateway(config, version, &mp2_version).await?;
