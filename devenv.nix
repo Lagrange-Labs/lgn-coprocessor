@@ -60,7 +60,7 @@ in
 
   scripts = let
     log-levels = "RUST_LOG=info,lgn_worker=debug,lgn_provers=debug";
-    cargo-worker = "cargo run --bin lgn-worker";
+    cargo-worker = "ulimit -s unlimited; cargo run --bin lgn-worker";
   in {
     toml-worker-avs.exec = "echo ${workerConfigFile}";
     toml-worker-lgn.exec = "echo ${lagrangeWorkerConfigFile}";
