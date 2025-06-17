@@ -292,7 +292,12 @@ async fn run(config: &Config) -> anyhow::Result<()> {
     metrics_exporter_prometheus::PrometheusBuilder::new()
         .with_http_listener(([0, 0, 0, 0], config.prometheus.port))
         .install()
-        .context("setting up Prometheus")?;
+        .with_context(|| {
+            format!(
+                "Failed to start the prometheus exporter at 0.0.0.0:{}",
+                config.prometheus.port
+            )
+        })?;
 
     let checksums = if cfg!(not(feature = "dummy-prover")) {
         fetch_checksums(config.public_params.checksum_file_url())
