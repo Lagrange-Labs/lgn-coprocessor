@@ -22,14 +22,19 @@ pub trait LgnProver {
 /// Given a serializable circuit input, write it to a temporary file and log the
 /// file path.
 pub(crate) fn write_to_tmp<S: Serialize>(s: &S) -> anyhow::Result<()> {
-    let mut tmp = tempfile::NamedTempFile::new().context("failed to create a temporary file")?;
-    warn!("circuit inputs written to `{}`", tmp.path().display());
+    let mut tmp = tempfile::Builder::new()
+        .prefix("inputs")
+        .suffix(".json")
+        .tempfile()
+        .context("failed to create a temporary file")?;
     tmp.write_all(
         serde_json::to_string_pretty(s)
             .context("failed to serialize PIs to JSON")?
             .as_bytes(),
     )
     .context("failed to write serialized PIs to temporary file")?;
+    let (_, path) = tmp.keep()?;
+    warn!("circuit inputs written to `{}`", path.display());
 
     Ok(())
 }
