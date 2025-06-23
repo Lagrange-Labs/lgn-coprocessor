@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
-use alloy::primitives::address;
 use alloy::primitives::Address;
 use alloy::primitives::U256;
+use alloy::primitives::address;
 use alloy::providers::RootProvider;
 use alloy::signers::local::PrivateKeySigner;
-use anyhow::bail;
+use anyhow::Context;
 use anyhow::Result;
+use anyhow::bail;
 use delegation_manager::DelegationManager;
 use serde::Serialize;
 use tracing::info;
@@ -213,7 +214,9 @@ pub async fn register_operator(
     // we first check if we are whitelist
     let is_whitelisted = contract.whitelist(operator_address).call().await?;
     if !is_whitelisted {
-        bail!("operator address {operator_address} is not whitelisted on the Lagrange contract. Contact Lagrange admin.");
+        bail!(
+            "operator address {operator_address} is not whitelisted on the Lagrange contract. Contact Lagrange admin."
+        );
     }
     let is_registered = contract.isRegistered(operator_address).call().await?;
     if is_registered {
@@ -241,20 +244,35 @@ pub async fn register_operator(
 pub async fn deregister_operator(
     network: &Network,
     client: &RootProvider,
+    print_tx: bool,
 ) -> Result<()> {
     let contract_address: Address = network.lagrange_registry_address();
     let contract = ZKMRStakeRegistry::new(contract_address, client);
-    let receipt = contract
-        .deregisterOperator()
-        .send()
-        .await?
-        .get_receipt()
-        .await?;
 
-    info!(
-        "Successfully de-registered from Lagrange AVS. Tx hash {:?}",
-        receipt.transaction_hash
-    );
+    if print_tx {
+        let raw_tx = contract
+            .deregisterOperator()
+            .build_unsigned_raw_transaction()
+            .context("failed to build de-registration transaction")?;
+        info!(
+            "De-registration transaction ready to be signed & sent: {}",
+            hex::encode(raw_tx)
+        );
+    } else {
+        let receipt = contract
+            .deregisterOperator()
+            .send()
+            .await
+            .context("failed to send transaction to RPC")?
+            .get_receipt()
+            .await
+            .context("failed to get transaction receipt")?;
+
+        info!(
+            "Successfully de-registered from Lagrange AVS. Tx hash {:?}",
+            receipt.transaction_hash
+        );
+    }
 
     Ok(())
 }

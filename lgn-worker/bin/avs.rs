@@ -8,17 +8,17 @@ use std::sync::Arc;
 
 use alloy::providers::Provider;
 use alloy::providers::ProviderBuilder;
-use alloy::signers::local::LocalSigner;
 use alloy::signers::Signer;
-use anyhow::bail;
+use alloy::signers::local::LocalSigner;
 use anyhow::Result;
+use anyhow::bail;
 use clap::Args;
 use clap::Parser;
+use lgn_worker::avs::contract::Network;
 use lgn_worker::avs::contract::calculate_registration_digest_hash;
 use lgn_worker::avs::contract::deregister_operator;
 use lgn_worker::avs::contract::is_operator;
 use lgn_worker::avs::contract::register_operator;
-use lgn_worker::avs::contract::Network;
 use lgn_worker::avs::public_key::PublicKey;
 use lgn_worker::avs::utils::expiry_timestamp;
 use lgn_worker::avs::utils::read_keystore;
@@ -189,9 +189,12 @@ https://docs.eigenlayer.xyz/eigenlayer/operator-guides/operator-installation#ope
 }
 #[derive(Args, Debug)]
 struct DeRegister {
-    /// URL for blockchain RPC requests.
+    /// URL for blockchain RPC requests. If set, automatically send the
+    /// transaction with eth_sendTransaction; otherwise print the transaction to
+    /// be signed & sent.
     #[clap(short, long, env)]
     rpc_url: Url,
+
     /// File path to load the main AVS keystore for signing, could set ENV
     /// AVS__AVS_PWD for password or input following the prompt.
     ///
@@ -206,10 +209,19 @@ struct DeRegister {
 
     #[clap(short, long, env, default_value_t, value_enum)]
     network: Network,
+
+    /// If set, print the transaction to be signed & sent with
+    /// eth_sendRawTransaction, otherwise automatically send the transaction
+    /// with eth_sendTransaction.
+    #[clap(short, long)]
+    print_tx: bool,
 }
 
 impl DeRegister {
-    async fn run(&self) -> Result<()> {
+    async fn run(
+        &self,
+        print_tx: bool,
+    ) -> Result<()> {
         info!("Running operation on {}", self.network.describe());
         // Restore the main AVS key, try to check if ENV AVS_SECRET_KEY is set.
         let main_wallet = env::var(ETH_PRIVATE_KEY_ENV_VAR).map_or_else(
@@ -234,7 +246,7 @@ impl DeRegister {
             bail!("Address {} does not belong to a known operator", operator);
         }
 
-        deregister_operator(&self.network, provider.root()).await?;
+        deregister_operator(&self.network, provider.root(), print_tx).await?;
         info!("Successfully de-registered operator {}", operator);
 
         Ok(())
@@ -260,7 +272,7 @@ async fn main() -> anyhow::Result<()> {
     match cli {
         Cli::NewKey(new_key) => new_key.run(),
         Cli::Register(register) => register.run().await,
-        Cli::DeRegister(deregister) => deregister.run().await,
+        Cli::DeRegister(deregister) => deregister.run(deregister.send_tx).await,
     }
 }
 
