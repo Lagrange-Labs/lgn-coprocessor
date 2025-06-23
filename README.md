@@ -68,6 +68,12 @@ docker compose up -d
 docker compose run --rm worker avs de-register
 ```
 
+Were it preferred to obtain the raw transaction to be signed & sent manually, run the following:
+
+```sh
+docker compose run --rm worker avs de-register --print-tx
+```
+
 ### Observability
 #### Metrics
 The worker exposes the prometheus metrics by default on port 9000
@@ -84,13 +90,13 @@ Starting from worker version `v0.2.1`, you can import this [grafana dashboard ](
 
 We follow [Semantic Versioning](https://semver.org/) with slight modifications tailored to operational workflows.
 
-- **Major (`X.0.0`)**  
+- **Major (`X.0.0`)**
   Requires **ZK Public Parameters** changes OR changes in **protobuf** between the worker and the gateway.
 
-- **Minor (`0.X.0`)**  
+- **Minor (`0.X.0`)**
   Backward-compatible changes. The older version of the gateway can still support this new version.
 
-- **Patch (`0.0.X`)**  
+- **Patch (`0.0.X`)**
   Urgent hotfixes applied on a deployed branch.
 
 ### Examples:

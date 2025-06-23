@@ -272,7 +272,7 @@ async fn main() -> anyhow::Result<()> {
     match cli {
         Cli::NewKey(new_key) => new_key.run(),
         Cli::Register(register) => register.run().await,
-        Cli::DeRegister(deregister) => deregister.run(deregister.send_tx).await,
+        Cli::DeRegister(deregister) => deregister.run(deregister.print_tx).await,
     }
 }
 
