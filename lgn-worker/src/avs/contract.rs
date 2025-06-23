@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
+use alloy::primitives::address;
 use alloy::primitives::Address;
 use alloy::primitives::U256;
-use alloy::primitives::address;
 use alloy::providers::RootProvider;
 use alloy::signers::local::PrivateKeySigner;
+use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
-use anyhow::bail;
 use delegation_manager::DelegationManager;
 use serde::Serialize;
 use tracing::info;
