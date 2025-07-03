@@ -138,7 +138,7 @@ const ERROR_UUID_MISSING: &str = "uuid_missing";
 const ERROR_UUID_INVALID: &str = "uuid_invalid";
 const ERROR_ENVELOPE_PARSE_FAILED: &str = "envelope_parse_invalid";
 const ERROR_ENVELOPE_INVALID_MP2_VERSION: &str = "envelope_invalid_mp2_version";
-const ERROR_ENVELOPE_INCOMPATIBLE_MP2_VERSION: &str = "envelope_incompatbile_mp2_version";
+const ERROR_ENVELOPE_INCOMPATIBLE_MP2_VERSION: &str = "envelope_incompatible_mp2_version";
 const ERROR_PROOF_INVALID: &str = "proof_invalid";
 const ERROR_PROOF_PANIC: &str = "proof_panic";
 const ERROR_REPLY_SERIALIZATION_INVALID: &str = "reply_serialization_invalid";
@@ -457,7 +457,7 @@ async fn run(config: &Config) -> anyhow::Result<()> {
 /// this situation are tasks sent from the GW to the worker to be processed. The second stream is
 /// the worker requests, which contains the results of the tasks (either a proof or an error).
 ///
-/// The nomeclature is inverted because it is written from the perspective of the gateway, and the
+/// The nomenclature is inverted because it is written from the perspective of the gateway, and the
 /// client is automatically generated via tonic.
 async fn connect_to_gateway(
     config: &Config,
@@ -641,7 +641,7 @@ async fn process_message_from_gateway(
             )
             .increment(1);
             histogram!(
-                "zkmr_worker_task_sucessful_processing_duration_seconds",
+                "zkmr_worker_task_successful_processing_duration_seconds",
                 "task_type" => task_type.clone(),
             )
             .record(start_time.elapsed().as_secs_f64());
