@@ -25,6 +25,7 @@ verifiable-db = { workspace = true }
 
 lgn-messages = { path = "../lgn-messages" }
 exponential-backoff = "2.0.1"
+memmap2 = "0.9.7"
 
 [features]
 dummy-prover = []
