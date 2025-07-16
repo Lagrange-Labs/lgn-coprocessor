@@ -1,5 +1,7 @@
 use std::collections::HashMap;
+use std::fs::read;
 
+use anyhow::Context;
 use anyhow::Result;
 use groth16_framework::Groth16Prover;
 use tracing::debug;
@@ -21,17 +23,20 @@ impl Groth16EuclidProver {
         pk_file: &str,
         checksums: &HashMap<String, blake3::Hash>,
     ) -> Result<Self> {
-        let circuit_bytes =
+        let circuit_bytes_path =
             params::download_and_checksum(url, dir, circuit_file, checksums).await?;
-        let r1cs_bytes = params::download_and_checksum(url, dir, r1cs_file, checksums).await?;
-        let pk_bytes = params::download_and_checksum(url, dir, pk_file, checksums).await?;
+        let r1cs_bytes_path = params::download_and_checksum(url, dir, r1cs_file, checksums).await?;
+        let pk_bytes_path = params::download_and_checksum(url, dir, pk_file, checksums).await?;
+
+        let r1cs = read(&r1cs_bytes_path)
+            .with_context(|| format!("while reading {}", r1cs_bytes_path.display()))?;
+        let pk = read(&pk_bytes_path)
+            .with_context(|| format!("while reading {}", pk_bytes_path.display()))?;
+        let circuit = read(&circuit_bytes_path)
+            .with_context(|| format!("while reading {}", circuit_bytes_path.display()))?;
 
         debug!("Creating Groth16 prover");
-        let inner = Groth16Prover::from_bytes(
-            r1cs_bytes.to_vec(),
-            pk_bytes.to_vec(),
-            circuit_bytes.to_vec(),
-        )?;
+        let inner = Groth16Prover::from_bytes(r1cs, pk, circuit)?;
 
         debug!("Groth16 prover created");
         Ok(Self { inner })
