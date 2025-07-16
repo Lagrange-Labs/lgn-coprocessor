@@ -166,7 +166,7 @@ async fn resume_download(
                 Ok(parsed)
             })?;
 
-    if response.status() != StatusCode::RANGE_NOT_SATISFIABLE {
+    if response.status() == StatusCode::RANGE_NOT_SATISFIABLE {
         hasher.reset();
         file.set_len(0).await?;
         bail!("Local file is bigger than remote, reset file and restart download");
