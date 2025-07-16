@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fs::File;
 
 use anyhow::Context;
 use lgn_messages::types::v1::query::tasks::MatchingRowInput;
@@ -51,9 +52,10 @@ impl QueryEuclidProver {
         checksums: &HashMap<String, blake3::Hash>,
         with_tracing: bool,
     ) -> anyhow::Result<Self> {
-        let params = params::download_and_checksum(url, dir, file, checksums).await?;
-        let reader = std::io::BufReader::new(params.as_ref());
-        let params = bincode::deserialize_from(reader)?;
+        let params_path = params::download_and_checksum(url, dir, file, checksums).await?;
+        let file = File::open(params_path)?;
+        let reader = unsafe { memmap2::Mmap::map(&file)? };
+        let params = bincode::deserialize(&reader)?;
         Ok(Self {
             params,
             with_tracing,
