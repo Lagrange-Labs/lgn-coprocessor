@@ -1,6 +1,6 @@
 [package]
 name = "lgn-provers"
-version = "2.0.0"
+version = "2.0.1"
 edition = "2021"
 
 [dependencies]
@@ -24,7 +24,7 @@ tempfile = "3"
 verifiable-db = { workspace = true }
 
 lgn-messages = { path = "../lgn-messages" }
-exponential-backoff = "2.0.0"
+exponential-backoff = "2.0.1"
 
 [features]
 dummy-prover = []
