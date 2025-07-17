@@ -4102,7 +4102,7 @@ dependencies = [
 
 [[package]]
 name = "lgn-messages"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "alloy",
  "derive-debug-plus",
@@ -4117,7 +4117,7 @@ dependencies = [
 
 [[package]]
 name = "lgn-provers"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "alloy",
  "anyhow",
@@ -4143,7 +4143,7 @@ dependencies = [
 
 [[package]]
 name = "lgn-worker"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "alloy",
  "anyhow",
