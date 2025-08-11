@@ -22,7 +22,7 @@ chdir $pps_directory;
 # This will exit the script if any of the PPs are already present on S3
 find({ wanted => \&check_not_on_s3, no_chdir => 1 }, '.');
 
-# Go back to the saved invokation directory
+# Go back to the saved invocation directory
 chdir $current_dir;
 
 # Recursively upload the PPs to S3

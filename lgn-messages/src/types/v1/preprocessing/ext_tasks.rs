@@ -447,7 +447,7 @@ pub enum FinalExtractionType {
 /// works with serde_json, except if a parent container uses a tagged
 /// union, this is an unresolved bug in serde.
 ///
-/// This struct exists to change the map to a vec, to circunvent the above.
+/// This struct exists to change the map to a vec, to circumvent the above.
 ///
 /// issue: https://github.com/serde-rs/serde/issues/1183
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
